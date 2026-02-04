@@ -1,0 +1,78 @@
+/**
+ * Plan Model
+ * @api-separable
+ * @migration-notes 분리 시 백엔드 프로젝트의 models/Plan.ts로 이동
+ */
+
+import mongoose, { Schema, Model } from 'mongoose';
+import type { IPlan, Term } from '@/types';
+
+export interface IPlanDocument extends Omit<IPlan, '_id'>, mongoose.Document {}
+
+const plannedCourseSchema = new Schema(
+  {
+    course: {
+      type: Schema.Types.ObjectId,
+      ref: 'Course',
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ['planned', 'enrolled', 'completed', 'failed'],
+      default: 'planned',
+    },
+    grade: {
+      type: String,
+    },
+  },
+  { _id: false }
+);
+
+const semesterPlanSchema = new Schema(
+  {
+    year: {
+      type: Number,
+      required: true,
+    },
+    term: {
+      type: String,
+      enum: ['spring', 'fall'] as Term[],
+      required: true,
+    },
+    courses: [plannedCourseSchema],
+  },
+  { _id: false }
+);
+
+const planSchema = new Schema<IPlanDocument>(
+  {
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: [true, '사용자는 필수입니다.'],
+    },
+    name: {
+      type: String,
+      required: [true, '계획 이름은 필수입니다.'],
+      trim: true,
+    },
+    semesters: [semesterPlanSchema],
+    status: {
+      type: String,
+      enum: ['draft', 'active'],
+      default: 'draft',
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// 인덱스
+planSchema.index({ user: 1 });
+planSchema.index({ user: 1, status: 1 });
+
+const Plan: Model<IPlanDocument> =
+  mongoose.models.Plan || mongoose.model<IPlanDocument>('Plan', planSchema);
+
+export default Plan;
