@@ -71,9 +71,9 @@ export function RequirementsSummary() {
               />
             </div>
           ) : (
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <p className="text-sm text-gray-500">졸업 요건을 설정하세요</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0">
                 <Button
                   size="sm"
                   variant="outline"
@@ -134,15 +134,15 @@ export function RequirementsSummary() {
 
   return (
     <Card>
-      <CardContent className="py-3 px-4">
+      <CardContent className="py-3 px-3 sm:px-4">
         {/* Collapsed header - always visible */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
           className="w-full flex items-center justify-between group"
         >
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <span className="text-sm font-medium text-gray-700">졸업 요건</span>
-            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[200px]">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 flex-wrap">
+            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">졸업 요건</span>
+            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[120px] sm:max-w-[200px]">
               <div
                 className={`h-full transition-all rounded-full ${
                   total.percentage >= 100 ? 'bg-green-500' : total.percentage >= 50 ? 'bg-blue-500' : 'bg-orange-500'
@@ -155,7 +155,7 @@ export function RequirementsSummary() {
             }`}>
               {total.percentage}%
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 whitespace-nowrap">
               ({total.earned}/{total.required}학점)
             </span>
           </div>

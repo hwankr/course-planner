@@ -118,8 +118,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
       {/* Compact Header Row */}
-      <div className="px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center gap-4 flex-wrap">
+      <div className="px-3 sm:px-4 py-3 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-wrap">
           {/* Title */}
           <div>
             <h2 className="text-base font-semibold text-gray-900">
@@ -136,11 +136,11 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             placeholder="과목명 또는 코드 검색..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64"
+            className="w-full sm:w-64"
           />
 
           {/* Year filter chips */}
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 overflow-x-auto flex-shrink-0">
             {[undefined, 1, 2, 3, 4].map((y) => (
               <button
                 key={y ?? 'all'}
@@ -156,7 +156,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
           </div>
 
           {/* Semester filter chips */}
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-shrink-0">
             {([undefined, 'spring', 'fall'] as const).map((s) => (
               <button
                 key={s ?? 'all'}
@@ -213,7 +213,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
       {/* Content Area - Only visible when not collapsed */}
       {!isCollapsed && (
-        <div className="max-h-[400px] overflow-y-auto p-4">
+        <div className="max-h-[350px] sm:max-h-[400px] overflow-y-auto p-3 sm:p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -240,7 +240,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                     return courseGroups.map((group) => (
                       <div
                         key={group.label}
-                        className="flex-shrink-0 w-64 flex flex-col"
+                        className="flex-shrink-0 w-56 sm:w-64 flex flex-col"
                       >
                         {/* Non-draggable group header */}
                         <div className="bg-gray-100 px-3 py-2 rounded-t-md border-b-2 border-gray-300 sticky top-0 z-10">
@@ -324,7 +324,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="grid grid-cols-5 gap-3"
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
                 >
                   {filteredCourses.map((course, index) => {
                     const courseId = course._id.toString();

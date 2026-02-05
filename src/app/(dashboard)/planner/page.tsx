@@ -479,12 +479,12 @@ export default function PlannerPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">수강 계획</h1>
-          <p className="text-gray-600 mt-1">학기를 클릭하여 포커스 후, 카탈로그에서 과목을 클릭하거나 드래그하세요.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">수강 계획</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 카탈로그에서 과목을 추가하세요.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Plan Selector */}
           {plans.length > 1 && (
             <select
@@ -516,7 +516,7 @@ export default function PlannerPage() {
               </Button>
             )
           )}
-          <Button onClick={() => setIsCreating(true)}>새 계획 만들기</Button>
+          <Button onClick={() => setIsCreating(true)} className="text-sm sm:text-base">새 계획 만들기</Button>
         </div>
       </div>
 
@@ -552,7 +552,7 @@ export default function PlannerPage() {
                       ({semesters.reduce((total, sem) => total + sem.courses.reduce((sum, c) => sum + c.credits, 0), 0)}학점)
                     </span>
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {semesters.map((semester) => (
                       <SemesterColumn
                         key={`${semester.year}-${semester.term}`}

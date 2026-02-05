@@ -35,7 +35,7 @@ export default function AdminPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="text-3xl font-bold text-blue-600">0</div>
@@ -63,7 +63,7 @@ export default function AdminPage() {
       </div>
 
       {/* Admin Menus */}
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {adminMenus.map((menu) => (
           <Link key={menu.href} href={menu.href}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
