@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse } from '@/hooks/usePlans';
+import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
 import { usePlanStore } from '@/stores/planStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
+import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { Button, Card, CardContent } from '@/components/ui';
 import type { Term } from '@/types';
 
@@ -21,6 +22,7 @@ export default function PlannerPage() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newPlanName, setNewPlanName] = useState('');
+  const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
 
   // Fetch all plans
   const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
@@ -32,6 +34,8 @@ export default function PlannerPage() {
   const createPlanMutation = useCreatePlan();
   const addCourseMutation = useAddCourse();
   const removeCourseMutation = useRemoveCourse();
+  const addSemesterMutation = useAddSemester();
+  const removeSemesterMutation = useRemoveSemester();
 
   // Zustand store
   const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
@@ -145,37 +149,22 @@ export default function PlannerPage() {
   // Handle adding a new semester
   const handleAddSemester = () => {
     if (!activePlan) return;
+    setIsAddSemesterOpen(true);
+  };
 
-    // Find the latest semester and add next one
-    const semesters = activePlan.semesters;
-    let nextYear: number;
-    let nextTerm: Term;
-
-    if (semesters.length === 0) {
-      // Default to current year spring
-      nextYear = new Date().getFullYear();
-      nextTerm = 'spring';
-    } else {
-      const lastSemester = semesters[semesters.length - 1];
-      if (lastSemester.term === 'spring') {
-        nextYear = lastSemester.year;
-        nextTerm = 'fall';
-      } else {
-        nextYear = lastSemester.year + 1;
-        nextTerm = 'spring';
-      }
+  const handleAddSemesterSubmit = async (year: number, term: Term) => {
+    if (!activePlan) return;
+    try {
+      await addSemesterMutation.mutateAsync({
+        planId: activePlan.id,
+        year,
+        term,
+      });
+      setIsAddSemesterOpen(false);
+    } catch (error) {
+      console.error('Failed to add semester:', error);
+      // Dialog stays open on error
     }
-
-    // Add empty semester to store (optimistic)
-    addCourseToSemester(nextYear, nextTerm, {
-      id: '__placeholder__',
-      code: '',
-      name: '',
-      credits: 0,
-      status: 'planned',
-    });
-    // Immediately remove the placeholder
-    removeCourseFromSemester(nextYear, nextTerm, '__placeholder__');
   };
 
   // Handle drag end
@@ -324,6 +313,23 @@ export default function PlannerPage() {
     [activePlan, removeCourseFromSemester, addCourseToSemester, removeCourseMutation]
   );
 
+  // Handle delete semester
+  const handleDeleteSemester = useCallback(
+    async (year: number, term: Term) => {
+      if (!activePlan) return;
+      try {
+        await removeSemesterMutation.mutateAsync({
+          planId: activePlan.id,
+          year,
+          term,
+        });
+      } catch (error) {
+        console.error('Failed to delete semester:', error);
+      }
+    },
+    [activePlan, removeSemesterMutation]
+  );
+
   // Handle click-to-add course to focused semester
   const handleClickAdd = useCallback(
     async (courseId: string, courseData: { code: string; name: string; credits: number; category?: string }) => {
@@ -466,23 +472,24 @@ export default function PlannerPage() {
       {/* Drag and Drop Context */}
       {activePlan && !planDetailLoading && (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex gap-6">
-            {/* Course Catalog Sidebar */}
-            <div className="w-80 flex-shrink-0">
-              <CourseCatalog
-                planCourseIds={planCourseIds}
-                onClickAdd={handleClickAdd}
-                focusedSemester={focusedSemester}
-                isAddingCourse={addCourseMutation.isPending}
-              />
-            </div>
+          <div className="space-y-6">
+            {/* Course Catalog - Full Width Top Row */}
+            <CourseCatalog
+              planCourseIds={planCourseIds}
+              onClickAdd={handleClickAdd}
+              focusedSemester={focusedSemester}
+              isAddingCourse={addCourseMutation.isPending}
+            />
 
-            {/* Semester Grid - Year Grouped */}
-            <div className="flex-1 space-y-4 overflow-y-auto">
+            {/* Semester Grid - Full Width Bottom Row */}
+            <div className="space-y-4">
               {Array.from(semestersByYear.entries()).map(([year, semesters]) => (
                 <div key={year} className="space-y-2">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                    {year}년
+                    {year}학년
+                    <span className="ml-2 text-xs font-normal text-gray-400">
+                      ({semesters.reduce((total, sem) => total + sem.courses.reduce((sum, c) => sum + c.credits, 0), 0)}학점)
+                    </span>
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     {semesters.map((semester) => (
@@ -493,6 +500,7 @@ export default function PlannerPage() {
                         isFocused={focusedSemester?.year === semester.year && focusedSemester?.term === semester.term}
                         onFocus={() => toggleFocusedSemester(semester.year, semester.term)}
                         onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
+                        onDelete={() => handleDeleteSemester(semester.year, semester.term)}
                       />
                     ))}
                   </div>
@@ -524,6 +532,17 @@ export default function PlannerPage() {
             </div>
           </div>
         </DragDropContext>
+      )}
+
+      {/* Add Semester Dialog */}
+      {activePlan && (
+        <AddSemesterDialog
+          isOpen={isAddSemesterOpen}
+          onClose={() => setIsAddSemesterOpen(false)}
+          onAdd={handleAddSemesterSubmit}
+          existingSemesters={activePlan.semesters.map(s => ({ year: s.year, term: s.term }))}
+          isLoading={addSemesterMutation.isPending}
+        />
       )}
     </div>
   );

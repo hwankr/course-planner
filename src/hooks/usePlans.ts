@@ -200,3 +200,55 @@ export function useRemoveCourse() {
     },
   });
 }
+
+/**
+ * Add a semester to a plan
+ */
+export function useAddSemester() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
+      const res = await fetch(`/api/plans/${planId}/semesters`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, term }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to add semester');
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+  });
+}
+
+/**
+ * Remove a semester from a plan
+ */
+export function useRemoveSemester() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
+      const res = await fetch(`/api/plans/${planId}/semesters`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, term }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to remove semester');
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+  });
+}

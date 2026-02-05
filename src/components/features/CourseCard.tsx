@@ -34,7 +34,7 @@ const statusLabels = {
 };
 
 const categoryLabels: Record<string, string> = {
-  major_required: '전공필수',
+  major_required: '전공핵심',
   major_elective: '전공선택',
   general_required: '교양필수',
   general_elective: '교양선택',

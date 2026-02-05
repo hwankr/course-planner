@@ -214,6 +214,38 @@ async function remove(id: string): Promise<IPlanDocument | null> {
 }
 
 /**
+ * 학기 제거
+ */
+async function removeSemester(
+  planId: string,
+  year: number,
+  term: Term
+): Promise<IPlanDocument> {
+  await connectDB();
+  const plan = await Plan.findById(planId);
+  if (!plan) throw new Error('Plan not found');
+
+  const semesterIndex = plan.semesters.findIndex(
+    (s) => s.year === year && s.term === term
+  );
+  if (semesterIndex === -1) throw new Error('학기를 찾을 수 없습니다.');
+
+  plan.semesters.splice(semesterIndex, 1);
+  await plan.save();
+
+  return Plan.findById(planId)
+    .populate({
+      path: 'semesters.courses.course',
+      select: 'code name credits category department prerequisites',
+      populate: [
+        { path: 'department', select: 'code name' },
+        { path: 'prerequisites', select: 'code name' },
+      ],
+    })
+    .lean() as Promise<IPlanDocument>;
+}
+
+/**
  * 계획 상태 변경 (활성화)
  */
 async function activate(planId: string, userId: string): Promise<IPlanDocument | null> {
@@ -238,6 +270,7 @@ export const planService = {
   findById,
   create,
   addSemester,
+  removeSemester,
   addCourseToSemester,
   removeCourseFromSemester,
   updateCourseStatus,

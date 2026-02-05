@@ -28,6 +28,8 @@ interface CourseData {
   description: string;
   semesters: ('spring' | 'summer' | 'fall' | 'winter')[];
   category: string;
+  recommendedYear?: number;
+  recommendedSemester?: 'spring' | 'fall';
 }
 
 interface DepartmentData {
@@ -74,6 +76,8 @@ const courses: CourseData[] = [
     description: 'SW와 AI의 기초 개념 및 사회적 영향 이해',
     semesters: ['spring'],
     category: 'general_required',
+    recommendedYear: 1,
+    recommendedSemester: 'spring',
   },
   {
     code: 'GEN1102',
@@ -84,6 +88,8 @@ const courses: CourseData[] = [
     description: '대학 생활 적응 및 진로 설계',
     semesters: ['spring'],
     category: 'general_required',
+    recommendedYear: 1,
+    recommendedSemester: 'spring',
   },
   {
     code: 'GEN1103',
@@ -94,6 +100,8 @@ const courses: CourseData[] = [
     description: '영어 의사소통 능력 향상',
     semesters: ['spring'],
     category: 'general_required',
+    recommendedYear: 1,
+    recommendedSemester: 'spring',
   },
   {
     code: 'GEN1104',
@@ -104,6 +112,8 @@ const courses: CourseData[] = [
     description: '행렬의 기본 연산 및 행렬식의 성질',
     semesters: ['spring'],
     category: 'general_required',
+    recommendedYear: 1,
+    recommendedSemester: 'spring',
   },
 
   // ============================================
@@ -118,6 +128,8 @@ const courses: CourseData[] = [
     description: '사회 봉사를 통한 공동체 의식 함양',
     semesters: ['fall'],
     category: 'general_required',
+    recommendedYear: 1,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE1201',
@@ -128,6 +140,8 @@ const courses: CourseData[] = [
     description: 'C언어 기초 문법 및 프로그래밍 실습',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 1,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE1202',
@@ -138,6 +152,8 @@ const courses: CourseData[] = [
     description: '함수의 극한, 미분, 적분의 기초',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 1,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE1203',
@@ -148,6 +164,8 @@ const courses: CourseData[] = [
     description: '확률 및 통계의 기본 개념과 응용',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 1,
+    recommendedSemester: 'fall',
   },
 
   // ============================================
@@ -162,6 +180,8 @@ const courses: CourseData[] = [
     description: '정보보안의 기본 개념 및 암호학 입문',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 2,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE2102',
@@ -172,6 +192,8 @@ const courses: CourseData[] = [
     description: 'Java 언어를 이용한 객체지향 프로그래밍',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 2,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE2103',
@@ -182,6 +204,8 @@ const courses: CourseData[] = [
     description: '소프트웨어 설계의 기초 및 팀 프로젝트',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE2104',
@@ -192,6 +216,8 @@ const courses: CourseData[] = [
     description: '디지털 논리 회로의 설계 및 분석',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE2105',
@@ -202,6 +228,8 @@ const courses: CourseData[] = [
     description: '집합, 논리, 그래프 등 이산 수학의 기초',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE2106',
@@ -212,6 +240,8 @@ const courses: CourseData[] = [
     description: '통계 분석 기법 및 데이터 모델링',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'spring',
   },
 
   // ============================================
@@ -226,6 +256,8 @@ const courses: CourseData[] = [
     description: '오픈소스 소프트웨어 개발 방법론 및 협업',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 2,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE2202',
@@ -236,6 +268,8 @@ const courses: CourseData[] = [
     description: 'AI의 기본 개념 및 기계학습 입문',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 2,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE2203',
@@ -246,6 +280,8 @@ const courses: CourseData[] = [
     description: '스택, 큐, 트리, 그래프 등 자료구조 학습',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 2,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE2204',
@@ -256,6 +292,8 @@ const courses: CourseData[] = [
     description: 'Linux 시스템 프로그래밍 및 보안 기법',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE2205',
@@ -266,6 +304,8 @@ const courses: CourseData[] = [
     description: 'CPU, 메모리 등 컴퓨터 하드웨어 구조',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE2206',
@@ -276,6 +316,8 @@ const courses: CourseData[] = [
     description: 'TCP/IP 프로토콜 및 네트워크 설계',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 2,
+    recommendedSemester: 'fall',
   },
 
   // ============================================
@@ -290,6 +332,8 @@ const courses: CourseData[] = [
     description: '신경망 및 딥러닝 알고리즘 학습',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE3102',
@@ -300,6 +344,8 @@ const courses: CourseData[] = [
     description: '정렬, 탐색, 동적 계획법 등 알고리즘 설계',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE3103',
@@ -310,6 +356,8 @@ const courses: CourseData[] = [
     description: '오픈소스 프로젝트 설계 및 기여 실습',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE3104',
@@ -320,6 +368,8 @@ const courses: CourseData[] = [
     description: '프로세스, 메모리, 파일 시스템 관리',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE3105',
@@ -330,6 +380,8 @@ const courses: CourseData[] = [
     description: '영상 처리 및 컴퓨터 비전 기술',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE3106',
@@ -340,6 +392,8 @@ const courses: CourseData[] = [
     description: '대용량 데이터 처리 및 분산 시스템',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE3107',
@@ -350,6 +404,8 @@ const courses: CourseData[] = [
     description: 'HTML, CSS, JavaScript 기반 웹 개발',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 3,
+    recommendedSemester: 'spring',
   },
 
   // ============================================
@@ -364,6 +420,8 @@ const courses: CourseData[] = [
     description: 'Q-learning 등 강화학습 알고리즘',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3202',
@@ -374,6 +432,8 @@ const courses: CourseData[] = [
     description: '데이터에서 패턴 추출 및 분석 기법',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3203',
@@ -384,6 +444,8 @@ const courses: CourseData[] = [
     description: '블록체인 기술 및 암호화폐의 원리',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3204',
@@ -394,6 +456,8 @@ const courses: CourseData[] = [
     description: 'SW 개발 방법론 및 프로젝트 관리',
     semesters: ['fall'],
     category: 'major_required',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3205',
@@ -404,6 +468,8 @@ const courses: CourseData[] = [
     description: 'SQL 및 관계형 데이터베이스 설계',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3206',
@@ -414,6 +480,8 @@ const courses: CourseData[] = [
     description: 'Android/iOS 앱 개발 실습',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3207',
@@ -424,6 +492,8 @@ const courses: CourseData[] = [
     description: '팀 단위 소프트웨어 개발 프로젝트',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE3208',
@@ -434,6 +504,8 @@ const courses: CourseData[] = [
     description: '산업 현장 실습을 통한 실무 경험',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 3,
+    recommendedSemester: 'fall',
   },
 
   // ============================================
@@ -448,6 +520,8 @@ const courses: CourseData[] = [
     description: 'NLP 기초 및 언어 모델 학습',
     semesters: ['spring'],
     category: 'major_required',
+    recommendedYear: 4,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE4102',
@@ -458,6 +532,8 @@ const courses: CourseData[] = [
     description: '산학 협력 종합 설계 프로젝트 1단계',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE4103',
@@ -468,6 +544,8 @@ const courses: CourseData[] = [
     description: '네트워크 보안 기술 및 모니터링',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE4104',
@@ -478,6 +556,8 @@ const courses: CourseData[] = [
     description: 'Hadoop, Spark 등 빅데이터 프레임워크',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE4105',
@@ -488,6 +568,8 @@ const courses: CourseData[] = [
     description: '기업 요구사항 분석 및 솔루션 설계',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'spring',
   },
   {
     code: 'SWE4106',
@@ -498,6 +580,8 @@ const courses: CourseData[] = [
     description: '산업 현장 실습을 통한 실무 경험',
     semesters: ['spring'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'spring',
   },
 
   // ============================================
@@ -512,6 +596,8 @@ const courses: CourseData[] = [
     description: '4차 산업혁명 트렌드 및 취업 전략',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE4202',
@@ -522,6 +608,8 @@ const courses: CourseData[] = [
     description: '산학 협력 종합 설계 프로젝트 2단계',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE4203',
@@ -532,6 +620,8 @@ const courses: CourseData[] = [
     description: '기업과의 공동 연구 프로젝트 수행',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE4204',
@@ -542,6 +632,8 @@ const courses: CourseData[] = [
     description: 'AI 보안 및 적대적 공격 방어 기법',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'fall',
   },
   {
     code: 'SWE4205',
@@ -552,6 +644,8 @@ const courses: CourseData[] = [
     description: '2D/3D 그래픽스 렌더링 기술',
     semesters: ['fall'],
     category: 'major_elective',
+    recommendedYear: 4,
+    recommendedSemester: 'fall',
   },
 ];
 
@@ -708,6 +802,8 @@ async function seedCourses(
       description: course.description,
       semesters: course.semesters,
       category: course.category,
+      recommendedYear: course.recommendedYear,
+      recommendedSemester: course.recommendedSemester,
       isActive: true,
     });
 
