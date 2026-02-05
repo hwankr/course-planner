@@ -34,12 +34,14 @@ export default function PlannerPage() {
   const removeCourseMutation = useRemoveCourse();
 
   // Zustand store
-  const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse } = usePlanStore();
+  const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
 
   // Auto-select first plan when plans are loaded
   useEffect(() => {
     if (plans && plans.length > 0 && !selectedPlanId) {
-      setSelectedPlanId(plans[0]._id.toString());
+      const firstPlanId = plans[0]._id.toString();
+      // Use a microtask to avoid synchronous setState in effect
+      Promise.resolve().then(() => setSelectedPlanId(firstPlanId));
     }
   }, [plans, selectedPlanId]);
 
@@ -61,12 +63,14 @@ export default function PlannerPage() {
               code: string;
               name: string;
               credits: number;
+              category?: string;
             };
             return {
               id: course._id?.toString() || (pc.course as unknown as string),
               code: course.code || 'N/A',
               name: course.name || 'Unknown Course',
               credits: course.credits || 0,
+              category: course.category,
               status: pc.status,
             };
           }),
@@ -76,10 +80,51 @@ export default function PlannerPage() {
     }
   }, [planDetail, setActivePlan]);
 
+  // Escape key clears semester focus
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setFocusedSemester(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setFocusedSemester]);
+
+  // Clear focus if focused semester no longer exists
+  useEffect(() => {
+    if (focusedSemester && activePlan) {
+      const exists = activePlan.semesters.some(
+        (s) => s.year === focusedSemester.year && s.term === focusedSemester.term
+      );
+      if (!exists) {
+        setFocusedSemester(null);
+      }
+    }
+  }, [activePlan, focusedSemester, setFocusedSemester]);
+
   // Compute all course IDs currently in the plan
   const planCourseIds = useMemo(() => {
     if (!activePlan) return [];
     return activePlan.semesters.flatMap((sem) => sem.courses.map((c) => c.id));
+  }, [activePlan]);
+
+  // Group semesters by year for compact layout
+  const semestersByYear = useMemo(() => {
+    if (!activePlan) return new Map<number, Array<{ year: number; term: Term; courses: Array<{
+      id: string;
+      code: string;
+      name: string;
+      credits: number;
+      category?: string;
+      status: 'planned' | 'enrolled' | 'completed' | 'failed';
+    }> }>>();
+    const map = new Map<number, typeof activePlan.semesters>();
+    for (const sem of activePlan.semesters) {
+      if (!map.has(sem.year)) map.set(sem.year, []);
+      map.get(sem.year)!.push(sem);
+    }
+    return map;
   }, [activePlan]);
 
   // Handle creating a new plan
@@ -158,6 +203,7 @@ export default function PlannerPage() {
           code: 'Loading...',
           name: 'Loading...',
           credits: 0,
+          category: undefined,
           status: 'planned' as const,
         };
 
@@ -278,6 +324,43 @@ export default function PlannerPage() {
     [activePlan, removeCourseFromSemester, addCourseToSemester, removeCourseMutation]
   );
 
+  // Handle click-to-add course to focused semester
+  const handleClickAdd = useCallback(
+    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: string }) => {
+      if (!activePlan || !focusedSemester) return;
+
+      const { year, term } = focusedSemester;
+
+      // Check if course already in plan
+      if (planCourseIds.includes(courseId)) return;
+
+      // Optimistic update with real course data
+      const optimisticCourse = {
+        id: courseId,
+        code: courseData.code,
+        name: courseData.name,
+        credits: courseData.credits,
+        category: courseData.category,
+        status: 'planned' as const,
+      };
+      addCourseToSemester(year, term, optimisticCourse);
+
+      // API call
+      try {
+        await addCourseMutation.mutateAsync({
+          planId: activePlan.id,
+          year,
+          term,
+          courseId,
+        });
+      } catch (error) {
+        removeCourseFromSemester(year, term, courseId);
+        console.error('Failed to add course:', error);
+      }
+    },
+    [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation]
+  );
+
   // Loading state
   if (plansLoading) {
     return (
@@ -352,7 +435,7 @@ export default function PlannerPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">수강 계획</h1>
-          <p className="text-gray-600 mt-1">드래그앤드롭으로 과목을 배치하세요.</p>
+          <p className="text-gray-600 mt-1">학기를 클릭하여 포커스 후, 카탈로그에서 과목을 클릭하거나 드래그하세요.</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Plan Selector */}
@@ -386,39 +469,58 @@ export default function PlannerPage() {
           <div className="flex gap-6">
             {/* Course Catalog Sidebar */}
             <div className="w-80 flex-shrink-0">
-              <CourseCatalog planCourseIds={planCourseIds} />
+              <CourseCatalog
+                planCourseIds={planCourseIds}
+                onClickAdd={handleClickAdd}
+                focusedSemester={focusedSemester}
+                isAddingCourse={addCourseMutation.isPending}
+              />
             </div>
 
-            {/* Semester Grid */}
-            <div className="flex-1 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {activePlan.semesters.map((semester) => (
-                <SemesterColumn
-                  key={`${semester.year}-${semester.term}`}
-                  semester={semester}
-                  onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
-                />
+            {/* Semester Grid - Year Grouped */}
+            <div className="flex-1 space-y-4 overflow-y-auto">
+              {Array.from(semestersByYear.entries()).map(([year, semesters]) => (
+                <div key={year} className="space-y-2">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                    {year}년
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    {semesters.map((semester) => (
+                      <SemesterColumn
+                        key={`${semester.year}-${semester.term}`}
+                        semester={semester}
+                        compact={true}
+                        isFocused={focusedSemester?.year === semester.year && focusedSemester?.term === semester.term}
+                        onFocus={() => toggleFocusedSemester(semester.year, semester.term)}
+                        onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
 
-              {/* Add Semester Card */}
-              <Card className="border-dashed border-2 border-gray-300 bg-gray-50">
-                <CardContent className="flex items-center justify-center min-h-[400px]">
-                  <Button variant="ghost" onClick={handleAddSemester} className="text-gray-500 hover:text-gray-700">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-5 h-5 mr-2"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    학기 추가
-                  </Button>
-                </CardContent>
-              </Card>
+              {/* Add Semester Button */}
+              <div className="flex justify-center py-4">
+                <Button
+                  variant="ghost"
+                  onClick={handleAddSemester}
+                  className="text-gray-500 hover:text-gray-700 border-dashed border-2 px-6 py-3"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5 mr-2"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  학기 추가
+                </Button>
+              </div>
             </div>
           </div>
         </DragDropContext>

@@ -54,6 +54,15 @@ const courseSchema = new Schema<ICourseDocument>(
       type: String,
       trim: true,
     },
+    recommendedYear: {
+      type: Number,
+      min: [1, '학년은 1 이상이어야 합니다.'],
+      max: [4, '학년은 4 이하여야 합니다.'],
+    },
+    recommendedSemester: {
+      type: String,
+      enum: ['spring', 'summer', 'fall', 'winter'],
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -68,6 +77,7 @@ const courseSchema = new Schema<ICourseDocument>(
 courseSchema.index({ department: 1 });
 courseSchema.index({ name: 'text', code: 'text' }); // 텍스트 검색용
 courseSchema.index({ category: 1, department: 1 });
+courseSchema.index({ recommendedYear: 1, recommendedSemester: 1 });
 
 const Course: Model<ICourseDocument> =
   mongoose.models.Course || mongoose.model<ICourseDocument>('Course', courseSchema);

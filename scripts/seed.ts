@@ -673,8 +673,10 @@ async function seedCourses(
   // Sort courses to ensure prerequisites are created first
   const sortedCourses = [...courses].sort((a, b) => {
     // Courses with no prerequisites come first
-    if (a.prerequisites.length === 0 && b.prerequisites.length > 0) return -1;
-    if (a.prerequisites.length > 0 && b.prerequisites.length === 0) return 1;
+    const aPrereqLength = a.prerequisites?.length || 0;
+    const bPrereqLength = b.prerequisites?.length || 0;
+    if (aPrereqLength === 0 && bPrereqLength > 0) return -1;
+    if (aPrereqLength > 0 && bPrereqLength === 0) return 1;
     // Then sort by code
     return a.code.localeCompare(b.code);
   });

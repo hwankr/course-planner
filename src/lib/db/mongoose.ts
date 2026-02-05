@@ -19,7 +19,7 @@ interface MongooseCache {
 
 // 전역 캐시 (개발 모드에서 Hot Reload 시 연결 재사용)
 declare global {
-  // eslint-disable-next-line no-var
+  // var is required for global declarations in Next.js
   var mongooseCache: MongooseCache | undefined;
 }
 

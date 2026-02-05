@@ -17,7 +17,7 @@ async function findByUser(userId: string): Promise<IPlanDocument[]> {
   return Plan.find({ user: userId })
     .populate({
       path: 'semesters.courses.course',
-      select: 'code name credits',
+      select: 'code name credits category',
     })
     .sort({ updatedAt: -1 });
 }
@@ -29,7 +29,7 @@ async function findById(id: string): Promise<IPlanDocument | null> {
   await connectDB();
   return Plan.findById(id).populate({
     path: 'semesters.courses.course',
-    select: 'code name credits department prerequisites',
+    select: 'code name credits category department prerequisites',
     populate: [
       { path: 'department', select: 'code name' },
       { path: 'prerequisites', select: 'code name' },
@@ -136,7 +136,7 @@ async function addCourseToSemester(
   await plan.save();
   return Plan.findById(planId).populate({
     path: 'semesters.courses.course',
-    select: 'code name credits',
+    select: 'code name credits category',
   });
 }
 
@@ -168,7 +168,7 @@ async function removeCourseFromSemester(
   await plan.save();
   return Plan.findById(planId).populate({
     path: 'semesters.courses.course',
-    select: 'code name credits',
+    select: 'code name credits category',
   });
 }
 

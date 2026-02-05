@@ -10,11 +10,13 @@ interface CourseCardProps {
     code: string;
     name: string;
     credits: number;
+    category?: string;
     status?: 'planned' | 'enrolled' | 'completed' | 'failed';
   };
   index?: number;        // Optional: only needed in SemesterColumn
   onRemove?: () => void; // Optional: only shown in SemesterColumn
   isDragDisabled?: boolean; // Optional: for catalog items already in plan
+  compact?: boolean;     // Optional: for compact display mode
 }
 
 const statusColors = {
@@ -31,13 +33,81 @@ const statusLabels = {
   failed: '재수강',
 };
 
-export function CourseCard({ course, index, onRemove, isDragDisabled }: CourseCardProps) {
-  // Normalize ID - handle both _id (from API) and id (from plan)
-  const courseId = course.id || course._id?.toString() || '';
+const categoryLabels: Record<string, string> = {
+  major_required: '전공필수',
+  major_elective: '전공선택',
+  general_required: '교양필수',
+  general_elective: '교양선택',
+  free_elective: '자유선택',
+};
+
+const categoryColors: Record<string, string> = {
+  major_required: 'bg-red-100 text-red-700',
+  major_elective: 'bg-orange-100 text-orange-700',
+  general_required: 'bg-blue-100 text-blue-700',
+  general_elective: 'bg-green-100 text-green-700',
+  free_elective: 'bg-gray-100 text-gray-600',
+};
+
+export function CourseCard({ course, onRemove, isDragDisabled, compact = false }: CourseCardProps) {
 
   // Default status to 'planned' if not provided (for catalog view)
   const status = course.status || 'planned';
 
+  // Compact mode: single-line condensed view
+  if (compact) {
+    return (
+      <Card
+        className={`
+          mb-1 px-2 py-1.5 transition-shadow
+          ${statusColors[status]}
+          ${isDragDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-move'}
+          shadow-sm hover:shadow-md
+        `}
+      >
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {course.category && categoryLabels[course.category] && (
+              <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
+                {categoryLabels[course.category]}
+              </span>
+            )}
+            <span className="text-xs font-medium text-gray-800 truncate">
+              {course.name}
+            </span>
+            <span className="text-[10px] text-gray-500 whitespace-nowrap">
+              {course.credits}학점
+            </span>
+          </div>
+          {onRemove && !isDragDisabled && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove();
+              }}
+              className="p-0.5 hover:bg-white rounded-full transition-colors flex-shrink-0"
+              aria-label="과목 제거"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-3 h-3 text-gray-400 hover:text-red-500"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
+      </Card>
+    );
+  }
+
+  // Default mode: full card view
   return (
     <Card
       className={`
@@ -49,17 +119,19 @@ export function CourseCard({ course, index, onRemove, isDragDisabled }: CourseCa
     >
       <div className="flex items-start justify-between">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-gray-700">
-              {course.code}
-            </span>
+          <div className="flex items-center gap-1.5 mb-1">
+            {course.category && categoryLabels[course.category] && (
+              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
+                {categoryLabels[course.category]}
+              </span>
+            )}
             {course.status && (
               <span className="text-xs px-2 py-0.5 rounded-full bg-white border">
                 {statusLabels[status]}
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-600 truncate">
+          <p className="text-sm font-medium text-gray-800 truncate">
             {course.name}
           </p>
           <p className="text-xs text-gray-500 mt-1">

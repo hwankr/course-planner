@@ -11,6 +11,7 @@ interface PlannedCourse {
   code: string;
   name: string;
   credits: number;
+  category?: string;
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
 }
 
@@ -31,11 +32,14 @@ interface PlanState {
   plans: Plan[];
   activePlan: Plan | null;
   isLoading: boolean;
+  focusedSemester: { year: number; term: Term } | null;
 
   // Actions
   setPlans: (plans: Plan[]) => void;
   setActivePlan: (plan: Plan | null) => void;
   setLoading: (loading: boolean) => void;
+  setFocusedSemester: (semester: { year: number; term: Term } | null) => void;
+  toggleFocusedSemester: (year: number, term: Term) => void;
 
   // Optimistic updates (for drag & drop)
   addCourseToSemester: (
@@ -61,10 +65,20 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   plans: [],
   activePlan: null,
   isLoading: false,
+  focusedSemester: null,
 
   setPlans: (plans) => set({ plans }),
   setActivePlan: (plan) => set({ activePlan: plan }),
   setLoading: (isLoading) => set({ isLoading }),
+  setFocusedSemester: (semester) => set({ focusedSemester: semester }),
+  toggleFocusedSemester: (year, term) => {
+    const { focusedSemester } = get();
+    if (focusedSemester?.year === year && focusedSemester?.term === term) {
+      set({ focusedSemester: null });
+    } else {
+      set({ focusedSemester: { year, term } });
+    }
+  },
 
   addCourseToSemester: (year, term, course) => {
     const { activePlan } = get();

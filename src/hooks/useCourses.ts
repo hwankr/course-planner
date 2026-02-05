@@ -24,6 +24,8 @@ function buildCourseFilterParams(filter?: CourseFilter): string {
   if (filter.semester) params.set('semester', filter.semester);
   if (filter.category) params.set('category', filter.category);
   if (filter.search) params.set('search', filter.search);
+  if (filter.recommendedYear) params.set('recommendedYear', String(filter.recommendedYear));
+  if (filter.recommendedSemester) params.set('recommendedSemester', filter.recommendedSemester);
 
   const queryString = params.toString();
   return queryString ? `?${queryString}` : '';

@@ -16,12 +16,16 @@ import type { CourseFilter, Semester } from '@/types';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const recommendedYear = searchParams.get('recommendedYear');
+    const recommendedSemester = searchParams.get('recommendedSemester');
 
     const filter: CourseFilter = {
       departmentId: searchParams.get('departmentId') || undefined,
       semester: searchParams.get('semester') as Semester | undefined,
       category: searchParams.get('category') || undefined,
       search: searchParams.get('search') || undefined,
+      recommendedYear: recommendedYear ? parseInt(recommendedYear, 10) : undefined,
+      recommendedSemester: recommendedSemester as Semester | undefined,
     };
 
     const courses = await courseService.findAll(filter);
@@ -48,6 +52,8 @@ const createCourseSchema = z.object({
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])),
   category: z.string().optional(),
+  recommendedYear: z.number().min(1).max(4).optional(),
+  recommendedSemester: z.enum(['spring', 'summer', 'fall', 'winter']).optional(),
 });
 
 export async function POST(request: Request) {

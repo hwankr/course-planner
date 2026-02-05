@@ -36,6 +36,14 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     ];
   }
 
+  if (filter?.recommendedYear) {
+    query.recommendedYear = filter.recommendedYear;
+  }
+
+  if (filter?.recommendedSemester) {
+    query.recommendedSemester = filter.recommendedSemester;
+  }
+
   return Course.find(query)
     .populate('department', 'code name')
     .populate('prerequisites', 'code name')

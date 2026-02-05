@@ -51,6 +51,8 @@ export interface ICourse {
   description?: string;
   semesters: Semester[]; // 개설 학기
   category?: string; // 전공필수, 전공선택, 교양 등
+  recommendedYear?: number;        // 권장 학년 (1-4)
+  recommendedSemester?: Semester;   // 권장 학기 (semantic: "when to take", NOT "when offered")
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -65,6 +67,8 @@ export interface CreateCourseInput {
   description?: string;
   semesters: Semester[];
   category?: string;
+  recommendedYear?: number;
+  recommendedSemester?: Semester;
 }
 
 export interface CourseFilter {
@@ -72,6 +76,8 @@ export interface CourseFilter {
   semester?: Semester;
   category?: string;
   search?: string;
+  recommendedYear?: number;
+  recommendedSemester?: Semester;
 }
 
 // ============================================
