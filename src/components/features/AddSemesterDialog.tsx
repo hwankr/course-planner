@@ -51,8 +51,11 @@ export function AddSemesterDialog({
   useEffect(() => {
     if (isOpen) {
       const defaults = calculateDefaults();
-      setYear(defaults.year);
-      setTerm(defaults.term);
+      // Use queueMicrotask to avoid synchronous setState in effect
+      queueMicrotask(() => {
+        setYear(defaults.year);
+        setTerm(defaults.term);
+      });
     }
   }, [isOpen, calculateDefaults]);
 

@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: '대시보드', href: '/dashboard' },
   { name: '수강 계획', href: '/planner' },
-  { name: '졸업 요건', href: '/requirements' },
   { name: '프로필', href: '/profile' },
 ];
 

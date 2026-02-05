@@ -22,7 +22,7 @@ export async function GET(request: Request) {
     const filter: CourseFilter = {
       departmentId: searchParams.get('departmentId') || undefined,
       semester: searchParams.get('semester') as Semester | undefined,
-      category: searchParams.get('category') || undefined,
+      category: searchParams.get('category') as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
       search: searchParams.get('search') || undefined,
       recommendedYear: recommendedYear ? parseInt(recommendedYear, 10) : undefined,
       recommendedSemester: recommendedSemester as Semester | undefined,
@@ -51,7 +51,7 @@ const createCourseSchema = z.object({
   prerequisites: z.array(z.string()).optional(),
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])),
-  category: z.string().optional(),
+  category: z.enum(['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective']).optional(),
   recommendedYear: z.number().min(1).max(4).optional(),
   recommendedSemester: z.enum(['spring', 'summer', 'fall', 'winter']).optional(),
 });

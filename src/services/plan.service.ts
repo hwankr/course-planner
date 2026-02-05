@@ -202,7 +202,10 @@ async function updateCourseStatus(
   if (grade) courseEntry.grade = grade;
 
   await plan.save();
-  return plan;
+  return Plan.findById(planId).populate({
+    path: 'semesters.courses.course',
+    select: 'code name credits category',
+  });
 }
 
 /**

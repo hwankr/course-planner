@@ -3,10 +3,13 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
 import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
+import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
+import { useActivatePlan } from '@/hooks/usePlanActivation';
 import { usePlanStore } from '@/stores/planStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
+import { RequirementsSummary } from '@/components/features/RequirementsSummary';
 import { Button, Card, CardContent } from '@/components/ui';
 import type { Term } from '@/types';
 
@@ -36,6 +39,8 @@ export default function PlannerPage() {
   const removeCourseMutation = useRemoveCourse();
   const addSemesterMutation = useAddSemester();
   const removeSemesterMutation = useRemoveSemester();
+  const updateStatusMutation = useUpdateCourseStatus();
+  const activatePlanMutation = useActivatePlan();
 
   // Zustand store
   const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
@@ -67,14 +72,14 @@ export default function PlannerPage() {
               code: string;
               name: string;
               credits: number;
-              category?: string;
+              category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
             };
             return {
               id: course._id?.toString() || (pc.course as unknown as string),
               code: course.code || 'N/A',
               name: course.name || 'Unknown Course',
               credits: course.credits || 0,
-              category: course.category,
+              category: course.category as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
               status: pc.status,
             };
           }),
@@ -120,7 +125,7 @@ export default function PlannerPage() {
       code: string;
       name: string;
       credits: number;
-      category?: string;
+      category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
       status: 'planned' | 'enrolled' | 'completed' | 'failed';
     }> }>>();
     const map = new Map<number, typeof activePlan.semesters>();
@@ -332,7 +337,7 @@ export default function PlannerPage() {
 
   // Handle click-to-add course to focused semester
   const handleClickAdd = useCallback(
-    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: string }) => {
+    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => {
       if (!activePlan || !focusedSemester) return;
 
       const { year, term } = focusedSemester;
@@ -346,7 +351,7 @@ export default function PlannerPage() {
         code: courseData.code,
         name: courseData.name,
         credits: courseData.credits,
-        category: courseData.category,
+        category: courseData.category as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
         status: 'planned' as const,
       };
       addCourseToSemester(year, term, optimisticCourse);
@@ -366,6 +371,42 @@ export default function PlannerPage() {
     },
     [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation]
   );
+
+  // Handle course status change
+  const handleStatusChange = useCallback(
+    async (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => {
+      if (!activePlan) return;
+
+      // Find which semester this course is in
+      const semester = activePlan.semesters.find(s =>
+        s.courses.some(c => c.id === courseId)
+      );
+      if (!semester) return;
+
+      try {
+        await updateStatusMutation.mutateAsync({
+          planId: activePlan.id,
+          year: semester.year,
+          term: semester.term,
+          courseId,
+          status: newStatus,
+        });
+      } catch (error) {
+        console.error('Failed to update course status:', error);
+      }
+    },
+    [activePlan, updateStatusMutation]
+  );
+
+  // Handle plan activation
+  const handleActivatePlan = useCallback(async () => {
+    if (!selectedPlanId) return;
+    try {
+      await activatePlanMutation.mutateAsync(selectedPlanId);
+    } catch (error) {
+      console.error('Failed to activate plan:', error);
+    }
+  }, [selectedPlanId, activatePlanMutation]);
 
   // Loading state
   if (plansLoading) {
@@ -458,6 +499,23 @@ export default function PlannerPage() {
               ))}
             </select>
           )}
+          {/* Plan Status Badge + Activation */}
+          {activePlan && (
+            activePlan.status === 'active' ? (
+              <span className="text-xs px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                활성
+              </span>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={handleActivatePlan}
+                isLoading={activatePlanMutation.isPending}
+                className="text-sm"
+              >
+                활성화
+              </Button>
+            )
+          )}
           <Button onClick={() => setIsCreating(true)}>새 계획 만들기</Button>
         </div>
       </div>
@@ -473,6 +531,9 @@ export default function PlannerPage() {
       {activePlan && !planDetailLoading && (
         <DragDropContext onDragEnd={handleDragEnd}>
           <div className="space-y-6">
+            {/* Requirements Summary Widget */}
+            <RequirementsSummary />
+
             {/* Course Catalog - Full Width Top Row */}
             <CourseCatalog
               planCourseIds={planCourseIds}
@@ -501,6 +562,7 @@ export default function PlannerPage() {
                         onFocus={() => toggleFocusedSemester(semester.year, semester.term)}
                         onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
                         onDelete={() => handleDeleteSemester(semester.year, semester.term)}
+                        onStatusChange={handleStatusChange}
                       />
                     ))}
                   </div>

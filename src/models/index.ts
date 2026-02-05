@@ -9,6 +9,7 @@ export { default as Course } from './Course';
 export { default as Department } from './Department';
 export { default as Plan } from './Plan';
 export { default as Requirement } from './Requirement';
+export { default as GraduationRequirement } from './GraduationRequirement';
 
 // Document 타입 export
 export type { IUserDocument } from './User';
@@ -16,3 +17,4 @@ export type { ICourseDocument } from './Course';
 export type { IDepartmentDocument } from './Department';
 export type { IPlanDocument } from './Plan';
 export type { IRequirementDocument } from './Requirement';
+export type { IGraduationRequirementDocument } from './GraduationRequirement';

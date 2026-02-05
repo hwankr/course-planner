@@ -9,7 +9,7 @@ import type { Semester, ICourse } from '@/types';
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
-  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: string }) => void;
+  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => void;
   focusedSemester?: { year: number; term: string } | null;
   isAddingCourse?: boolean;
 }
@@ -82,7 +82,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
     // Sort by year then semester (spring before fall)
     const sortedKeys = Array.from(grouped.keys()).sort((a, b) => {
       const [yearA, semA] = a.split('-');
-      const [yearB, semB] = b.split('-');
+      const [yearB] = b.split('-');
       if (yearA !== yearB) return parseInt(yearA) - parseInt(yearB);
       return semA === 'spring' ? -1 : 1;
     });

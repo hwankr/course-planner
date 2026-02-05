@@ -3,9 +3,15 @@
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Card, CardHeader, CardTitle, CardContent, Button } from '@/components/ui';
+import { useGraduationProgress } from '@/hooks/useGraduationRequirements';
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const { data: progress } = useGraduationProgress();
+
+  const totalRequired = progress?.total.required || 0;
+  const totalEarned = progress?.total.earned || 0;
+  const overallPercentage = progress?.total.percentage || 0;
 
   return (
     <div className="space-y-8">
@@ -38,10 +44,25 @@ export default function DashboardPage() {
             <CardTitle className="text-lg">졸업 요건</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600 text-sm mb-4">
-              졸업 요건 충족 현황을 확인하세요.
-            </p>
-            <Link href="/requirements">
+            <div className="mb-4">
+              {progress ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${overallPercentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                        style={{ width: `${Math.min(overallPercentage, 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-600">{overallPercentage}%</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{totalEarned}/{totalRequired}학점 이수</p>
+                </div>
+              ) : (
+                <p className="text-gray-600 text-sm">졸업 요건을 설정하고 진행률을 확인하세요.</p>
+              )}
+            </div>
+            <Link href="/planner">
               <Button variant="outline" className="w-full">
                 요건 확인
               </Button>

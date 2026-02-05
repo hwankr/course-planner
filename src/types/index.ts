@@ -50,7 +50,7 @@ export interface ICourse {
   prerequisites: Types.ObjectId[];
   description?: string;
   semesters: Semester[]; // 개설 학기
-  category?: string; // 전공필수, 전공선택, 교양 등
+  category?: RequirementCategory; // 전공필수, 전공선택, 교양 등
   recommendedYear?: number;        // 권장 학년 (1-4)
   recommendedSemester?: Semester;   // 권장 학기 (semantic: "when to take", NOT "when offered")
   isActive: boolean;
@@ -66,7 +66,7 @@ export interface CreateCourseInput {
   prerequisites?: string[];
   description?: string;
   semesters: Semester[];
-  category?: string;
+  category?: RequirementCategory;
   recommendedYear?: number;
   recommendedSemester?: Semester;
 }
@@ -74,7 +74,7 @@ export interface CreateCourseInput {
 export interface CourseFilter {
   departmentId?: string;
   semester?: Semester;
-  category?: string;
+  category?: RequirementCategory;
   search?: string;
   recommendedYear?: number;
   recommendedSemester?: Semester;
@@ -170,6 +170,66 @@ export interface CreateRequirementInput {
   requiredCredits: number;
   description?: string;
   allowedCourses?: string[];
+}
+
+// ============================================
+// Graduation Requirement Types
+// ============================================
+
+export interface IGraduationRequirement {
+  _id: Types.ObjectId;
+  user: Types.ObjectId;
+  totalCredits: number;
+  majorCredits: number;
+  majorRequiredMin: number;
+  generalCredits: number;
+  earnedMajorCredits: number;
+  earnedGeneralCredits: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GraduationRequirementInput {
+  totalCredits: number;
+  majorCredits: number;
+  majorRequiredMin: number;
+  generalCredits: number;
+  earnedMajorCredits: number;
+  earnedGeneralCredits: number;
+}
+
+export interface CourseInfo {
+  id: string;
+  code: string;
+  name: string;
+  credits: number;
+}
+
+export interface GroupProgress {
+  required: number;
+  earned: number;
+  enrolled: number;
+  planned: number;
+  percentage: number;
+}
+
+export interface SubRequirement {
+  required: number;
+  earned: number;
+  percentage: number;
+}
+
+export interface GraduationProgress {
+  total: GroupProgress;
+  major: GroupProgress & {
+    requiredMin: SubRequirement;
+  };
+  general: GroupProgress;
+  courses: {
+    completed: CourseInfo[];
+    enrolled: CourseInfo[];
+    planned: CourseInfo[];
+  };
 }
 
 // ============================================

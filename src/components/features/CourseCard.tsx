@@ -10,11 +10,12 @@ interface CourseCardProps {
     code: string;
     name: string;
     credits: number;
-    category?: string;
+    category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
     status?: 'planned' | 'enrolled' | 'completed' | 'failed';
   };
   index?: number;        // Optional: only needed in SemesterColumn
   onRemove?: () => void; // Optional: only shown in SemesterColumn
+  onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void; // Optional: for status updates
   isDragDisabled?: boolean; // Optional: for catalog items already in plan
   compact?: boolean;     // Optional: for compact display mode
 }
@@ -49,10 +50,36 @@ const categoryColors: Record<string, string> = {
   free_elective: 'bg-gray-100 text-gray-600',
 };
 
-export function CourseCard({ course, onRemove, isDragDisabled, compact = false }: CourseCardProps) {
+const statusDotColors = {
+  planned: 'bg-blue-400',
+  enrolled: 'bg-green-400',
+  completed: 'bg-gray-400',
+  failed: 'bg-red-400',
+};
+
+// Helper to cycle status: planned -> enrolled -> completed -> failed -> planned
+function getNextStatus(current: 'planned' | 'enrolled' | 'completed' | 'failed'): 'planned' | 'enrolled' | 'completed' | 'failed' {
+  const cycle: Array<'planned' | 'enrolled' | 'completed' | 'failed'> = ['planned', 'enrolled', 'completed', 'failed'];
+  const currentIndex = cycle.indexOf(current);
+  return cycle[(currentIndex + 1) % cycle.length];
+}
+
+export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, compact = false }: CourseCardProps) {
 
   // Default status to 'planned' if not provided (for catalog view)
   const status = course.status || 'planned';
+
+  // Get course ID (from either _id or id field)
+  const courseId = (course.id || course._id?.toString()) ?? '';
+
+  // Handle status click
+  const handleStatusClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onStatusChange && courseId) {
+      const nextStatus = getNextStatus(status);
+      onStatusChange(courseId, nextStatus);
+    }
+  };
 
   // Compact mode: single-line condensed view
   if (compact) {
@@ -67,6 +94,14 @@ export function CourseCard({ course, onRemove, isDragDisabled, compact = false }
       >
         <div className="flex items-center justify-between gap-1">
           <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            {onStatusChange && (
+              <button
+                onClick={handleStatusClick}
+                className={`w-2 h-2 rounded-full flex-shrink-0 hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 transition-all ${statusDotColors[status]}`}
+                aria-label={`상태 변경: ${statusLabels[status]}`}
+                title={statusLabels[status]}
+              />
+            )}
             {course.category && categoryLabels[course.category] && (
               <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
                 {categoryLabels[course.category]}
@@ -125,11 +160,19 @@ export function CourseCard({ course, onRemove, isDragDisabled, compact = false }
                 {categoryLabels[course.category]}
               </span>
             )}
-            {course.status && (
+            {course.status && onStatusChange ? (
+              <button
+                onClick={handleStatusClick}
+                className="text-xs px-2 py-0.5 rounded-full bg-white border hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer"
+                aria-label={`상태 변경: ${statusLabels[status]}`}
+              >
+                {statusLabels[status]}
+              </button>
+            ) : course.status ? (
               <span className="text-xs px-2 py-0.5 rounded-full bg-white border">
                 {statusLabels[status]}
               </span>
-            )}
+            ) : null}
           </div>
           <p className="text-sm font-medium text-gray-800 truncate">
             {course.name}

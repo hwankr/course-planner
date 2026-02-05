@@ -52,6 +52,7 @@ const courseSchema = new Schema<ICourseDocument>(
     ],
     category: {
       type: String,
+      enum: ['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective'],
       trim: true,
     },
     recommendedYear: {

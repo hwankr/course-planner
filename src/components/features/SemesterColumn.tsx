@@ -14,7 +14,7 @@ interface SemesterColumnProps {
       code: string;
       name: string;
       credits: number;
-      category?: string;
+      category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
       status: 'planned' | 'enrolled' | 'completed' | 'failed';
     }>;
   };
@@ -23,9 +23,10 @@ interface SemesterColumnProps {
   isFocused?: boolean;
   onFocus?: () => void;
   compact?: boolean;
+  onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void;
 }
 
-export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused = false, onFocus, compact = false }: SemesterColumnProps) {
+export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused = false, onFocus, compact = false, onStatusChange }: SemesterColumnProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const MAX_VISIBLE = 4;
   const visibleCourses = compact && !isExpanded
@@ -115,6 +116,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused =
                           index={index}
                           compact={compact}
                           onRemove={() => onRemoveCourse(course.id)}
+                          onStatusChange={onStatusChange}
                         />
                       </div>
                     )}

@@ -27,7 +27,7 @@ interface CourseData {
   prerequisites?: string[]; // course codes
   description: string;
   semesters: ('spring' | 'summer' | 'fall' | 'winter')[];
-  category: string;
+  category: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
   recommendedYear?: number;
   recommendedSemester?: 'spring' | 'fall';
 }

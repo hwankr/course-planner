@@ -11,7 +11,7 @@ interface PlannedCourse {
   code: string;
   name: string;
   credits: number;
-  category?: string;
+  category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
 }
 
@@ -58,6 +58,12 @@ interface PlanState {
     destYear: number,
     destTerm: Term,
     courseId: string
+  ) => void;
+  updateCourseStatus: (
+    year: number,
+    term: Term,
+    courseId: string,
+    status: 'planned' | 'enrolled' | 'completed' | 'failed'
   ) => void;
 }
 
@@ -151,6 +157,23 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     }
 
     destSemester.courses.push(course);
+    set({ activePlan: updatedPlan });
+  },
+
+  updateCourseStatus: (year, term, courseId, status) => {
+    const { activePlan } = get();
+    if (!activePlan) return;
+
+    const updatedPlan = { ...activePlan };
+    const semester = updatedPlan.semesters.find(
+      (s) => s.year === year && s.term === term
+    );
+    if (!semester) return;
+
+    const course = semester.courses.find((c) => c.id === courseId);
+    if (!course) return;
+
+    course.status = status;
     set({ activePlan: updatedPlan });
   },
 }));

@@ -50,7 +50,7 @@ const updateCourseSchema = z.object({
   prerequisites: z.array(z.string()).optional(),
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])).optional(),
-  category: z.string().optional(),
+  category: z.enum(['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective']).optional(),
 });
 
 export async function PUT(request: Request, { params }: RouteParams) {
