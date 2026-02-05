@@ -1,7 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import type { ApiResponse, ICourse, CourseFilter } from '@/types';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { ApiResponse, ICourse, CourseFilter, CreateCourseInput } from '@/types';
 
 /**
  * TanStack Query hooks for course data fetching
@@ -105,5 +105,42 @@ export function useCourse(id: string) {
     queryFn: () => fetchCourse(id),
     enabled: !!id, // Only run query when id is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+/**
+ * Create a new course (custom or official)
+ */
+async function createCourse(input: Omit<CreateCourseInput, 'createdBy'>): Promise<ICourse> {
+  const response = await fetch('/api/courses', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+
+  const result: ApiResponse<ICourse> = await response.json();
+
+  if (!result.success || !result.data) {
+    throw new Error(result.error || 'Failed to create course');
+  }
+
+  return result.data;
+}
+
+/**
+ * Mutation hook for creating a course
+ *
+ * @example
+ * const createCourse = useCreateCourse();
+ * createCourse.mutate({ name: '...', code: '...', credits: 3, department: '...' });
+ */
+export function useCreateCourse() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createCourse,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+    },
   });
 }

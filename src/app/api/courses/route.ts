@@ -15,6 +15,7 @@ import type { CourseFilter, Semester } from '@/types';
 
 export async function GET(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
     const recommendedYear = searchParams.get('recommendedYear');
     const recommendedSemester = searchParams.get('recommendedSemester');
@@ -26,6 +27,7 @@ export async function GET(request: Request) {
       search: searchParams.get('search') || undefined,
       recommendedYear: recommendedYear ? parseInt(recommendedYear, 10) : undefined,
       recommendedSemester: recommendedSemester as Semester | undefined,
+      userId: session?.user?.id, // Include user's custom courses
     };
 
     const courses = await courseService.findAll(filter);
@@ -59,17 +61,23 @@ const createCourseSchema = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session) {
       return NextResponse.json(
-        { success: false, error: '관리자 권한이 필요합니다.' },
-        { status: 403 }
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
       );
     }
 
     const body = await request.json();
     const validatedData = createCourseSchema.parse(body);
 
-    const course = await courseService.create(validatedData);
+    // Non-admin: force createdBy (custom course). Admin: official course (createdBy = null)
+    const courseData = {
+      ...validatedData,
+      createdBy: session.user.role === 'admin' ? undefined : session.user.id,
+    };
+
+    const course = await courseService.create(courseData);
 
     return NextResponse.json({
       success: true,

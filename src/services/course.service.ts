@@ -15,39 +15,50 @@ import type { CreateCourseInput, CourseFilter } from '@/types';
 async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
   await connectDB();
 
-  const query: Record<string, unknown> = { isActive: true };
+  const conditions: Record<string, unknown>[] = [{ isActive: true }];
+
+  // Ownership filter: show official courses + user's custom courses
+  if (filter?.userId) {
+    conditions.push({
+      $or: [{ createdBy: null }, { createdBy: filter.userId }],
+    });
+  } else {
+    conditions.push({ createdBy: null }); // Only official courses
+  }
 
   if (filter?.departmentId) {
-    query.department = filter.departmentId;
+    conditions.push({ department: filter.departmentId });
   }
 
   if (filter?.semester) {
-    query.semesters = filter.semester;
+    conditions.push({ semesters: filter.semester });
   }
 
   if (filter?.category) {
-    query.category = filter.category;
+    conditions.push({ category: filter.category });
   }
 
   if (filter?.search) {
-    query.$or = [
-      { name: { $regex: filter.search, $options: 'i' } },
-      { code: { $regex: filter.search, $options: 'i' } },
-    ];
+    conditions.push({
+      $or: [
+        { name: { $regex: filter.search, $options: 'i' } },
+        { code: { $regex: filter.search, $options: 'i' } },
+      ],
+    });
   }
 
   if (filter?.recommendedYear) {
-    query.recommendedYear = filter.recommendedYear;
+    conditions.push({ recommendedYear: filter.recommendedYear });
   }
 
   if (filter?.recommendedSemester) {
-    query.recommendedSemester = filter.recommendedSemester;
+    conditions.push({ recommendedSemester: filter.recommendedSemester });
   }
 
-  return Course.find(query)
+  return Course.find({ $and: conditions })
     .populate('department', 'code name')
     .populate('prerequisites', 'code name')
-    .sort({ code: 1 });
+    .sort({ createdBy: 1, code: 1 }); // Official courses first, then custom
 }
 
 /**
@@ -76,15 +87,24 @@ async function findByCode(code: string): Promise<ICourseDocument | null> {
 async function create(input: CreateCourseInput): Promise<ICourseDocument> {
   await connectDB();
 
-  const existingCourse = await Course.findOne({ code: input.code.toUpperCase() });
+  // Uniqueness scoped to createdBy (official vs custom per-user)
+  const existingCourse = await Course.findOne({
+    code: input.code.toUpperCase(),
+    createdBy: input.createdBy || null,
+  });
   if (existingCourse) {
     throw new Error('이미 존재하는 과목 코드입니다.');
   }
 
-  const course = await Course.create({
+  const courseData: Record<string, unknown> = {
     ...input,
     code: input.code.toUpperCase(),
-  });
+  };
+  if (input.createdBy) {
+    courseData.createdBy = input.createdBy;
+  }
+
+  const course = await Course.create(courseData);
 
   return course.populate('department', 'code name');
 }

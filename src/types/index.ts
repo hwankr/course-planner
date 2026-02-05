@@ -53,6 +53,7 @@ export interface ICourse {
   category?: RequirementCategory; // 전공필수, 전공선택, 교양 등
   recommendedYear?: number;        // 권장 학년 (1-4)
   recommendedSemester?: Semester;   // 권장 학기 (semantic: "when to take", NOT "when offered")
+  createdBy?: Types.ObjectId;       // null=공식 과목, ObjectId=커스텀 과목
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -69,6 +70,7 @@ export interface CreateCourseInput {
   category?: RequirementCategory;
   recommendedYear?: number;
   recommendedSemester?: Semester;
+  createdBy?: string; // userId for custom courses, undefined for official
 }
 
 export interface CourseFilter {
@@ -78,6 +80,7 @@ export interface CourseFilter {
   search?: string;
   recommendedYear?: number;
   recommendedSemester?: Semester;
+  userId?: string; // Include custom courses for this user
 }
 
 // ============================================

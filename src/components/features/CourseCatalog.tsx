@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
+import { useSession } from 'next-auth/react';
 import { useCourses } from '@/hooks/useCourses';
 import { Input } from '@/components/ui/Input';
 import { CourseCard } from './CourseCard';
+import { CustomCourseForm } from './CustomCourseForm';
 import type { Semester, ICourse } from '@/types';
 
 interface CourseCatalogProps {
@@ -28,6 +30,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const [yearFilter, setYearFilter] = useState<number | undefined>(undefined);
   const [semesterFilter, setSemesterFilter] = useState<Semester | undefined>(undefined);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { data: session } = useSession();
+  const userDepartment = session?.user?.department;
+  const [showCustomForm, setShowCustomForm] = useState(false);
 
   // Debounce search term
   useEffect(() => {
@@ -43,8 +48,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
   const { data: courses = [], isLoading, error } = useCourses(
     isGroupedView
-      ? {} // Fetch all courses for grouping
+      ? { departmentId: userDepartment } // Fetch department courses for grouping
       : {
+          departmentId: userDepartment,
           search: debouncedSearch || undefined,
           recommendedYear: yearFilter,
           recommendedSemester: semesterFilter,
@@ -126,7 +132,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
               과목 카탈로그
             </h2>
             <p className="text-xs text-gray-400">
-              디지털융합대학 컴퓨터학부 소프트웨어융합전공
+              {userDepartment ? '내 학과 커리큘럼' : '학과를 설정하면 커리큘럼이 표시됩니다'}
             </p>
           </div>
 
@@ -198,8 +204,26 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
               />
             </svg>
           </button>
+
+          {/* Custom Course Button */}
+          <button
+            onClick={() => setShowCustomForm(true)}
+            className="px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+          >
+            + 과목 추가
+          </button>
         </div>
       </div>
+
+      {/* No Department Banner */}
+      {!isCollapsed && !userDepartment && (
+        <div className="px-4 py-3 bg-amber-50 border-b border-amber-200 text-sm text-amber-700">
+          <a href="/profile" className="font-medium underline hover:text-amber-800">
+            프로필 설정
+          </a>
+          에서 학과를 선택하면 해당 학과의 커리큘럼이 표시됩니다.
+        </div>
+      )}
 
       {/* Focus Banner */}
       {!isCollapsed && focusedSemester && (
@@ -298,6 +322,13 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                       </button>
                                     )}
 
+                                    {/* Custom badge */}
+                                    {course.createdBy && (
+                                      <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-br-md rounded-tl-md">
+                                        커스텀
+                                      </div>
+                                    )}
+
                                     {/* In Plan badge */}
                                     {isInPlan && (
                                       <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
@@ -373,6 +404,13 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                               </button>
                             )}
 
+                            {/* Custom badge */}
+                            {course.createdBy && (
+                              <div className="absolute top-0 left-0 bg-emerald-500 text-white text-xs px-2 py-1 rounded-br-md rounded-tl-md">
+                                커스텀
+                              </div>
+                            )}
+
                             {/* In Plan badge */}
                             {isInPlan && (
                               <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md rounded-tr-md">
@@ -390,6 +428,11 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             </Droppable>
           )}
         </div>
+      )}
+
+      {/* Custom Course Form Modal */}
+      {showCustomForm && (
+        <CustomCourseForm onClose={() => setShowCustomForm(false)} />
       )}
     </div>
   );

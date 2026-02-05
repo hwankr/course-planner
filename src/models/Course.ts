@@ -14,7 +14,6 @@ const courseSchema = new Schema<ICourseDocument>(
     code: {
       type: String,
       required: [true, '과목 코드는 필수입니다.'],
-      unique: true,
       uppercase: true,
       trim: true,
     },
@@ -64,6 +63,11 @@ const courseSchema = new Schema<ICourseDocument>(
       type: String,
       enum: ['spring', 'summer', 'fall', 'winter'],
     },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -74,7 +78,9 @@ const courseSchema = new Schema<ICourseDocument>(
   }
 );
 
-// 인덱스 (code는 unique: true로 자동 생성)
+// 인덱스
+courseSchema.index({ code: 1, createdBy: 1 }, { unique: true }); // 같은 코드라도 다른 사용자면 허용
+courseSchema.index({ createdBy: 1 });
 courseSchema.index({ department: 1 });
 courseSchema.index({ name: 'text', code: 'text' }); // 텍스트 검색용
 courseSchema.index({ category: 1, department: 1 });

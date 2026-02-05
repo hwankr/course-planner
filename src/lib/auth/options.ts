@@ -70,19 +70,27 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         if (account?.provider === 'google') {
-          // Google OAuth: user.id는 Google ID이므로 MongoDB _id로 교체
           const dbUser = await userService.findByEmail(user.email!);
           if (dbUser) {
             token.id = dbUser._id.toString();
             token.role = dbUser.role;
+            token.department = dbUser.department?.toString();
           }
         } else {
-          // Credentials: user.id는 이미 MongoDB _id
           token.id = user.id;
           token.role = user.role;
+          token.department = user.department;
+        }
+      } else if (trigger === 'update') {
+        // Session refresh: re-fetch from DB to get updated department
+        const dbUser = await userService.findByEmail(token.email as string);
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+          token.role = dbUser.role;
+          token.department = dbUser.department?.toString();
         }
       }
       return token;
@@ -91,6 +99,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role;
+        session.user.department = token.department;
       }
       return session;
     },
