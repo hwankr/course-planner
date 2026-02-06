@@ -112,10 +112,11 @@ export function useGraduationRequirement() {
 /**
  * Fetch graduation progress (from active plan)
  */
-export function useGraduationProgress() {
+export function useGraduationProgress(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: graduationRequirementKeys.progress(),
     queryFn: fetchGraduationProgress,
+    enabled: options?.enabled ?? true,
   });
 }
 

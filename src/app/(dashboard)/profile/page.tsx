@@ -5,6 +5,20 @@ import { useSession } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input } from '@/components/ui';
 import type { ApiResponse } from '@/types';
+import { useGuestStore } from '@/stores/guestStore';
+import Link from 'next/link';
+import {
+  User,
+  Mail,
+  Building2,
+  CalendarDays,
+  Shield,
+  Star,
+  Pencil,
+  X,
+  UserX,
+  Chrome,
+} from 'lucide-react';
 
 interface Department {
   _id: string;
@@ -24,6 +38,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
+  const isGuest = useGuestStore((s) => s.isGuest);
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -104,6 +119,30 @@ export default function ProfilePage() {
   const departmentName = userProfile?.department?.name;
   const enrollmentYear = userProfile?.enrollmentYear;
 
+  if (isGuest) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">프로필</h1>
+          <p className="text-gray-600 mt-1">개인 정보를 관리하세요.</p>
+        </div>
+        <Card className="border-2 border-dashed border-gray-200 animate-fade-in">
+          <CardContent className="py-12">
+            <UserX className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-center mb-6">
+              비회원은 프로필을 설정할 수 없습니다.
+            </p>
+            <div className="text-center">
+              <Link href="/register">
+                <Button>회원가입하기</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
@@ -111,24 +150,60 @@ export default function ProfilePage() {
         <p className="text-gray-600 mt-1">개인 정보를 관리하세요.</p>
       </div>
 
+      {/* Profile Header Banner */}
+      <div className="animate-fade-in">
+        <div className="h-32 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 relative mb-16">
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-4 ring-white shadow-lg">
+            <span className="text-2xl font-bold text-white">
+              {userProfile?.name?.charAt(0).toUpperCase() || session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+            </span>
+          </div>
+        </div>
+        <div className="text-center mt-2">
+          <h2 className="text-xl font-bold text-gray-900">
+            {userProfile?.name || session?.user?.name || '사용자'}
+          </h2>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            {departmentName && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+                <Building2 className="w-3 h-3" />
+                {departmentName}
+              </span>
+            )}
+            {enrollmentYear && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-medium">
+                <CalendarDays className="w-3 h-3" />
+                {enrollmentYear}년 입학
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Basic Info */}
-      <Card>
+      <Card className="animate-fade-in-up">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>기본 정보</CardTitle>
+          <div className="flex items-center gap-2">
+            <User className="w-5 h-5 text-gray-600" />
+            <CardTitle>기본 정보</CardTitle>
+          </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsEditing(!isEditing)}
             disabled={isLoadingProfile}
           >
-            {isEditing ? '취소' : '수정'}
+            {isEditing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
           </Button>
         </CardHeader>
         <CardContent>
           {isEditing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <User className="w-4 h-4 text-gray-400" />
+                  이름
+                </label>
                 <Input
                   name="name"
                   value={formData.name}
@@ -137,7 +212,10 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">입학년도</label>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  입학년도
+                </label>
                 <Input
                   name="enrollmentYear"
                   type="number"
@@ -149,7 +227,10 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">학과</label>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <Building2 className="w-4 h-4 text-gray-400" />
+                  학과
+                </label>
                 <select
                   name="department"
                   value={formData.department}
@@ -176,21 +257,33 @@ export default function ProfilePage() {
           ) : (
             <div className="space-y-3">
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">이메일</span>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">이메일</span>
+                </div>
                 <span className="font-medium">{session?.user?.email}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">이름</span>
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">이름</span>
+                </div>
                 <span className="font-medium">{userProfile?.name || session?.user?.name}</span>
               </div>
               <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">입학년도</span>
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">입학년도</span>
+                </div>
                 <span className={enrollmentYear ? 'font-medium' : 'text-gray-400'}>
                   {enrollmentYear ? `${enrollmentYear}년` : '미설정'}
                 </span>
               </div>
               <div className="flex justify-between py-2">
-                <span className="text-gray-600">학과</span>
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">학과</span>
+                </div>
                 <span className={departmentName ? 'font-medium' : 'text-gray-400'}>
                   {departmentName || '미설정'}
                 </span>
@@ -201,21 +294,37 @@ export default function ProfilePage() {
       </Card>
 
       {/* Account Info */}
-      <Card>
+      <Card className="animate-fade-in-up anim-delay-100">
         <CardHeader>
-          <CardTitle>계정 정보</CardTitle>
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-gray-600" />
+            <CardTitle>계정 정보</CardTitle>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div className="flex justify-between py-2 border-b">
               <span className="text-gray-600">계정 유형</span>
-              <span className="font-medium">
-                {session?.user?.image ? 'Google 계정' : '이메일 계정'}
-              </span>
+              <div className="flex items-center gap-2 font-medium">
+                {session?.user?.image ? (
+                  <>
+                    <Chrome className="w-4 h-4 text-gray-400" />
+                    Google 계정
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    이메일 계정
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex justify-between py-2">
               <span className="text-gray-600">권한</span>
-              <span className="font-medium capitalize">{session?.user?.role || 'student'}</span>
+              <div className="flex items-center gap-2 font-medium">
+                <Star className="w-4 h-4 text-gray-400" />
+                <span className="capitalize">{session?.user?.role || 'student'}</span>
+              </div>
             </div>
           </div>
         </CardContent>

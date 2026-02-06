@@ -3,10 +3,12 @@
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { useGuestStore } from '@/stores/guestStore';
 
 export function useAuth() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { isGuest, enterGuestMode, exitGuestMode } = useGuestStore();
 
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
@@ -24,21 +26,32 @@ export function useAuth() {
         throw new Error(result.error);
       }
 
+      // 비회원 모드였을 경우 해제 (멱등 - 비회원 아니어도 안전)
+      exitGuestMode();
+
       router.push('/dashboard');
       router.refresh();
     },
-    [router]
+    [router, exitGuestMode]
   );
 
   const loginWithGoogle = useCallback(async () => {
+    // signIn('google')은 full-page redirect를 트리거하므로
+    // exitGuestMode()를 반드시 signIn 이전에 호출해야 함
+    exitGuestMode();
     await signIn('google', { callbackUrl: '/dashboard' });
-  }, []);
+  }, [exitGuestMode]);
 
   const logout = useCallback(async () => {
+    if (isGuest) {
+      exitGuestMode();
+      router.push('/');
+      return;
+    }
     await signOut({ redirect: false });
     router.push('/login');
     router.refresh();
-  }, [router]);
+  }, [router, isGuest, exitGuestMode]);
 
   const register = useCallback(
     async (data: { email: string; password: string; name: string }) => {
@@ -60,14 +73,21 @@ export function useAuth() {
     [login]
   );
 
+  const startGuestMode = useCallback(() => {
+    enterGuestMode();
+    router.push('/dashboard');
+  }, [router, enterGuestMode]);
+
   return {
     user,
     isLoading,
     isAuthenticated,
     isAdmin: user?.role === 'admin',
+    isGuest,
     login,
     loginWithGoogle,
     logout,
     register,
+    startGuestMode,
   };
 }

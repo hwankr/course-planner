@@ -1,100 +1,210 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui';
+import { useGuestStore } from '@/stores/guestStore';
+import {
+  ArrowRight,
+  Sparkles,
+  LayoutGrid,
+  Target,
+  Zap,
+  GripVertical,
+  BarChart3,
+  ShieldCheck,
+} from 'lucide-react';
 
 export default function Home() {
+  const router = useRouter();
+  const enterGuestMode = useGuestStore((s) => s.enterGuestMode);
+
+  const handleGuestMode = () => {
+    enterGuestMode();
+    router.push('/dashboard');
+  };
+
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <div className="container mx-auto px-4 py-16">
-        {/* Hero Section */}
-        <div className="text-center max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Course Planner
-          </h1>
-          <p className="text-xl text-gray-600 mb-8">
-            학기별 수강 계획을 세우고 졸업 요건을 체계적으로 추적하세요.
-            드래그앤드롭으로 쉽게 과목을 배치하고, 실시간으로 진행 상황을 확인할 수 있습니다.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/login">
-              <Button size="lg">시작하기</Button>
-            </Link>
-            <Link href="/login">
-              <Button variant="outline" size="lg">
-                로그인
+    <main className="min-h-screen bg-white">
+      {/* Sticky Navigation */}
+      <nav className="sticky top-0 z-50 glass border-b border-gray-200/50 animate-fade-in-down">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gradient">Course Planner</h1>
+          <Link href="/login" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+            로그인
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center bg-mesh overflow-hidden">
+        {/* Decorative Floating Shapes */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute top-40 right-20 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl animate-float anim-delay-300" />
+          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-indigo-400/15 rounded-full blur-3xl animate-float anim-delay-500" />
+          <div className="absolute bottom-40 right-1/4 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl animate-float anim-delay-700" />
+        </div>
+
+        <div className="container mx-auto px-4 py-16 relative z-10">
+          <div className="text-center max-w-4xl mx-auto">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-blue-200 mb-8 animate-fade-in-up">
+              <Sparkles className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-gray-700">학기 계획의 새로운 기준</span>
+            </div>
+
+            {/* Title */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight animate-fade-in-up anim-delay-100">
+              <span className="block text-gray-900">학기 계획을</span>
+              <span className="block text-gradient">완벽하게</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto animate-fade-in-up anim-delay-200">
+              학기별 수강 계획을 세우고 졸업 요건을 체계적으로 추적하세요. 드래그앤드롭으로 쉽게 과목을 배치하고, 실시간으로 진행 상황을 확인할 수 있습니다.
+            </p>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4 animate-fade-in-up anim-delay-300">
+              <Link href="/login">
+                <Button size="lg" className="group">
+                  지금 시작하기
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+              <Button variant="ghost" size="lg" onClick={handleGuestMode}>
+                비회원으로 체험하기
               </Button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Features Section */}
-        <div className="mt-24 grid md:grid-cols-3 gap-8">
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-blue-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                />
-              </svg>
             </div>
-            <h3 className="text-xl font-semibold mb-2">드래그앤드롭 플래너</h3>
-            <p className="text-gray-600">
-              직관적인 드래그앤드롭으로 학기별 과목을 손쉽게 배치하세요.
-            </p>
-          </div>
 
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">졸업 요건 추적</h3>
-            <p className="text-gray-600">
-              전공필수, 교양, 자유선택 등 모든 졸업 요건을 한눈에 확인하세요.
-            </p>
-          </div>
-
-          <div className="text-center p-6">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg
-                className="w-8 h-8 text-purple-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-xl font-semibold mb-2">선수과목 검증</h3>
-            <p className="text-gray-600">
-              선수과목 충족 여부를 자동으로 확인하고 경고를 받으세요.
+            {/* Small Notice */}
+            <p className="text-sm text-gray-400 animate-fade-in-up anim-delay-300">
+              비회원은 데이터가 저장되지 않습니다
             </p>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="relative py-24 bg-dots bg-gray-50">
+        <div className="container mx-auto px-4">
+          {/* Section Title */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              왜 Course Planner인가요?
+            </h2>
+            <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-violet-500 mx-auto rounded-full" />
+          </div>
+
+          {/* Feature Cards */}
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Card 1 */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-blue-500 card-hover animate-fade-in-up anim-delay-200">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-6">
+                <LayoutGrid className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">드래그앤드롭 플래너</h3>
+              <p className="text-gray-600 leading-relaxed">
+                직관적인 드래그앤드롭으로 학기별 과목을 손쉽게 배치하세요.
+              </p>
+            </div>
+
+            {/* Card 2 */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-emerald-500 card-hover animate-fade-in-up anim-delay-400">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-6">
+                <Target className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">졸업 요건 추적</h3>
+              <p className="text-gray-600 leading-relaxed">
+                전공필수, 교양, 자유선택 등 모든 졸업 요건을 한눈에 확인하세요.
+              </p>
+            </div>
+
+            {/* Card 3 */}
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-amber-500 card-hover animate-fade-in-up anim-delay-600">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mb-6">
+                <Zap className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">선수과목 검증</h3>
+              <p className="text-gray-600 leading-relaxed">
+                선수과목 충족 여부를 자동으로 확인하고 경고를 받으세요.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Statistics Band */}
+      <section className="relative py-16 bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+        {/* Decorative Background */}
+        <div className="absolute inset-0 bg-grid opacity-10" />
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Stat 1 */}
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <GripVertical className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2">간편한 드래그앤드롭</h3>
+              <p className="text-blue-100">과목을 끌어서 학기에 배치</p>
+            </div>
+
+            {/* Stat 2 */}
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2">실시간 졸업 추적</h3>
+              <p className="text-blue-100">진행률을 한눈에 확인</p>
+            </div>
+
+            {/* Stat 3 */}
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-xl font-bold mb-2">선수과목 자동 검증</h3>
+              <p className="text-blue-100">수강 조건을 자동으로 확인</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Footer Section */}
+      <section className="relative py-20 bg-mesh text-center overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 right-10 w-64 h-64 bg-violet-400/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 left-10 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-8">
+            지금 바로 수강 계획을 시작하세요
+          </h2>
+          <Link href="/login">
+            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-xl shadow-blue-500/20">
+              무료로 시작하기
+            </Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Simple Footer */}
+      <footer className="border-t border-gray-200 py-8 bg-white">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-sm text-gray-400">
+            © {new Date().getFullYear()} Course Planner. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

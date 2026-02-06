@@ -10,3 +10,4 @@ export { planService } from './plan.service';
 export { departmentService } from './department.service';
 export { requirementService } from './requirement.service';
 export { graduationRequirementService } from './graduationRequirement.service';
+export { onboardingService } from './onboarding.service';

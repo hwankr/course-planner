@@ -47,6 +47,10 @@ const userSchema = new Schema<IUserDocument>(
       enum: ['credentials', 'google'],
       default: 'credentials',
     },
+    onboardingCompleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

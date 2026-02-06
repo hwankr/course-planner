@@ -123,21 +123,22 @@ async function removeCourseFromPlan(params: {
 /**
  * Fetch all plans for the current user
  */
-export function usePlans() {
+export function usePlans(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: planKeys.lists(),
     queryFn: fetchPlans,
+    enabled: options?.enabled ?? true,
   });
 }
 
 /**
  * Fetch a single plan by ID with populated courses
  */
-export function usePlan(id: string) {
+export function usePlan(id: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: planKeys.detail(id),
     queryFn: () => fetchPlan(id),
-    enabled: !!id,
+    enabled: (options?.enabled ?? true) && !!id,
   });
 }
 

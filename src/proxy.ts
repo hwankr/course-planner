@@ -27,6 +27,12 @@ export async function proxy(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtectedRoute && !token) {
+    // 비회원 모드: guest-mode 쿠키가 있으면 통과
+    const isGuestMode = request.cookies.get('guest-mode')?.value === 'true';
+    if (isGuestMode) {
+      return NextResponse.next();
+    }
+
     // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('callbackUrl', pathname);

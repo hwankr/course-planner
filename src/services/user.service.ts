@@ -74,7 +74,7 @@ async function verifyPassword(
  */
 async function update(
   id: string,
-  data: Partial<Pick<CreateUserInput, 'name' | 'department' | 'enrollmentYear'>>
+  data: Partial<Pick<CreateUserInput, 'name' | 'department' | 'enrollmentYear'> & { onboardingCompleted: boolean }>
 ): Promise<IUserDocument | null> {
   await connectDB();
   return User.findByIdAndUpdate(id, data, { new: true }).populate('department');

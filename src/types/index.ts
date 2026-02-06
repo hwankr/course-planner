@@ -22,6 +22,7 @@ export interface IUser {
   enrollmentYear?: number;
   role: UserRole;
   provider?: 'credentials' | 'google';
+  onboardingCompleted: boolean;
   createdAt: Date;
   updatedAt: Date;
 }

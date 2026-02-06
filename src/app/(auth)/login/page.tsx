@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { Button, Input, Card, CardHeader, CardTitle, CardContent } from '@/components/ui';
+import { Button, Input } from '@/components/ui';
 
 export default function LoginPage() {
   const { login, loginWithGoogle, isLoading } = useAuth();
@@ -27,12 +28,66 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl">로그인</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="min-h-screen flex">
+      {/* Left Panel - Branded Gradient */}
+      <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 animate-gradient relative overflow-hidden">
+        {/* Mesh Overlay */}
+        <div className="absolute inset-0 bg-mesh opacity-30" />
+
+        {/* Floating Decorative Shapes */}
+        <div className="absolute top-20 left-20 w-32 h-32 bg-white/20 rounded-full blur-xl animate-float" />
+        <div className="absolute bottom-32 right-32 w-40 h-40 bg-white/20 rounded-full blur-xl animate-float anim-delay-300" />
+        <div className="absolute top-1/2 right-20 w-24 h-24 bg-white/20 rounded-full blur-xl animate-float anim-delay-500" />
+
+        {/* Content */}
+        <div className="relative z-10 flex items-center justify-center p-12 animate-fade-in">
+          <div className="max-w-lg text-white">
+            <h1 className="text-4xl lg:text-5xl font-bold mb-8 leading-tight whitespace-pre-line">
+              학업 계획의{'\n'}새로운 시작
+            </h1>
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">드래그앤드롭으로 학기 배치</h3>
+                  <p className="text-blue-100">직관적인 인터페이스로 쉽게 수강 계획을 세우세요</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">실시간 졸업 요건 추적</h3>
+                  <p className="text-blue-100">현재 진행 상황을 한눈에 파악하세요</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">선수과목 자동 검증</h3>
+                  <p className="text-blue-100">스마트한 알고리즘으로 과목 순서를 검증합니다</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="w-full md:w-1/2 lg:w-2/5 flex items-center justify-center p-8 bg-white">
+        <div className="max-w-md w-full animate-fade-in-up">
+          {/* Logo */}
+          <h2 className="text-2xl font-bold mb-8 text-gradient">Course Planner</h2>
+
+          {/* Title */}
+          <div className="mb-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">로그인</h1>
+            <p className="text-gray-500">계정에 로그인하세요</p>
+          </div>
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
@@ -73,6 +128,7 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          {/* Divider */}
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -83,6 +139,7 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {/* Google Login */}
             <Button
               type="button"
               variant="outline"
@@ -111,14 +168,15 @@ export default function LoginPage() {
             </Button>
           </div>
 
+          {/* Register Link */}
           <p className="mt-6 text-center text-sm text-gray-600">
             계정이 없으신가요?{' '}
-            <Link href="/register" className="text-blue-600 hover:underline">
+            <Link href="/register" className="text-blue-600 hover:underline font-medium">
               회원가입
             </Link>
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

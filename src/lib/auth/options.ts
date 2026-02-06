@@ -8,6 +8,7 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { userService } from '@/services';
+import User from '@/models/User';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -48,7 +49,9 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
+          department: user.department?.toString(),
           role: user.role,
+          onboardingCompleted: user.onboardingCompleted,
         };
       },
     }),
@@ -78,11 +81,24 @@ export const authOptions: NextAuthOptions = {
             token.id = dbUser._id.toString();
             token.role = dbUser.role;
             token.department = dbUser.department?.toString();
+            // Auto-migrate existing users with department
+            if (dbUser.department && !dbUser.onboardingCompleted) {
+              await User.updateOne({ _id: dbUser._id }, { $set: { onboardingCompleted: true } });
+              dbUser.onboardingCompleted = true;
+            }
+            token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
           }
         } else {
           token.id = user.id;
           token.role = user.role;
           token.department = user.department;
+          // Auto-migrate existing users with department
+          if (user.department && !user.onboardingCompleted) {
+            await userService.update(user.id, { onboardingCompleted: true });
+            token.onboardingCompleted = true;
+          } else {
+            token.onboardingCompleted = user.onboardingCompleted ?? false;
+          }
         }
       } else if (trigger === 'update') {
         // Session refresh: re-fetch from DB to get updated department
@@ -91,6 +107,12 @@ export const authOptions: NextAuthOptions = {
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
           token.department = dbUser.department?.toString();
+          // Auto-migrate existing users with department
+          if (dbUser.department && !dbUser.onboardingCompleted) {
+            await User.updateOne({ _id: dbUser._id }, { $set: { onboardingCompleted: true } });
+            dbUser.onboardingCompleted = true;
+          }
+          token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
         }
       }
       return token;
@@ -100,6 +122,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role;
         session.user.department = token.department;
+        session.user.onboardingCompleted = token.onboardingCompleted as boolean;
       }
       return session;
     },
