@@ -29,7 +29,7 @@ export function useAuth() {
       // 비회원 모드였을 경우 해제 (멱등 - 비회원 아니어도 안전)
       exitGuestMode();
 
-      router.push('/dashboard');
+      router.push('/planner');
       router.refresh();
     },
     [router, exitGuestMode]
@@ -39,7 +39,7 @@ export function useAuth() {
     // signIn('google')은 full-page redirect를 트리거하므로
     // exitGuestMode()를 반드시 signIn 이전에 호출해야 함
     exitGuestMode();
-    await signIn('google', { callbackUrl: '/dashboard' });
+    await signIn('google', { callbackUrl: '/planner' });
   }, [exitGuestMode]);
 
   const logout = useCallback(async () => {
@@ -75,7 +75,7 @@ export function useAuth() {
 
   const startGuestMode = useCallback(() => {
     enterGuestMode();
-    router.push('/dashboard');
+    router.push('/planner');
   }, [router, enterGuestMode]);
 
   return {

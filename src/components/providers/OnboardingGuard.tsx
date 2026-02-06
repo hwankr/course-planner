@@ -65,9 +65,9 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
       return;
     }
 
-    // Already onboarded but on onboarding page -> redirect to dashboard
+    // Already onboarded but on onboarding page -> redirect to planner
     if (isOnboardingPage && onboardingCompleted) {
-      router.replace('/dashboard');
+      router.replace('/planner');
       return;
     }
   }, [guestHydrated, isGuestMode, isLoading, isAuthenticated, onboardingCompleted, isOnboardingPage, router, exitGuestMode]);

@@ -17,13 +17,13 @@ export async function proxy(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  // 인증된 사용자가 로그인/회원가입 페이지 접근 시 대시보드로 리다이렉트
-  if (token && (pathname === '/login' || pathname === '/register')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // 인증된 사용자가 로그인/회원가입/랜딩 페이지 접근 시 플래너로 리다이렉트
+  if (token && (pathname === '/login' || pathname === '/register' || pathname === '/')) {
+    return NextResponse.redirect(new URL('/planner', request.url));
   }
 
-  // 대시보드 라우트 보호
-  const protectedRoutes = ['/dashboard', '/planner', '/requirements', '/profile', '/admin'];
+  // 보호된 라우트
+  const protectedRoutes = ['/planner', '/requirements', '/profile', '/admin'];
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtectedRoute && !token) {
@@ -42,8 +42,8 @@ export async function proxy(request: NextRequest) {
   // 관리자 전용 라우트 보호
   if (pathname.startsWith('/admin') && token) {
     if (token.role !== 'admin') {
-      // 관리자가 아닌 사용자는 대시보드로 리다이렉트
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+      // 관리자가 아닌 사용자는 플래너로 리다이렉트
+      return NextResponse.redirect(new URL('/planner', request.url));
     }
   }
 

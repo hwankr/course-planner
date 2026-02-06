@@ -72,7 +72,7 @@ export default function OnboardingPage() {
 
       // Refresh JWT to get onboardingCompleted=true
       await updateSession();
-      router.push('/dashboard');
+      router.push('/planner');
     } catch (err) {
       setError(err instanceof Error ? err.message : '오류가 발생했습니다.');
     }

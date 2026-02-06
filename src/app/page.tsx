@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui';
 import { useGuestStore } from '@/stores/guestStore';
 import {
@@ -17,11 +19,19 @@ import {
 
 export default function Home() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const enterGuestMode = useGuestStore((s) => s.enterGuestMode);
+
+  // 로그인된 사용자는 플래너로 리다이렉트
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/planner');
+    }
+  }, [status, router]);
 
   const handleGuestMode = () => {
     enterGuestMode();
-    router.push('/dashboard');
+    router.push('/planner');
   };
 
   return (
@@ -30,9 +40,15 @@ export default function Home() {
       <nav className="sticky top-0 z-50 glass border-b border-gray-200/50 animate-fade-in-down">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-gradient">Course Planner</h1>
-          <Link href="/login" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
-            로그인
-          </Link>
+          {status === 'authenticated' ? (
+            <Link href="/planner" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+              플래너로 이동
+            </Link>
+          ) : (
+            <Link href="/login" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
+              로그인
+            </Link>
+          )}
         </div>
       </nav>
 

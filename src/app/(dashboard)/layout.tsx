@@ -8,7 +8,6 @@ import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import OnboardingGuard from '@/components/providers/OnboardingGuard';
 import {
-  LayoutDashboard,
   Calendar,
   User,
   Shield,
@@ -19,7 +18,6 @@ import {
 } from 'lucide-react';
 
 const navigation = [
-  { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
   { name: '수강 계획', href: '/planner', icon: Calendar },
   { name: '프로필', href: '/profile', icon: User },
 ];
@@ -45,7 +43,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
-              <Link href="/dashboard" className="flex items-center gap-2">
+              <Link href="/planner" className="flex items-center gap-2">
                 <GraduationCap className="w-6 h-6 text-blue-600" />
                 <span className="text-xl font-bold text-gradient">Course Planner</span>
               </Link>
