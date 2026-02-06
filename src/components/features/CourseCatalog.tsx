@@ -9,7 +9,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
-import type { Semester, ICourse } from '@/types';
+import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
@@ -31,6 +31,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [yearFilter, setYearFilter] = useState<number | undefined>(undefined);
   const [semesterFilter, setSemesterFilter] = useState<Semester | undefined>(undefined);
+  const [categoryFilter, setCategoryFilter] = useState<RequirementCategory | undefined>(undefined);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
@@ -48,21 +49,25 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   }, [searchTerm]);
 
   // Conditional fetch strategy: grouped view fetches all, filtered view uses filters
-  const isGroupedView = !debouncedSearch && !yearFilter && !semesterFilter;
+  const isGroupedView = !debouncedSearch && !yearFilter && !semesterFilter && !categoryFilter;
 
   const { data: courses = [], isLoading, error } = useCourses(
     isGroupedView
-      ? { departmentId: userDepartment } // Fetch department courses for grouping
+      ? { departmentId: userDepartment }
       : {
           departmentId: userDepartment,
           search: debouncedSearch || undefined,
           recommendedYear: yearFilter,
           recommendedSemester: semesterFilter,
+          category: categoryFilter,
         }
   );
 
   // Filter courses locally for instant feedback while typing
   const filteredCourses = courses.filter((course) => {
+    // Category filter
+    if (categoryFilter && course.category !== categoryFilter) return false;
+    // Search filter
     if (!searchTerm) return true;
     const search = searchTerm.toLowerCase();
     return (
@@ -127,96 +132,136 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-      {/* Compact Header Row */}
-      <div className="px-3 sm:px-4 py-3 border-b border-gray-200">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-wrap">
-          {/* Title */}
-          <div>
-            <h2 className="text-base font-semibold text-gray-900">
-              과목 카탈로그
-            </h2>
-            <p className="text-xs text-gray-400">
+      {/* Header */}
+      <div className="px-3 sm:px-4 py-3 border-b border-gray-200 space-y-2.5">
+        {/* Row 1: Title + Actions */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-gray-900">과목 카탈로그</h2>
+            <p className="text-xs text-gray-400 truncate">
               {userDepartment ? '내 학과 커리큘럼' : '학과를 설정하면 커리큘럼이 표시됩니다'}
             </p>
           </div>
-
-          {/* Search Input */}
-          <Input
-            type="text"
-            placeholder="과목명 또는 코드 검색..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-64"
-          />
-
-          {/* Year filter chips */}
-          <div className="flex gap-1.5 overflow-x-auto flex-shrink-0">
-            {[undefined, 1, 2, 3, 4].map((y) => (
-              <button
-                key={y ?? 'all'}
-                onClick={() => setYearFilter(y)}
-                className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors
-                  ${yearFilter === y
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
-              >
-                {y ? `${y}학년` : '전체'}
-              </button>
-            ))}
-          </div>
-
-          {/* Semester filter chips */}
-          <div className="flex gap-1.5 flex-shrink-0">
-            {([undefined, 'spring', 'fall'] as const).map((s) => (
-              <button
-                key={s ?? 'all'}
-                onClick={() => setSemesterFilter(s as Semester | undefined)}
-                className={`px-2.5 py-1 text-xs rounded-full font-medium transition-colors
-                  ${semesterFilter === s
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
-              >
-                {s === 'spring' ? '1학기' : s === 'fall' ? '2학기' : '전체'}
-              </button>
-            ))}
-          </div>
-
-          {/* Course Count */}
-          <span className="text-sm text-gray-500 ml-auto">
-            {isLoading ? (
-              '로딩 중...'
-            ) : (
-              `${courseCount}개 과목`
-            )}
-          </span>
-
-          {/* Collapse Toggle */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            aria-label={isCollapsed ? '펼치기' : '접기'}
-          >
-            <svg
-              className={`w-5 h-5 text-gray-600 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
-              viewBox="0 0 20 20"
-              fill="currentColor"
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className="text-xs text-gray-500 hidden sm:inline">
+              {isLoading ? '로딩...' : `${courseCount}개`}
+            </span>
+            <button
+              onClick={() => setShowCustomForm(true)}
+              className="px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
             >
-              <path
-                fillRule="evenodd"
-                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
-
-          {/* Custom Course Button */}
-          <button
-            onClick={() => setShowCustomForm(true)}
-            className="px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
-          >
-            + 과목 추가
-          </button>
+              + 추가
+            </button>
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              aria-label={isCollapsed ? '펼치기' : '접기'}
+            >
+              <svg
+                className={`w-5 h-5 text-gray-600 transition-transform ${isCollapsed ? 'rotate-180' : ''}`}
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
+
+        {/* Row 2: Search + Count (mobile) */}
+        {!isCollapsed && (
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              placeholder="과목명 또는 코드 검색..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1"
+            />
+            <span className="text-xs text-gray-500 sm:hidden flex-shrink-0">
+              {isLoading ? '...' : `${courseCount}개`}
+            </span>
+          </div>
+        )}
+
+        {/* Row 3: Filters */}
+        {!isCollapsed && (
+          <div className="space-y-1.5">
+            {/* Year + Semester filters (같은 줄) */}
+            <div className="flex items-center gap-3 overflow-x-auto pb-0.5">
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="text-[11px] font-medium text-gray-400 w-7">학년</span>
+                {[undefined, 1, 2, 3, 4].map((y) => (
+                  <button
+                    key={y ?? 'all'}
+                    onClick={() => setYearFilter(y)}
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
+                      ${yearFilter === y
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                  >
+                    {y ? `${y}` : '전체'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-px h-4 bg-gray-200 flex-shrink-0" />
+
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="text-[11px] font-medium text-gray-400 w-7">학기</span>
+                {([undefined, 'spring', 'fall'] as const).map((s) => (
+                  <button
+                    key={s ?? 'all'}
+                    onClick={() => setSemesterFilter(s as Semester | undefined)}
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
+                      ${semesterFilter === s
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                  >
+                    {s === 'spring' ? '1학기' : s === 'fall' ? '2학기' : '전체'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Category filter (별도 줄) */}
+            <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
+              <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">이수</span>
+              {([undefined, 'major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective'] as const).map((cat) => {
+                const labels: Record<string, string> = {
+                  major_required: '전공핵심',
+                  major_elective: '전공선택',
+                  general_required: '교양필수',
+                  general_elective: '교양선택',
+                  free_elective: '자유선택',
+                };
+                const chipColors: Record<string, { active: string; inactive: string }> = {
+                  major_required: { active: 'bg-red-500 text-white', inactive: 'bg-red-50 text-red-600 hover:bg-red-100' },
+                  major_elective: { active: 'bg-orange-500 text-white', inactive: 'bg-orange-50 text-orange-600 hover:bg-orange-100' },
+                  general_required: { active: 'bg-blue-500 text-white', inactive: 'bg-blue-50 text-blue-600 hover:bg-blue-100' },
+                  general_elective: { active: 'bg-green-500 text-white', inactive: 'bg-green-50 text-green-600 hover:bg-green-100' },
+                  free_elective: { active: 'bg-gray-500 text-white', inactive: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
+                };
+                return (
+                  <button
+                    key={cat ?? 'all'}
+                    onClick={() => setCategoryFilter(cat as RequirementCategory | undefined)}
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors whitespace-nowrap flex-shrink-0
+                      ${categoryFilter === cat
+                        ? (cat ? chipColors[cat].active : 'bg-violet-500 text-white')
+                        : (cat ? chipColors[cat].inactive : 'bg-violet-50 text-violet-600 hover:bg-violet-100')}`}
+                  >
+                    {cat ? labels[cat] : '전체'}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* No Department Banner */}

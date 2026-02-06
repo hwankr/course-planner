@@ -29,6 +29,7 @@ export default function PlannerPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newPlanName, setNewPlanName] = useState('');
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
+  const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
 
   // Guest plan store - use serialized selector for stable reference
   const guestActivePlanJson = useGuestPlanStore((s) => {
@@ -175,6 +176,16 @@ export default function PlannerPage() {
     return map;
   }, [activePlan]);
 
+  const filteredSemestersByYear = useMemo(() => {
+    if (!semesterYearFilter) return semestersByYear;
+    const filtered = new Map() as typeof semestersByYear;
+    const yearData = semestersByYear.get(semesterYearFilter);
+    if (yearData) {
+      filtered.set(semesterYearFilter, yearData);
+    }
+    return filtered;
+  }, [semestersByYear, semesterYearFilter]);
+
   // Handle creating a new plan
   const handleCreatePlan = async () => {
     if (!newPlanName.trim()) return;
@@ -229,6 +240,13 @@ export default function PlannerPage() {
 
       // From catalog to semester (add course)
       if (source.droppableId === 'catalog' && destInfo && activePlan) {
+        // Duplicate guard: check current state directly to prevent race condition
+        const currentPlan = usePlanStore.getState().activePlan;
+        const alreadyInPlan = currentPlan?.semesters.some(sem =>
+          sem.courses.some(c => c.id === draggableId)
+        );
+        if (alreadyInPlan) return;
+
         // Find the course info from the catalog (we need to fetch it)
         // For optimistic update, we'll use placeholder data
         const optimisticCourse = {
@@ -381,8 +399,13 @@ export default function PlannerPage() {
 
       const { year, term } = focusedSemester;
 
-      // Check if course already in plan
+      // Check if course already in plan (memoized + fresh state)
       if (planCourseIds.includes(courseId)) return;
+      const currentPlan = usePlanStore.getState().activePlan;
+      const alreadyInPlan = currentPlan?.semesters.some(sem =>
+        sem.courses.some(c => c.id === courseId)
+      );
+      if (alreadyInPlan) return;
 
       // Optimistic update with real course data
       const optimisticCourse = {
@@ -415,6 +438,14 @@ export default function PlannerPage() {
       }
     },
     [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation]
+  );
+
+  const handleSemesterFocus = useCallback(
+    (year: number, term: Term) => {
+      toggleFocusedSemester(year, term);
+      setSemesterYearFilter(year);
+    },
+    [toggleFocusedSemester]
   );
 
   // Handle course status change
@@ -589,7 +620,24 @@ export default function PlannerPage() {
 
             {/* Semester Grid - Full Width Bottom Row */}
             <div className="space-y-4">
-              {Array.from(semestersByYear.entries()).map(([year, semesters]) => (
+              {/* Year filter for semester grid */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">학년</span>
+                {[null, ...Array.from(semestersByYear.keys()).sort()].map((y) => (
+                  <button
+                    key={y ?? 'all'}
+                    onClick={() => setSemesterYearFilter(y)}
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
+                      ${semesterYearFilter === y
+                        ? 'bg-indigo-500 text-white'
+                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                  >
+                    {y ? `${y}학년` : '전체'}
+                  </button>
+                ))}
+              </div>
+
+              {Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => (
                 <div key={year} className="space-y-2">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
                     {year}학년
@@ -604,7 +652,7 @@ export default function PlannerPage() {
                         semester={semester}
                         compact={true}
                         isFocused={focusedSemester?.year === semester.year && focusedSemester?.term === semester.term}
-                        onFocus={() => toggleFocusedSemester(semester.year, semester.term)}
+                        onFocus={() => handleSemesterFocus(semester.year, semester.term)}
                         onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
                         onDelete={() => handleDeleteSemester(semester.year, semester.term)}
                         onStatusChange={handleStatusChange}

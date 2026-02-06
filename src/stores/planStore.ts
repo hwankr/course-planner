@@ -90,6 +90,12 @@ export const usePlanStore = create<PlanState>((set, get) => ({
     const { activePlan } = get();
     if (!activePlan) return;
 
+    // Duplicate guard: skip if course already exists in any semester
+    const alreadyInPlan = activePlan.semesters.some(sem =>
+      sem.courses.some(c => c.id === course.id)
+    );
+    if (alreadyInPlan) return;
+
     const updatedPlan = { ...activePlan };
     let semester = updatedPlan.semesters.find(
       (s) => s.year === year && s.term === term

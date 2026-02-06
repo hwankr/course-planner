@@ -144,6 +144,12 @@ export const useGuestPlanStore = create<GuestPlanState>()(
           plans: state.plans.map((plan) => {
             if (plan.id !== planId) return plan;
 
+            // Duplicate guard: skip if course already exists in any semester
+            const alreadyInPlan = plan.semesters.some(sem =>
+              sem.courses.some(c => c.id === course.id)
+            );
+            if (alreadyInPlan) return plan;
+
             return {
               ...plan,
               semesters: plan.semesters.map((semester) => {

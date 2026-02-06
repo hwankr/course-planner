@@ -120,12 +120,15 @@ async function addCourseToSemester(
     semester = plan.semesters.find((s) => s.year === year && s.term === term)!;
   }
 
-  // 이미 추가된 과목인지 확인
-  const alreadyAdded = semester.courses.some(
-    (c) => c.course.toString() === courseId
+  // 이미 추가된 과목인지 확인 (모든 학기 체크) - 멱등성: 중복 시 에러 대신 기존 plan 반환
+  const alreadyInPlan = plan.semesters.some(s =>
+    s.courses.some(c => c.course.toString() === courseId)
   );
-  if (alreadyAdded) {
-    throw new Error('이미 추가된 과목입니다.');
+  if (alreadyInPlan) {
+    return Plan.findById(planId).populate({
+      path: 'semesters.courses.course',
+      select: 'code name credits category',
+    });
   }
 
   semester.courses.push({
