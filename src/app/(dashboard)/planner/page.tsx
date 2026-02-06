@@ -30,9 +30,13 @@ export default function PlannerPage() {
   const [newPlanName, setNewPlanName] = useState('');
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
 
-  // Guest plan store
-  const guestPlans = useGuestPlanStore((s) => s.plans);
+  // Guest plan store - use serialized selector for stable reference
+  const guestActivePlanJson = useGuestPlanStore((s) => {
+    const plan = s.plans.find((p) => p.id === s.activePlanId);
+    return plan ? JSON.stringify(plan) : null;
+  });
   const guestActivePlanId = useGuestPlanStore((s) => s.activePlanId);
+  const guestPlans = useGuestPlanStore((s) => s.plans);
 
   // Fetch all plans
   const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
@@ -61,8 +65,9 @@ export default function PlannerPage() {
     }
   }, [plans, selectedPlanId]);
 
-  // Sync fetched plan detail to Zustand store
+  // Sync fetched plan detail to Zustand store (skip for guests — handled by guest sync effect)
   useEffect(() => {
+    if (isGuest) return;
     if (planDetail) {
       // Transform API plan to store format
       const storePlan = {
@@ -94,21 +99,21 @@ export default function PlannerPage() {
       };
       setActivePlan(storePlan);
     }
-  }, [planDetail, setActivePlan]);
+  }, [isGuest, planDetail, setActivePlan]);
 
-  // Sync guest plan to Zustand planStore
+  // Sync guest plan to Zustand planStore (use serialized selector to avoid infinite loop)
   useEffect(() => {
     if (!isGuest) return;
-    const activePlan = guestPlans.find((p) => p.id === guestActivePlanId);
-    if (activePlan) {
+    if (guestActivePlanJson) {
+      const activePlan = JSON.parse(guestActivePlanJson);
       setActivePlan({
         id: activePlan.id,
         name: activePlan.name,
         status: activePlan.status,
-        semesters: activePlan.semesters.map((sem) => ({
+        semesters: activePlan.semesters.map((sem: { year: number; term: string; courses: Array<{ id: string; code: string; name: string; credits: number; category?: string; status: string }> }) => ({
           year: sem.year,
           term: sem.term,
-          courses: sem.courses.map((c) => ({
+          courses: sem.courses.map((c: { id: string; code: string; name: string; credits: number; category?: string; status: string }) => ({
             id: c.id,
             code: c.code,
             name: c.name,
@@ -121,7 +126,7 @@ export default function PlannerPage() {
     } else {
       setActivePlan(null);
     }
-  }, [isGuest, guestPlans, guestActivePlanId, setActivePlan]);
+  }, [isGuest, guestActivePlanJson, setActivePlan]);
 
   // Escape key clears semester focus
   useEffect(() => {

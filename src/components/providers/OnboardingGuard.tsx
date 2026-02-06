@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { useGuestStore, useGuestHydrated } from '@/stores/guestStore';
+import { useGuestProfileStore, useGuestProfileHydrated } from '@/stores/guestProfileStore';
 
 /** Synchronous fallback: read guest flag directly from sessionStorage */
 function isGuestFromStorage(): boolean {
@@ -21,6 +22,8 @@ function isGuestFromStorage(): boolean {
 export default function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { isGuest, exitGuestMode } = useGuestStore();
   const guestHydrated = useGuestHydrated();
+  const guestProfileHydrated = useGuestProfileHydrated();
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const router = useRouter();
@@ -33,9 +36,12 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
   const isAuthenticated = status === 'authenticated';
   const onboardingCompleted = session?.user?.onboardingCompleted === true;
 
+  // Guest onboarding: department must be set
+  const guestOnboarded = isGuestMode && !!guestDepartmentId;
+
   useEffect(() => {
     // Wait for hydration
-    if (!guestHydrated) return;
+    if (!guestHydrated || (isGuestMode && !guestProfileHydrated)) return;
 
     // Authenticated session + guest flag 충돌 해결
     // Google OAuth full-page redirect 후 sessionStorage에 남은 guest flag 정리
@@ -44,8 +50,20 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
       return;
     }
 
-    // Guest bypass (Zustand + sessionStorage fallback)
-    if (isGuestMode) return;
+    // Guest mode routing
+    if (isGuestMode) {
+      if (!guestOnboarded && !isOnboardingPage) {
+        // Guest needs onboarding -> redirect
+        router.replace('/onboarding');
+        return;
+      }
+      if (guestOnboarded && isOnboardingPage) {
+        // Guest already onboarded but on onboarding page -> redirect to planner
+        router.replace('/planner');
+        return;
+      }
+      return;
+    }
 
     // Wait for session to load
     if (isLoading) return;
@@ -70,10 +88,10 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
       router.replace('/planner');
       return;
     }
-  }, [guestHydrated, isGuestMode, isLoading, isAuthenticated, onboardingCompleted, isOnboardingPage, router, exitGuestMode]);
+  }, [guestHydrated, guestProfileHydrated, isGuestMode, guestOnboarded, isLoading, isAuthenticated, onboardingCompleted, isOnboardingPage, router, exitGuestMode]);
 
-  // Rule 1: Guest store still hydrating -> spinner
-  if (!guestHydrated) {
+  // Rule 1: Stores still hydrating -> spinner
+  if (!guestHydrated || (isGuestMode && !guestProfileHydrated)) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
@@ -81,8 +99,17 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
     );
   }
 
-  // Rule 2: Guest mode -> render children (Zustand + sessionStorage fallback)
-  if (isGuestMode) return <>{children}</>;
+  // Rule 2: Guest mode
+  if (isGuestMode) {
+    // Guest not onboarded and on onboarding page -> allow
+    if (!guestOnboarded && isOnboardingPage) return <>{children}</>;
+    // Guest not onboarded -> show nothing (useEffect handles redirect)
+    if (!guestOnboarded) return null;
+    // Guest onboarded and on onboarding page -> show nothing (useEffect handles redirect)
+    if (isOnboardingPage) return null;
+    // Guest onboarded -> render children
+    return <>{children}</>;
+  }
 
   // Rule 3: Session loading -> spinner
   if (isLoading) {

@@ -15,12 +15,19 @@ import {
   ArrowLeft,
   CheckCircle
 } from 'lucide-react';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { update: updateSession } = useSession();
   const { data: departments = [], isLoading: isDeptLoading } = useDepartments();
   const completeMutation = useCompleteOnboarding();
+
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const setGuestProfile = useGuestProfileStore((s) => s.setProfile);
+  const setGuestGraduation = useGuestGraduationStore((s) => s.setRequirement);
 
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
@@ -53,6 +60,26 @@ export default function OnboardingPage() {
     setError('');
     if (totalCredits < 1) {
       setError('졸업학점은 1 이상이어야 합니다.');
+      return;
+    }
+
+    if (isGuest) {
+      // Guest: save to local stores
+      const selectedDept = departments.find((d) => d._id === departmentId);
+      setGuestProfile({
+        departmentId,
+        departmentName: selectedDept?.name || '',
+        enrollmentYear: parseInt(enrollmentYear),
+      });
+      setGuestGraduation({
+        totalCredits,
+        majorCredits,
+        majorRequiredMin: 0,
+        generalCredits,
+        earnedMajorCredits,
+        earnedGeneralCredits,
+      });
+      router.push('/planner');
       return;
     }
 
@@ -263,9 +290,9 @@ export default function OnboardingPage() {
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   이전
                 </Button>
-                <Button onClick={handleComplete} disabled={completeMutation.isPending} className="inline-flex items-center">
-                  {completeMutation.isPending ? '처리 중...' : '완료'}
-                  {!completeMutation.isPending && <CheckCircle className="w-4 h-4 ml-1" />}
+                <Button onClick={handleComplete} disabled={!isGuest && completeMutation.isPending} className="inline-flex items-center">
+                  {!isGuest && completeMutation.isPending ? '처리 중...' : '완료'}
+                  {(isGuest || !completeMutation.isPending) && <CheckCircle className="w-4 h-4 ml-1" />}
                 </Button>
               </div>
             </CardContent>
