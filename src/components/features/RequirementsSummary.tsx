@@ -180,9 +180,19 @@ export function RequirementsSummary() {
         >
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 flex-wrap">
             <span className="text-sm font-medium text-gray-700 whitespace-nowrap">졸업 요건</span>
-            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[120px] sm:max-w-[200px]">
+            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[120px] sm:max-w-[200px] relative">
+              {/* Planned segment (behind) */}
+              {total.planned > 0 && (
+                <div
+                  className={`h-full absolute inset-y-0 left-0 rounded-full ${
+                    total.percentage >= 100 ? 'bg-green-200' : total.percentage >= 50 ? 'bg-blue-200' : 'bg-orange-200'
+                  }`}
+                  style={{ width: `${Math.min(Math.round(((total.earned + total.planned) / total.required) * 100), 100)}%` }}
+                />
+              )}
+              {/* Earned segment (front) */}
               <div
-                className={`h-full transition-all rounded-full ${
+                className={`h-full relative transition-all rounded-full ${
                   total.percentage >= 100 ? 'bg-green-500' : total.percentage >= 50 ? 'bg-blue-500' : 'bg-orange-500'
                 }`}
                 style={{ width: `${Math.min(total.percentage, 100)}%` }}
@@ -192,9 +202,14 @@ export function RequirementsSummary() {
               total.percentage >= 100 ? 'text-green-600' : 'text-gray-600'
             }`}>
               {total.percentage}%
+              {total.planned > 0 && (
+                <span className="text-gray-400 font-normal">
+                  {' → '}{Math.min(Math.round(((total.earned + total.planned) / total.required) * 100), 100)}%
+                </span>
+              )}
             </span>
             <span className="text-xs text-gray-400 whitespace-nowrap">
-              ({total.earned}/{total.required}학점)
+              ({total.earned}{total.planned > 0 ? `+${total.planned}` : ''}/{total.required}학점)
             </span>
             {delta?.total && <DeltaBadge value={delta.total.planned} />}
           </div>
@@ -216,28 +231,44 @@ export function RequirementsSummary() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full flex-shrink-0 bg-red-500" />
                 <span className="text-xs text-gray-600 w-14">전공</span>
-                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+                  {/* Planned segment (behind) */}
+                  {major.planned > 0 && (
+                    <div
+                      className="h-full absolute inset-y-0 left-0 rounded-full bg-red-200"
+                      style={{ width: `${Math.min(Math.round(((major.earned + major.planned) / major.required) * 100), 100)}%` }}
+                    />
+                  )}
+                  {/* Earned segment (front) */}
                   <div
-                    className={`h-full rounded-full ${major.percentage >= 100 ? 'bg-green-500' : 'bg-red-500'}`}
+                    className={`h-full relative rounded-full ${major.percentage >= 100 ? 'bg-green-500' : 'bg-red-500'}`}
                     style={{ width: `${Math.min(major.percentage, 100)}%` }}
                   />
                 </div>
                 <span className="text-xs text-gray-500 w-20 text-right">
-                  {major.earned}/{major.required}학점
+                  {major.earned}{major.planned > 0 ? `+${major.planned}` : ''}/{major.required}학점
                 </span>
                 {delta?.major && <DeltaBadge value={delta.major.planned} />}
               </div>
               {/* 전공핵심 sub-bar */}
               <div className="flex items-center gap-2 pl-4">
                 <span className="text-xs text-gray-400 w-14">핵심</span>
-                <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden relative">
+                  {/* Planned segment (behind) */}
+                  {(major.requiredMin.planned ?? 0) > 0 && (
+                    <div
+                      className="h-full absolute inset-y-0 left-0 rounded-full bg-red-100"
+                      style={{ width: `${Math.min(Math.round(((major.requiredMin.earned + (major.requiredMin.planned ?? 0)) / major.requiredMin.required) * 100), 100)}%` }}
+                    />
+                  )}
+                  {/* Earned segment (front) */}
                   <div
-                    className={`h-full rounded-full ${major.requiredMin.percentage >= 100 ? 'bg-green-400' : 'bg-red-300'}`}
+                    className={`h-full relative rounded-full ${major.requiredMin.percentage >= 100 ? 'bg-green-400' : 'bg-red-300'}`}
                     style={{ width: `${Math.min(major.requiredMin.percentage, 100)}%` }}
                   />
                 </div>
                 <span className="text-xs text-gray-400 w-20 text-right">
-                  {major.requiredMin.earned}/{major.requiredMin.required}학점
+                  {major.requiredMin.earned}{(major.requiredMin.planned ?? 0) > 0 ? `+${major.requiredMin.planned}` : ''}/{major.requiredMin.required}학점
                 </span>
               </div>
             </div>
@@ -247,14 +278,22 @@ export function RequirementsSummary() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500" />
                 <span className="text-xs text-gray-600 w-14">교양</span>
-                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+                  {/* Planned segment (behind) */}
+                  {general.planned > 0 && (
+                    <div
+                      className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-200"
+                      style={{ width: `${Math.min(Math.round(((general.earned + general.planned) / general.required) * 100), 100)}%` }}
+                    />
+                  )}
+                  {/* Earned segment (front) */}
                   <div
-                    className={`h-full rounded-full ${general.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                    className={`h-full relative rounded-full ${general.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
                     style={{ width: `${Math.min(general.percentage, 100)}%` }}
                   />
                 </div>
                 <span className="text-xs text-gray-500 w-20 text-right">
-                  {general.earned}/{general.required}학점
+                  {general.earned}{general.planned > 0 ? `+${general.planned}` : ''}/{general.required}학점
                 </span>
                 {delta?.general && <DeltaBadge value={delta.general.planned} />}
               </div>

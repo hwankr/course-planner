@@ -139,6 +139,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
 
   // Major required sub-requirement
   const majorReqEarned = sumCredits(completed, ['major_required']);
+  const majorReqPlanned = sumCredits(planned, ['major_required']);
 
   // General group
   const generalEarned = sumCredits(completed, generalCategories);
@@ -166,6 +167,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       requiredMin: {
         required: requirement.majorRequiredMin,
         earned: majorReqEarned + priorMajorRequired,
+        planned: majorReqPlanned,
         percentage: pct(majorReqEarned + priorMajorRequired, requirement.majorRequiredMin),
       },
     },

@@ -133,6 +133,7 @@ export function calculateGuestProgress(
   const majorPlanned = sumCredits(planned, majorCategories);
 
   const majorReqEarned = sumCredits(completed, ['major_required']);
+  const majorReqPlanned = sumCredits(planned, ['major_required']);
 
   const generalEarned = sumCredits(completed, generalCategories);
   const generalEnrolled = sumCredits(enrolled, generalCategories);
@@ -165,6 +166,7 @@ export function calculateGuestProgress(
       requiredMin: {
         required: requirement.majorRequiredMin,
         earned: majorReqEarned + priorMajorRequired,
+        planned: majorReqPlanned,
         percentage: pct(majorReqEarned + priorMajorRequired, requirement.majorRequiredMin),
       },
     },
