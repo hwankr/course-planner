@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
+import { useQueryClient } from '@tanstack/react-query';
 import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
@@ -14,7 +15,7 @@ import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
 import { Button, Card, CardContent } from '@/components/ui';
-import type { Term } from '@/types';
+import type { Term, ICourse } from '@/types';
 
 // Helper to parse droppableId
 function parseSemesterId(droppableId: string): { year: number; term: Term } | null {
@@ -54,6 +55,9 @@ export default function PlannerPage() {
   const removeSemesterMutation = useRemoveSemester();
   const updateStatusMutation = useUpdateCourseStatus();
   const activatePlanMutation = useActivatePlan();
+
+  // Query client for cache access
+  const queryClient = useQueryClient();
 
   // Zustand store
   const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
@@ -346,28 +350,43 @@ export default function PlannerPage() {
         );
         if (alreadyInPlan) return;
 
-        // Find the course info from the catalog (we need to fetch it)
-        // For optimistic update, we'll use placeholder data
+        // Look up real course data from query cache
+        const allCourseQueries = queryClient.getQueriesData<ICourse[]>({ queryKey: ['courses'] });
+        let catalogCourse: ICourse | undefined;
+        for (const [, courses] of allCourseQueries) {
+          if (courses) {
+            catalogCourse = courses.find(c => c._id.toString() === draggableId);
+            if (catalogCourse) break;
+          }
+        }
+
+        // Use real data for optimistic update (fall back to placeholder if somehow not found)
         const optimisticCourse = {
           id: draggableId,
-          code: 'Loading...',
-          name: 'Loading...',
-          credits: 0,
-          category: undefined,
+          code: catalogCourse?.code ?? 'Loading...',
+          name: catalogCourse?.name ?? 'Loading...',
+          credits: catalogCourse?.credits ?? 0,
+          category: catalogCourse?.category as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
           status: 'planned' as const,
         };
 
         // Optimistic update
         addCourseToSemester(destInfo.year, destInfo.term, optimisticCourse);
 
-        // API call
+        // API call (or guest store update)
         try {
-          await addCourseMutation.mutateAsync({
-            planId: activePlan.id,
-            year: destInfo.year,
-            term: destInfo.term,
-            courseId: draggableId,
-          });
+          if (isGuest) {
+            // For guest mode, add full course data directly to guest store
+            const guestAddCourse = useGuestPlanStore.getState().addCourse;
+            guestAddCourse(activePlan.id, destInfo.year, destInfo.term, optimisticCourse);
+          } else {
+            await addCourseMutation.mutateAsync({
+              planId: activePlan.id,
+              year: destInfo.year,
+              term: destInfo.term,
+              courseId: draggableId,
+            });
+          }
           triggerHighlight();
         } catch (error) {
           // Rollback on error
@@ -442,7 +461,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest]
   );
 
   // Handle remove course from semester column
