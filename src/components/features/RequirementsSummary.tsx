@@ -1,25 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useGraduationRequirement,
   useGraduationProgress,
   useUpsertGraduationRequirement,
   useCreateDefaultGraduationRequirement,
 } from '@/hooks/useGraduationRequirements';
+import { useGraduationPreview } from '@/hooks/useGraduationPreview';
 import { RequirementForm } from '@/components/features/RequirementForm';
 import { Card, CardContent, Button } from '@/components/ui';
 
 export function RequirementsSummary() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [shouldHighlight, setShouldHighlight] = useState(false);
 
   const { data: requirement, isLoading: loadingReq } = useGraduationRequirement();
   const { data: progress, isLoading: loadingProgress } = useGraduationProgress();
+  const { delta, highlightTrigger } = useGraduationPreview();
   const upsertMutation = useUpsertGraduationRequirement();
   const createDefaults = useCreateDefaultGraduationRequirement();
 
   const isLoading = loadingReq || loadingProgress;
+
+  // Trigger highlight animation when highlightTrigger changes
+  useEffect(() => {
+    if (highlightTrigger > 0) {
+      setShouldHighlight(true);
+      const timer = setTimeout(() => setShouldHighlight(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightTrigger]);
 
   const handleCreateDefault = async () => {
     try {
@@ -143,8 +155,23 @@ export function RequirementsSummary() {
     required: requirement.generalCredits, earned: 0, enrolled: 0, planned: 0, percentage: 0,
   };
 
+  // Helper to render delta badge
+  const DeltaBadge = ({ value, suffix = '학점' }: { value: number; suffix?: string }) => {
+    if (value === 0) return null;
+    const isPositive = value > 0;
+    return (
+      <span
+        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-semibold rounded transition-all ${
+          isPositive ? 'text-green-700 bg-green-100' : 'text-red-700 bg-red-100'
+        } ${shouldHighlight ? 'ring-2 ring-offset-1 ring-current' : ''}`}
+      >
+        {isPositive ? '+' : ''}{value}{suffix}
+      </span>
+    );
+  };
+
   return (
-    <Card>
+    <Card className={shouldHighlight ? 'ring-2 ring-blue-400 ring-offset-2 transition-all duration-300' : ''}>
       <CardContent className="py-3 px-3 sm:px-4">
         {/* Collapsed header - always visible */}
         <button
@@ -169,6 +196,7 @@ export function RequirementsSummary() {
             <span className="text-xs text-gray-400 whitespace-nowrap">
               ({total.earned}/{total.required}학점)
             </span>
+            {delta?.total && <DeltaBadge value={delta.total.planned} />}
           </div>
           <svg
             className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
@@ -197,6 +225,7 @@ export function RequirementsSummary() {
                 <span className="text-xs text-gray-500 w-20 text-right">
                   {major.earned}/{major.required}학점
                 </span>
+                {delta?.major && <DeltaBadge value={delta.major.planned} />}
               </div>
               {/* 전공핵심 sub-bar */}
               <div className="flex items-center gap-2 pl-4">
@@ -227,6 +256,7 @@ export function RequirementsSummary() {
                 <span className="text-xs text-gray-500 w-20 text-right">
                   {general.earned}/{general.required}학점
                 </span>
+                {delta?.general && <DeltaBadge value={delta.general.planned} />}
               </div>
             </div>
 

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { GraduationRequirementInput, GraduationProgress } from '@/types';
 
-interface GuestCourseForProgress {
+export interface GuestCourseForProgress {
   id: string;
   code: string;
   name: string;
@@ -11,7 +11,7 @@ interface GuestCourseForProgress {
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
 }
 
-interface GuestSemesterForProgress {
+export interface GuestSemesterForProgress {
   year: number;
   term: string;
   courses: GuestCourseForProgress[];

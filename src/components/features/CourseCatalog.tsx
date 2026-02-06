@@ -9,6 +9,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
@@ -38,6 +39,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
   const userDepartment = (isGuest ? guestDepartmentId : session?.user?.department) || undefined;
   const [showCustomForm, setShowCustomForm] = useState(false);
+
+  // Preview store
+  const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
 
   // Debounce search term
   useEffect(() => {
@@ -129,6 +133,34 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   }, [filteredCourses, isGroupedView, courses.length]);
 
   const courseCount = filteredCourses.length;
+
+  // Preview handlers
+  const handleCourseHoverStart = (course: ICourse) => {
+    const isInPlan = planCourseIds.includes(course._id.toString());
+    if (isInPlan) return; // Don't preview courses already in plan
+
+    setPreview(
+      {
+        id: course._id.toString(),
+        code: course.code,
+        name: course.name,
+        credits: course.credits,
+        category: course.category ?? 'free_elective',
+      },
+      'add',
+      focusedSemester ?? null
+    );
+  };
+
+  const handleCourseHoverEnd = () => {
+    clearPreview();
+  };
+
+  const handleAddClick = (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => {
+    if (!onClickAdd) return;
+    triggerHighlight();
+    onClickAdd(courseId, courseData);
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -344,6 +376,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     className={`relative ${isInPlan ? 'opacity-50' : ''}`}
+                                    onMouseEnter={() => handleCourseHoverStart(course)}
+                                    onMouseLeave={handleCourseHoverEnd}
                                   >
                                     <div {...provided.dragHandleProps}>
                                       <CourseCard
@@ -356,7 +390,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                     {/* "+" button */}
                                     {focusedSemester && !isInPlan && onClickAdd && (
                                       <button
-                                        onClick={() => onClickAdd(course._id.toString(), {
+                                        onClick={() => handleAddClick(course._id.toString(), {
                                           code: course.code,
                                           name: course.name,
                                           credits: course.credits,
@@ -422,6 +456,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                             ref={provided.innerRef}
                             {...provided.draggableProps}
                             className={`relative ${isInPlan ? 'opacity-50' : ''}`}
+                            onMouseEnter={() => handleCourseHoverStart(course)}
+                            onMouseLeave={handleCourseHoverEnd}
                           >
                             <div {...provided.dragHandleProps}>
                               <CourseCard
@@ -434,7 +470,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                             {/* "+" button */}
                             {focusedSemester && !isInPlan && onClickAdd && (
                               <button
-                                onClick={() => onClickAdd(course._id.toString(), {
+                                onClick={() => handleAddClick(course._id.toString(), {
                                   code: course.code,
                                   name: course.name,
                                   credits: course.credits,

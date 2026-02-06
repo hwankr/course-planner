@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
 import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
 import { useActivatePlan } from '@/hooks/usePlanActivation';
 import { usePlanStore } from '@/stores/planStore';
+import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
@@ -56,6 +57,9 @@ export default function PlannerPage() {
 
   // Zustand store
   const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
+
+  // Preview store
+  const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
 
   // Auto-select first plan when plans are loaded
   useEffect(() => {
@@ -201,6 +205,98 @@ export default function PlannerPage() {
     }
   };
 
+  // Helper to find course data from draggableId
+  const findCourseData = useCallback((courseId: string) => {
+    if (!activePlan) return null;
+    for (const sem of activePlan.semesters) {
+      const course = sem.courses.find(c => c.id === courseId);
+      if (course) return course;
+    }
+    return null;
+  }, [activePlan]);
+
+  // Handle drag start - set preview for remove action
+  const handleDragStart = useCallback((start: DragStart) => {
+    const { source, draggableId } = start;
+    const sourceInfo = parseSemesterId(source.droppableId);
+
+    // Only preview removal if dragging FROM a semester
+    if (sourceInfo) {
+      const course = findCourseData(draggableId);
+      if (course) {
+        setPreview(
+          {
+            id: course.id,
+            code: course.code,
+            name: course.name,
+            credits: course.credits,
+            category: course.category ?? 'free_elective',
+          },
+          'remove',
+          null
+        );
+      }
+    }
+  }, [findCourseData, setPreview]);
+
+  // Handle drag update - update preview based on destination
+  const handleDragUpdate = useCallback((update: DragUpdate) => {
+    const { source, destination, draggableId } = update;
+
+    if (!destination) {
+      // No destination - maintain remove preview
+      const sourceInfo = parseSemesterId(source.droppableId);
+      if (sourceInfo) {
+        const course = findCourseData(draggableId);
+        if (course) {
+          setPreview(
+            {
+              id: course.id,
+              code: course.code,
+              name: course.name,
+              credits: course.credits,
+              category: course.category ?? 'free_elective',
+            },
+            'remove',
+            null
+          );
+        }
+      }
+      return;
+    }
+
+    const sourceInfo = parseSemesterId(source.droppableId);
+    const destInfo = parseSemesterId(destination.droppableId);
+
+    // From catalog to semester - preview add
+    if (source.droppableId === 'catalog' && destInfo) {
+      // Course data will be fetched in onDragEnd, for now we can't preview accurately
+      // Skip preview for catalog drag (hover handles this better)
+      clearPreview();
+    }
+    // From semester to catalog - preview remove
+    else if (sourceInfo && destination.droppableId === 'catalog') {
+      const course = findCourseData(draggableId);
+      if (course) {
+        setPreview(
+          {
+            id: course.id,
+            code: course.code,
+            name: course.name,
+            credits: course.credits,
+            category: course.category ?? 'free_elective',
+          },
+          'remove',
+          null
+        );
+      }
+    }
+    // Between semesters - no net change in total credits, skip preview
+    else if (sourceInfo && destInfo) {
+      clearPreview();
+    }
+  }, [findCourseData, setPreview, clearPreview]);
+
   // Handle adding a new semester
   const handleAddSemester = () => {
     if (!activePlan) return;
@@ -226,6 +322,9 @@ export default function PlannerPage() {
   const handleDragEnd = useCallback(
     async (result: DropResult) => {
       const { source, destination, draggableId } = result;
+
+      // Clear preview on drag end
+      clearPreview();
 
       // Dropped outside a droppable
       if (!destination) return;
@@ -269,6 +368,7 @@ export default function PlannerPage() {
             term: destInfo.term,
             courseId: draggableId,
           });
+          triggerHighlight();
         } catch (error) {
           // Rollback on error
           removeCourseFromSemester(destInfo.year, destInfo.term, draggableId);
@@ -296,6 +396,7 @@ export default function PlannerPage() {
             term: sourceInfo.term,
             courseId: draggableId,
           });
+          triggerHighlight();
         } catch (error) {
           // Rollback on error
           if (courseToRemove) {
@@ -341,7 +442,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight]
   );
 
   // Handle remove course from semester column
@@ -605,7 +706,11 @@ export default function PlannerPage() {
 
       {/* Drag and Drop Context */}
       {activePlan && !planDetailLoading && (
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext
+          onDragStart={handleDragStart}
+          onDragUpdate={handleDragUpdate}
+          onDragEnd={handleDragEnd}
+        >
           <div className="space-y-6">
             {/* Requirements Summary Widget */}
             <RequirementsSummary />
