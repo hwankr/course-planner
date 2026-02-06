@@ -1,6 +1,8 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { graduationRequirementKeys } from './useGraduationRequirements';
 import type { ApiResponse, IPlan } from '@/types';
 
@@ -36,8 +38,10 @@ const planKeys = {
  */
 export function useActivatePlan() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestSetActivePlan = useGuestPlanStore((s) => s.setActivePlanId);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: activatePlan,
     onSuccess: () => {
       // Invalidate plan list (status changed)
@@ -46,4 +50,17 @@ export function useActivatePlan() {
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (planId: string) => {
+        guestSetActivePlan(planId);
+        return { _id: { toString: () => planId } } as unknown as IPlan;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }

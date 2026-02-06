@@ -1,7 +1,10 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ApiResponse, GraduationProgress } from '@/types';
+import type { ApiResponse, GraduationProgress, GraduationRequirementInput } from '@/types';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestGraduationStore, calculateGuestProgress } from '@/stores/guestGraduationStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
 
 // ============================================
 // Types (local to this hook)
@@ -18,15 +21,6 @@ interface GraduationRequirement {
   earnedGeneralCredits: number;
   createdAt: string;
   updatedAt: string;
-}
-
-interface GraduationRequirementInput {
-  totalCredits: number;
-  majorCredits: number;
-  majorRequiredMin: number;
-  generalCredits: number;
-  earnedMajorCredits: number;
-  earnedGeneralCredits: number;
 }
 
 // ============================================
@@ -103,21 +97,59 @@ async function createDefaultGraduationRequirement(): Promise<GraduationRequireme
  * Fetch the user's graduation requirement (single document)
  */
 export function useGraduationRequirement() {
-  return useQuery({
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestRequirement = useGuestGraduationStore((s) => s.requirement);
+
+  const apiResult = useQuery({
     queryKey: graduationRequirementKeys.detail(),
     queryFn: fetchGraduationRequirement,
+    enabled: !isGuest,
   });
+
+  if (isGuest) {
+    return {
+      ...apiResult,
+      data: guestRequirement,
+      isLoading: false,
+      error: null,
+      isError: false,
+    } as typeof apiResult;
+  }
+
+  return apiResult;
 }
 
 /**
  * Fetch graduation progress (from active plan)
  */
 export function useGraduationProgress(options?: { enabled?: boolean }) {
-  return useQuery({
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestRequirement = useGuestGraduationStore((s) => s.requirement);
+  const guestPlans = useGuestPlanStore((s) => s.plans);
+  const guestActivePlanId = useGuestPlanStore((s) => s.activePlanId);
+
+  const apiResult = useQuery({
     queryKey: graduationRequirementKeys.progress(),
     queryFn: fetchGraduationProgress,
-    enabled: options?.enabled ?? true,
+    enabled: !isGuest && (options?.enabled ?? true),
   });
+
+  if (isGuest) {
+    let progress = null;
+    if (guestRequirement) {
+      const activePlan = guestPlans.find((p) => p.id === guestActivePlanId);
+      progress = calculateGuestProgress(guestRequirement, activePlan?.semesters ?? []);
+    }
+    return {
+      ...apiResult,
+      data: progress,
+      isLoading: false,
+      error: null,
+      isError: false,
+    } as typeof apiResult;
+  }
+
+  return apiResult;
 }
 
 /**
@@ -125,14 +157,32 @@ export function useGraduationProgress(options?: { enabled?: boolean }) {
  */
 export function useUpsertGraduationRequirement() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestSetRequirement = useGuestGraduationStore((s) => s.setRequirement);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: upsertGraduationRequirement,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.detail() });
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (input: GraduationRequirementInput) => {
+        guestSetRequirement(input);
+        return input as any;
+      },
+      mutate: (input: GraduationRequirementInput) => {
+        guestSetRequirement(input);
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
 
 /**
@@ -140,12 +190,27 @@ export function useUpsertGraduationRequirement() {
  */
 export function useCreateDefaultGraduationRequirement() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestCreateDefaults = useGuestGraduationStore((s) => s.createDefaults);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: createDefaultGraduationRequirement,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.detail() });
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async () => {
+        guestCreateDefaults();
+        return {} as any;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }

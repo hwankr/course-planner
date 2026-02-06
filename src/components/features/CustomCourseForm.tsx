@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useCreateCourse } from '@/hooks/useCourses';
 import { Button, Input } from '@/components/ui';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import type { RequirementCategory, Semester } from '@/types';
 
 interface CustomCourseFormProps {
@@ -20,6 +22,9 @@ const categoryLabels: Record<RequirementCategory, string> = {
 
 export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
   const { data: session } = useSession();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const userDepartment = isGuest ? guestDepartmentId : session?.user?.department;
   const createCourse = useCreateCourse();
 
   const [formData, setFormData] = useState({
@@ -41,7 +46,7 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!session?.user?.department) return;
+    if (!userDepartment) return;
 
     // Auto-generate code from name + timestamp
     const autoCode = `CUS-${Date.now().toString(36).toUpperCase()}`;
@@ -51,7 +56,7 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
         name: formData.name,
         code: autoCode,
         credits: formData.credits as number,
-        department: session.user.department,
+        department: userDepartment!,
         semesters: formData.recommendedSemester
           ? [formData.recommendedSemester as Semester]
           : ['spring', 'fall'],
@@ -155,7 +160,7 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
             </div>
           </div>
 
-          {!session?.user?.department && (
+          {!userDepartment && (
             <p className="text-sm text-amber-600">
               학과를 먼저 설정해주세요.{' '}
               <a href="/profile" className="underline font-medium">
@@ -181,7 +186,7 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
             </Button>
             <Button
               type="submit"
-              disabled={createCourse.isPending || !session?.user?.department}
+              disabled={createCourse.isPending || !userDepartment}
               className="flex-1"
             >
               {createCourse.isPending ? '추가 중...' : '추가'}

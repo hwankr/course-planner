@@ -8,6 +8,7 @@ interface GuestState {
   _hasHydrated: boolean;
   enterGuestMode: () => void;
   exitGuestMode: () => void;
+  clearAllGuestData: () => void;
   setHasHydrated: (state: boolean) => void;
 }
 
@@ -25,6 +26,15 @@ export const useGuestStore = create<GuestState>()(
         // Remove guest cookie
         document.cookie = 'guest-mode=;path=/;max-age=0';
         set({ isGuest: false });
+      },
+      clearAllGuestData: () => {
+        // Clear all guest localStorage keys
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('guest-plans');
+          localStorage.removeItem('guest-profile');
+          localStorage.removeItem('guest-graduation');
+          localStorage.removeItem('guest-courses');
+        }
       },
       setHasHydrated: (state: boolean) => set({ _hasHydrated: state }),
     }),

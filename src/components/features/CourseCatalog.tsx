@@ -7,6 +7,8 @@ import { useCourses } from '@/hooks/useCourses';
 import { Input } from '@/components/ui/Input';
 import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import type { Semester, ICourse } from '@/types';
 
 interface CourseCatalogProps {
@@ -31,7 +33,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const [semesterFilter, setSemesterFilter] = useState<Semester | undefined>(undefined);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
-  const userDepartment = session?.user?.department;
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const userDepartment = (isGuest ? guestDepartmentId : session?.user?.department) || undefined;
   const [showCustomForm, setShowCustomForm] = useState(false);
 
   // Debounce search term

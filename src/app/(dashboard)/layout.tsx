@@ -29,9 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, logout, isAdmin, isGuest } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const visibleNavigation = isGuest
-    ? navigation.filter((item) => item.href !== '/profile')
-    : navigation;
+  const visibleNavigation = navigation;
 
   return (
     <div className="min-h-screen bg-gray-50 bg-grid">
@@ -171,7 +169,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-800" />
               <p className="text-sm text-amber-800">
-                비회원 모드입니다. 데이터가 저장되지 않습니다.
+                비회원 모드입니다. 데이터가 이 브라우저에만 저장됩니다.
               </p>
             </div>
             <Link href="/register" className="text-sm font-medium text-amber-900 hover:text-amber-700 underline">

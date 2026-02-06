@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input } from '@/components/ui';
 import type { ApiResponse } from '@/types';
 import { useGuestStore } from '@/stores/guestStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import Link from 'next/link';
 import {
   User,
@@ -39,6 +40,7 @@ interface UserProfile {
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
+  const guestProfile = useGuestProfileStore();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -80,6 +82,17 @@ export default function ProfilePage() {
       });
     }
   }, [userProfile]);
+
+  // Pre-populate form for guest
+  useEffect(() => {
+    if (isGuest) {
+      setFormData({
+        name: guestProfile.name || '',
+        enrollmentYear: guestProfile.enrollmentYear?.toString() || '',
+        department: guestProfile.departmentId || '',
+      });
+    }
+  }, [isGuest, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId]);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -124,17 +137,103 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">프로필</h1>
-          <p className="text-gray-600 mt-1">개인 정보를 관리하세요.</p>
+          <p className="text-gray-600 mt-1">프로필을 설정하면 과목 카탈로그가 학과별로 필터됩니다.</p>
         </div>
-        <Card className="border-2 border-dashed border-gray-200 animate-fade-in">
-          <CardContent className="py-12">
-            <UserX className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-center mb-6">
-              비회원은 프로필을 설정할 수 없습니다.
-            </p>
-            <div className="text-center">
+
+        {/* Guest Profile Form */}
+        <Card className="animate-fade-in-up">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <User className="w-5 h-5 text-gray-600" />
+              <CardTitle>기본 정보</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                guestProfile.setProfile({
+                  name: formData.name || undefined,
+                  enrollmentYear: formData.enrollmentYear ? parseInt(formData.enrollmentYear, 10) : undefined,
+                  departmentId: formData.department || undefined,
+                  departmentName: departments.find((d) => d._id === formData.department)?.name || undefined,
+                });
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <User className="w-4 h-4 text-gray-400" />
+                  이름
+                </label>
+                <Input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="이름"
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  입학년도
+                </label>
+                <Input
+                  name="enrollmentYear"
+                  type="number"
+                  value={formData.enrollmentYear}
+                  onChange={handleChange}
+                  placeholder="2024"
+                  min={2000}
+                  max={2030}
+                />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <Building2 className="w-4 h-4 text-gray-400" />
+                  학과
+                </label>
+                <select
+                  name="department"
+                  value={formData.department}
+                  onChange={handleChange}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="">학과 선택</option>
+                  {departments.map((dept) => (
+                    <option key={dept._id} value={dept._id}>
+                      {dept.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button type="submit">저장</Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        {/* Guest Info */}
+        <Card className="animate-fade-in-up anim-delay-100">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Shield className="w-5 h-5 text-gray-600" />
+              <CardTitle>계정 정보</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-gray-600">계정 유형</span>
+                <span className="font-medium text-amber-600">게스트 모드</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span className="text-gray-600">데이터 저장</span>
+                <span className="font-medium text-gray-500">이 브라우저에만 저장</span>
+              </div>
+            </div>
+            <div className="mt-4">
               <Link href="/register">
-                <Button>회원가입하기</Button>
+                <Button variant="outline" className="w-full">회원가입하여 데이터 영구 저장</Button>
               </Link>
             </div>
           </CardContent>

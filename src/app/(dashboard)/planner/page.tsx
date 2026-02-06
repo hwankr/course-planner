@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
 import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
 import { useGuestStore } from '@/stores/guestStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
 import { useActivatePlan } from '@/hooks/usePlanActivation';
 import { usePlanStore } from '@/stores/planStore';
@@ -29,11 +30,15 @@ export default function PlannerPage() {
   const [newPlanName, setNewPlanName] = useState('');
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
 
+  // Guest plan store
+  const guestPlans = useGuestPlanStore((s) => s.plans);
+  const guestActivePlanId = useGuestPlanStore((s) => s.activePlanId);
+
   // Fetch all plans
-  const { data: plans, isLoading: plansLoading, error: plansError } = usePlans({ enabled: !isGuest });
+  const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
 
   // Fetch selected plan detail
-  const { data: planDetail, isLoading: planDetailLoading } = usePlan(selectedPlanId || '', { enabled: !isGuest });
+  const { data: planDetail, isLoading: planDetailLoading } = usePlan(selectedPlanId || '');
 
   // Mutations
   const createPlanMutation = useCreatePlan();
@@ -90,6 +95,33 @@ export default function PlannerPage() {
       setActivePlan(storePlan);
     }
   }, [planDetail, setActivePlan]);
+
+  // Sync guest plan to Zustand planStore
+  useEffect(() => {
+    if (!isGuest) return;
+    const activePlan = guestPlans.find((p) => p.id === guestActivePlanId);
+    if (activePlan) {
+      setActivePlan({
+        id: activePlan.id,
+        name: activePlan.name,
+        status: activePlan.status,
+        semesters: activePlan.semesters.map((sem) => ({
+          year: sem.year,
+          term: sem.term,
+          courses: sem.courses.map((c) => ({
+            id: c.id,
+            code: c.code,
+            name: c.name,
+            credits: c.credits,
+            category: c.category,
+            status: c.status,
+          })),
+        })),
+      });
+    } else {
+      setActivePlan(null);
+    }
+  }, [isGuest, guestPlans, guestActivePlanId, setActivePlan]);
 
   // Escape key clears semester focus
   useEffect(() => {
@@ -358,14 +390,20 @@ export default function PlannerPage() {
       };
       addCourseToSemester(year, term, optimisticCourse);
 
-      // API call
+      // API call (or guest store update)
       try {
-        await addCourseMutation.mutateAsync({
-          planId: activePlan.id,
-          year,
-          term,
-          courseId,
-        });
+        if (isGuest) {
+          // For guest mode, add full course data directly to guest store
+          const guestAddCourse = useGuestPlanStore.getState().addCourse;
+          guestAddCourse(activePlan.id, year, term, optimisticCourse);
+        } else {
+          await addCourseMutation.mutateAsync({
+            planId: activePlan.id,
+            year,
+            term,
+            courseId,
+          });
+        }
       } catch (error) {
         removeCourseFromSemester(year, term, courseId);
         console.error('Failed to add course:', error);
@@ -409,22 +447,6 @@ export default function PlannerPage() {
       console.error('Failed to activate plan:', error);
     }
   }, [selectedPlanId, activatePlanMutation]);
-
-  if (isGuest) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">수강 계획</h1>
-        <div className="bg-white rounded-lg border p-8 text-center">
-          <p className="text-gray-500 mb-4">
-            비회원 모드에서는 수강 계획을 저장할 수 없습니다.
-          </p>
-          <a href="/register" className="text-blue-600 hover:underline font-medium">
-            회원가입 후 이용해주세요
-          </a>
-        </div>
-      </div>
-    );
-  }
 
   // Loading state
   if (plansLoading) {

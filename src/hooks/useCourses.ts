@@ -2,6 +2,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ApiResponse, ICourse, CourseFilter, CreateCourseInput } from '@/types';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestCourseStore } from '@/stores/guestCourseStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 
 /**
  * TanStack Query hooks for course data fetching
@@ -86,11 +89,40 @@ async function fetchCourse(id: string): Promise<ICourse> {
  * });
  */
 export function useCourses(filter?: CourseFilter) {
-  return useQuery({
-    queryKey: ['courses', filter], // Include filter in queryKey for proper caching
-    queryFn: () => fetchCourses(filter),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const guestCustomCourses = useGuestCourseStore((s) => s.customCourses);
+
+  // 게스트일 때 department를 게스트 프로필에서 가져옴
+  const effectiveFilter = isGuest
+    ? { ...filter, departmentId: filter?.departmentId || guestDepartmentId || undefined }
+    : filter;
+
+  const apiResult = useQuery({
+    queryKey: ['courses', effectiveFilter],
+    queryFn: () => fetchCourses(effectiveFilter),
+    staleTime: 5 * 60 * 1000,
   });
+
+  // 게스트 커스텀 과목을 API 결과에 병합
+  if (isGuest && guestCustomCourses.length > 0) {
+    const apiCourses = apiResult.data ?? [];
+    const mergedData = [
+      ...apiCourses,
+      ...guestCustomCourses.map((c) => ({
+        ...c,
+        _id: c._id as any,
+        department: c.department as any,
+        prerequisites: [] as any[],
+      })),
+    ] as ICourse[];
+    return {
+      ...apiResult,
+      data: mergedData,
+    } as typeof apiResult;
+  }
+
+  return apiResult;
 }
 
 /**
@@ -136,11 +168,54 @@ async function createCourse(input: Omit<CreateCourseInput, 'createdBy'>): Promis
  */
 export function useCreateCourse() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestAddCourse = useGuestCourseStore((s) => s.addCourse);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: createCourse,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutate: (input: Omit<CreateCourseInput, 'createdBy'>, options?: { onSuccess?: () => void }) => {
+        guestAddCourse({
+          code: input.code,
+          name: input.name,
+          credits: input.credits,
+          department: input.department,
+          prerequisites: input.prerequisites ?? [],
+          description: input.description,
+          semesters: input.semesters,
+          category: input.category,
+          recommendedYear: input.recommendedYear,
+          recommendedSemester: input.recommendedSemester,
+        });
+        options?.onSuccess?.();
+      },
+      mutateAsync: async (input: Omit<CreateCourseInput, 'createdBy'>) => {
+        const course = guestAddCourse({
+          code: input.code,
+          name: input.name,
+          credits: input.credits,
+          department: input.department,
+          prerequisites: input.prerequisites ?? [],
+          description: input.description,
+          semesters: input.semesters,
+          category: input.category,
+          recommendedYear: input.recommendedYear,
+          recommendedSemester: input.recommendedSemester,
+        });
+        return course as unknown as ICourse;
+      },
+      isPending: false,
+      isError: false,
+      error: null,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }

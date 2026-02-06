@@ -2,6 +2,8 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePlanStore } from '@/stores/planStore';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { graduationRequirementKeys } from './useGraduationRequirements';
 import type { ApiResponse, IPlan, Term } from '@/types';
 
@@ -57,8 +59,10 @@ const planKeys = {
 export function useUpdateCourseStatus() {
   const queryClient = useQueryClient();
   const updateStoreStatus = usePlanStore((s) => s.updateCourseStatus);
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestUpdateStatus = useGuestPlanStore((s) => s.updateCourseStatus);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: updateCourseStatus,
     onMutate: (variables) => {
       // Optimistic update via Zustand store
@@ -81,4 +85,18 @@ export function useUpdateCourseStatus() {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (input: UpdateCourseStatusInput) => {
+        guestUpdateStatus(input.planId, input.year, input.term, input.courseId, input.status);
+        updateStoreStatus(input.year, input.term, input.courseId, input.status);
+        return { _id: { toString: () => input.planId } } as unknown as IPlan;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }

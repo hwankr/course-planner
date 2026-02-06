@@ -1,6 +1,8 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import type {
   IPlan,
   CreatePlanInput,
@@ -124,22 +126,76 @@ async function removeCourseFromPlan(params: {
  * Fetch all plans for the current user
  */
 export function usePlans(options?: { enabled?: boolean }) {
-  return useQuery({
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestPlans = useGuestPlanStore((s) => s.plans);
+
+  const apiResult = useQuery({
     queryKey: planKeys.lists(),
     queryFn: fetchPlans,
-    enabled: options?.enabled ?? true,
+    enabled: !isGuest && (options?.enabled ?? true),
   });
+
+  if (isGuest) {
+    // Transform guest plans to match IPlan shape
+    const data = guestPlans.map((p) => ({
+      _id: { toString: () => p.id } as any,
+      name: p.name,
+      status: p.status,
+      semesters: p.semesters,
+      user: {} as any,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })) as unknown as IPlan[];
+    return { ...apiResult, data, isLoading: false, error: null, isError: false } as typeof apiResult;
+  }
+
+  return apiResult;
 }
 
 /**
  * Fetch a single plan by ID with populated courses
  */
 export function usePlan(id: string, options?: { enabled?: boolean }) {
-  return useQuery({
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestPlans = useGuestPlanStore((s) => s.plans);
+
+  const apiResult = useQuery({
     queryKey: planKeys.detail(id),
     queryFn: () => fetchPlan(id),
-    enabled: (options?.enabled ?? true) && !!id,
+    enabled: !isGuest && (options?.enabled ?? true) && !!id,
   });
+
+  if (isGuest) {
+    const guestPlan = guestPlans.find((p) => p.id === id);
+    if (guestPlan) {
+      const data = {
+        _id: { toString: () => guestPlan.id } as any,
+        name: guestPlan.name,
+        status: guestPlan.status,
+        semesters: guestPlan.semesters.map((sem) => ({
+          year: sem.year,
+          term: sem.term,
+          courses: sem.courses.map((c) => ({
+            course: {
+              _id: { toString: () => c.id },
+              code: c.code,
+              name: c.name,
+              credits: c.credits,
+              category: c.category,
+            } as any,
+            status: c.status,
+          })),
+        })),
+        user: {} as any,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as unknown as IPlan;
+      return { ...apiResult, data, isLoading: false, error: null, isError: false } as typeof apiResult;
+    }
+    return { ...apiResult, data: undefined, isLoading: false, error: null, isError: false } as typeof apiResult;
+  }
+
+  return apiResult;
 }
 
 /**
@@ -147,13 +203,36 @@ export function usePlan(id: string, options?: { enabled?: boolean }) {
  */
 export function useCreatePlan() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestCreatePlan = useGuestPlanStore((s) => s.createPlan);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: createPlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (input: CreatePlanInput) => {
+        const plan = guestCreatePlan(input.name);
+        return {
+          _id: { toString: () => plan.id } as any,
+          name: plan.name,
+          status: plan.status,
+          semesters: plan.semesters,
+          user: {} as any,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as unknown as IPlan;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
 
 /**
@@ -161,13 +240,27 @@ export function useCreatePlan() {
  */
 export function useDeletePlan() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestDeletePlan = useGuestPlanStore((s) => s.deletePlan);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: deletePlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (id: string) => {
+        guestDeletePlan(id);
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
 
 /**
@@ -175,8 +268,10 @@ export function useDeletePlan() {
  */
 export function useAddCourse() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestAddCourse = useGuestPlanStore((s) => s.addCourse);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: addCourseToPlan,
     onSuccess: (data) => {
       // Invalidate both the list and the specific plan detail
@@ -184,6 +279,25 @@ export function useAddCourse() {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(data._id.toString()) });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (params: AddCourseToSemesterInput) => {
+        guestAddCourse(params.planId, params.year, params.term, {
+          id: params.courseId,
+          code: '',
+          name: '',
+          credits: 0,
+          status: 'planned',
+        });
+        return { _id: { toString: () => params.planId } } as unknown as IPlan;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
 
 /**
@@ -191,8 +305,10 @@ export function useAddCourse() {
  */
 export function useRemoveCourse() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestRemoveCourse = useGuestPlanStore((s) => s.removeCourse);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: removeCourseFromPlan,
     onSuccess: (data) => {
       // Invalidate both the list and the specific plan detail
@@ -200,6 +316,19 @@ export function useRemoveCourse() {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(data._id.toString()) });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (params: { planId: string; year: number; term: Term; courseId: string }) => {
+        guestRemoveCourse(params.planId, params.year, params.term, params.courseId);
+        return { _id: { toString: () => params.planId } } as unknown as IPlan;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
 
 /**
@@ -207,8 +336,10 @@ export function useRemoveCourse() {
  */
 export function useAddSemester() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestAddSemester = useGuestPlanStore((s) => s.addSemester);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
       const res = await fetch(`/api/plans/${planId}/semesters`, {
         method: 'POST',
@@ -226,6 +357,18 @@ export function useAddSemester() {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
+        guestAddSemester(planId, year, term as Term);
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
 
 /**
@@ -233,8 +376,10 @@ export function useAddSemester() {
  */
 export function useRemoveSemester() {
   const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestRemoveSemester = useGuestPlanStore((s) => s.removeSemester);
 
-  return useMutation({
+  const apiMutation = useMutation({
     mutationFn: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
       const res = await fetch(`/api/plans/${planId}/semesters`, {
         method: 'DELETE',
@@ -252,4 +397,16 @@ export function useRemoveSemester() {
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
     },
   });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
+        guestRemoveSemester(planId, year, term as Term);
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
 }
