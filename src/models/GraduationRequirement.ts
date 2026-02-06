@@ -12,8 +12,10 @@ export interface IGraduationRequirementDocument extends mongoose.Document {
   majorCredits: number;          // 전공학점 합계 (예: 60)
   majorRequiredMin: number;      // 전공핵심 최소 (예: 24)
   generalCredits: number;        // 교양학점 합계 (예: 30)
+  earnedTotalCredits: number;    // 기이수 졸업학점 (기타)
   earnedMajorCredits: number;    // 기이수 전공학점
   earnedGeneralCredits: number;  // 기이수 교양학점
+  earnedMajorRequiredCredits: number;  // 기이수 전공핵심학점
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +48,11 @@ const graduationRequirementSchema = new Schema<IGraduationRequirementDocument>(
       required: [true, '교양학점은 필수입니다.'],
       min: [0, '교양학점은 0 이상이어야 합니다.'],
     },
+    earnedTotalCredits: {
+      type: Number,
+      default: 0,
+      min: [0, '기이수 졸업학점은 0 이상이어야 합니다.'],
+    },
     earnedMajorCredits: {
       type: Number,
       default: 0,
@@ -56,14 +63,23 @@ const graduationRequirementSchema = new Schema<IGraduationRequirementDocument>(
       default: 0,
       min: [0, '기이수 교양학점은 0 이상이어야 합니다.'],
     },
+    earnedMajorRequiredCredits: {
+      type: Number,
+      default: 0,
+      min: [0, '기이수 전공핵심학점은 0 이상이어야 합니다.'],
+    },
   },
   {
     timestamps: true,
   }
 );
 
+// Delete cached model during dev hot reload to pick up schema changes
+if (mongoose.models.GraduationRequirement) {
+  mongoose.deleteModel('GraduationRequirement');
+}
+
 const GraduationRequirement: Model<IGraduationRequirementDocument> =
-  mongoose.models.GraduationRequirement ||
   mongoose.model<IGraduationRequirementDocument>('GraduationRequirement', graduationRequirementSchema);
 
 export default GraduationRequirement;

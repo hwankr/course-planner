@@ -42,8 +42,10 @@ const upsertSchema = z.object({
   majorCredits: z.number().min(0, '전공학점은 0 이상이어야 합니다.'),
   majorRequiredMin: z.number().min(0, '전공핵심 최소학점은 0 이상이어야 합니다.'),
   generalCredits: z.number().min(0, '교양학점은 0 이상이어야 합니다.'),
+  earnedTotalCredits: z.number().min(0, '기이수 졸업학점은 0 이상이어야 합니다.'),
   earnedMajorCredits: z.number().min(0, '기이수 전공학점은 0 이상이어야 합니다.'),
   earnedGeneralCredits: z.number().min(0, '기이수 교양학점은 0 이상이어야 합니다.'),
+  earnedMajorRequiredCredits: z.number().min(0, '기이수 전공핵심학점은 0 이상이어야 합니다.'),
 });
 
 export async function PUT(request: Request) {

@@ -38,11 +38,13 @@ export const useGuestGraduationStore = create<GuestGraduationState>()(
         set({
           requirement: {
             totalCredits: 120,
-            majorCredits: 63,
-            majorRequiredMin: 0,
+            majorCredits: 53,
+            majorRequiredMin: 24,
             generalCredits: 30,
+            earnedTotalCredits: 0,
             earnedMajorCredits: 0,
             earnedGeneralCredits: 0,
+            earnedMajorRequiredCredits: 0,
           },
         }),
 
@@ -66,8 +68,10 @@ export function calculateGuestProgress(
   const pct = (earned: number, required: number) =>
     required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;
 
+  const priorTotal = requirement.earnedTotalCredits || 0;
   const priorMajor = requirement.earnedMajorCredits || 0;
   const priorGeneral = requirement.earnedGeneralCredits || 0;
+  const priorMajorRequired = requirement.earnedMajorRequiredCredits || 0;
 
   // Collect courses by status
   const completed: Array<{
@@ -147,10 +151,10 @@ export function calculateGuestProgress(
   return {
     total: {
       required: requirement.totalCredits,
-      earned: totalEarned + priorMajor + priorGeneral,
+      earned: totalEarned + priorTotal,
       enrolled: totalEnrolled,
       planned: totalPlanned,
-      percentage: pct(totalEarned + priorMajor + priorGeneral, requirement.totalCredits),
+      percentage: pct(totalEarned + priorTotal, requirement.totalCredits),
     },
     major: {
       required: requirement.majorCredits,
@@ -160,8 +164,8 @@ export function calculateGuestProgress(
       percentage: pct(majorEarned + priorMajor, requirement.majorCredits),
       requiredMin: {
         required: requirement.majorRequiredMin,
-        earned: majorReqEarned,
-        percentage: pct(majorReqEarned, requirement.majorRequiredMin),
+        earned: majorReqEarned + priorMajorRequired,
+        percentage: pct(majorReqEarned + priorMajorRequired, requirement.majorRequiredMin),
       },
     },
     general: {

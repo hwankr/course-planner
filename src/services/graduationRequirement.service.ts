@@ -67,15 +67,17 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
     select: 'code name credits category',
   }) as IPlanDocument | null;
 
+  const priorTotal = requirement.earnedTotalCredits || 0;
   const priorMajor = requirement.earnedMajorCredits || 0;
   const priorGeneral = requirement.earnedGeneralCredits || 0;
+  const priorMajorRequired = requirement.earnedMajorRequiredCredits || 0;
 
   // Helper to create empty CourseInfo arrays
   const emptyProgress = (): GraduationProgress => ({
-    total: { required: requirement.totalCredits, earned: priorMajor + priorGeneral, enrolled: 0, planned: 0, percentage: pct(priorMajor + priorGeneral, requirement.totalCredits) },
+    total: { required: requirement.totalCredits, earned: priorTotal, enrolled: 0, planned: 0, percentage: pct(priorTotal, requirement.totalCredits) },
     major: {
       required: requirement.majorCredits, earned: priorMajor, enrolled: 0, planned: 0, percentage: pct(priorMajor, requirement.majorCredits),
-      requiredMin: { required: requirement.majorRequiredMin, earned: 0, percentage: 0 },
+      requiredMin: { required: requirement.majorRequiredMin, earned: priorMajorRequired, percentage: pct(priorMajorRequired, requirement.majorRequiredMin) },
     },
     general: {
       required: requirement.generalCredits, earned: priorGeneral, enrolled: 0, planned: 0, percentage: pct(priorGeneral, requirement.generalCredits),
@@ -150,10 +152,10 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
   return {
     total: {
       required: requirement.totalCredits,
-      earned: totalEarned + priorMajor + priorGeneral,
+      earned: totalEarned + priorTotal,
       enrolled: totalEnrolled,
       planned: totalPlanned,
-      percentage: pct(totalEarned + priorMajor + priorGeneral, requirement.totalCredits),
+      percentage: pct(totalEarned + priorTotal, requirement.totalCredits),
     },
     major: {
       required: requirement.majorCredits,
@@ -163,8 +165,8 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       percentage: pct(majorEarned + priorMajor, requirement.majorCredits),
       requiredMin: {
         required: requirement.majorRequiredMin,
-        earned: majorReqEarned,
-        percentage: pct(majorReqEarned, requirement.majorRequiredMin),
+        earned: majorReqEarned + priorMajorRequired,
+        percentage: pct(majorReqEarned + priorMajorRequired, requirement.majorRequiredMin),
       },
     },
     general: {
@@ -190,11 +192,13 @@ async function createDefaults(userId: string): Promise<IGraduationRequirementDoc
   return GraduationRequirement.create({
     user: userId,
     totalCredits: 120,
-    majorCredits: 63,
-    majorRequiredMin: 0,
+    majorCredits: 53,
+    majorRequiredMin: 24,
     generalCredits: 30,
+    earnedTotalCredits: 0,
     earnedMajorCredits: 0,
     earnedGeneralCredits: 0,
+    earnedMajorRequiredCredits: 0,
   });
 }
 

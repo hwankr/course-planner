@@ -39,9 +39,12 @@ export default function OnboardingPage() {
   // Step 2 data - graduation requirements
   const [totalCredits, setTotalCredits] = useState(120);
   const [generalCredits, setGeneralCredits] = useState(30);
-  const [majorCredits, setMajorCredits] = useState(63);
+  const [majorCredits, setMajorCredits] = useState(53);
+  const [majorRequiredMin, setMajorRequiredMin] = useState(24);
+  const [earnedTotalCredits, setEarnedTotalCredits] = useState(0);
   const [earnedGeneralCredits, setEarnedGeneralCredits] = useState(0);
   const [earnedMajorCredits, setEarnedMajorCredits] = useState(0);
+  const [earnedMajorRequiredCredits, setEarnedMajorRequiredCredits] = useState(0);
 
   const handleNext = () => {
     setError('');
@@ -74,10 +77,12 @@ export default function OnboardingPage() {
       setGuestGraduation({
         totalCredits,
         majorCredits,
-        majorRequiredMin: 0,
+        majorRequiredMin,
         generalCredits,
+        earnedTotalCredits,
         earnedMajorCredits,
         earnedGeneralCredits,
+        earnedMajorRequiredCredits,
       });
       router.push('/planner');
       return;
@@ -90,10 +95,12 @@ export default function OnboardingPage() {
         graduationRequirements: {
           totalCredits,
           majorCredits,
-          majorRequiredMin: 0,
+          majorRequiredMin,
           generalCredits,
+          earnedTotalCredits,
           earnedMajorCredits,
           earnedGeneralCredits,
+          earnedMajorRequiredCredits,
         },
       });
 
@@ -244,6 +251,16 @@ export default function OnboardingPage() {
                       min={0}
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">전공핵심 (최소)</label>
+                    <Input
+                      type="number"
+                      value={majorRequiredMin}
+                      onChange={(e) => setMajorRequiredMin(parseInt(e.target.value) || 0)}
+                      min={0}
+                    />
+                    <p className="text-xs text-gray-400 mt-0.5">전공필수 최소 이수학점</p>
+                  </div>
                 </div>
 
                 {/* Right: Earned Credits */}
@@ -253,14 +270,14 @@ export default function OnboardingPage() {
                     <h3 className="text-sm font-semibold text-gray-900">취득 학점</h3>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">기이수 총학점</label>
+                    <label className="block text-xs text-gray-600 mb-1">기이수 졸업학점</label>
                     <Input
                       type="number"
-                      value={earnedMajorCredits + earnedGeneralCredits}
-                      disabled
-                      className="bg-gray-50"
+                      value={earnedTotalCredits}
+                      onChange={(e) => setEarnedTotalCredits(parseInt(e.target.value) || 0)}
+                      min={0}
                     />
-                    <p className="text-xs text-gray-400 mt-0.5">전공 + 교양 자동 합산</p>
+                    <p className="text-xs text-gray-400 mt-0.5">이미 이수한 총 학점 (전공+교양+기타 포함)</p>
                   </div>
                   <div>
                     <label className="block text-xs text-gray-600 mb-1">기이수 교양학점</label>
@@ -277,6 +294,15 @@ export default function OnboardingPage() {
                       type="number"
                       value={earnedMajorCredits}
                       onChange={(e) => setEarnedMajorCredits(parseInt(e.target.value) || 0)}
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">기이수 전공핵심학점</label>
+                    <Input
+                      type="number"
+                      value={earnedMajorRequiredCredits}
+                      onChange={(e) => setEarnedMajorRequiredCredits(parseInt(e.target.value) || 0)}
                       min={0}
                     />
                   </div>

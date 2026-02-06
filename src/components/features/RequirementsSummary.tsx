@@ -29,19 +29,26 @@ export function RequirementsSummary() {
     }
   };
 
+  const [saveError, setSaveError] = useState('');
+
   const handleUpsert = async (data: {
     totalCredits: number;
     majorCredits: number;
     majorRequiredMin: number;
     generalCredits: number;
+    earnedTotalCredits: number;
     earnedMajorCredits: number;
     earnedGeneralCredits: number;
+    earnedMajorRequiredCredits: number;
   }) => {
+    setSaveError('');
     try {
       await upsertMutation.mutateAsync(data);
       setIsEditing(false);
+      setIsExpanded(true);
     } catch (error) {
       console.error('Failed to save graduation requirement:', error);
+      setSaveError(error instanceof Error ? error.message : '저장에 실패했습니다.');
     }
   };
 
@@ -64,9 +71,10 @@ export function RequirementsSummary() {
           {isEditing ? (
             <div>
               <p className="text-sm font-medium text-gray-700 mb-3">졸업 요건 입력</p>
+              {saveError && <p className="text-sm text-red-500 mb-2">{saveError}</p>}
               <RequirementForm
                 onSubmit={handleUpsert}
-                onCancel={() => setIsEditing(false)}
+                onCancel={() => { setIsEditing(false); setSaveError(''); }}
                 isLoading={upsertMutation.isPending}
               />
             </div>
@@ -104,17 +112,20 @@ export function RequirementsSummary() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-medium text-gray-700">졸업 요건 수정</p>
           </div>
+          {saveError && <p className="text-sm text-red-500 mb-2">{saveError}</p>}
           <RequirementForm
             initialData={{
               totalCredits: requirement.totalCredits,
               majorCredits: requirement.majorCredits,
               majorRequiredMin: requirement.majorRequiredMin,
               generalCredits: requirement.generalCredits,
+              earnedTotalCredits: requirement.earnedTotalCredits || 0,
               earnedMajorCredits: requirement.earnedMajorCredits || 0,
               earnedGeneralCredits: requirement.earnedGeneralCredits || 0,
+              earnedMajorRequiredCredits: requirement.earnedMajorRequiredCredits || 0,
             }}
             onSubmit={handleUpsert}
-            onCancel={() => setIsEditing(false)}
+            onCancel={() => { setIsEditing(false); setSaveError(''); }}
             isLoading={upsertMutation.isPending}
           />
         </CardContent>
@@ -220,15 +231,18 @@ export function RequirementsSummary() {
             </div>
 
             {/* Edit button */}
-            <div className="pt-2 flex justify-end">
+            <div className="pt-3 flex justify-end border-t mt-1">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsEditing(true);
                   setIsExpanded(false);
                 }}
-                className="text-xs text-blue-500 hover:text-blue-700"
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
               >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
                 요건 수정
               </button>
             </div>

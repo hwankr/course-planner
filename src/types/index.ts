@@ -187,8 +187,10 @@ export interface IGraduationRequirement {
   majorCredits: number;
   majorRequiredMin: number;
   generalCredits: number;
+  earnedTotalCredits: number;
   earnedMajorCredits: number;
   earnedGeneralCredits: number;
+  earnedMajorRequiredCredits: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -198,8 +200,10 @@ export interface GraduationRequirementInput {
   majorCredits: number;
   majorRequiredMin: number;
   generalCredits: number;
+  earnedTotalCredits: number;
   earnedMajorCredits: number;
   earnedGeneralCredits: number;
+  earnedMajorRequiredCredits: number;
 }
 
 export interface CourseInfo {

@@ -17,8 +17,10 @@ interface CompleteOnboardingInput {
     majorCredits: number;
     majorRequiredMin: number;
     generalCredits: number;
+    earnedTotalCredits: number;
     earnedMajorCredits: number;
     earnedGeneralCredits: number;
+    earnedMajorRequiredCredits: number;
   };
 }
 

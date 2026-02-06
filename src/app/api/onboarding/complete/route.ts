@@ -18,8 +18,10 @@ const completeOnboardingSchema = z.object({
     majorCredits: z.number().int().min(0),
     majorRequiredMin: z.number().int().min(0),
     generalCredits: z.number().int().min(0),
+    earnedTotalCredits: z.number().int().min(0),
     earnedMajorCredits: z.number().int().min(0),
     earnedGeneralCredits: z.number().int().min(0),
+    earnedMajorRequiredCredits: z.number().int().min(0),
   }),
 });
 
