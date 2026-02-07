@@ -7,6 +7,7 @@
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+import type { MajorType } from '@/types';
 import { userService } from '@/services';
 
 export const authOptions: NextAuthOptions = {
@@ -51,6 +52,8 @@ export const authOptions: NextAuthOptions = {
           department: user.department?.toString(),
           role: user.role,
           onboardingCompleted: user.onboardingCompleted,
+          majorType: user.majorType,
+          secondaryDepartment: user.secondaryDepartment?.toString(),
         };
       },
     }),
@@ -86,6 +89,8 @@ export const authOptions: NextAuthOptions = {
               dbUser.onboardingCompleted = true;
             }
             token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
+            token.majorType = dbUser.majorType;
+            token.secondaryDepartment = dbUser.secondaryDepartment?.toString();
           }
         } else {
           token.id = user.id;
@@ -98,6 +103,8 @@ export const authOptions: NextAuthOptions = {
           } else {
             token.onboardingCompleted = user.onboardingCompleted ?? false;
           }
+          token.majorType = user.majorType;
+          token.secondaryDepartment = user.secondaryDepartment;
         }
       } else if (trigger === 'update') {
         // Session refresh: re-fetch from DB to get updated department
@@ -112,6 +119,8 @@ export const authOptions: NextAuthOptions = {
             dbUser.onboardingCompleted = true;
           }
           token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
+          token.majorType = dbUser.majorType;
+          token.secondaryDepartment = dbUser.secondaryDepartment?.toString();
         }
       }
       return token;
@@ -122,6 +131,8 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role;
         session.user.department = token.department;
         session.user.onboardingCompleted = token.onboardingCompleted as boolean;
+        session.user.majorType = token.majorType as MajorType | undefined;
+        session.user.secondaryDepartment = token.secondaryDepartment as string | undefined;
       }
       return session;
     },

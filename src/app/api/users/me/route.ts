@@ -41,6 +41,8 @@ export async function GET() {
         enrollmentYear: user.enrollmentYear,
         role: user.role,
         image: user.image,
+        majorType: user.majorType,
+        secondaryDepartment: user.secondaryDepartment,
       },
     });
   } catch (error) {
@@ -56,6 +58,8 @@ const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   department: z.string().min(1).optional(),
   enrollmentYear: z.number().min(2000).max(2030).optional(),
+  majorType: z.enum(['single', 'double', 'minor']).optional(),
+  secondaryDepartment: z.string().min(1).optional().nullable(),
 });
 
 export async function PATCH(request: Request) {
@@ -71,7 +75,13 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const validatedData = updateUserSchema.parse(body);
 
-    const updatedUser = await userService.update(session.user.id, validatedData);
+    // Transform null to undefined for service layer
+    const serviceData = {
+      ...validatedData,
+      secondaryDepartment: validatedData.secondaryDepartment === null ? undefined : validatedData.secondaryDepartment,
+    };
+
+    const updatedUser = await userService.update(session.user.id, serviceData);
     if (!updatedUser) {
       return NextResponse.json(
         { success: false, error: '사용자를 찾을 수 없습니다.' },
@@ -89,6 +99,8 @@ export async function PATCH(request: Request) {
         enrollmentYear: updatedUser.enrollmentYear,
         role: updatedUser.role,
         image: updatedUser.image,
+        majorType: updatedUser.majorType,
+        secondaryDepartment: updatedUser.secondaryDepartment,
       },
       message: '프로필이 업데이트되었습니다.',
     });

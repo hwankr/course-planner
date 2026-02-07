@@ -3,7 +3,7 @@
  */
 
 import 'next-auth';
-import type { UserRole } from '@/types';
+import type { UserRole, MajorType } from '@/types';
 
 declare module 'next-auth' {
   interface User {
@@ -11,6 +11,8 @@ declare module 'next-auth' {
     role?: UserRole;
     department?: string;
     onboardingCompleted?: boolean;
+    majorType?: MajorType;
+    secondaryDepartment?: string;
   }
 
   interface Session {
@@ -22,6 +24,8 @@ declare module 'next-auth' {
       role?: UserRole;
       department?: string;
       onboardingCompleted?: boolean;
+      majorType?: MajorType;
+      secondaryDepartment?: string;
     };
   }
 }
@@ -32,5 +36,7 @@ declare module 'next-auth/jwt' {
     role?: UserRole;
     department?: string;
     onboardingCompleted?: boolean;
+    majorType?: MajorType;
+    secondaryDepartment?: string;
   }
 }

@@ -13,7 +13,8 @@ import {
   Award,
   ArrowRight,
   ArrowLeft,
-  CheckCircle
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
@@ -323,34 +324,84 @@ export default function OnboardingPage() {
                 <p className="text-xs text-gray-500 mt-1">입학한 연도를 입력하세요.</p>
               </div>
 
-              {/* Major Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">전공 유형</label>
-                <div className="flex gap-2">
-                  {(['single', 'double', 'minor'] as MajorType[]).map((type) => {
-                    const labels: Record<MajorType, string> = { single: '단일전공', double: '복수전공', minor: '부전공' };
-                    const isAvailable = availableMajorTypes.includes(type);
-                    return (
+              {/* 복수전공/부전공 추가 */}
+              {departmentId && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>
+                  <div className="flex gap-2">
+                    {/* 복수전공 추가 토글 */}
+                    {availableMajorTypes.includes('double') && (
                       <button
-                        key={type}
                         type="button"
-                        onClick={() => isAvailable && setMajorType(type)}
-                        disabled={!isAvailable}
-                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
-                          majorType === type
-                            ? 'bg-[#153974] text-white border-[#153974]'
-                            : isAvailable
-                              ? 'bg-white text-gray-700 border-gray-300 hover:border-[#153974]'
-                              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        onClick={() => {
+                          if (majorType === 'double') {
+                            setMajorType('single');
+                            setSecondaryDepartmentId('');
+                          } else {
+                            setMajorType('double');
+                            setSecondaryDepartmentId('');
+                          }
+                        }}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                          majorType === 'double'
+                            ? 'bg-purple-500 text-white border-purple-500 shadow-sm'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600'
                         }`}
                       >
-                        {labels[type]}
-                        {!isAvailable && <span className="block text-[10px]">(미지원)</span>}
+                        <span className="flex items-center justify-center gap-1.5">
+                          {majorType === 'double' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              복수전공
+                            </>
+                          ) : (
+                            '+ 복수전공 추가'
+                          )}
+                        </span>
                       </button>
-                    );
-                  })}
+                    )}
+                    {/* 부전공 추가 토글 */}
+                    {availableMajorTypes.includes('minor') && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (majorType === 'minor') {
+                            setMajorType('single');
+                            setSecondaryDepartmentId('');
+                          } else {
+                            setMajorType('minor');
+                            setSecondaryDepartmentId('');
+                          }
+                        }}
+                        disabled={majorType === 'double'}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                          majorType === 'minor'
+                            ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                            : majorType === 'double'
+                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                        }`}
+                      >
+                        <span className="flex items-center justify-center gap-1.5">
+                          {majorType === 'minor' ? (
+                            <>
+                              <Check className="w-4 h-4" />
+                              부전공
+                            </>
+                          ) : (
+                            '+ 부전공 추가'
+                          )}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                  {majorType !== 'single' && (
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      {majorType === 'double' ? '복수전공' : '부전공'}을 선택했습니다. 해제하려면 다시 클릭하세요.
+                    </p>
+                  )}
                 </div>
-              </div>
+              )}
 
               {/* Secondary Department (shown for double/minor) */}
               {majorType !== 'single' && (
@@ -386,6 +437,22 @@ export default function OnboardingPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Warning banner for multi-major */}
+              {majorType !== 'single' && (
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">
+                      {majorType === 'double' ? '복수전공' : '부전공'}을 선택하셨습니다
+                    </p>
+                    <p className="text-xs text-amber-600 mt-1">
+                      이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요.
+                      아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Side-by-side layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Graduation Requirements */}

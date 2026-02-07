@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
-import type { ApiResponse } from '@/types';
+import type { ApiResponse, MajorType } from '@/types';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import Link from 'next/link';
@@ -20,6 +20,7 @@ import {
   UserX,
   Chrome,
   Trash2,
+  Check,
 } from 'lucide-react';
 
 interface Department {
@@ -36,6 +37,8 @@ interface UserProfile {
   enrollmentYear: number | null;
   role: string;
   image?: string;
+  majorType?: MajorType;
+  secondaryDepartment?: Department | null;
 }
 
 export default function ProfilePage() {
@@ -49,6 +52,8 @@ export default function ProfilePage() {
     name: '',
     enrollmentYear: '',
     department: '',
+    majorType: 'single' as MajorType,
+    secondaryDepartment: '',
   });
 
   const handleDeleteAccount = async () => {
@@ -110,6 +115,8 @@ export default function ProfilePage() {
         name: userProfile.name || '',
         enrollmentYear: userProfile.enrollmentYear?.toString() || '',
         department: userProfile.department?._id || '',
+        majorType: userProfile.majorType || 'single',
+        secondaryDepartment: userProfile.secondaryDepartment?._id || '',
       });
     }
   }, [userProfile]);
@@ -121,13 +128,15 @@ export default function ProfilePage() {
         name: guestProfile.name || '',
         enrollmentYear: guestProfile.enrollmentYear?.toString() || '',
         department: guestProfile.departmentId || '',
+        majorType: guestProfile.majorType || 'single',
+        secondaryDepartment: guestProfile.secondaryDepartmentId || '',
       });
     }
-  }, [isGuest, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId]);
+  }, [isGuest, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId, guestProfile.majorType, guestProfile.secondaryDepartmentId]);
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async (data: { name?: string; department?: string; enrollmentYear?: number }) => {
+    mutationFn: async (data: { name?: string; department?: string; enrollmentYear?: number; majorType?: MajorType; secondaryDepartment?: string | null }) => {
       const res = await fetch('/api/users/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -151,11 +160,13 @@ export default function ProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updateData: { name?: string; department?: string; enrollmentYear?: number } = {};
+    const updateData: { name?: string; department?: string; enrollmentYear?: number; majorType?: MajorType; secondaryDepartment?: string | null } = {};
 
     if (formData.name) updateData.name = formData.name;
     if (formData.department) updateData.department = formData.department;
     if (formData.enrollmentYear) updateData.enrollmentYear = parseInt(formData.enrollmentYear, 10);
+    updateData.majorType = formData.majorType;
+    updateData.secondaryDepartment = formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : null;
 
     updateMutation.mutate(updateData);
   };
@@ -243,6 +254,95 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
+        {/* Major Type Settings - Guest */}
+        <Card className="animate-fade-in-up anim-delay-50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-gray-600" />
+              <CardTitle>전공 설정</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newType = formData.majorType === 'double' ? 'single' : 'double';
+                      setFormData((prev) => ({ ...prev, majorType: newType, secondaryDepartment: '' }));
+                    }}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                      formData.majorType === 'double'
+                        ? 'bg-purple-500 text-white border-purple-500 shadow-sm'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-1.5">
+                      {formData.majorType === 'double' ? (
+                        <><Check className="w-4 h-4" />복수전공</>
+                      ) : '+ 복수전공 추가'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newType = formData.majorType === 'minor' ? 'single' : 'minor';
+                      setFormData((prev) => ({ ...prev, majorType: newType, secondaryDepartment: '' }));
+                    }}
+                    disabled={formData.majorType === 'double'}
+                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                      formData.majorType === 'minor'
+                        ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                        : formData.majorType === 'double'
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                    }`}
+                  >
+                    <span className="flex items-center justify-center gap-1.5">
+                      {formData.majorType === 'minor' ? (
+                        <><Check className="w-4 h-4" />부전공</>
+                      ) : '+ 부전공 추가'}
+                    </span>
+                  </button>
+                </div>
+                {formData.majorType !== 'single' && (
+                  <p className="text-xs text-gray-500 mt-1.5">
+                    {formData.majorType === 'double' ? '복수전공' : '부전공'}을 선택했습니다. 해제하려면 다시 클릭하세요.
+                  </p>
+                )}
+              </div>
+              {formData.majorType !== 'single' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {formData.majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
+                  </label>
+                  <SearchableSelect
+                    options={departmentOptions.filter((d) => d.value !== formData.department)}
+                    value={formData.secondaryDepartment}
+                    onChange={(val) => setFormData((prev) => ({ ...prev, secondaryDepartment: val }))}
+                    placeholder="학과를 검색하세요"
+                  />
+                </div>
+              )}
+              <Button
+                onClick={() => {
+                  guestProfile.setProfile({
+                    majorType: formData.majorType,
+                    secondaryDepartmentId: formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : undefined,
+                    secondaryDepartmentName: formData.majorType !== 'single' && formData.secondaryDepartment
+                      ? departments.find((d) => d._id === formData.secondaryDepartment)?.name || undefined
+                      : undefined,
+                  });
+                }}
+              >
+                저장
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Guest Info */}
         <Card className="animate-fade-in-up anim-delay-100">
           <CardHeader>
@@ -304,6 +404,17 @@ export default function ProfilePage() {
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#00AACA]/10 text-[#00AACA] text-xs font-medium">
                 <CalendarDays className="w-3 h-3" />
                 {enrollmentYear}년 입학
+              </span>
+            )}
+            {userProfile?.majorType && userProfile.majorType !== 'single' && (
+              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                userProfile.majorType === 'double'
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'bg-orange-100 text-orange-700'
+              }`}>
+                <Building2 className="w-3 h-3" />
+                {userProfile.majorType === 'double' ? '복수전공' : '부전공'}
+                {userProfile.secondaryDepartment ? `: ${userProfile.secondaryDepartment.name}` : ''}
               </span>
             )}
           </div>
@@ -402,7 +513,7 @@ export default function ProfilePage() {
                   {enrollmentYear ? `${enrollmentYear}년` : '미설정'}
                 </span>
               </div>
-              <div className="flex justify-between py-2">
+              <div className="flex justify-between py-2 border-b">
                 <div className="flex items-center gap-2">
                   <Building2 className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-600">학과</span>
@@ -411,8 +522,112 @@ export default function ProfilePage() {
                   {departmentName || '미설정'}
                 </span>
               </div>
+              {userProfile?.majorType && userProfile.majorType !== 'single' && (
+                <div className="flex justify-between py-2">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-gray-400" />
+                    <span className="text-gray-600">
+                      {userProfile.majorType === 'double' ? '복수전공' : '부전공'}
+                    </span>
+                  </div>
+                  <span className="font-medium">
+                    {userProfile.secondaryDepartment?.name || '학과 미설정'}
+                  </span>
+                </div>
+              )}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Major Type Settings - Authenticated */}
+      <Card className="animate-fade-in-up anim-delay-50">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-gray-600" />
+            <CardTitle>전공 설정</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, majorType: prev.majorType === 'double' ? 'single' : 'double', secondaryDepartment: '' }));
+                  }}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                    formData.majorType === 'double'
+                      ? 'bg-purple-500 text-white border-purple-500 shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-1.5">
+                    {formData.majorType === 'double' ? (
+                      <><Check className="w-4 h-4" />복수전공</>
+                    ) : '+ 복수전공 추가'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData((prev) => ({ ...prev, majorType: prev.majorType === 'minor' ? 'single' : 'minor', secondaryDepartment: '' }));
+                  }}
+                  disabled={formData.majorType === 'double'}
+                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
+                    formData.majorType === 'minor'
+                      ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                      : formData.majorType === 'double'
+                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                  }`}
+                >
+                  <span className="flex items-center justify-center gap-1.5">
+                    {formData.majorType === 'minor' ? (
+                      <><Check className="w-4 h-4" />부전공</>
+                    ) : '+ 부전공 추가'}
+                  </span>
+                </button>
+              </div>
+              {formData.majorType !== 'single' && (
+                <p className="text-xs text-gray-500 mt-1.5">
+                  {formData.majorType === 'double' ? '복수전공' : '부전공'}을 선택했습니다. 해제하려면 다시 클릭하세요.
+                </p>
+              )}
+            </div>
+            {formData.majorType !== 'single' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {formData.majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
+                </label>
+                <SearchableSelect
+                  options={departmentOptions.filter((d) => d.value !== formData.department)}
+                  value={formData.secondaryDepartment}
+                  onChange={(val) => setFormData((prev) => ({ ...prev, secondaryDepartment: val }))}
+                  placeholder="학과를 검색하세요"
+                />
+              </div>
+            )}
+            <Button
+              onClick={() => {
+                const updateData: { majorType?: MajorType; secondaryDepartment?: string | null } = {
+                  majorType: formData.majorType,
+                  secondaryDepartment: formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : null,
+                };
+                updateMutation.mutate(updateData as Parameters<typeof updateMutation.mutate>[0]);
+              }}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? '저장 중...' : '저장'}
+            </Button>
+            {updateMutation.isError && (
+              <p className="text-sm text-red-500">
+                {updateMutation.error?.message || '저장에 실패했습니다.'}
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 

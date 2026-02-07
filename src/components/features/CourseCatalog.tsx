@@ -9,7 +9,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
-import type { Semester, ICourse, RequirementCategory } from '@/types';
+import type { Semester, ICourse, RequirementCategory, MajorType } from '@/types';
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
@@ -37,7 +37,13 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const guestSecondaryDepartmentId = useGuestProfileStore((s) => s.secondaryDepartmentId);
+  const guestMajorType = useGuestProfileStore((s) => s.majorType);
   const userDepartment = (isGuest ? guestDepartmentId : session?.user?.department) || undefined;
+  const secondaryDepartment = (isGuest ? guestSecondaryDepartmentId : session?.user?.secondaryDepartment) || undefined;
+  const majorType = (isGuest ? guestMajorType : session?.user?.majorType) || 'single';
+  const [deptFilter, setDeptFilter] = useState<'primary' | 'secondary'>('primary');
+  const activeDepartment = (deptFilter === 'secondary' && secondaryDepartment) ? secondaryDepartment : userDepartment;
   const [showCustomForm, setShowCustomForm] = useState(false);
 
   // Debounce search term
@@ -54,9 +60,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
   const { data: courses = [], isLoading, error } = useCourses(
     isGroupedView
-      ? { departmentId: userDepartment }
+      ? { departmentId: activeDepartment }
       : {
-          departmentId: userDepartment,
+          departmentId: activeDepartment,
           search: debouncedSearch || undefined,
           recommendedYear: yearFilter,
           recommendedSemester: semesterFilter,
@@ -145,7 +151,11 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
           <div className="min-w-0">
             <h2 className="text-base font-semibold text-gray-900">과목 리스트</h2>
             <p className="text-xs text-gray-400 truncate">
-              {userDepartment ? '내 학과 커리큘럼' : '학과를 설정하면 커리큘럼이 표시됩니다'}
+              {activeDepartment
+                ? (deptFilter === 'secondary' && secondaryDepartment
+                  ? (majorType === 'double' ? '복수전공 학과 커리큘럼' : '부전공 학과 커리큘럼')
+                  : '내 학과 커리큘럼')
+                : '학과를 설정하면 커리큘럼이 표시됩니다'}
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -197,6 +207,32 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         {/* Row 3: Filters */}
         {!isCollapsed && (
           <div className="space-y-1.5">
+            {/* Department filter (for multi-major) */}
+            {secondaryDepartment && majorType !== 'single' && (
+              <div className="flex items-center gap-1 pb-1">
+                <span className="text-[11px] font-medium text-gray-400">학과</span>
+                <button
+                  onClick={() => setDeptFilter('primary')}
+                  className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors ${
+                    deptFilter === 'primary'
+                      ? 'bg-[#153974] text-white'
+                      : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'
+                  }`}
+                >
+                  주전공
+                </button>
+                <button
+                  onClick={() => setDeptFilter('secondary')}
+                  className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors ${
+                    deptFilter === 'secondary'
+                      ? (majorType === 'double' ? 'bg-purple-500 text-white' : 'bg-orange-500 text-white')
+                      : (majorType === 'double' ? 'bg-purple-50 text-purple-600 hover:bg-purple-100' : 'bg-orange-50 text-orange-600 hover:bg-orange-100')
+                  }`}
+                >
+                  {majorType === 'double' ? '복수전공' : '부전공'}
+                </button>
+              </div>
+            )}
             {/* Year + Semester filters (같은 줄) */}
             <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
               <div className="flex items-center gap-1">
@@ -360,6 +396,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                         course={course}
                                         isDragDisabled={isInPlan}
                                         compact={false}
+                                        departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
                                       />
                                     </div>
 
@@ -442,6 +479,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                 course={course}
                                 isDragDisabled={isInPlan}
                                 compact={false}
+                                departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
                               />
                             </div>
 

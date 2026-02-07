@@ -18,6 +18,7 @@ interface CourseCardProps {
   onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void; // Optional: for status updates
   isDragDisabled?: boolean; // Optional: for catalog items already in plan
   compact?: boolean;     // Optional: for compact display mode
+  departmentLabel?: string;  // e.g. "복수전공", "부전공"
 }
 
 const statusColors = {
@@ -64,7 +65,7 @@ function getNextStatus(current: 'planned' | 'enrolled' | 'completed' | 'failed')
   return cycle[(currentIndex + 1) % cycle.length];
 }
 
-export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, compact = false }: CourseCardProps) {
+export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, compact = false, departmentLabel }: CourseCardProps) {
 
   // Default status to 'planned' if not provided (for catalog view)
   const status = course.status || 'planned';
@@ -105,6 +106,17 @@ export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, c
             {course.category && categoryLabels[course.category] && (
               <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
                 {categoryLabels[course.category]}
+              </span>
+            )}
+            {departmentLabel && (
+              <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${
+                departmentLabel === '복수전공'
+                  ? 'bg-purple-100 text-purple-700'
+                  : departmentLabel === '부전공'
+                    ? 'bg-orange-100 text-orange-700'
+                    : 'bg-gray-100 text-gray-600'
+              }`}>
+                {departmentLabel}
               </span>
             )}
             <span className="text-xs font-medium text-gray-800 truncate">
@@ -158,6 +170,17 @@ export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, c
             {course.category && categoryLabels[course.category] && (
               <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
                 {categoryLabels[course.category]}
+              </span>
+            )}
+            {departmentLabel && (
+              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                departmentLabel === '복수전공'
+                  ? 'bg-purple-100 text-purple-700'
+                  : departmentLabel === '부전공'
+                    ? 'bg-orange-100 text-orange-700'
+                    : 'bg-gray-100 text-gray-600'
+              }`}>
+                {departmentLabel}
               </span>
             )}
             {course.status && onStatusChange ? (
