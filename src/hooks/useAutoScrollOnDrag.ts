@@ -5,7 +5,7 @@ import { useRef, useCallback, useEffect } from 'react';
 /**
  * 모바일 드래그 시작 시 타겟 요소로 자동 스크롤하는 훅.
  * useRef 기반 상태로 드래그 중 불필요한 re-render를 방지.
- * 터치 디바이스(pointer: coarse)에서만 동작.
+ * 터치 디바이스에서만 동작 (ontouchstart / maxTouchPoints 감지).
  */
 export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | null>) {
   const isDragScrollActiveRef = useRef(false);
@@ -13,8 +13,10 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
 
   const handleDragStartScroll = useCallback(
     (source: { droppableId: string }) => {
-      // Only on touch devices
-      if (typeof window === 'undefined' || !window.matchMedia('(pointer: coarse)').matches) return;
+      // Only on touch devices (ontouchstart + maxTouchPoints is more reliable than matchMedia pointer:coarse)
+      if (typeof window === 'undefined') return;
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      if (!isTouchDevice) return;
 
       // Only when dragging from catalog (not semester-to-semester)
       if (source.droppableId !== 'catalog') return;
