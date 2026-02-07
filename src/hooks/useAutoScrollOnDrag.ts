@@ -26,11 +26,19 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
         clearTimeout(scrollTimeoutRef.current);
       }
 
-      // Delay 80ms to let @hello-pangea/dnd complete INITIAL_PUBLISH
+      // Delay 150ms to let @hello-pangea/dnd complete INITIAL_PUBLISH
       scrollTimeoutRef.current = setTimeout(() => {
-        targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const el = targetRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          window.scrollTo({
+            top: scrollTop + rect.top - 8,
+            behavior: 'smooth',
+          });
+        }
         scrollTimeoutRef.current = null;
-      }, 80);
+      }, 150);
     },
     [targetRef]
   );
