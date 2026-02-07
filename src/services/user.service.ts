@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs';
 import { connectDB } from '@/lib/db/mongoose';
 import { User } from '@/models';
 import type { IUserDocument } from '@/models';
-import type { CreateUserInput } from '@/types';
+import type { CreateUserInput, MajorType } from '@/types';
 import { planService } from './plan.service';
 import { courseService } from './course.service';
 import { graduationRequirementService } from './graduationRequirement.service';
@@ -34,7 +34,7 @@ async function findByEmailWithPassword(email: string): Promise<IUserDocument | n
  */
 async function findById(id: string): Promise<IUserDocument | null> {
   await connectDB();
-  return User.findById(id).populate('department');
+  return User.findById(id).populate('department secondaryDepartment');
 }
 
 /**
@@ -77,10 +77,15 @@ async function verifyPassword(
  */
 async function update(
   id: string,
-  data: Partial<Pick<CreateUserInput, 'name' | 'department' | 'enrollmentYear'> & { onboardingCompleted: boolean }>
+  data: Partial<Pick<CreateUserInput, 'name' | 'department' | 'enrollmentYear'> & {
+    onboardingCompleted: boolean;
+    majorType: MajorType;
+    secondaryDepartment?: string;
+  }>
 ): Promise<IUserDocument | null> {
   await connectDB();
-  return User.findByIdAndUpdate(id, data, { new: true }).populate('department');
+  return User.findByIdAndUpdate(id, data, { new: true })
+    .populate('department secondaryDepartment');
 }
 
 /**

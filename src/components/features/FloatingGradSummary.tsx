@@ -39,7 +39,9 @@ export function FloatingGradSummary({ requirementsSummaryRef, isDragScrollActive
   if (!requirement || !isVisible || isDragScrollActive) return null;
 
   const total = progress?.total ?? { required: requirement.totalCredits, earned: 0, planned: 0, percentage: 0 };
-  const major = progress?.major ?? { required: requirement.majorCredits, earned: 0, planned: 0, percentage: 0 };
+  const primaryMajor = progress?.primaryMajor ?? { required: requirement.primaryMajorCredits, earned: 0, planned: 0, percentage: 0, requiredMin: { required: requirement.primaryMajorRequiredMin, earned: 0, planned: 0, percentage: 0 } };
+  const secondaryMajor = progress?.secondaryMajor;
+  const minor = progress?.minor;
   const general = progress?.general ?? { required: requirement.generalCredits, earned: 0, planned: 0, percentage: 0 };
 
   // Format credits display: skip "0+" when earned is 0
@@ -112,21 +114,47 @@ export function FloatingGradSummary({ requirementsSummaryRef, isDragScrollActive
             <div className="hidden sm:flex items-center gap-2 text-[10px] text-gray-500">
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                전공 {major.percentage}%
-                {delta?.major && renderDeltaBadge(delta.major.planned)}
+                전공 {primaryMajor.percentage}%
+                {delta?.primaryMajor && renderDeltaBadge(delta.primaryMajor.planned)}
               </span>
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                 교양 {general.percentage}%
                 {delta?.general && renderDeltaBadge(delta.general.planned)}
               </span>
+              {secondaryMajor && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                  복수전공 {secondaryMajor.percentage}%
+                  {delta?.secondaryMajor && renderDeltaBadge(delta.secondaryMajor.planned)}
+                </span>
+              )}
+              {minor && (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                  부전공 {minor.percentage}%
+                  {delta?.minor && renderDeltaBadge(delta.minor.planned)}
+                </span>
+              )}
             </div>
 
             {/* Mobile: compact category */}
             <div className="flex sm:hidden items-center gap-1.5 text-[10px] text-gray-500">
-              <span>전공 {major.percentage}%</span>
+              <span>전공 {primaryMajor.percentage}%</span>
               <span>·</span>
               <span>교양 {general.percentage}%</span>
+              {secondaryMajor && (
+                <>
+                  <span>·</span>
+                  <span>복수 {secondaryMajor.percentage}%</span>
+                </>
+              )}
+              {minor && (
+                <>
+                  <span>·</span>
+                  <span>부전공 {minor.percentage}%</span>
+                </>
+              )}
             </div>
           </div>
         </div>

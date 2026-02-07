@@ -51,6 +51,15 @@ const userSchema = new Schema<IUserDocument>(
       type: Boolean,
       default: false,
     },
+    majorType: {
+      type: String,
+      enum: ['single', 'double', 'minor'],
+      default: 'single',
+    },
+    secondaryDepartment: {
+      type: Schema.Types.ObjectId,
+      ref: 'Department',
+    },
   },
   {
     timestamps: true,
@@ -59,6 +68,7 @@ const userSchema = new Schema<IUserDocument>(
 
 // 인덱스 (email은 unique: true로 자동 생성)
 userSchema.index({ department: 1 });
+userSchema.index({ secondaryDepartment: 1 });
 
 // 비밀번호 포함 조회 메서드
 userSchema.statics.findByEmailWithPassword = function (email: string) {

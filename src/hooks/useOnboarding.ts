@@ -7,20 +7,33 @@ interface Department {
   _id: string;
   code: string;
   name: string;
+  college?: string;
 }
 
 interface CompleteOnboardingInput {
   departmentId: string;
+  majorType: 'single' | 'double' | 'minor';
+  secondaryDepartmentId?: string;
   enrollmentYear: number;
   graduationRequirements: {
+    majorType: 'single' | 'double' | 'minor';
     totalCredits: number;
-    majorCredits: number;
-    majorRequiredMin: number;
     generalCredits: number;
+    primaryMajorCredits: number;
+    primaryMajorRequiredMin: number;
+    secondaryMajorCredits?: number;
+    secondaryMajorRequiredMin?: number;
+    minorCredits?: number;
+    minorRequiredMin?: number;
+    minorPrimaryMajorMin?: number;
     earnedTotalCredits: number;
-    earnedMajorCredits: number;
     earnedGeneralCredits: number;
-    earnedMajorRequiredCredits: number;
+    earnedPrimaryMajorCredits: number;
+    earnedPrimaryMajorRequiredCredits: number;
+    earnedSecondaryMajorCredits?: number;
+    earnedSecondaryMajorRequiredCredits?: number;
+    earnedMinorCredits?: number;
+    earnedMinorRequiredCredits?: number;
   };
 }
 

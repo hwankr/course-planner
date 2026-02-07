@@ -7,12 +7,15 @@ import { usePlanStore } from '@/stores/planStore';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestGraduationStore, calculateGuestProgress } from '@/stores/guestGraduationStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import type { GraduationProgress, GraduationRequirementInput } from '@/types';
 import type { GuestSemesterForProgress } from '@/stores/guestGraduationStore';
 
 export interface GraduationPreviewDelta {
   total: { planned: number; projectedPercentage: number } | null;
-  major: { planned: number; projectedPercentage: number } | null;
+  primaryMajor: { planned: number; projectedPercentage: number } | null;
+  secondaryMajor: { planned: number; projectedPercentage: number } | null;
+  minor: { planned: number; projectedPercentage: number } | null;
   general: { planned: number; projectedPercentage: number } | null;
 }
 
@@ -44,18 +47,32 @@ export function useGraduationPreview(): GraduationPreviewResult {
   const memberSemesters = usePlanStore((s) => s.activePlan?.semesters);
   const guestPlan = useGuestPlanStore((s) => s.plan);
 
+  // Guest profile for department-based track resolution
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const guestSecondaryDepartmentId = useGuestProfileStore((s) => s.secondaryDepartmentId);
+
   const rawRequirement = isGuest ? guestRequirement : memberRequirement;
 
   // Adapt requirement to GraduationRequirementInput (strips _id, user, timestamps for member mode)
   const requirement: GraduationRequirementInput | null = rawRequirement ? {
+    majorType: rawRequirement.majorType ?? 'single',
     totalCredits: rawRequirement.totalCredits,
-    majorCredits: rawRequirement.majorCredits,
-    majorRequiredMin: rawRequirement.majorRequiredMin,
+    primaryMajorCredits: rawRequirement.primaryMajorCredits,
+    primaryMajorRequiredMin: rawRequirement.primaryMajorRequiredMin,
     generalCredits: rawRequirement.generalCredits,
+    secondaryMajorCredits: rawRequirement.secondaryMajorCredits,
+    secondaryMajorRequiredMin: rawRequirement.secondaryMajorRequiredMin,
+    minorCredits: rawRequirement.minorCredits,
+    minorRequiredMin: rawRequirement.minorRequiredMin,
+    minorPrimaryMajorMin: rawRequirement.minorPrimaryMajorMin,
     earnedTotalCredits: rawRequirement.earnedTotalCredits ?? 0,
-    earnedMajorCredits: rawRequirement.earnedMajorCredits ?? 0,
+    earnedPrimaryMajorCredits: rawRequirement.earnedPrimaryMajorCredits ?? 0,
     earnedGeneralCredits: rawRequirement.earnedGeneralCredits ?? 0,
-    earnedMajorRequiredCredits: rawRequirement.earnedMajorRequiredCredits ?? 0,
+    earnedPrimaryMajorRequiredCredits: rawRequirement.earnedPrimaryMajorRequiredCredits ?? 0,
+    earnedSecondaryMajorCredits: rawRequirement.earnedSecondaryMajorCredits,
+    earnedSecondaryMajorRequiredCredits: rawRequirement.earnedSecondaryMajorRequiredCredits,
+    earnedMinorCredits: rawRequirement.earnedMinorCredits,
+    earnedMinorRequiredCredits: rawRequirement.earnedMinorRequiredCredits,
   } : null;
 
   // Get semesters (member or guest)
@@ -80,7 +97,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
     }));
 
     // Current: calculate with current semesters as-is
-    const currentCalc = calculateGuestProgress(requirement, semestersForCalc);
+    const currentCalc = calculateGuestProgress(requirement, semestersForCalc, guestDepartmentId, guestSecondaryDepartmentId);
 
     if (!previewCourse) return { currentCalc, previewCalc: null };
 
@@ -111,9 +128,9 @@ export function useGraduationPreview(): GraduationPreviewResult {
       }
     }
 
-    const previewCalc = calculateGuestProgress(requirement, modifiedSemesters);
+    const previewCalc = calculateGuestProgress(requirement, modifiedSemesters, guestDepartmentId, guestSecondaryDepartmentId);
     return { currentCalc, previewCalc };
-  }, [requirement, semesters, previewCourse, previewAction, previewSemesterTarget]);
+  }, [requirement, semesters, previewCourse, previewAction, previewSemesterTarget, guestDepartmentId, guestSecondaryDepartmentId]);
 
   // Calculate delta (planned field changes)
   const delta = useMemo((): GraduationPreviewDelta | null => {
@@ -140,7 +157,11 @@ export function useGraduationPreview(): GraduationPreviewResult {
 
     return {
       total: calcDelta(currentCalc.total, previewCalc.total),
-      major: calcDelta(currentCalc.major, previewCalc.major),
+      primaryMajor: calcDelta(currentCalc.primaryMajor, previewCalc.primaryMajor),
+      secondaryMajor: (currentCalc.secondaryMajor && previewCalc.secondaryMajor)
+        ? calcDelta(currentCalc.secondaryMajor, previewCalc.secondaryMajor) : null,
+      minor: (currentCalc.minor && previewCalc.minor)
+        ? calcDelta(currentCalc.minor, previewCalc.minor) : null,
       general: calcDelta(currentCalc.general, previewCalc.general),
     };
   }, [currentCalc, previewCalc]);

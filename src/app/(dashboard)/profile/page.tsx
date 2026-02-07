@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
 import type { ApiResponse } from '@/types';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
@@ -94,6 +94,14 @@ export default function ProfilePage() {
       return result.data;
     },
   });
+
+  const departmentOptions = useMemo(() =>
+    departments.map((dept) => ({
+      value: dept._id,
+      label: dept.name,
+    })),
+    [departments]
+  );
 
   // Pre-populate form when userProfile loads
   useEffect(() => {
@@ -353,19 +361,12 @@ export default function ProfilePage() {
                   <Building2 className="w-4 h-4 text-gray-400" />
                   학과
                 </label>
-                <select
-                  name="department"
+                <SearchableSelect
+                  options={departmentOptions}
                   value={formData.department}
-                  onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                >
-                  <option value="">학과 선택</option>
-                  {departments.map((dept) => (
-                    <option key={dept._id} value={dept._id}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setFormData((prev) => ({ ...prev, department: val }))}
+                  placeholder="학과를 검색하세요"
+                />
               </div>
               <Button type="submit" disabled={updateMutation.isPending}>
                 {updateMutation.isPending ? '저장 중...' : '저장'}

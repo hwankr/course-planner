@@ -18,7 +18,9 @@ export interface IUser {
   password?: string; // OAuth 사용자는 없을 수 있음
   name: string;
   image?: string;
-  department?: Types.ObjectId;
+  department?: Types.ObjectId;           // 주전공 학과 (기존)
+  majorType: MajorType;                  // NEW: 전공 유형 (기본값: 'single')
+  secondaryDepartment?: Types.ObjectId;  // NEW: 복수전공/부전공 학과
   enrollmentYear?: number;
   role: UserRole;
   provider?: 'credentials' | 'google';
@@ -152,6 +154,55 @@ export type RequirementCategory =
   | 'general_elective'  // 교양선택
   | 'free_elective';    // 자유선택
 
+// ============================================
+// Major Track Types (전공 유형)
+// ============================================
+
+/** 전공 유형 */
+export type MajorType = 'single' | 'double' | 'minor';
+
+/** 전공 트랙별 요건 (전공핵심 + 전공계) */
+export interface MajorTrackRequirement {
+  majorRequiredMin: number;   // 전공핵심 최소학점
+  majorCredits: number;       // 전공계 학점 (전공핵심 포함 총 전공학점)
+}
+
+/** 전공 트랙별 기이수 학점 */
+export interface MajorTrackEarned {
+  earnedMajorCredits: number;         // 기이수 전공학점
+  earnedMajorRequiredCredits: number; // 기이수 전공핵심학점
+}
+
+// ============================================
+// DepartmentRequirement Types (학과 졸업요건 기준표)
+// ============================================
+
+/** 전공유형별 설정 (단일/복수/부전공 각각) */
+export interface DepartmentMajorTypeConfig {
+  majorRequiredMin: number | null;  // 전공핵심 최소학점 (null = 요건 없음, 전공계만)
+  majorCredits: number | null;      // 전공계 학점 (null = 해당 전공유형 미지원)
+}
+
+/** 부전공 전용 추가 필드 */
+export interface DepartmentMinorConfig extends DepartmentMajorTypeConfig {
+  primaryMajorMin: number | null;   // 부전공시 주전공 최소학점
+}
+
+/** 학과 졸업요건 기준표 (참조 테이블) */
+export interface IDepartmentRequirement {
+  _id: Types.ObjectId;
+  college: string;                    // 대학 (예: "공과대학")
+  departmentName: string;             // 학부(과)·전공 (예: "건축학부 건축학전공")
+  generalCredits: number | null;      // 교양 학점 (null = 교양 없음, 의학과 등)
+  single: DepartmentMajorTypeConfig;  // 단일전공 설정
+  double: DepartmentMajorTypeConfig;  // 복수전공 설정
+  minor: DepartmentMinorConfig;       // 부전공 설정
+  totalCredits: number;               // 졸업학점
+  availableMajorTypes: MajorType[];   // 가용 전공유형 (computed from non-null majorCredits)
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface IRequirement {
   _id: Types.ObjectId;
   department: Types.ObjectId;
@@ -180,27 +231,69 @@ export interface CreateRequirementInput {
 export interface IGraduationRequirement {
   _id: Types.ObjectId;
   user: Types.ObjectId;
+  majorType: MajorType;                 // NEW
+
+  // 공통 요건
   totalCredits: number;
-  majorCredits: number;
-  majorRequiredMin: number;
   generalCredits: number;
+
+  // 주전공 요건
+  primaryMajorCredits: number;           // renamed from majorCredits
+  primaryMajorRequiredMin: number;       // renamed from majorRequiredMin
+
+  // 복수전공 요건 (majorType === 'double')
+  secondaryMajorCredits?: number;
+  secondaryMajorRequiredMin?: number;
+
+  // 부전공 요건 (majorType === 'minor')
+  minorCredits?: number;
+  minorRequiredMin?: number;
+  minorPrimaryMajorMin?: number;
+
+  // 기이수 학점 - 공통
   earnedTotalCredits: number;
-  earnedMajorCredits: number;
   earnedGeneralCredits: number;
-  earnedMajorRequiredCredits: number;
+
+  // 기이수 학점 - 주전공
+  earnedPrimaryMajorCredits: number;            // renamed from earnedMajorCredits
+  earnedPrimaryMajorRequiredCredits: number;    // renamed from earnedMajorRequiredCredits
+
+  // 기이수 학점 - 복수전공
+  earnedSecondaryMajorCredits?: number;
+  earnedSecondaryMajorRequiredCredits?: number;
+
+  // 기이수 학점 - 부전공
+  earnedMinorCredits?: number;
+  earnedMinorRequiredCredits?: number;
+
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface GraduationRequirementInput {
+  majorType: MajorType;
+
   totalCredits: number;
-  majorCredits: number;
-  majorRequiredMin: number;
   generalCredits: number;
+
+  primaryMajorCredits: number;
+  primaryMajorRequiredMin: number;
+
+  secondaryMajorCredits?: number;
+  secondaryMajorRequiredMin?: number;
+
+  minorCredits?: number;
+  minorRequiredMin?: number;
+  minorPrimaryMajorMin?: number;
+
   earnedTotalCredits: number;
-  earnedMajorCredits: number;
   earnedGeneralCredits: number;
-  earnedMajorRequiredCredits: number;
+  earnedPrimaryMajorCredits: number;
+  earnedPrimaryMajorRequiredCredits: number;
+  earnedSecondaryMajorCredits?: number;
+  earnedSecondaryMajorRequiredCredits?: number;
+  earnedMinorCredits?: number;
+  earnedMinorRequiredCredits?: number;
 }
 
 export interface CourseInfo {
@@ -225,11 +318,16 @@ export interface SubRequirement {
   percentage: number;
 }
 
+export interface TrackProgress extends GroupProgress {
+  requiredMin: SubRequirement;  // 전공핵심 서브 요건
+}
+
 export interface GraduationProgress {
   total: GroupProgress;
-  major: GroupProgress & {
-    requiredMin: SubRequirement;
-  };
+  primaryMajor: TrackProgress;           // renamed from 'major'
+  secondaryMajor?: TrackProgress;        // NEW: 복수전공 진행률
+  minor?: TrackProgress;                 // NEW: 부전공 진행률
+  minorPrimaryMajorMin?: SubRequirement; // NEW: 부전공시 주전공 최소 체크
   general: GroupProgress;
   courses: {
     completed: CourseInfo[];

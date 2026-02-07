@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "seed:dept-req": "tsx scripts/seed-department-requirements.ts",
+    "seed:sync-dept": "tsx scripts/sync-departments.ts"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",

@@ -5,6 +5,7 @@ import type { ApiResponse, GraduationProgress, GraduationRequirementInput } from
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestGraduationStore, calculateGuestProgress } from '@/stores/guestGraduationStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 
 // ============================================
 // Types (local to this hook)
@@ -13,14 +14,24 @@ import { useGuestPlanStore } from '@/stores/guestPlanStore';
 interface GraduationRequirement {
   _id: string;
   user: string;
+  majorType: 'single' | 'double' | 'minor';
   totalCredits: number;
-  majorCredits: number;
-  majorRequiredMin: number;
+  primaryMajorCredits: number;
+  primaryMajorRequiredMin: number;
   generalCredits: number;
+  secondaryMajorCredits?: number;
+  secondaryMajorRequiredMin?: number;
+  minorCredits?: number;
+  minorRequiredMin?: number;
+  minorPrimaryMajorMin?: number;
   earnedTotalCredits: number;
-  earnedMajorCredits: number;
+  earnedPrimaryMajorCredits: number;
   earnedGeneralCredits: number;
-  earnedMajorRequiredCredits: number;
+  earnedPrimaryMajorRequiredCredits: number;
+  earnedSecondaryMajorCredits?: number;
+  earnedSecondaryMajorRequiredCredits?: number;
+  earnedMinorCredits?: number;
+  earnedMinorRequiredCredits?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -128,6 +139,8 @@ export function useGraduationProgress(options?: { enabled?: boolean }) {
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestRequirement = useGuestGraduationStore((s) => s.requirement);
   const guestPlan = useGuestPlanStore((s) => s.plan);
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const guestSecondaryDepartmentId = useGuestProfileStore((s) => s.secondaryDepartmentId);
 
   const apiResult = useQuery({
     queryKey: graduationRequirementKeys.progress(),
@@ -138,7 +151,12 @@ export function useGraduationProgress(options?: { enabled?: boolean }) {
   if (isGuest) {
     let progress = null;
     if (guestRequirement) {
-      progress = calculateGuestProgress(guestRequirement, guestPlan?.semesters ?? []);
+      progress = calculateGuestProgress(
+        guestRequirement,
+        guestPlan?.semesters ?? [],
+        guestDepartmentId,
+        guestSecondaryDepartmentId
+      );
     }
     return {
       ...apiResult,

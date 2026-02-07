@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input } from '@/components/ui';
+import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
 import { useDepartments, useCompleteOnboarding } from '@/hooks/useOnboarding';
 import {
   Check,
@@ -18,12 +18,24 @@ import {
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
+import type { MajorType } from '@/types';
+
+const EMPTY_DEPARTMENTS: { _id: string; code: string; name: string; college?: string }[] = [];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { update: updateSession } = useSession();
-  const { data: departments = [], isLoading: isDeptLoading } = useDepartments();
+  const { data: departments = EMPTY_DEPARTMENTS, isLoading: isDeptLoading } = useDepartments();
   const completeMutation = useCompleteOnboarding();
+
+  const departmentOptions = useMemo(() =>
+    departments.map((dept) => ({
+      value: dept._id,
+      label: dept.name,
+      group: dept.college || '',
+    })),
+    [departments]
+  );
 
   const isGuest = useGuestStore((s) => s.isGuest);
   const setGuestProfile = useGuestProfileStore((s) => s.setProfile);
@@ -35,16 +47,108 @@ export default function OnboardingPage() {
   // Step 1 data
   const [departmentId, setDepartmentId] = useState('');
   const [enrollmentYear, setEnrollmentYear] = useState('');
+  const [majorType, setMajorType] = useState<MajorType>('single');
+  const [secondaryDepartmentId, setSecondaryDepartmentId] = useState('');
+  const [availableMajorTypes, setAvailableMajorTypes] = useState<MajorType[]>(['single', 'double', 'minor']);
+  const [autoFillMessage, setAutoFillMessage] = useState('');
 
-  // Step 2 data - graduation requirements
+  // Step 2 data - graduation requirements (primary / common)
   const [totalCredits, setTotalCredits] = useState(120);
   const [generalCredits, setGeneralCredits] = useState(30);
-  const [majorCredits, setMajorCredits] = useState(63);
-  const [majorRequiredMin, setMajorRequiredMin] = useState(24);
+  const [primaryMajorCredits, setPrimaryMajorCredits] = useState(63);
+  const [primaryMajorRequiredMin, setPrimaryMajorRequiredMin] = useState(24);
   const [earnedTotalCredits, setEarnedTotalCredits] = useState(0);
   const [earnedGeneralCredits, setEarnedGeneralCredits] = useState(0);
-  const [earnedMajorCredits, setEarnedMajorCredits] = useState(0);
-  const [earnedMajorRequiredCredits, setEarnedMajorRequiredCredits] = useState(0);
+  const [earnedPrimaryMajorCredits, setEarnedPrimaryMajorCredits] = useState(0);
+  const [earnedPrimaryMajorRequiredCredits, setEarnedPrimaryMajorRequiredCredits] = useState(0);
+
+  // Step 2 data - double major
+  const [secondaryMajorCredits, setSecondaryMajorCredits] = useState(36);
+  const [secondaryMajorRequiredMin, setSecondaryMajorRequiredMin] = useState(12);
+  const [earnedSecondaryMajorCredits, setEarnedSecondaryMajorCredits] = useState(0);
+  const [earnedSecondaryMajorRequiredCredits, setEarnedSecondaryMajorRequiredCredits] = useState(0);
+
+  // Step 2 data - minor
+  const [minorCredits, setMinorCredits] = useState(21);
+  const [minorRequiredMin, setMinorRequiredMin] = useState(9);
+  const [minorPrimaryMajorMin, setMinorPrimaryMajorMin] = useState(0);
+  const [earnedMinorCredits, setEarnedMinorCredits] = useState(0);
+  const [earnedMinorRequiredCredits, setEarnedMinorRequiredCredits] = useState(0);
+
+  // Fetch available major types when department selected
+  useEffect(() => {
+    if (!departmentId) {
+      setAvailableMajorTypes(['single', 'double', 'minor']);
+      return;
+    }
+    const selectedDept = departments.find((d) => d._id === departmentId);
+    if (!selectedDept?.college || !selectedDept?.name) return;
+
+    const fetchAvailable = async () => {
+      try {
+        const res = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}`);
+        if (!res.ok) {
+          setAvailableMajorTypes(['single', 'double', 'minor']);
+          return;
+        }
+        const data = await res.json();
+        if (data.availableMajorTypes) {
+          setAvailableMajorTypes(data.availableMajorTypes);
+          // If currently selected majorType is not available, reset to 'single'
+          if (!data.availableMajorTypes.includes(majorType)) {
+            setMajorType('single');
+          }
+        }
+      } catch {
+        setAvailableMajorTypes(['single', 'double', 'minor']);
+      }
+    };
+    fetchAvailable();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [departmentId, departments]);
+
+  // Auto-fill from department requirements when entering Step 2
+  const autoFillFromDeptReq = async () => {
+    const selectedDept = departments.find((d) => d._id === departmentId);
+    if (!selectedDept?.college || !selectedDept?.name) return;
+
+    setAutoFillMessage('');
+
+    try {
+      // Fetch primary (single track) requirements
+      const primaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}&majorType=single`);
+      if (primaryRes.ok) {
+        const primaryData = await primaryRes.json();
+        if (primaryData.totalCredits) setTotalCredits(primaryData.totalCredits);
+        if (primaryData.generalCredits !== undefined && primaryData.generalCredits !== null) setGeneralCredits(primaryData.generalCredits);
+        if (primaryData.primaryMajorCredits) setPrimaryMajorCredits(primaryData.primaryMajorCredits);
+        if (primaryData.primaryMajorRequiredMin !== undefined && primaryData.primaryMajorRequiredMin !== null) setPrimaryMajorRequiredMin(primaryData.primaryMajorRequiredMin);
+      }
+
+      // For double/minor: also fetch secondary department requirements
+      if (majorType !== 'single' && secondaryDepartmentId) {
+        const secondaryDept = departments.find((d) => d._id === secondaryDepartmentId);
+        if (secondaryDept?.college && secondaryDept?.name) {
+          const secondaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(secondaryDept.college!)}&departmentName=${encodeURIComponent(secondaryDept.name)}&majorType=${majorType}`);
+          if (secondaryRes.ok) {
+            const secData = await secondaryRes.json();
+            if (majorType === 'double') {
+              if (secData.secondaryMajorCredits) setSecondaryMajorCredits(secData.secondaryMajorCredits);
+              if (secData.secondaryMajorRequiredMin !== undefined) setSecondaryMajorRequiredMin(secData.secondaryMajorRequiredMin);
+            } else if (majorType === 'minor') {
+              if (secData.minorCredits) setMinorCredits(secData.minorCredits);
+              if (secData.minorRequiredMin !== undefined) setMinorRequiredMin(secData.minorRequiredMin);
+              if (secData.minorPrimaryMajorMin !== undefined) setMinorPrimaryMajorMin(secData.minorPrimaryMajorMin);
+            }
+          }
+        }
+      }
+
+      setAutoFillMessage('학과 기준표에서 불러왔습니다. 수정할 수 있습니다.');
+    } catch {
+      // Silently fail - user can manually input
+    }
+  };
 
   const handleNext = () => {
     setError('');
@@ -56,7 +160,17 @@ export default function OnboardingPage() {
       setError('올바른 입학연도를 입력해주세요.');
       return;
     }
+    if (majorType !== 'single' && !secondaryDepartmentId) {
+      setError('복수전공/부전공 학과를 선택해주세요.');
+      return;
+    }
+    if (secondaryDepartmentId === departmentId) {
+      setError('주전공과 다른 학과를 선택해주세요.');
+      return;
+    }
     setStep(2);
+    // Auto-fill when entering step 2
+    autoFillFromDeptReq();
   };
 
   const handleComplete = async () => {
@@ -69,20 +183,31 @@ export default function OnboardingPage() {
     if (isGuest) {
       // Guest: save to local stores
       const selectedDept = departments.find((d) => d._id === departmentId);
+      const secondaryDept = departments.find((d) => d._id === secondaryDepartmentId);
       setGuestProfile({
         departmentId,
         departmentName: selectedDept?.name || '',
+        departmentCollege: selectedDept?.college || undefined,
+        majorType,
+        secondaryDepartmentId: secondaryDepartmentId || undefined,
+        secondaryDepartmentName: secondaryDept?.name,
+        secondaryDepartmentCollege: secondaryDept?.college || undefined,
         enrollmentYear: parseInt(enrollmentYear),
       });
       setGuestGraduation({
+        majorType,
         totalCredits,
-        majorCredits,
-        majorRequiredMin,
+        primaryMajorCredits,
+        primaryMajorRequiredMin,
         generalCredits,
+        ...(majorType === 'double' ? { secondaryMajorCredits, secondaryMajorRequiredMin } : {}),
+        ...(majorType === 'minor' ? { minorCredits, minorRequiredMin, minorPrimaryMajorMin } : {}),
         earnedTotalCredits,
-        earnedMajorCredits,
         earnedGeneralCredits,
-        earnedMajorRequiredCredits,
+        earnedPrimaryMajorCredits,
+        earnedPrimaryMajorRequiredCredits,
+        ...(majorType === 'double' ? { earnedSecondaryMajorCredits, earnedSecondaryMajorRequiredCredits } : {}),
+        ...(majorType === 'minor' ? { earnedMinorCredits, earnedMinorRequiredCredits } : {}),
       });
       router.push('/planner');
       return;
@@ -91,16 +216,23 @@ export default function OnboardingPage() {
     try {
       await completeMutation.mutateAsync({
         departmentId,
+        majorType,
+        secondaryDepartmentId: secondaryDepartmentId || undefined,
         enrollmentYear: parseInt(enrollmentYear),
         graduationRequirements: {
+          majorType,
           totalCredits,
-          majorCredits,
-          majorRequiredMin,
+          primaryMajorCredits,
+          primaryMajorRequiredMin,
           generalCredits,
+          ...(majorType === 'double' ? { secondaryMajorCredits, secondaryMajorRequiredMin } : {}),
+          ...(majorType === 'minor' ? { minorCredits, minorRequiredMin, minorPrimaryMajorMin } : {}),
           earnedTotalCredits,
-          earnedMajorCredits,
           earnedGeneralCredits,
-          earnedMajorRequiredCredits,
+          earnedPrimaryMajorCredits,
+          earnedPrimaryMajorRequiredCredits,
+          ...(majorType === 'double' ? { earnedSecondaryMajorCredits, earnedSecondaryMajorRequiredCredits } : {}),
+          ...(majorType === 'minor' ? { earnedMinorCredits, earnedMinorRequiredCredits } : {}),
         },
       });
 
@@ -170,19 +302,13 @@ export default function OnboardingPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">학과</label>
-                <select
+                <SearchableSelect
+                  options={departmentOptions}
                   value={departmentId}
-                  onChange={(e) => setDepartmentId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:border-transparent"
+                  onChange={(val) => setDepartmentId(val)}
+                  placeholder={isDeptLoading ? '불러오는 중...' : '학과를 검색하세요'}
                   disabled={isDeptLoading}
-                >
-                  <option value="">{isDeptLoading ? '불러오는 중...' : '학과를 선택하세요'}</option>
-                  {departments.map((dept) => (
-                    <option key={dept._id} value={dept._id}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">입학연도</label>
@@ -196,6 +322,50 @@ export default function OnboardingPage() {
                 />
                 <p className="text-xs text-gray-500 mt-1">입학한 연도를 입력하세요.</p>
               </div>
+
+              {/* Major Type Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">전공 유형</label>
+                <div className="flex gap-2">
+                  {(['single', 'double', 'minor'] as MajorType[]).map((type) => {
+                    const labels: Record<MajorType, string> = { single: '단일전공', double: '복수전공', minor: '부전공' };
+                    const isAvailable = availableMajorTypes.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => isAvailable && setMajorType(type)}
+                        disabled={!isAvailable}
+                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
+                          majorType === type
+                            ? 'bg-[#153974] text-white border-[#153974]'
+                            : isAvailable
+                              ? 'bg-white text-gray-700 border-gray-300 hover:border-[#153974]'
+                              : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                        }`}
+                      >
+                        {labels[type]}
+                        {!isAvailable && <span className="block text-[10px]">(미지원)</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Secondary Department (shown for double/minor) */}
+              {majorType !== 'single' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
+                  </label>
+                  <SearchableSelect
+                    options={departmentOptions.filter((d) => d.value !== departmentId)}
+                    value={secondaryDepartmentId}
+                    onChange={(val) => setSecondaryDepartmentId(val)}
+                    placeholder="학과를 검색하세요"
+                  />
+                </div>
+              )}
 
               {error && <p className="text-sm text-red-500">{error}</p>}
 
@@ -246,8 +416,8 @@ export default function OnboardingPage() {
                     <label className="block text-xs text-gray-600 mb-1">전공학점</label>
                     <Input
                       type="number"
-                      value={majorCredits}
-                      onChange={(e) => setMajorCredits(parseInt(e.target.value) || 0)}
+                      value={primaryMajorCredits}
+                      onChange={(e) => setPrimaryMajorCredits(parseInt(e.target.value) || 0)}
                       min={0}
                     />
                   </div>
@@ -255,8 +425,8 @@ export default function OnboardingPage() {
                     <label className="block text-xs text-gray-600 mb-1">전공핵심 (최소)</label>
                     <Input
                       type="number"
-                      value={majorRequiredMin}
-                      onChange={(e) => setMajorRequiredMin(parseInt(e.target.value) || 0)}
+                      value={primaryMajorRequiredMin}
+                      onChange={(e) => setPrimaryMajorRequiredMin(parseInt(e.target.value) || 0)}
                       min={0}
                     />
                     <p className="text-xs text-gray-400 mt-0.5">전공필수 최소 이수학점</p>
@@ -292,8 +462,8 @@ export default function OnboardingPage() {
                     <label className="block text-xs text-gray-600 mb-1">기이수 전공학점</label>
                     <Input
                       type="number"
-                      value={earnedMajorCredits}
-                      onChange={(e) => setEarnedMajorCredits(parseInt(e.target.value) || 0)}
+                      value={earnedPrimaryMajorCredits}
+                      onChange={(e) => setEarnedPrimaryMajorCredits(parseInt(e.target.value) || 0)}
                       min={0}
                     />
                   </div>
@@ -301,18 +471,94 @@ export default function OnboardingPage() {
                     <label className="block text-xs text-gray-600 mb-1">기이수 전공핵심학점</label>
                     <Input
                       type="number"
-                      value={earnedMajorRequiredCredits}
-                      onChange={(e) => setEarnedMajorRequiredCredits(parseInt(e.target.value) || 0)}
+                      value={earnedPrimaryMajorRequiredCredits}
+                      onChange={(e) => setEarnedPrimaryMajorRequiredCredits(parseInt(e.target.value) || 0)}
                       min={0}
                     />
                   </div>
                 </div>
+
+                {/* Conditional: Double Major Requirements */}
+                {majorType === 'double' && (
+                  <>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-1.5 border-b pb-2">
+                        <BookOpen className="w-4 h-4 text-purple-500" />
+                        <h3 className="text-sm font-semibold text-gray-900">복수전공 기준</h3>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">복수전공 전공학점</label>
+                        <Input type="number" value={secondaryMajorCredits} onChange={(e) => setSecondaryMajorCredits(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">복수전공 전공핵심 (최소)</label>
+                        <Input type="number" value={secondaryMajorRequiredMin} onChange={(e) => setSecondaryMajorRequiredMin(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-1.5 border-b pb-2">
+                        <Award className="w-4 h-4 text-purple-500" />
+                        <h3 className="text-sm font-semibold text-gray-900">복수전공 기이수</h3>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">기이수 복수전공 전공학점</label>
+                        <Input type="number" value={earnedSecondaryMajorCredits} onChange={(e) => setEarnedSecondaryMajorCredits(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">기이수 복수전공 전공핵심</label>
+                        <Input type="number" value={earnedSecondaryMajorRequiredCredits} onChange={(e) => setEarnedSecondaryMajorRequiredCredits(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Conditional: Minor Requirements */}
+                {majorType === 'minor' && (
+                  <>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-1.5 border-b pb-2">
+                        <BookOpen className="w-4 h-4 text-orange-500" />
+                        <h3 className="text-sm font-semibold text-gray-900">부전공 기준</h3>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">부전공 전공학점</label>
+                        <Input type="number" value={minorCredits} onChange={(e) => setMinorCredits(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">부전공 전공핵심 (최소)</label>
+                        <Input type="number" value={minorRequiredMin} onChange={(e) => setMinorRequiredMin(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">부전공시 주전공 최소학점</label>
+                        <Input type="number" value={minorPrimaryMajorMin} onChange={(e) => setMinorPrimaryMajorMin(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-1.5 border-b pb-2">
+                        <Award className="w-4 h-4 text-orange-500" />
+                        <h3 className="text-sm font-semibold text-gray-900">부전공 기이수</h3>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">기이수 부전공 전공학점</label>
+                        <Input type="number" value={earnedMinorCredits} onChange={(e) => setEarnedMinorCredits(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-600 mb-1">기이수 부전공 전공핵심</label>
+                        <Input type="number" value={earnedMinorRequiredCredits} onChange={(e) => setEarnedMinorRequiredCredits(parseInt(e.target.value) || 0)} min={0} />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
+
+              {autoFillMessage && (
+                <p className="text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md">{autoFillMessage}</p>
+              )}
 
               {error && <p className="text-sm text-red-500">{error}</p>}
 
               <div className="flex justify-between pt-2">
-                <Button variant="outline" onClick={() => { setStep(1); setError(''); }} className="inline-flex items-center">
+                <Button variant="outline" onClick={() => { setStep(1); setError(''); setAutoFillMessage(''); }} className="inline-flex items-center">
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   이전
                 </Button>

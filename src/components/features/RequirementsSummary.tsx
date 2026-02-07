@@ -31,14 +31,24 @@ export function RequirementsSummary() {
   const [saveError, setSaveError] = useState('');
 
   const handleUpsert = async (data: {
+    majorType: 'single' | 'double' | 'minor';
     totalCredits: number;
-    majorCredits: number;
-    majorRequiredMin: number;
+    primaryMajorCredits: number;
+    primaryMajorRequiredMin: number;
     generalCredits: number;
+    secondaryMajorCredits?: number;
+    secondaryMajorRequiredMin?: number;
+    minorCredits?: number;
+    minorRequiredMin?: number;
+    minorPrimaryMajorMin?: number;
     earnedTotalCredits: number;
-    earnedMajorCredits: number;
+    earnedPrimaryMajorCredits: number;
     earnedGeneralCredits: number;
-    earnedMajorRequiredCredits: number;
+    earnedPrimaryMajorRequiredCredits: number;
+    earnedSecondaryMajorCredits?: number;
+    earnedSecondaryMajorRequiredCredits?: number;
+    earnedMinorCredits?: number;
+    earnedMinorRequiredCredits?: number;
   }) => {
     setSaveError('');
     try {
@@ -113,14 +123,24 @@ export function RequirementsSummary() {
           {saveError && <p className="text-sm text-red-500 mb-2">{saveError}</p>}
           <RequirementForm
             initialData={{
+              majorType: requirement.majorType,
               totalCredits: requirement.totalCredits,
-              majorCredits: requirement.majorCredits,
-              majorRequiredMin: requirement.majorRequiredMin,
+              primaryMajorCredits: requirement.primaryMajorCredits,
+              primaryMajorRequiredMin: requirement.primaryMajorRequiredMin,
               generalCredits: requirement.generalCredits,
+              secondaryMajorCredits: requirement.secondaryMajorCredits,
+              secondaryMajorRequiredMin: requirement.secondaryMajorRequiredMin,
+              minorCredits: requirement.minorCredits,
+              minorRequiredMin: requirement.minorRequiredMin,
+              minorPrimaryMajorMin: requirement.minorPrimaryMajorMin,
               earnedTotalCredits: requirement.earnedTotalCredits || 0,
-              earnedMajorCredits: requirement.earnedMajorCredits || 0,
+              earnedPrimaryMajorCredits: requirement.earnedPrimaryMajorCredits || 0,
               earnedGeneralCredits: requirement.earnedGeneralCredits || 0,
-              earnedMajorRequiredCredits: requirement.earnedMajorRequiredCredits || 0,
+              earnedPrimaryMajorRequiredCredits: requirement.earnedPrimaryMajorRequiredCredits || 0,
+              earnedSecondaryMajorCredits: requirement.earnedSecondaryMajorCredits,
+              earnedSecondaryMajorRequiredCredits: requirement.earnedSecondaryMajorRequiredCredits,
+              earnedMinorCredits: requirement.earnedMinorCredits,
+              earnedMinorRequiredCredits: requirement.earnedMinorRequiredCredits,
             }}
             onSubmit={handleUpsert}
             onCancel={() => { setIsEditing(false); setSaveError(''); }}
@@ -133,19 +153,29 @@ export function RequirementsSummary() {
 
   // View mode - requirement exists
   const total = progress?.total ?? { required: requirement.totalCredits, earned: 0, enrolled: 0, planned: 0, percentage: 0 };
-  const major = progress?.major ?? {
-    required: requirement.majorCredits, earned: 0, enrolled: 0, planned: 0, percentage: 0,
-    requiredMin: { required: requirement.majorRequiredMin, earned: 0, percentage: 0 },
+  const major = progress?.primaryMajor ?? {
+    required: requirement.primaryMajorCredits, earned: 0, enrolled: 0, planned: 0, percentage: 0,
+    requiredMin: { required: requirement.primaryMajorRequiredMin, earned: 0, percentage: 0 },
   };
   const general = progress?.general ?? {
     required: requirement.generalCredits, earned: 0, enrolled: 0, planned: 0, percentage: 0,
   };
 
+  const secondaryMajor = progress?.secondaryMajor;
+  const minor = progress?.minor;
+  const minorPrimaryMajorMin = progress?.minorPrimaryMajorMin;
+
   // Prior earned credits (기이수)
   const priorTotal = requirement.earnedTotalCredits || 0;
-  const priorMajor = requirement.earnedMajorCredits || 0;
+  const priorMajor = requirement.earnedPrimaryMajorCredits || 0;
   const priorGeneral = requirement.earnedGeneralCredits || 0;
-  const priorMajorRequired = requirement.earnedMajorRequiredCredits || 0;
+  const priorMajorRequired = requirement.earnedPrimaryMajorRequiredCredits || 0;
+
+  // Prior earned for secondary/minor
+  const priorSecondaryMajor = requirement.earnedSecondaryMajorCredits || 0;
+  const priorSecondaryMajorRequired = requirement.earnedSecondaryMajorRequiredCredits || 0;
+  const priorMinor = requirement.earnedMinorCredits || 0;
+  const priorMinorRequired = requirement.earnedMinorRequiredCredits || 0;
 
   // Format credits display: skip "0+" when earned is 0
   const fmtCredits = (earned: number, planned: number, required: number) => {
@@ -264,7 +294,108 @@ export function RequirementsSummary() {
                 {fmtCredits(major.requiredMin.earned, major.requiredMin.planned ?? 0, major.requiredMin.required)}학점
               </span>
             </div>
+            {/* 부전공시 주전공 최소 sub-bar */}
+            {minorPrimaryMajorMin && (
+              <div className="flex items-center gap-2 pl-4">
+                <span className="text-xs text-gray-400 w-14 whitespace-nowrap">주전공최소</span>
+                <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full ${minorPrimaryMajorMin.percentage >= 100 ? 'bg-green-500' : 'bg-red-300'}`}
+                    style={{ width: `${Math.min(minorPrimaryMajorMin.percentage, 100)}%` }} />
+                </div>
+                <span className="text-xs text-gray-400 w-20 text-right">
+                  {minorPrimaryMajorMin.earned}/{minorPrimaryMajorMin.required}학점
+                </span>
+              </div>
+            )}
           </div>
+
+          {/* 복수전공 (double major) */}
+          {secondaryMajor && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-purple-500" />
+                <span className="text-xs text-gray-600 w-14">복수전공</span>
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+                  {secondaryMajor.planned > 0 && (
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-purple-300"
+                      style={{ width: `${Math.min(Math.round(((secondaryMajor.earned + secondaryMajor.planned) / secondaryMajor.required) * 100), 100)}%` }} />
+                  )}
+                  <div className={`h-full relative rounded-full ${secondaryMajor.percentage >= 100 ? 'bg-green-600' : 'bg-purple-600'}`}
+                    style={{ width: `${Math.min(secondaryMajor.percentage, 100)}%` }} />
+                  {priorSecondaryMajor > 0 && (
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${secondaryMajor.percentage >= 100 ? 'bg-green-400' : 'bg-purple-400'}`}
+                      style={{ width: `${Math.min(Math.round((priorSecondaryMajor / secondaryMajor.required) * 100), 100)}%` }} />
+                  )}
+                </div>
+                <span className="text-xs text-gray-500 w-20 text-right">
+                  {fmtCredits(secondaryMajor.earned, secondaryMajor.planned, secondaryMajor.required)}학점
+                </span>
+              </div>
+              {/* 복수전공 핵심 sub-bar */}
+              <div className="flex items-center gap-2 pl-4">
+                <span className="text-xs text-gray-400 w-14">핵심</span>
+                <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden relative">
+                  {(secondaryMajor.requiredMin.planned ?? 0) > 0 && (
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-purple-200"
+                      style={{ width: `${Math.min(Math.round(((secondaryMajor.requiredMin.earned + (secondaryMajor.requiredMin.planned ?? 0)) / secondaryMajor.requiredMin.required) * 100), 100)}%` }} />
+                  )}
+                  <div className={`h-full relative rounded-full ${secondaryMajor.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-purple-400'}`}
+                    style={{ width: `${Math.min(secondaryMajor.requiredMin.percentage, 100)}%` }} />
+                  {priorSecondaryMajorRequired > 0 && (
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${secondaryMajor.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-purple-300'}`}
+                      style={{ width: `${Math.min(Math.round((priorSecondaryMajorRequired / secondaryMajor.requiredMin.required) * 100), 100)}%` }} />
+                  )}
+                </div>
+                <span className="text-xs text-gray-400 w-20 text-right">
+                  {fmtCredits(secondaryMajor.requiredMin.earned, secondaryMajor.requiredMin.planned ?? 0, secondaryMajor.requiredMin.required)}학점
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* 부전공 (minor) */}
+          {minor && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-orange-500" />
+                <span className="text-xs text-gray-600 w-14">부전공</span>
+                <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+                  {minor.planned > 0 && (
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-orange-300"
+                      style={{ width: `${Math.min(Math.round(((minor.earned + minor.planned) / minor.required) * 100), 100)}%` }} />
+                  )}
+                  <div className={`h-full relative rounded-full ${minor.percentage >= 100 ? 'bg-green-600' : 'bg-orange-600'}`}
+                    style={{ width: `${Math.min(minor.percentage, 100)}%` }} />
+                  {priorMinor > 0 && (
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${minor.percentage >= 100 ? 'bg-green-400' : 'bg-orange-400'}`}
+                      style={{ width: `${Math.min(Math.round((priorMinor / minor.required) * 100), 100)}%` }} />
+                  )}
+                </div>
+                <span className="text-xs text-gray-500 w-20 text-right">
+                  {fmtCredits(minor.earned, minor.planned, minor.required)}학점
+                </span>
+              </div>
+              {/* 부전공 핵심 sub-bar */}
+              <div className="flex items-center gap-2 pl-4">
+                <span className="text-xs text-gray-400 w-14">핵심</span>
+                <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden relative">
+                  {(minor.requiredMin.planned ?? 0) > 0 && (
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-orange-200"
+                      style={{ width: `${Math.min(Math.round(((minor.requiredMin.earned + (minor.requiredMin.planned ?? 0)) / minor.requiredMin.required) * 100), 100)}%` }} />
+                  )}
+                  <div className={`h-full relative rounded-full ${minor.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-orange-400'}`}
+                    style={{ width: `${Math.min(minor.requiredMin.percentage, 100)}%` }} />
+                  {priorMinorRequired > 0 && (
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${minor.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-orange-300'}`}
+                      style={{ width: `${Math.min(Math.round((priorMinorRequired / minor.requiredMin.required) * 100), 100)}%` }} />
+                  )}
+                </div>
+                <span className="text-xs text-gray-400 w-20 text-right">
+                  {fmtCredits(minor.requiredMin.earned, minor.requiredMin.planned ?? 0, minor.requiredMin.required)}학점
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* 교양학점 */}
           <div className="space-y-1">

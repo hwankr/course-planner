@@ -12,18 +12,40 @@ import { z } from 'zod';
 
 const completeOnboardingSchema = z.object({
   departmentId: z.string().min(1, '학과를 선택해주세요.'),
+  majorType: z.enum(['single', 'double', 'minor']).default('single'),
+  secondaryDepartmentId: z.string().optional(),
   enrollmentYear: z.number().int().min(2000).max(2100),
   graduationRequirements: z.object({
+    majorType: z.enum(['single', 'double', 'minor']),
     totalCredits: z.number().int().min(1),
-    majorCredits: z.number().int().min(0),
-    majorRequiredMin: z.number().int().min(0),
     generalCredits: z.number().int().min(0),
+
+    primaryMajorCredits: z.number().int().min(0),
+    primaryMajorRequiredMin: z.number().int().min(0),
+
+    secondaryMajorCredits: z.number().int().min(0).optional(),
+    secondaryMajorRequiredMin: z.number().int().min(0).optional(),
+
+    minorCredits: z.number().int().min(0).optional(),
+    minorRequiredMin: z.number().int().min(0).optional(),
+    minorPrimaryMajorMin: z.number().int().min(0).optional(),
+
     earnedTotalCredits: z.number().int().min(0),
-    earnedMajorCredits: z.number().int().min(0),
     earnedGeneralCredits: z.number().int().min(0),
-    earnedMajorRequiredCredits: z.number().int().min(0),
+    earnedPrimaryMajorCredits: z.number().int().min(0),
+    earnedPrimaryMajorRequiredCredits: z.number().int().min(0),
+    earnedSecondaryMajorCredits: z.number().int().min(0).optional(),
+    earnedSecondaryMajorRequiredCredits: z.number().int().min(0).optional(),
+    earnedMinorCredits: z.number().int().min(0).optional(),
+    earnedMinorRequiredCredits: z.number().int().min(0).optional(),
   }),
-});
+})
+.refine(data => {
+  if (data.majorType !== 'single' && !data.secondaryDepartmentId) {
+    return false;
+  }
+  return true;
+}, { message: '복수전공/부전공 학과를 선택해주세요.' });
 
 export async function POST(request: Request) {
   try {

@@ -6,6 +6,7 @@ export interface PreviewCourse {
   name: string;
   credits: number;
   category: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
+  departmentId?: string;  // 트랙 판별용
 }
 
 export type PreviewAction = 'add' | 'remove';

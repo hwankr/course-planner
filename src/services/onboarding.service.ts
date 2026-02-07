@@ -6,10 +6,12 @@
 
 import { connectDB } from '@/lib/db/mongoose';
 import { userService, graduationRequirementService } from '@/services';
-import type { GraduationRequirementInput } from '@/types';
+import type { GraduationRequirementInput, MajorType } from '@/types';
 
 interface CompleteOnboardingInput {
   departmentId: string;
+  majorType: MajorType;
+  secondaryDepartmentId?: string;
   enrollmentYear: number;
   graduationRequirements: GraduationRequirementInput;
 }
@@ -20,6 +22,8 @@ async function completeOnboarding(userId: string, input: CompleteOnboardingInput
   // Update user: department, enrollmentYear, onboardingCompleted
   const updatedUser = await userService.update(userId, {
     department: input.departmentId,
+    majorType: input.majorType,
+    secondaryDepartment: input.secondaryDepartmentId,
     enrollmentYear: input.enrollmentYear,
     onboardingCompleted: true,
   });

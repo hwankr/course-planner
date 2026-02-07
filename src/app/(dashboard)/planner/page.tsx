@@ -73,17 +73,46 @@ export default function PlannerPage() {
     if (isGuest) {
       return useGuestGraduationStore.getState().requirement;
     }
-    const raw = queryClient.getQueryData<{ totalCredits: number; majorCredits: number; majorRequiredMin: number; generalCredits: number; earnedTotalCredits?: number; earnedMajorCredits?: number; earnedGeneralCredits?: number; earnedMajorRequiredCredits?: number }>(graduationRequirementKeys.detail());
+    const raw = queryClient.getQueryData<{
+      majorType: 'single' | 'double' | 'minor';
+      totalCredits: number;
+      primaryMajorCredits: number;
+      primaryMajorRequiredMin: number;
+      generalCredits: number;
+      secondaryMajorCredits?: number;
+      secondaryMajorRequiredMin?: number;
+      minorCredits?: number;
+      minorRequiredMin?: number;
+      minorPrimaryMajorMin?: number;
+      earnedTotalCredits?: number;
+      earnedPrimaryMajorCredits?: number;
+      earnedGeneralCredits?: number;
+      earnedPrimaryMajorRequiredCredits?: number;
+      earnedSecondaryMajorCredits?: number;
+      earnedSecondaryMajorRequiredCredits?: number;
+      earnedMinorCredits?: number;
+      earnedMinorRequiredCredits?: number;
+    }>(graduationRequirementKeys.detail());
     if (!raw) return null;
     return {
+      majorType: raw.majorType ?? 'single',
       totalCredits: raw.totalCredits,
-      majorCredits: raw.majorCredits,
-      majorRequiredMin: raw.majorRequiredMin,
+      primaryMajorCredits: raw.primaryMajorCredits,
+      primaryMajorRequiredMin: raw.primaryMajorRequiredMin,
       generalCredits: raw.generalCredits,
+      secondaryMajorCredits: raw.secondaryMajorCredits,
+      secondaryMajorRequiredMin: raw.secondaryMajorRequiredMin,
+      minorCredits: raw.minorCredits,
+      minorRequiredMin: raw.minorRequiredMin,
+      minorPrimaryMajorMin: raw.minorPrimaryMajorMin,
       earnedTotalCredits: raw.earnedTotalCredits ?? 0,
-      earnedMajorCredits: raw.earnedMajorCredits ?? 0,
+      earnedPrimaryMajorCredits: raw.earnedPrimaryMajorCredits ?? 0,
       earnedGeneralCredits: raw.earnedGeneralCredits ?? 0,
-      earnedMajorRequiredCredits: raw.earnedMajorRequiredCredits ?? 0,
+      earnedPrimaryMajorRequiredCredits: raw.earnedPrimaryMajorRequiredCredits ?? 0,
+      earnedSecondaryMajorCredits: raw.earnedSecondaryMajorCredits,
+      earnedSecondaryMajorRequiredCredits: raw.earnedSecondaryMajorRequiredCredits,
+      earnedMinorCredits: raw.earnedMinorCredits,
+      earnedMinorRequiredCredits: raw.earnedMinorRequiredCredits,
     };
   }, [isGuest, queryClient]);
 
@@ -102,9 +131,9 @@ export default function PlannerPage() {
     const majorCats = ['major_required', 'major_elective'];
     const generalCats = ['general_required', 'general_elective'];
     adjustedTotals.totalPlanned -= course.credits;
-    if (majorCats.includes(cat)) adjustedTotals.majorPlanned -= course.credits;
+    if (majorCats.includes(cat)) adjustedTotals.primaryMajorPlanned -= course.credits;
     if (generalCats.includes(cat)) adjustedTotals.generalPlanned -= course.credits;
-    if (cat === 'major_required') adjustedTotals.majorRequiredPlanned -= course.credits;
+    if (cat === 'major_required') adjustedTotals.primaryMajorRequiredPlanned -= course.credits;
 
     const delta = computeGraduationDelta(
       { credits: course.credits, category: course.category as any },
@@ -150,10 +179,10 @@ export default function PlannerPage() {
         creditsDelta: course.credits,
         categoryLabel: catLabel,
         categoryPct: delta.categoryKey !== 'total' ? { before: delta.before.percentage, after: delta.after.percentage } : undefined,
-        categoryCredits: delta.categoryKey !== 'total' ? { after: delta.after.credits, required: delta.categoryKey === 'major' ? requirement!.majorCredits : requirement!.generalCredits } : undefined,
+        categoryCredits: delta.categoryKey !== 'total' ? { after: delta.after.credits, required: delta.categoryKey === 'primaryMajor' ? requirement!.primaryMajorCredits : requirement!.generalCredits } : undefined,
         secondRowLabel: delta.secondRowCategoryKey === 'major_required' ? '전공핵심' : '전체',
         secondRowPct: { before: delta.secondRowBefore.percentage, after: delta.secondRowAfter.percentage },
-        secondRowCredits: { after: delta.secondRowAfter.credits, required: delta.secondRowCategoryKey === 'major_required' ? requirement!.majorRequiredMin : requirement!.totalCredits },
+        secondRowCredits: { after: delta.secondRowAfter.credits, required: delta.secondRowCategoryKey === 'major_required' ? requirement!.primaryMajorRequiredMin : requirement!.totalCredits },
       } : undefined,
     });
   }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation]);

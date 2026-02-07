@@ -38,15 +38,47 @@ export async function GET() {
 }
 
 const upsertSchema = z.object({
-  totalCredits: z.number().min(1, '졸업학점은 1 이상이어야 합니다.'),
-  majorCredits: z.number().min(0, '전공학점은 0 이상이어야 합니다.'),
-  majorRequiredMin: z.number().min(0, '전공핵심 최소학점은 0 이상이어야 합니다.'),
-  generalCredits: z.number().min(0, '교양학점은 0 이상이어야 합니다.'),
-  earnedTotalCredits: z.number().min(0, '기이수 졸업학점은 0 이상이어야 합니다.'),
-  earnedMajorCredits: z.number().min(0, '기이수 전공학점은 0 이상이어야 합니다.'),
-  earnedGeneralCredits: z.number().min(0, '기이수 교양학점은 0 이상이어야 합니다.'),
-  earnedMajorRequiredCredits: z.number().min(0, '기이수 전공핵심학점은 0 이상이어야 합니다.'),
-});
+  majorType: z.enum(['single', 'double', 'minor']),
+
+  totalCredits: z.number().min(1),
+  generalCredits: z.number().min(0),
+
+  primaryMajorCredits: z.number().min(0),
+  primaryMajorRequiredMin: z.number().min(0),
+
+  secondaryMajorCredits: z.number().min(0).optional(),
+  secondaryMajorRequiredMin: z.number().min(0).optional(),
+
+  minorCredits: z.number().min(0).optional(),
+  minorRequiredMin: z.number().min(0).optional(),
+  minorPrimaryMajorMin: z.number().min(0).optional(),
+
+  earnedTotalCredits: z.number().min(0),
+  earnedGeneralCredits: z.number().min(0),
+  earnedPrimaryMajorCredits: z.number().min(0),
+  earnedPrimaryMajorRequiredCredits: z.number().min(0),
+  earnedSecondaryMajorCredits: z.number().min(0).optional(),
+  earnedSecondaryMajorRequiredCredits: z.number().min(0).optional(),
+  earnedMinorCredits: z.number().min(0).optional(),
+  earnedMinorRequiredCredits: z.number().min(0).optional(),
+})
+.refine(data => {
+  if (data.majorType === 'double') {
+    return data.secondaryMajorCredits !== undefined && data.secondaryMajorRequiredMin !== undefined;
+  }
+  return true;
+}, { message: '복수전공 요건은 필수입니다.' })
+.refine(data => {
+  if (data.majorType === 'minor') {
+    return data.minorCredits !== undefined && data.minorRequiredMin !== undefined && data.minorPrimaryMajorMin !== undefined;
+  }
+  return true;
+}, { message: '부전공 요건은 필수입니다.' })
+.refine(data => {
+  const secondary = data.majorType === 'double' ? (data.secondaryMajorCredits ?? 0) : 0;
+  const minor = data.majorType === 'minor' ? (data.minorCredits ?? 0) : 0;
+  return data.primaryMajorCredits + secondary + minor + data.generalCredits <= data.totalCredits;
+}, { message: '전공+교양 학점 합이 졸업학점을 초과합니다.' });
 
 export async function PUT(request: Request) {
   try {
