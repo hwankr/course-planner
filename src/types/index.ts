@@ -108,16 +108,10 @@ export interface SemesterPlan {
 export interface IPlan {
   _id: Types.ObjectId;
   user: Types.ObjectId;
-  name: string;
+  name?: string;
   semesters: SemesterPlan[];
-  status: 'draft' | 'active';
   createdAt: Date;
   updatedAt: Date;
-}
-
-export interface CreatePlanInput {
-  name: string;
-  semesters?: SemesterPlan[];
 }
 
 export interface AddCourseToSemesterInput {

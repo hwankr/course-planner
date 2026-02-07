@@ -20,20 +20,16 @@ export interface GuestSemester {
 
 export interface GuestPlan {
   id: string;
-  name: string;
   semesters: GuestSemester[];
-  status: 'draft' | 'active';
 }
 
 interface GuestPlanState {
-  plans: GuestPlan[];
-  activePlanId: string | null;
+  plan: GuestPlan | null;
   _hasHydrated: boolean;
 
   // Actions
-  createPlan: (name: string) => GuestPlan;
-  deletePlan: (id: string) => void;
-  setActivePlanId: (id: string) => void;
+  getOrCreatePlan: () => GuestPlan;
+  resetPlan: () => void;
   addSemester: (planId: string, year: number, term: Term) => void;
   removeSemester: (planId: string, year: number, term: Term) => void;
   clearSemester: (planId: string, year: number, term: Term) => void;
@@ -62,217 +58,180 @@ const sortSemesters = (semesters: GuestSemester[]): GuestSemester[] => {
 export const useGuestPlanStore = create<GuestPlanState>()(
   persist(
     (set, get) => ({
-      plans: [],
-      activePlanId: null,
+      plan: null,
       _hasHydrated: false,
 
-      createPlan: (name: string) => {
+      getOrCreatePlan: () => {
+        const { plan } = get();
+        if (plan) return plan;
+
         const newPlan: GuestPlan = {
           id: `guest-plan-${Date.now().toString(36)}`,
-          name,
           semesters: [],
-          status: 'draft',
         };
 
-        set((state) => {
-          const isFirstPlan = state.plans.length === 0;
-          return {
-            plans: [...state.plans, newPlan],
-            activePlanId: isFirstPlan ? newPlan.id : state.activePlanId,
-          };
-        });
-
+        set({ plan: newPlan });
         return newPlan;
       },
 
-      deletePlan: (id: string) => {
-        set((state) => {
-          const newPlans = state.plans.filter((p) => p.id !== id);
-          const newActivePlanId = state.activePlanId === id
-            ? (newPlans[0]?.id ?? null)
-            : state.activePlanId;
+      resetPlan: () => {
+        const { plan } = get();
+        if (!plan) return;
+        set({ plan: { ...plan, semesters: [] } });
+      },
 
-          return {
-            plans: newPlans,
-            activePlanId: newActivePlanId,
-          };
+      addSemester: (_planId: string, year: number, term: Term) => {
+        const { plan } = get();
+        if (!plan) return;
+
+        const exists = plan.semesters.some(
+          (s) => s.year === year && s.term === term
+        );
+        if (exists) return;
+
+        const newSemesters = sortSemesters([
+          ...plan.semesters,
+          { year, term, courses: [] },
+        ]);
+
+        set({ plan: { ...plan, semesters: newSemesters } });
+      },
+
+      removeSemester: (_planId: string, year: number, term: Term) => {
+        const { plan } = get();
+        if (!plan) return;
+
+        set({
+          plan: {
+            ...plan,
+            semesters: plan.semesters.filter(
+              (s) => !(s.year === year && s.term === term)
+            ),
+          },
         });
       },
 
-      setActivePlanId: (id: string) => {
-        set({ activePlanId: id });
+      clearSemester: (_planId: string, year: number, term: Term) => {
+        const { plan } = get();
+        if (!plan) return;
+
+        set({
+          plan: {
+            ...plan,
+            semesters: plan.semesters.map((semester) => {
+              if (semester.year !== year || semester.term !== term) return semester;
+              return { ...semester, courses: [] };
+            }),
+          },
+        });
       },
 
-      addSemester: (planId: string, year: number, term: Term) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
+      addCourse: (_planId: string, year: number, term: Term, course: GuestPlannedCourse) => {
+        const { plan } = get();
+        if (!plan) return;
 
-            // Check if semester already exists
-            const exists = plan.semesters.some(
-              (s) => s.year === year && s.term === term
-            );
-            if (exists) return plan;
+        // Duplicate guard: skip if course already exists in any semester
+        const alreadyInPlan = plan.semesters.some(sem =>
+          sem.courses.some(c => c.id === course.id)
+        );
+        if (alreadyInPlan) return;
 
-            // Add and sort
-            const newSemesters = sortSemesters([
-              ...plan.semesters,
-              { year, term, courses: [] },
-            ]);
-
-            return { ...plan, semesters: newSemesters };
-          }),
-        }));
-      },
-
-      removeSemester: (planId: string, year: number, term: Term) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
-
-            return {
-              ...plan,
-              semesters: plan.semesters.filter(
-                (s) => !(s.year === year && s.term === term)
-              ),
-            };
-          }),
-        }));
-      },
-
-      clearSemester: (planId: string, year: number, term: Term) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
-
-            return {
-              ...plan,
-              semesters: plan.semesters.map((semester) => {
-                if (semester.year !== year || semester.term !== term) return semester;
-
-                return {
-                  ...semester,
-                  courses: [],
-                };
-              }),
-            };
-          }),
-        }));
-      },
-
-      addCourse: (planId: string, year: number, term: Term, course: GuestPlannedCourse) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
-
-            // Duplicate guard: skip if course already exists in any semester
-            const alreadyInPlan = plan.semesters.some(sem =>
-              sem.courses.some(c => c.id === course.id)
-            );
-            if (alreadyInPlan) return plan;
-
-            return {
-              ...plan,
-              semesters: plan.semesters.map((semester) => {
-                if (semester.year !== year || semester.term !== term) return semester;
-
-                return {
-                  ...semester,
-                  courses: [...semester.courses, course],
-                };
-              }),
-            };
-          }),
-        }));
-      },
-
-      removeCourse: (planId: string, year: number, term: Term, courseId: string) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
-
-            return {
-              ...plan,
-              semesters: plan.semesters.map((semester) => {
-                if (semester.year !== year || semester.term !== term) return semester;
-
-                return {
-                  ...semester,
-                  courses: semester.courses.filter((c) => c.id !== courseId),
-                };
-              }),
-            };
-          }),
-        }));
-      },
-
-      moveCourse: (planId: string, srcYear: number, srcTerm: Term, destYear: number, destTerm: Term, courseId: string) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
-
-            let courseToMove: GuestPlannedCourse | null = null;
-
-            // Find and remove from source
-            const updatedSemesters = plan.semesters.map((semester) => {
-              if (semester.year === srcYear && semester.term === srcTerm) {
-                const course = semester.courses.find((c) => c.id === courseId);
-                if (course) courseToMove = course;
-
-                return {
-                  ...semester,
-                  courses: semester.courses.filter((c) => c.id !== courseId),
-                };
-              }
-              return semester;
-            });
-
-            // Add to destination
-            if (courseToMove) {
+        set({
+          plan: {
+            ...plan,
+            semesters: plan.semesters.map((semester) => {
+              if (semester.year !== year || semester.term !== term) return semester;
               return {
-                ...plan,
-                semesters: updatedSemesters.map((semester) => {
-                  if (semester.year === destYear && semester.term === destTerm) {
-                    return {
-                      ...semester,
-                      courses: [...semester.courses, courseToMove!],
-                    };
-                  }
-                  return semester;
+                ...semester,
+                courses: [...semester.courses, course],
+              };
+            }),
+          },
+        });
+      },
+
+      removeCourse: (_planId: string, year: number, term: Term, courseId: string) => {
+        const { plan } = get();
+        if (!plan) return;
+
+        set({
+          plan: {
+            ...plan,
+            semesters: plan.semesters.map((semester) => {
+              if (semester.year !== year || semester.term !== term) return semester;
+              return {
+                ...semester,
+                courses: semester.courses.filter((c) => c.id !== courseId),
+              };
+            }),
+          },
+        });
+      },
+
+      moveCourse: (_planId: string, srcYear: number, srcTerm: Term, destYear: number, destTerm: Term, courseId: string) => {
+        const { plan } = get();
+        if (!plan) return;
+
+        let courseToMove: GuestPlannedCourse | null = null;
+
+        // Find and remove from source
+        const updatedSemesters = plan.semesters.map((semester) => {
+          if (semester.year === srcYear && semester.term === srcTerm) {
+            const course = semester.courses.find((c) => c.id === courseId);
+            if (course) courseToMove = course;
+
+            return {
+              ...semester,
+              courses: semester.courses.filter((c) => c.id !== courseId),
+            };
+          }
+          return semester;
+        });
+
+        // Add to destination
+        if (courseToMove) {
+          set({
+            plan: {
+              ...plan,
+              semesters: updatedSemesters.map((semester) => {
+                if (semester.year === destYear && semester.term === destTerm) {
+                  return {
+                    ...semester,
+                    courses: [...semester.courses, courseToMove!],
+                  };
+                }
+                return semester;
+              }),
+            },
+          });
+        } else {
+          set({ plan: { ...plan, semesters: updatedSemesters } });
+        }
+      },
+
+      updateCourseStatus: (_planId: string, year: number, term: Term, courseId: string, status: GuestPlannedCourse['status']) => {
+        const { plan } = get();
+        if (!plan) return;
+
+        set({
+          plan: {
+            ...plan,
+            semesters: plan.semesters.map((semester) => {
+              if (semester.year !== year || semester.term !== term) return semester;
+              return {
+                ...semester,
+                courses: semester.courses.map((course) => {
+                  if (course.id !== courseId) return course;
+                  return { ...course, status };
                 }),
               };
-            }
-
-            return { ...plan, semesters: updatedSemesters };
-          }),
-        }));
-      },
-
-      updateCourseStatus: (planId: string, year: number, term: Term, courseId: string, status: GuestPlannedCourse['status']) => {
-        set((state) => ({
-          plans: state.plans.map((plan) => {
-            if (plan.id !== planId) return plan;
-
-            return {
-              ...plan,
-              semesters: plan.semesters.map((semester) => {
-                if (semester.year !== year || semester.term !== term) return semester;
-
-                return {
-                  ...semester,
-                  courses: semester.courses.map((course) => {
-                    if (course.id !== courseId) return course;
-                    return { ...course, status };
-                  }),
-                };
-              }),
-            };
-          }),
-        }));
+            }),
+          },
+        });
       },
 
       clearAll: () => {
-        set({ plans: [], activePlanId: null });
+        set({ plan: null });
       },
 
       setHasHydrated: (state: boolean) => {
@@ -283,11 +242,20 @@ export const useGuestPlanStore = create<GuestPlanState>()(
       name: 'guest-plans',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        if (state) {
+          state.setHasHydrated(true);
+          // Migration: if old plans[] format exists, migrate to single plan
+          const raw = state as unknown as { plans?: GuestPlan[]; activePlanId?: string };
+          if (raw.plans && Array.isArray(raw.plans) && !state.plan) {
+            const firstPlan = raw.plans[0];
+            if (firstPlan) {
+              state.plan = { id: firstPlan.id, semesters: firstPlan.semesters };
+            }
+          }
+        }
       },
       partialize: (state) => ({
-        plans: state.plans,
-        activePlanId: state.activePlanId,
+        plan: state.plan,
       }),
     }
   )
@@ -295,7 +263,7 @@ export const useGuestPlanStore = create<GuestPlanState>()(
 
 // Selector helpers
 export const useGuestActivePlan = () =>
-  useGuestPlanStore((s) => s.plans.find((p) => p.id === s.activePlanId) ?? null);
+  useGuestPlanStore((s) => s.plan);
 
 export const useGuestPlanHydrated = () =>
   useGuestPlanStore((s) => s._hasHydrated);

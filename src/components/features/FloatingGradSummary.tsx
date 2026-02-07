@@ -42,6 +42,13 @@ export function FloatingGradSummary({ requirementsSummaryRef, isDragScrollActive
   const major = progress?.major ?? { required: requirement.majorCredits, earned: 0, planned: 0, percentage: 0 };
   const general = progress?.general ?? { required: requirement.generalCredits, earned: 0, planned: 0, percentage: 0 };
 
+  // Format credits display: skip "0+" when earned is 0
+  const fmtCredits = (earned: number, planned: number, required: number) => {
+    if (earned === 0 && planned > 0) return `${planned}/${required}`;
+    if (planned > 0) return `${earned}+${planned}/${required}`;
+    return `${earned}/${required}`;
+  };
+
   const handleClick = () => {
     requirementsSummaryRef.current?.scrollIntoView({ behavior: 'smooth' });
   };

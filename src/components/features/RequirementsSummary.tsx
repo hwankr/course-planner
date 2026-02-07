@@ -141,6 +141,19 @@ export function RequirementsSummary() {
     required: requirement.generalCredits, earned: 0, enrolled: 0, planned: 0, percentage: 0,
   };
 
+  // Prior earned credits (기이수)
+  const priorTotal = requirement.earnedTotalCredits || 0;
+  const priorMajor = requirement.earnedMajorCredits || 0;
+  const priorGeneral = requirement.earnedGeneralCredits || 0;
+  const priorMajorRequired = requirement.earnedMajorRequiredCredits || 0;
+
+  // Format credits display: skip "0+" when earned is 0
+  const fmtCredits = (earned: number, planned: number, required: number) => {
+    if (earned === 0 && planned > 0) return `${planned}/${required}`;
+    if (planned > 0) return `${earned}+${planned}/${required}`;
+    return `${earned}/${required}`;
+  };
+
   return (
     <Card>
       <CardContent className="py-3 px-3 sm:px-4">
@@ -153,18 +166,27 @@ export function RequirementsSummary() {
               {total.planned > 0 && (
                 <div
                   className={`h-full absolute inset-y-0 left-0 rounded-full ${
-                    total.percentage >= 100 ? 'bg-green-200' : total.percentage >= 50 ? 'bg-blue-200' : 'bg-orange-200'
+                    total.percentage >= 100 ? 'bg-green-300' : total.percentage >= 50 ? 'bg-blue-300' : 'bg-orange-300'
                   }`}
                   style={{ width: `${Math.min(Math.round(((total.earned + total.planned) / total.required) * 100), 100)}%` }}
                 />
               )}
-              {/* Earned segment (front) */}
+              {/* Earned segment */}
               <div
                 className={`h-full relative transition-all rounded-full ${
-                  total.percentage >= 100 ? 'bg-green-500' : total.percentage >= 50 ? 'bg-blue-500' : 'bg-orange-500'
+                  total.percentage >= 100 ? 'bg-green-600' : total.percentage >= 50 ? 'bg-blue-600' : 'bg-orange-600'
                 }`}
                 style={{ width: `${Math.min(total.percentage, 100)}%` }}
               />
+              {/* Prior earned segment (기이수) */}
+              {priorTotal > 0 && (
+                <div
+                  className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${
+                    total.percentage >= 100 ? 'bg-green-400' : total.percentage >= 50 ? 'bg-blue-400' : 'bg-orange-400'
+                  }`}
+                  style={{ width: `${Math.min(Math.round((priorTotal / total.required) * 100), 100)}%` }}
+                />
+              )}
             </div>
             <span className={`text-sm font-semibold ${
               total.percentage >= 100 ? 'text-green-600' : 'text-gray-600'
@@ -177,7 +199,7 @@ export function RequirementsSummary() {
               )}
             </span>
             <span className="text-xs text-gray-400 whitespace-nowrap">
-              ({total.earned}{total.planned > 0 ? `+${total.planned}` : ''}/{total.required}학점)
+              ({fmtCredits(total.earned, total.planned, total.required)}학점)
             </span>
           </div>
         </div>
@@ -193,18 +215,25 @@ export function RequirementsSummary() {
                 {/* Planned segment (behind) */}
                 {major.planned > 0 && (
                   <div
-                    className="h-full absolute inset-y-0 left-0 rounded-full bg-red-200"
+                    className="h-full absolute inset-y-0 left-0 rounded-full bg-red-300"
                     style={{ width: `${Math.min(Math.round(((major.earned + major.planned) / major.required) * 100), 100)}%` }}
                   />
                 )}
-                {/* Earned segment (front) */}
+                {/* Earned segment */}
                 <div
-                  className={`h-full relative rounded-full ${major.percentage >= 100 ? 'bg-green-500' : 'bg-red-500'}`}
+                  className={`h-full relative rounded-full ${major.percentage >= 100 ? 'bg-green-600' : 'bg-red-600'}`}
                   style={{ width: `${Math.min(major.percentage, 100)}%` }}
                 />
+                {/* Prior earned segment (기이수) */}
+                {priorMajor > 0 && (
+                  <div
+                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${major.percentage >= 100 ? 'bg-green-400' : 'bg-red-400'}`}
+                    style={{ width: `${Math.min(Math.round((priorMajor / major.required) * 100), 100)}%` }}
+                  />
+                )}
               </div>
               <span className="text-xs text-gray-500 w-20 text-right">
-                {major.earned}{major.planned > 0 ? `+${major.planned}` : ''}/{major.required}학점
+                {fmtCredits(major.earned, major.planned, major.required)}학점
               </span>
             </div>
             {/* 전공핵심 sub-bar */}
@@ -214,18 +243,25 @@ export function RequirementsSummary() {
                 {/* Planned segment (behind) */}
                 {(major.requiredMin.planned ?? 0) > 0 && (
                   <div
-                    className="h-full absolute inset-y-0 left-0 rounded-full bg-red-100"
+                    className="h-full absolute inset-y-0 left-0 rounded-full bg-red-200"
                     style={{ width: `${Math.min(Math.round(((major.requiredMin.earned + (major.requiredMin.planned ?? 0)) / major.requiredMin.required) * 100), 100)}%` }}
                   />
                 )}
-                {/* Earned segment (front) */}
+                {/* Earned segment */}
                 <div
-                  className={`h-full relative rounded-full ${major.requiredMin.percentage >= 100 ? 'bg-green-400' : 'bg-red-300'}`}
+                  className={`h-full relative rounded-full ${major.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-red-400'}`}
                   style={{ width: `${Math.min(major.requiredMin.percentage, 100)}%` }}
                 />
+                {/* Prior earned segment (기이수) */}
+                {priorMajorRequired > 0 && (
+                  <div
+                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${major.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-red-300'}`}
+                    style={{ width: `${Math.min(Math.round((priorMajorRequired / major.requiredMin.required) * 100), 100)}%` }}
+                  />
+                )}
               </div>
               <span className="text-xs text-gray-400 w-20 text-right">
-                {major.requiredMin.earned}{(major.requiredMin.planned ?? 0) > 0 ? `+${major.requiredMin.planned}` : ''}/{major.requiredMin.required}학점
+                {fmtCredits(major.requiredMin.earned, major.requiredMin.planned ?? 0, major.requiredMin.required)}학점
               </span>
             </div>
           </div>
@@ -239,18 +275,25 @@ export function RequirementsSummary() {
                 {/* Planned segment (behind) */}
                 {general.planned > 0 && (
                   <div
-                    className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-200"
+                    className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-300"
                     style={{ width: `${Math.min(Math.round(((general.earned + general.planned) / general.required) * 100), 100)}%` }}
                   />
                 )}
-                {/* Earned segment (front) */}
+                {/* Earned segment */}
                 <div
-                  className={`h-full relative rounded-full ${general.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
+                  className={`h-full relative rounded-full ${general.percentage >= 100 ? 'bg-green-600' : 'bg-blue-600'}`}
                   style={{ width: `${Math.min(general.percentage, 100)}%` }}
                 />
+                {/* Prior earned segment (기이수) */}
+                {priorGeneral > 0 && (
+                  <div
+                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${general.percentage >= 100 ? 'bg-green-400' : 'bg-blue-400'}`}
+                    style={{ width: `${Math.min(Math.round((priorGeneral / general.required) * 100), 100)}%` }}
+                  />
+                )}
               </div>
               <span className="text-xs text-gray-500 w-20 text-right">
-                {general.earned}{general.planned > 0 ? `+${general.planned}` : ''}/{general.required}학점
+                {fmtCredits(general.earned, general.planned, general.required)}학점
               </span>
             </div>
           </div>

@@ -127,8 +127,7 @@ export function useGraduationRequirement() {
 export function useGraduationProgress(options?: { enabled?: boolean }) {
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestRequirement = useGuestGraduationStore((s) => s.requirement);
-  const guestPlans = useGuestPlanStore((s) => s.plans);
-  const guestActivePlanId = useGuestPlanStore((s) => s.activePlanId);
+  const guestPlan = useGuestPlanStore((s) => s.plan);
 
   const apiResult = useQuery({
     queryKey: graduationRequirementKeys.progress(),
@@ -139,8 +138,7 @@ export function useGraduationProgress(options?: { enabled?: boolean }) {
   if (isGuest) {
     let progress = null;
     if (guestRequirement) {
-      const activePlan = guestPlans.find((p) => p.id === guestActivePlanId);
-      progress = calculateGuestProgress(guestRequirement, activePlan?.semesters ?? []);
+      progress = calculateGuestProgress(guestRequirement, guestPlan?.semesters ?? []);
     }
     return {
       ...apiResult,

@@ -75,7 +75,7 @@ async function calculateProgress(
   await connectDB();
 
   // 사용자의 활성 계획 조회
-  const plan = await Plan.findOne({ user: userId, status: 'active' }).populate({
+  const plan = await Plan.findOne({ user: userId }).populate({
     path: 'semesters.courses.course',
     select: 'code name credits category',
   }) as IPlanDocument | null;

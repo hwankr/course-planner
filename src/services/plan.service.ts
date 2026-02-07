@@ -7,19 +7,46 @@
 import { connectDB } from '@/lib/db/mongoose';
 import { Plan, Course } from '@/models';
 import type { IPlanDocument } from '@/models';
-import type { CreatePlanInput, AddCourseToSemesterInput, Term } from '@/types';
+import type { AddCourseToSemesterInput, Term } from '@/types';
+
+const POPULATE_COURSES = {
+  path: 'semesters.courses.course',
+  select: 'code name credits category',
+};
+
+const POPULATE_COURSES_DETAIL = {
+  path: 'semesters.courses.course',
+  select: 'code name credits category department prerequisites',
+  populate: [
+    { path: 'department', select: 'code name' },
+    { path: 'prerequisites', select: 'code name' },
+  ],
+};
 
 /**
- * 사용자의 모든 계획 조회
+ * 사용자의 계획 조회 (단일)
  */
-async function findByUser(userId: string): Promise<IPlanDocument[]> {
+async function findByUser(userId: string): Promise<IPlanDocument | null> {
   await connectDB();
-  return Plan.find({ user: userId })
-    .populate({
-      path: 'semesters.courses.course',
-      select: 'code name credits category',
-    })
-    .sort({ updatedAt: -1 });
+  return Plan.findOne({ user: userId }).populate(POPULATE_COURSES);
+}
+
+/**
+ * 사용자의 계획 조회 또는 자동 생성 (lazy creation)
+ */
+async function findOrCreateByUser(userId: string): Promise<IPlanDocument> {
+  await connectDB();
+
+  let plan = await Plan.findOne({ user: userId });
+  if (!plan) {
+    plan = await Plan.create({
+      user: userId,
+      semesters: [],
+    });
+  }
+
+  await plan.populate(POPULATE_COURSES_DETAIL);
+  return plan;
 }
 
 /**
@@ -27,38 +54,7 @@ async function findByUser(userId: string): Promise<IPlanDocument[]> {
  */
 async function findById(id: string): Promise<IPlanDocument | null> {
   await connectDB();
-  return Plan.findById(id).populate({
-    path: 'semesters.courses.course',
-    select: 'code name credits category department prerequisites',
-    populate: [
-      { path: 'department', select: 'code name' },
-      { path: 'prerequisites', select: 'code name' },
-    ],
-  });
-}
-
-/**
- * 새 계획 생성
- */
-async function create(
-  userId: string,
-  input: CreatePlanInput
-): Promise<IPlanDocument> {
-  await connectDB();
-
-  // 사용자의 계획 수 제한 (최대 10개)
-  const existingCount = await Plan.countDocuments({ user: userId });
-  if (existingCount >= 10) {
-    throw new Error('수강계획은 최대 10개까지 생성할 수 있습니다.');
-  }
-
-  const plan = await Plan.create({
-    user: userId,
-    name: input.name,
-    semesters: input.semesters || [],
-  });
-
-  return plan;
+  return Plan.findById(id).populate(POPULATE_COURSES_DETAIL);
 }
 
 /**
@@ -136,10 +132,7 @@ async function addCourseToSemester(
     s.courses.some(c => c.course.toString() === courseId)
   );
   if (alreadyInPlan) {
-    return Plan.findById(planId).populate({
-      path: 'semesters.courses.course',
-      select: 'code name credits category',
-    });
+    return Plan.findById(planId).populate(POPULATE_COURSES);
   }
 
   // 학기당 과목 수 제한 (최대 10개)
@@ -153,10 +146,7 @@ async function addCourseToSemester(
   });
 
   await plan.save();
-  await plan.populate({
-    path: 'semesters.courses.course',
-    select: 'code name credits category',
-  });
+  await plan.populate(POPULATE_COURSES);
   return plan;
 }
 
@@ -186,10 +176,7 @@ async function removeCourseFromSemester(
   );
 
   await plan.save();
-  await plan.populate({
-    path: 'semesters.courses.course',
-    select: 'code name credits category',
-  });
+  await plan.populate(POPULATE_COURSES);
   return plan;
 }
 
@@ -223,19 +210,8 @@ async function updateCourseStatus(
   if (grade) courseEntry.grade = grade;
 
   await plan.save();
-  await plan.populate({
-    path: 'semesters.courses.course',
-    select: 'code name credits category',
-  });
+  await plan.populate(POPULATE_COURSES);
   return plan;
-}
-
-/**
- * 계획 삭제
- */
-async function remove(id: string): Promise<IPlanDocument | null> {
-  await connectDB();
-  return Plan.findByIdAndDelete(id);
 }
 
 /**
@@ -261,14 +237,7 @@ async function removeSemester(
   }
 
   return Plan.findById(planId)
-    .populate({
-      path: 'semesters.courses.course',
-      select: 'code name credits category department prerequisites',
-      populate: [
-        { path: 'department', select: 'code name' },
-        { path: 'prerequisites', select: 'code name' },
-      ],
-    })
+    .populate(POPULATE_COURSES_DETAIL)
     .lean() as Promise<IPlanDocument>;
 }
 
@@ -295,35 +264,8 @@ async function clearSemester(
   }
 
   return Plan.findById(planId)
-    .populate({
-      path: 'semesters.courses.course',
-      select: 'code name credits category department prerequisites',
-      populate: [
-        { path: 'department', select: 'code name' },
-        { path: 'prerequisites', select: 'code name' },
-      ],
-    })
+    .populate(POPULATE_COURSES_DETAIL)
     .lean() as Promise<IPlanDocument>;
-}
-
-/**
- * 계획 상태 변경 (활성화)
- */
-async function activate(planId: string, userId: string): Promise<IPlanDocument | null> {
-  await connectDB();
-
-  // 기존 활성 계획 비활성화
-  await Plan.updateMany(
-    { user: userId, status: 'active' },
-    { status: 'draft' }
-  );
-
-  // 새 계획 활성화
-  return Plan.findByIdAndUpdate(
-    planId,
-    { status: 'active' },
-    { new: true }
-  );
 }
 
 /**
@@ -379,10 +321,22 @@ async function moveCourse(
   destSemester.courses.push(courseEntry);
 
   await plan.save();
-  return Plan.findById(planId).populate({
-    path: 'semesters.courses.course',
-    select: 'code name credits category',
-  });
+  return Plan.findById(planId).populate(POPULATE_COURSES);
+}
+
+/**
+ * 계획 초기화 (모든 학기/과목 삭제, 계획 자체는 유지)
+ */
+async function resetPlan(planId: string): Promise<IPlanDocument> {
+  await connectDB();
+  const plan = await Plan.findById(planId);
+  if (!plan) throw new Error('수강계획을 찾을 수 없습니다.');
+
+  plan.semesters = [];
+  await plan.save();
+
+  await plan.populate(POPULATE_COURSES_DETAIL);
+  return plan;
 }
 
 /**
@@ -396,8 +350,8 @@ async function deleteAllByUser(userId: string): Promise<number> {
 
 export const planService = {
   findByUser,
+  findOrCreateByUser,
   findById,
-  create,
   addSemester,
   removeSemester,
   clearSemester,
@@ -405,7 +359,6 @@ export const planService = {
   removeCourseFromSemester,
   moveCourse,
   updateCourseStatus,
-  remove,
-  activate,
+  resetPlan,
   deleteAllByUser,
 };

@@ -23,19 +23,15 @@ interface Semester {
 
 interface Plan {
   id: string;
-  name: string;
   semesters: Semester[];
-  status: 'draft' | 'active';
 }
 
 interface PlanState {
-  plans: Plan[];
   activePlan: Plan | null;
   isLoading: boolean;
   focusedSemester: { year: number; term: Term } | null;
 
   // Actions
-  setPlans: (plans: Plan[]) => void;
   setActivePlan: (plan: Plan | null) => void;
   setLoading: (loading: boolean) => void;
   setFocusedSemester: (semester: { year: number; term: Term } | null) => void;
@@ -69,12 +65,10 @@ interface PlanState {
 }
 
 export const usePlanStore = create<PlanState>((set, get) => ({
-  plans: [],
   activePlan: null,
   isLoading: false,
   focusedSemester: null,
 
-  setPlans: (plans) => set({ plans }),
   setActivePlan: (plan) => set({ activePlan: plan }),
   setLoading: (isLoading) => set({ isLoading }),
   setFocusedSemester: (semester) => set({ focusedSemester: semester }),

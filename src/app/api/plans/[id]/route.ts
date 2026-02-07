@@ -1,9 +1,9 @@
 /**
  * @api-separable
  * @endpoint GET /api/plans/:id - 계획 상세 조회
- * @endpoint DELETE /api/plans/:id - 계획 삭제
- * @service planService.findById, planService.remove
- * @migration-notes Express 변환 시: app.get('/api/plans/:id', ...)
+ * @endpoint DELETE /api/plans/:id - 계획 초기화 (모든 학기/과목 삭제)
+ * @service planService.findById, planService.resetPlan
+ * @migration-notes Express 변환 시: app.get('/api/plans/:id', ...), app.delete('/api/plans/:id', ...)
  */
 
 import { NextResponse } from 'next/server';
@@ -86,16 +86,17 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    await planService.remove(id);
+    const resetted = await planService.resetPlan(id);
 
     return NextResponse.json({
       success: true,
-      message: '계획이 삭제되었습니다.',
+      data: resetted,
+      message: '계획이 초기화되었습니다.',
     });
   } catch (error) {
     console.error('DELETE /api/plans/[id] error:', error);
     return NextResponse.json(
-      { success: false, error: '계획 삭제에 실패했습니다.' },
+      { success: false, error: '계획 초기화에 실패했습니다.' },
       { status: 500 }
     );
   }

@@ -3,11 +3,10 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
 import { useQueryClient } from '@tanstack/react-query';
-import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester } from '@/hooks/usePlans';
+import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
-import { useActivatePlan } from '@/hooks/usePlanActivation';
 import { usePlanStore } from '@/stores/planStore';
 import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
@@ -16,7 +15,7 @@ import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
 import { FloatingGradSummary } from '@/components/features/FloatingGradSummary';
-import { Button, Card, CardContent } from '@/components/ui';
+import { Button } from '@/components/ui';
 import type { Term, ICourse } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
@@ -34,9 +33,6 @@ function parseSemesterId(droppableId: string): { year: number; term: Term } | nu
 
 export default function PlannerPage() {
   const isGuest = useGuestStore((s) => s.isGuest);
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newPlanName, setNewPlanName] = useState('');
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
@@ -44,20 +40,13 @@ export default function PlannerPage() {
 
   // Guest plan store - use serialized selector for stable reference
   const guestActivePlanJson = useGuestPlanStore((s) => {
-    const plan = s.plans.find((p) => p.id === s.activePlanId);
-    return plan ? JSON.stringify(plan) : null;
+    return s.plan ? JSON.stringify(s.plan) : null;
   });
-  const guestActivePlanId = useGuestPlanStore((s) => s.activePlanId);
-  const guestPlans = useGuestPlanStore((s) => s.plans);
 
-  // Fetch all plans
-  const { data: plans, isLoading: plansLoading, error: plansError } = usePlans();
-
-  // Fetch selected plan detail
-  const { data: planDetail, isLoading: planDetailLoading } = usePlan(selectedPlanId || '');
+  // Fetch my plan (auto-creates for logged-in users)
+  const { data: myPlan, isLoading: planLoading, error: planError } = useMyPlan();
 
   // Mutations
-  const createPlanMutation = useCreatePlan();
   const addCourseMutation = useAddCourse();
   const removeCourseMutation = useRemoveCourse();
   const moveCourseMutation = useMoveCourse();
@@ -65,7 +54,7 @@ export default function PlannerPage() {
   const removeSemesterMutation = useRemoveSemester();
   const clearSemesterMutation = useClearSemester();
   const updateStatusMutation = useUpdateCourseStatus();
-  const activatePlanMutation = useActivatePlan();
+  const resetPlanMutation = useResetPlan();
 
   // Query client for cache access
   const queryClient = useQueryClient();
@@ -169,25 +158,14 @@ export default function PlannerPage() {
     });
   }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation]);
 
-  // Auto-select first plan when plans are loaded
-  useEffect(() => {
-    if (plans && plans.length > 0 && !selectedPlanId) {
-      const firstPlanId = plans[0]._id.toString();
-      // Use a microtask to avoid synchronous setState in effect
-      Promise.resolve().then(() => setSelectedPlanId(firstPlanId));
-    }
-  }, [plans, selectedPlanId]);
-
-  // Sync fetched plan detail to Zustand store (skip for guests — handled by guest sync effect)
+  // Sync fetched plan to Zustand store (skip for guests — handled by guest sync effect)
   useEffect(() => {
     if (isGuest) return;
-    if (planDetail) {
+    if (myPlan) {
       // Transform API plan to store format
       const storePlan = {
-        id: planDetail._id.toString(),
-        name: planDetail.name,
-        status: planDetail.status,
-        semesters: planDetail.semesters.map((sem) => ({
+        id: myPlan._id.toString(),
+        semesters: myPlan.semesters.map((sem) => ({
           year: sem.year,
           term: sem.term,
           courses: sem.courses.map((pc) => {
@@ -212,18 +190,16 @@ export default function PlannerPage() {
       };
       setActivePlan(storePlan);
     }
-  }, [isGuest, planDetail, setActivePlan]);
+  }, [isGuest, myPlan, setActivePlan]);
 
   // Sync guest plan to Zustand planStore (use serialized selector to avoid infinite loop)
   useEffect(() => {
     if (!isGuest) return;
     if (guestActivePlanJson) {
-      const activePlan = JSON.parse(guestActivePlanJson);
+      const guestPlan = JSON.parse(guestActivePlanJson);
       setActivePlan({
-        id: activePlan.id,
-        name: activePlan.name,
-        status: activePlan.status,
-        semesters: activePlan.semesters.map((sem: { year: number; term: string; courses: Array<{ id: string; code: string; name: string; credits: number; category?: string; status: string }> }) => ({
+        id: guestPlan.id,
+        semesters: guestPlan.semesters.map((sem: { year: number; term: string; courses: Array<{ id: string; code: string; name: string; credits: number; category?: string; status: string }> }) => ({
           year: sem.year,
           term: sem.term,
           courses: sem.courses.map((c: { id: string; code: string; name: string; credits: number; category?: string; status: string }) => ({
@@ -298,20 +274,23 @@ export default function PlannerPage() {
     return filtered;
   }, [semestersByYear, semesterYearFilter]);
 
-  // Handle creating a new plan
-  const handleCreatePlan = async () => {
-    if (!newPlanName.trim()) return;
+  // Handle reset plan
+  const handleResetPlan = useCallback(async () => {
+    if (!activePlan) return;
+    const confirmed = window.confirm('모든 학기와 과목이 삭제됩니다. 계획을 초기화하시겠습니까?');
+    if (!confirmed) return;
+
     try {
-      const newPlan = await createPlanMutation.mutateAsync({
-        name: newPlanName.trim(),
+      await resetPlanMutation.mutateAsync(activePlan.id);
+      useToastStore.getState().addToast({
+        message: '계획이 초기화되었습니다.',
+        type: 'info',
+        duration: 3000,
       });
-      setSelectedPlanId(newPlan._id.toString());
-      setNewPlanName('');
-      setIsCreating(false);
     } catch (error) {
-      console.error('Failed to create plan:', error);
+      console.error('Failed to reset plan:', error);
     }
-  };
+  }, [activePlan, resetPlanMutation]);
 
   // Helper to find course data from draggableId
   const findCourseData = useCallback((courseId: string) => {
@@ -782,18 +761,8 @@ export default function PlannerPage() {
     [activePlan, updateStatusMutation]
   );
 
-  // Handle plan activation
-  const handleActivatePlan = useCallback(async () => {
-    if (!selectedPlanId) return;
-    try {
-      await activatePlanMutation.mutateAsync(selectedPlanId);
-    } catch (error) {
-      console.error('Failed to activate plan:', error);
-    }
-  }, [selectedPlanId, activatePlanMutation]);
-
   // Loading state
-  if (plansLoading) {
+  if (planLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]"></div>
@@ -802,60 +771,11 @@ export default function PlannerPage() {
   }
 
   // Error state
-  if (plansError) {
+  if (planError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
         <p className="text-red-500 mb-4">계획을 불러오는데 실패했습니다.</p>
         <Button onClick={() => window.location.reload()}>다시 시도</Button>
-      </div>
-    );
-  }
-
-  // No plans - show create prompt
-  if (!plans || plans.length === 0 || isCreating) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">수강 계획</h1>
-          <p className="text-gray-600 mt-1">새 수강 계획을 만들어 시작하세요.</p>
-        </div>
-
-        <Card className="max-w-md mx-auto">
-          <CardContent className="pt-6">
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="planName" className="block text-sm font-medium text-gray-700 mb-1">
-                  계획 이름
-                </label>
-                <input
-                  id="planName"
-                  type="text"
-                  value={newPlanName}
-                  onChange={(e) => setNewPlanName(e.target.value)}
-                  placeholder="예: 2024년 졸업 계획"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AACA]"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleCreatePlan();
-                  }}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleCreatePlan}
-                  isLoading={createPlanMutation.isPending}
-                  className="flex-1"
-                >
-                  계획 만들기
-                </Button>
-                {plans && plans.length > 0 && (
-                  <Button variant="outline" onClick={() => setIsCreating(false)}>
-                    취소
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -869,50 +789,22 @@ export default function PlannerPage() {
           <p className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          {/* Plan Selector */}
-          {plans.length > 1 && (
-            <select
-              value={selectedPlanId || ''}
-              onChange={(e) => setSelectedPlanId(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AACA]"
+          {/* Reset Plan Button */}
+          {activePlan && activePlan.semesters.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={handleResetPlan}
+              isLoading={resetPlanMutation.isPending}
+              className="text-sm text-red-600 border-red-300 hover:bg-red-50"
             >
-              {plans.map((plan) => (
-                <option key={plan._id.toString()} value={plan._id.toString()}>
-                  {plan.name}
-                </option>
-              ))}
-            </select>
+              초기화
+            </Button>
           )}
-          {/* Plan Status Badge + Activation */}
-          {activePlan && (
-            activePlan.status === 'active' ? (
-              <span className="text-xs px-2.5 py-1 bg-green-100 text-green-700 rounded-full font-medium">
-                활성
-              </span>
-            ) : (
-              <Button
-                variant="outline"
-                onClick={handleActivatePlan}
-                isLoading={activatePlanMutation.isPending}
-                className="text-sm"
-              >
-                활성화
-              </Button>
-            )
-          )}
-          <Button onClick={() => setIsCreating(true)} className="text-sm sm:text-base">새 계획 만들기</Button>
         </div>
       </div>
 
-      {/* Loading plan detail */}
-      {planDetailLoading && (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]"></div>
-        </div>
-      )}
-
       {/* Drag and Drop Context */}
-      {activePlan && !planDetailLoading && (
+      {activePlan && (
         <DragDropContext
           onDragStart={handleDragStart}
           onDragUpdate={handleDragUpdate}
@@ -939,21 +831,23 @@ export default function PlannerPage() {
             {/* Semester Grid - Full Width Bottom Row */}
             <div ref={semesterGridRef} className="space-y-4">
               {/* Year filter for semester grid */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-                <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">학년</span>
-                {[null, ...Array.from(semestersByYear.keys()).sort()].map((y) => (
-                  <button
-                    key={y ?? 'all'}
-                    onClick={() => setSemesterYearFilter(y)}
-                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
-                      ${semesterYearFilter === y
-                        ? 'bg-[#153974] text-white'
-                        : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
-                  >
-                    {y ? `${y}학년` : '전체'}
-                  </button>
-                ))}
-              </div>
+              {semestersByYear.size > 0 && (
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                  <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">학년</span>
+                  {[null, ...Array.from(semestersByYear.keys()).sort()].map((y) => (
+                    <button
+                      key={y ?? 'all'}
+                      onClick={() => setSemesterYearFilter(y)}
+                      className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
+                        ${semesterYearFilter === y
+                          ? 'bg-[#153974] text-white'
+                          : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
+                    >
+                      {y ? `${y}학년` : '전체'}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => (
                 <div key={year} className="space-y-2">

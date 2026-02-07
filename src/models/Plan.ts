@@ -53,24 +53,18 @@ const planSchema = new Schema<IPlanDocument>(
     },
     name: {
       type: String,
-      required: [true, '계획 이름은 필수입니다.'],
+      default: '내 수강계획',
       trim: true,
     },
     semesters: [semesterPlanSchema],
-    status: {
-      type: String,
-      enum: ['draft', 'active'],
-      default: 'draft',
-    },
   },
   {
     timestamps: true,
   }
 );
 
-// 인덱스
-planSchema.index({ user: 1 });
-planSchema.index({ user: 1, status: 1 });
+// 인덱스: 사용자당 단일 계획
+planSchema.index({ user: 1 }, { unique: true });
 
 const Plan: Model<IPlanDocument> =
   mongoose.models.Plan || mongoose.model<IPlanDocument>('Plan', planSchema);

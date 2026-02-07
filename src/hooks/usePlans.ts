@@ -3,9 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
+import { graduationRequirementKeys } from './useGraduationRequirements';
 import type {
   IPlan,
-  CreatePlanInput,
   AddCourseToSemesterInput,
   ApiResponse,
   Term
@@ -15,7 +15,7 @@ import type {
 // Query Keys
 // ============================================
 
-const planKeys = {
+export const planKeys = {
   all: ['plans'] as const,
   lists: () => [...planKeys.all, 'list'] as const,
   list: (filters?: Record<string, unknown>) => [...planKeys.lists(), { filters }] as const,
@@ -27,12 +27,12 @@ const planKeys = {
 // Fetch Functions
 // ============================================
 
-async function fetchPlans(): Promise<IPlan[]> {
+async function fetchMyPlan(): Promise<IPlan> {
   const response = await fetch('/api/plans');
-  const result: ApiResponse<IPlan[]> = await response.json();
+  const result: ApiResponse<IPlan> = await response.json();
 
   if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to fetch plans');
+    throw new Error(result.error || 'Failed to fetch plan');
   }
 
   return result.data;
@@ -49,32 +49,18 @@ async function fetchPlan(id: string): Promise<IPlan> {
   return result.data;
 }
 
-async function createPlan(input: CreatePlanInput): Promise<IPlan> {
-  const response = await fetch('/api/plans', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(input),
+async function resetPlan(id: string): Promise<IPlan> {
+  const response = await fetch(`/api/plans/${id}`, {
+    method: 'DELETE',
   });
 
   const result: ApiResponse<IPlan> = await response.json();
 
   if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to create plan');
+    throw new Error(result.error || 'Failed to reset plan');
   }
 
   return result.data;
-}
-
-async function deletePlan(id: string): Promise<void> {
-  const response = await fetch(`/api/plans/${id}`, {
-    method: 'DELETE',
-  });
-
-  const result: ApiResponse<void> = await response.json();
-
-  if (!result.success) {
-    throw new Error(result.error || 'Failed to delete plan');
-  }
 }
 
 async function addCourseToPlan(params: AddCourseToSemesterInput): Promise<IPlan> {
@@ -152,29 +138,42 @@ async function moveCourseBetweenSemesters(params: {
 // ============================================
 
 /**
- * Fetch all plans for the current user
+ * Fetch the single plan for the current user (auto-creates if none exists)
  */
-export function usePlans(options?: { enabled?: boolean }) {
+export function useMyPlan(options?: { enabled?: boolean }) {
   const isGuest = useGuestStore((s) => s.isGuest);
-  const guestPlans = useGuestPlanStore((s) => s.plans);
+  const guestPlan = useGuestPlanStore((s) => s.plan);
+  const getOrCreatePlan = useGuestPlanStore((s) => s.getOrCreatePlan);
 
   const apiResult = useQuery({
-    queryKey: planKeys.lists(),
-    queryFn: fetchPlans,
+    queryKey: planKeys.detail('my'),
+    queryFn: fetchMyPlan,
     enabled: !isGuest && (options?.enabled ?? true),
   });
 
   if (isGuest) {
-    // Transform guest plans to match IPlan shape
-    const data = guestPlans.map((p) => ({
-      _id: { toString: () => p.id } as any,
-      name: p.name,
-      status: p.status,
-      semesters: p.semesters,
+    // Ensure guest plan exists
+    const plan = guestPlan || getOrCreatePlan();
+    const data = {
+      _id: { toString: () => plan.id } as any,
+      semesters: plan.semesters.map((sem) => ({
+        year: sem.year,
+        term: sem.term,
+        courses: sem.courses.map((c) => ({
+          course: {
+            _id: { toString: () => c.id },
+            code: c.code,
+            name: c.name,
+            credits: c.credits,
+            category: c.category,
+          } as any,
+          status: c.status,
+        })),
+      })),
       user: {} as any,
       createdAt: new Date(),
       updatedAt: new Date(),
-    })) as unknown as IPlan[];
+    } as unknown as IPlan;
     return { ...apiResult, data, isLoading: false, error: null, isError: false } as typeof apiResult;
   }
 
@@ -186,7 +185,7 @@ export function usePlans(options?: { enabled?: boolean }) {
  */
 export function usePlan(id: string, options?: { enabled?: boolean }) {
   const isGuest = useGuestStore((s) => s.isGuest);
-  const guestPlans = useGuestPlanStore((s) => s.plans);
+  const guestPlan = useGuestPlanStore((s) => s.plan);
 
   const apiResult = useQuery({
     queryKey: planKeys.detail(id),
@@ -195,12 +194,9 @@ export function usePlan(id: string, options?: { enabled?: boolean }) {
   });
 
   if (isGuest) {
-    const guestPlan = guestPlans.find((p) => p.id === id);
     if (guestPlan) {
       const data = {
         _id: { toString: () => guestPlan.id } as any,
-        name: guestPlan.name,
-        status: guestPlan.status,
         semesters: guestPlan.semesters.map((sem) => ({
           year: sem.year,
           term: sem.term,
@@ -228,62 +224,27 @@ export function usePlan(id: string, options?: { enabled?: boolean }) {
 }
 
 /**
- * Create a new plan
+ * Reset a plan (clear all semesters/courses)
  */
-export function useCreatePlan() {
+export function useResetPlan() {
   const queryClient = useQueryClient();
   const isGuest = useGuestStore((s) => s.isGuest);
-  const guestCreatePlan = useGuestPlanStore((s) => s.createPlan);
+  const guestResetPlan = useGuestPlanStore((s) => s.resetPlan);
 
   const apiMutation = useMutation({
-    mutationFn: createPlan,
+    mutationFn: resetPlan,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
 
   if (isGuest) {
     return {
       ...apiMutation,
-      mutateAsync: async (input: CreatePlanInput) => {
-        const plan = guestCreatePlan(input.name);
-        return {
-          _id: { toString: () => plan.id } as any,
-          name: plan.name,
-          status: plan.status,
-          semesters: plan.semesters,
-          user: {} as any,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as unknown as IPlan;
-      },
-      isPending: false,
-    } as typeof apiMutation;
-  }
-
-  return apiMutation;
-}
-
-/**
- * Delete a plan
- */
-export function useDeletePlan() {
-  const queryClient = useQueryClient();
-  const isGuest = useGuestStore((s) => s.isGuest);
-  const guestDeletePlan = useGuestPlanStore((s) => s.deletePlan);
-
-  const apiMutation = useMutation({
-    mutationFn: deletePlan,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-    },
-  });
-
-  if (isGuest) {
-    return {
-      ...apiMutation,
-      mutateAsync: async (id: string) => {
-        guestDeletePlan(id);
+      mutateAsync: async (_id: string) => {
+        guestResetPlan();
+        return {} as unknown as IPlan;
       },
       isPending: false,
     } as typeof apiMutation;
@@ -304,7 +265,8 @@ export function useAddCourse() {
     mutationFn: addCourseToPlan,
     onSuccess: (data) => {
       queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
 
@@ -340,7 +302,8 @@ export function useRemoveCourse() {
     mutationFn: removeCourseFromPlan,
     onSuccess: (data) => {
       queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
 
@@ -370,7 +333,8 @@ export function useMoveCourse() {
     mutationFn: moveCourseBetweenSemesters,
     onSuccess: (data) => {
       queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
 
@@ -418,7 +382,7 @@ export function useAddSemester() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
     },
   });
 
@@ -458,7 +422,8 @@ export function useRemoveSemester() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
 
@@ -498,7 +463,8 @@ export function useClearSemester() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
 

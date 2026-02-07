@@ -62,7 +62,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
     required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;
 
   // Fetch active plan with populated courses
-  const plan = await Plan.findOne({ user: userId, status: 'active' }).populate({
+  const plan = await Plan.findOne({ user: userId }).populate({
     path: 'semesters.courses.course',
     select: 'code name credits category',
   }) as IPlanDocument | null;

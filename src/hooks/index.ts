@@ -5,10 +5,9 @@
 
 export { useAuth } from './useAuth';
 export {
-  usePlans,
+  useMyPlan,
   usePlan,
-  useCreatePlan,
-  useDeletePlan,
+  useResetPlan,
   useAddCourse,
   useRemoveCourse,
 } from './usePlans';

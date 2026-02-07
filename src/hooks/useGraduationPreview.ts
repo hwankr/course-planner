@@ -42,8 +42,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
 
   // Semesters data
   const memberSemesters = usePlanStore((s) => s.activePlan?.semesters);
-  const guestPlans = useGuestPlanStore((s) => s.plans);
-  const guestActivePlanId = useGuestPlanStore((s) => s.activePlanId);
+  const guestPlan = useGuestPlanStore((s) => s.plan);
 
   const rawRequirement = isGuest ? guestRequirement : memberRequirement;
 
@@ -60,8 +59,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
   } : null;
 
   // Get semesters (member or guest)
-  const guestActivePlan = guestPlans.find(p => p.id === guestActivePlanId);
-  const semesters = isGuest ? (guestActivePlan?.semesters ?? null) : (memberSemesters ?? null);
+  const semesters = isGuest ? (guestPlan?.semesters ?? null) : (memberSemesters ?? null);
 
   // Compute current and preview using the same calculateGuestProgress function
   const { currentCalc, previewCalc } = useMemo(() => {
