@@ -2,8 +2,9 @@
  * @api-separable
  * @endpoint POST /api/plans/:id/semesters - 빈 학기 추가
  * @endpoint DELETE /api/plans/:id/semesters - 학기 제거
- * @service planService.addSemester, planService.removeSemester
- * @migration-notes Express 변환 시: app.post('/api/plans/:id/semesters', ...)
+ * @endpoint PATCH /api/plans/:id/semesters - 학기 초기화 (과목 전체 제거)
+ * @service planService.addSemester, planService.removeSemester, planService.clearSemester
+ * @migration-notes Express 변환 시: app.post('/api/plans/:id/semesters', ...), app.patch('/api/plans/:id/semesters', ...)
  */
 
 import { NextResponse } from 'next/server';
@@ -123,6 +124,57 @@ export async function DELETE(request: Request, { params }: RouteParams) {
 
     return NextResponse.json(
       { success: false, error: '학기 제거에 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request, { params }: RouteParams) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '로그인이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const { id: planId } = await params;
+    const body = await request.json();
+    const { year, term } = semesterSchema.parse(body);
+
+    const existingPlan = await planService.findById(planId);
+    if (!existingPlan || existingPlan.user.toString() !== session.user.id) {
+      return NextResponse.json(
+        { success: false, error: '접근 권한이 없습니다.' },
+        { status: 403 }
+      );
+    }
+
+    const plan = await planService.clearSemester(planId, year, term);
+
+    return NextResponse.json({
+      success: true,
+      data: plan,
+      message: '학기가 초기화되었습니다.',
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { success: false, error: error.issues[0].message },
+        { status: 400 }
+      );
+    }
+
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, error: '학기 초기화에 실패했습니다.' },
       { status: 500 }
     );
   }

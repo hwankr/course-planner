@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input } from '@/components/ui';
 import type { ApiResponse } from '@/types';
@@ -19,6 +19,7 @@ import {
   X,
   UserX,
   Chrome,
+  Trash2,
 } from 'lucide-react';
 
 interface Department {
@@ -43,11 +44,33 @@ export default function ProfilePage() {
   const guestProfile = useGuestProfileStore();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     enrollmentYear: '',
     department: '',
   });
+
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      '정말로 회원 탈퇴하시겠습니까?\n\n모든 수강 계획, 커스텀 과목 등 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.'
+    );
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch('/api/users/me', { method: 'DELETE' });
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.error || '계정 삭제에 실패했습니다.');
+      }
+      await signOut({ callbackUrl: '/' });
+    } catch (error) {
+      console.error('Account deletion failed:', error);
+      alert('계정 삭제에 실패했습니다. 다시 시도해주세요.');
+      setIsDeleting(false);
+    }
+  };
 
   // Fetch current user profile
   const { data: userProfile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
@@ -137,7 +160,7 @@ export default function ProfilePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">프로필</h1>
-          <p className="text-gray-600 mt-1">프로필을 설정하면 과목 카탈로그가 학과별로 필터됩니다.</p>
+          <p className="text-gray-600 mt-1">프로필을 설정하면 과목 리스트가 학과별로 필터됩니다.</p>
         </div>
 
         {/* Guest Profile Form */}
@@ -426,6 +449,29 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Danger Zone */}
+      <Card className="animate-fade-in-up anim-delay-200 border-red-200">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-red-500" />
+            <CardTitle className="text-red-600">위험 구역</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-600 mb-4">
+            회원 탈퇴 시 모든 수강 계획, 커스텀 과목 등 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다.
+          </p>
+          <Button
+            variant="outline"
+            onClick={handleDeleteAccount}
+            disabled={isDeleting}
+            className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+          >
+            {isDeleting ? '삭제 중...' : '회원 탈퇴'}
+          </Button>
         </CardContent>
       </Card>
     </div>

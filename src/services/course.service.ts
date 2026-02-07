@@ -143,6 +143,17 @@ async function countByDepartment(departmentId: string): Promise<number> {
   return Course.countDocuments({ department: departmentId, isActive: true });
 }
 
+/**
+ * 사용자가 생성한 커스텀 과목 모두 삭제 (회원 탈퇴 시 사용)
+ * NOTE: 의도적으로 hard delete (deleteMany) 사용. 기존 remove()는 soft delete (isActive: false)이지만,
+ * 회원 탈퇴 시에는 사용자 데이터 완전 삭제가 목적이므로 hard delete가 적절함.
+ */
+async function deleteCustomByUser(userId: string): Promise<number> {
+  await connectDB();
+  const result = await Course.deleteMany({ createdBy: userId });
+  return result.deletedCount;
+}
+
 export const courseService = {
   findAll,
   findById,
@@ -151,4 +162,5 @@ export const courseService = {
   update,
   remove,
   countByDepartment,
+  deleteCustomByUser,
 };

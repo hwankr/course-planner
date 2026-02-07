@@ -9,6 +9,8 @@ import { connectDB } from '@/lib/db/mongoose';
 import { User } from '@/models';
 import type { IUserDocument } from '@/models';
 import type { CreateUserInput } from '@/types';
+import { planService } from './plan.service';
+import { courseService } from './course.service';
 
 /**
  * 이메일로 사용자 조회
@@ -107,6 +109,25 @@ async function findOrCreateOAuthUser(
   return user;
 }
 
+/**
+ * 사용자 및 관련 데이터 모두 삭제 (회원 탈퇴)
+ */
+async function deleteWithCascade(userId: string): Promise<void> {
+  await connectDB();
+
+  // 1. 사용자의 모든 수강계획 삭제
+  await planService.deleteAllByUser(userId);
+
+  // 2. 사용자가 생성한 커스텀 과목 삭제
+  await courseService.deleteCustomByUser(userId);
+
+  // 3. 사용자 문서 삭제
+  const user = await User.findByIdAndDelete(userId);
+  if (!user) {
+    throw new Error('사용자를 찾을 수 없습니다.');
+  }
+}
+
 export const userService = {
   findByEmail,
   findByEmailWithPassword,
@@ -115,4 +136,5 @@ export const userService = {
   verifyPassword,
   update,
   findOrCreateOAuthUser,
+  deleteWithCascade,
 };

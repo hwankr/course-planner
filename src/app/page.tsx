@@ -11,10 +11,10 @@ import {
   Sparkles,
   LayoutGrid,
   Target,
-  Zap,
+  Users,
   GripVertical,
   BarChart3,
-  ShieldCheck,
+  Smartphone,
 } from 'lucide-react';
 
 export default function Home() {
@@ -138,13 +138,13 @@ export default function Home() {
             </div>
 
             {/* Card 3 */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-amber-500 card-hover animate-fade-in-up anim-delay-600">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center mb-6">
-                <Zap className="w-8 h-8 text-white" />
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-violet-500 card-hover animate-fade-in-up anim-delay-600">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">선수과목 검증</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">비회원 체험 모드</h3>
               <p className="text-gray-600 leading-relaxed">
-                선수과목 충족 여부를 자동으로 확인하고 경고를 받으세요.
+                회원가입 없이 바로 체험해보세요. 모든 기능을 자유롭게 사용할 수 있습니다.
               </p>
             </div>
           </div>
@@ -184,11 +184,11 @@ export default function Home() {
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <ShieldCheck className="w-6 h-6" />
+                  <Smartphone className="w-6 h-6" />
                 </div>
               </div>
-              <h3 className="text-xl font-bold mb-2">선수과목 자동 검증</h3>
-              <p className="text-blue-100">수강 조건을 자동으로 확인</p>
+              <h3 className="text-xl font-bold mb-2">모바일 반응형 지원</h3>
+              <p className="text-blue-100">어디서든 수강 계획 관리</p>
             </div>
           </div>
         </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
 import { useQueryClient } from '@tanstack/react-query';
-import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
+import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester, useClearSemester } from '@/hooks/usePlans';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
@@ -62,6 +62,7 @@ export default function PlannerPage() {
   const removeCourseMutation = useRemoveCourse();
   const addSemesterMutation = useAddSemester();
   const removeSemesterMutation = useRemoveSemester();
+  const clearSemesterMutation = useClearSemester();
   const updateStatusMutation = useUpdateCourseStatus();
   const activatePlanMutation = useActivatePlan();
 
@@ -69,7 +70,7 @@ export default function PlannerPage() {
   const queryClient = useQueryClient();
 
   // Zustand store
-  const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
+  const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, clearSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
 
   // Preview store
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
@@ -113,6 +114,7 @@ export default function PlannerPage() {
     adjustedTotals.totalPlanned -= course.credits;
     if (majorCats.includes(cat)) adjustedTotals.majorPlanned -= course.credits;
     if (generalCats.includes(cat)) adjustedTotals.generalPlanned -= course.credits;
+    if (cat === 'major_required') adjustedTotals.majorRequiredPlanned -= course.credits;
 
     const delta = computeGraduationDelta(
       { credits: course.credits, category: course.category as any },
@@ -158,7 +160,10 @@ export default function PlannerPage() {
         creditsDelta: course.credits,
         categoryLabel: catLabel,
         categoryPct: delta.categoryKey !== 'total' ? { before: delta.before.percentage, after: delta.after.percentage } : undefined,
-        totalPct: { before: delta.totalBefore.percentage, after: delta.totalAfter.percentage },
+        categoryCredits: delta.categoryKey !== 'total' ? { after: delta.after.credits, required: delta.categoryKey === 'major' ? requirement!.majorCredits : requirement!.generalCredits } : undefined,
+        secondRowLabel: delta.secondRowCategoryKey === 'major_required' ? '전공핵심' : '전체',
+        secondRowPct: { before: delta.secondRowBefore.percentage, after: delta.secondRowAfter.percentage },
+        secondRowCredits: { after: delta.secondRowAfter.credits, required: delta.secondRowCategoryKey === 'major_required' ? requirement!.majorRequiredMin : requirement!.totalCredits },
       } : undefined,
     });
   }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation]);
@@ -634,6 +639,50 @@ export default function PlannerPage() {
     [activePlan, removeSemesterMutation]
   );
 
+  // Handle clear semester (remove all courses but keep semester)
+  const handleClearSemester = useCallback(
+    async (year: number, term: Term) => {
+      if (!activePlan) return;
+
+      // Save courses for potential rollback
+      const semester = activePlan.semesters.find(
+        (s) => s.year === year && s.term === term
+      );
+      const savedCourses = semester?.courses ? [...semester.courses] : [];
+
+      // Optimistic update
+      clearSemester(year, term);
+
+      try {
+        if (isGuest) {
+          const guestClearSemester = useGuestPlanStore.getState().clearSemester;
+          guestClearSemester(activePlan.id, year, term);
+        } else {
+          await clearSemesterMutation.mutateAsync({
+            planId: activePlan.id,
+            year,
+            term,
+          });
+        }
+      } catch (error) {
+        // Rollback: re-add saved courses
+        const planStore = usePlanStore.getState();
+        if (planStore.activePlan) {
+          const semesterExists = planStore.activePlan.semesters.find(
+            (s) => s.year === year && s.term === term
+          );
+          if (semesterExists) {
+            for (const course of savedCourses) {
+              planStore.addCourseToSemester(year, term, course);
+            }
+          }
+        }
+        console.error('Failed to clear semester:', error);
+      }
+    },
+    [activePlan, clearSemester, clearSemesterMutation, isGuest]
+  );
+
   // Handle click-to-add course to focused semester
   const handleClickAdd = useCallback(
     async (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => {
@@ -815,7 +864,7 @@ export default function PlannerPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">수강 계획</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 카탈로그에서 과목을 추가하세요.</p>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           {/* Plan Selector */}
@@ -922,6 +971,7 @@ export default function PlannerPage() {
                         onFocus={() => handleSemesterFocus(semester.year, semester.term)}
                         onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
                         onDelete={() => handleDeleteSemester(semester.year, semester.term)}
+                        onClear={() => handleClearSemester(semester.year, semester.term)}
                         onStatusChange={handleStatusChange}
                       />
                     ))}

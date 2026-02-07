@@ -225,7 +225,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         {/* Row 1: Title + Actions */}
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <h2 className="text-base font-semibold text-gray-900">과목 카탈로그</h2>
+            <h2 className="text-base font-semibold text-gray-900">과목 리스트</h2>
             <p className="text-xs text-gray-400 truncate">
               {userDepartment ? '내 학과 커리큘럼' : '학과를 설정하면 커리큘럼이 표시됩니다'}
             </p>

@@ -20,13 +20,14 @@ interface SemesterColumnProps {
   };
   onRemoveCourse: (courseId: string) => void;
   onDelete?: () => void;
+  onClear?: () => void;
   isFocused?: boolean;
   onFocus?: () => void;
   compact?: boolean;
   onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void;
 }
 
-export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused = false, onFocus, compact = false, onStatusChange }: SemesterColumnProps) {
+export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, isFocused = false, onFocus, compact = false, onStatusChange }: SemesterColumnProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const MAX_VISIBLE = 4;
   const visibleCourses = compact && !isExpanded
@@ -78,6 +79,22 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused =
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {onClear && semester.courses.length > 0 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`이 학기의 모든 과목(${semester.courses.length}개)을 제거하시겠습니까?`)) {
+                    onClear();
+                  }
+                }}
+                className="p-1 hover:bg-amber-100 rounded-full transition-colors"
+                aria-label="학기 초기화"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400 hover:text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+              </button>
+            )}
             {onDelete && (
               <button
                 onClick={(e) => {
@@ -121,7 +138,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused =
             {semester.courses.length === 0 ? (
               <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
                 <p className={`${compact ? 'text-xs' : 'text-sm'} text-gray-400`}>
-                  {isFocused ? '카탈로그에서 + 버튼으로 과목을 추가하세요' : '과목을 드래그하세요'}
+                  {isFocused ? '과목 리스트에서 + 버튼으로 과목을 추가하세요' : '과목을 드래그하세요'}
                 </p>
               </div>
             ) : (

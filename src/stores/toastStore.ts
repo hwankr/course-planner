@@ -8,7 +8,10 @@ export interface Toast {
     creditsDelta: number;
     categoryLabel: string;
     categoryPct?: { before: number; after: number };
-    totalPct: { before: number; after: number };
+    categoryCredits?: { after: number; required: number };
+    secondRowLabel: string;
+    secondRowPct: { before: number; after: number };
+    secondRowCredits: { after: number; required: number };
   };
   type: 'success' | 'info' | 'warning';
   action?: { label: string; onClick: () => void };

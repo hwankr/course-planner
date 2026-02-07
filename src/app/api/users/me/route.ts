@@ -2,8 +2,9 @@
  * @api-separable
  * @endpoint GET /api/users/me - 현재 사용자 정보 조회
  * @endpoint PATCH /api/users/me - 사용자 정보 업데이트
- * @service userService.findById, userService.update
- * @migration-notes Express 변환 시: app.get('/api/users/me', ...), app.patch('/api/users/me', ...)
+ * @endpoint DELETE /api/users/me - 회원 탈퇴 (계정 및 관련 데이터 삭제)
+ * @service userService.findById, userService.update, userService.deleteWithCascade
+ * @migration-notes Express 변환 시: app.get('/api/users/me', ...), app.patch('/api/users/me', ...), app.delete('/api/users/me', ...)
  */
 
 import { NextResponse } from 'next/server';
@@ -102,6 +103,31 @@ export async function PATCH(request: Request) {
     console.error('PATCH /api/users/me error:', error);
     return NextResponse.json(
       { success: false, error: '프로필 업데이트에 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    await userService.deleteWithCascade(session.user.id);
+
+    return NextResponse.json({
+      success: true,
+      message: '계정이 삭제되었습니다.',
+    });
+  } catch (error) {
+    console.error('DELETE /api/users/me error:', error);
+    return NextResponse.json(
+      { success: false, error: '계정 삭제에 실패했습니다.' },
       { status: 500 }
     );
   }

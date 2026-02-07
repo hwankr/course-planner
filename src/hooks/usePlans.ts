@@ -410,3 +410,43 @@ export function useRemoveSemester() {
 
   return apiMutation;
 }
+
+/**
+ * Clear all courses from a semester in a plan
+ */
+export function useClearSemester() {
+  const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestClearSemester = useGuestPlanStore((s) => s.clearSemester);
+
+  const apiMutation = useMutation({
+    mutationFn: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
+      const res = await fetch(`/api/plans/${planId}/semesters`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ year, term }),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to clear semester');
+      }
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+  });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async ({ planId, year, term }: { planId: string; year: number; term: string }) => {
+        guestClearSemester(planId, year, term as Term);
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
+}

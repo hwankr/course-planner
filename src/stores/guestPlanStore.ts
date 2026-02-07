@@ -36,6 +36,7 @@ interface GuestPlanState {
   setActivePlanId: (id: string) => void;
   addSemester: (planId: string, year: number, term: Term) => void;
   removeSemester: (planId: string, year: number, term: Term) => void;
+  clearSemester: (planId: string, year: number, term: Term) => void;
   addCourse: (planId: string, year: number, term: Term, course: GuestPlannedCourse) => void;
   removeCourse: (planId: string, year: number, term: Term, courseId: string) => void;
   moveCourse: (planId: string, srcYear: number, srcTerm: Term, destYear: number, destTerm: Term, courseId: string) => void;
@@ -134,6 +135,26 @@ export const useGuestPlanStore = create<GuestPlanState>()(
               semesters: plan.semesters.filter(
                 (s) => !(s.year === year && s.term === term)
               ),
+            };
+          }),
+        }));
+      },
+
+      clearSemester: (planId: string, year: number, term: Term) => {
+        set((state) => ({
+          plans: state.plans.map((plan) => {
+            if (plan.id !== planId) return plan;
+
+            return {
+              ...plan,
+              semesters: plan.semesters.map((semester) => {
+                if (semester.year !== year || semester.term !== term) return semester;
+
+                return {
+                  ...semester,
+                  courses: [],
+                };
+              }),
             };
           }),
         }));

@@ -52,6 +52,7 @@ interface PlanState {
     term: Term,
     courseId: string
   ) => void;
+  clearSemester: (year: number, term: Term) => void;
   moveCourse: (
     sourceYear: number,
     sourceTerm: Term,
@@ -125,6 +126,21 @@ export const usePlanStore = create<PlanState>((set, get) => ({
 
     if (semester) {
       semester.courses = semester.courses.filter((c) => c.id !== courseId);
+      set({ activePlan: updatedPlan });
+    }
+  },
+
+  clearSemester: (year, term) => {
+    const { activePlan } = get();
+    if (!activePlan) return;
+
+    const updatedPlan = { ...activePlan };
+    const semester = updatedPlan.semesters.find(
+      (s) => s.year === year && s.term === term
+    );
+
+    if (semester) {
+      semester.courses = [];
       set({ activePlan: updatedPlan });
     }
   },

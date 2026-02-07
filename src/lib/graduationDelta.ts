@@ -12,6 +12,8 @@ export interface CurrentTotals {
   majorEarned: number;
   generalPlanned: number;
   generalEarned: number;
+  majorRequiredPlanned: number;
+  majorRequiredEarned: number;
 }
 
 export interface GraduationDelta {
@@ -22,6 +24,9 @@ export interface GraduationDelta {
   after: { credits: number; percentage: number };
   totalBefore: { credits: number; percentage: number };
   totalAfter: { credits: number; percentage: number };
+  secondRowBefore: { credits: number; percentage: number };
+  secondRowAfter: { credits: number; percentage: number };
+  secondRowCategoryKey: string;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -55,9 +60,24 @@ export function computeGraduationDelta(
   const pct = (earned: number, planned: number, required: number) =>
     required > 0 ? Math.min(100, Math.round(((earned + planned) / required) * 100)) : 0;
 
+  // Compute total before/after first (needed for secondRow)
+  const totalBeforePlanned = currentTotals.totalPlanned;
+  const totalAfterPlanned = totalBeforePlanned + credits;
+  const totalBefore = {
+    credits: currentTotals.totalEarned + totalBeforePlanned,
+    percentage: pct(currentTotals.totalEarned, totalBeforePlanned, requirement.totalCredits),
+  };
+  const totalAfter = {
+    credits: currentTotals.totalEarned + totalAfterPlanned,
+    percentage: pct(currentTotals.totalEarned, totalAfterPlanned, requirement.totalCredits),
+  };
+
   let categoryKey: string;
   let before: { credits: number; percentage: number };
   let after: { credits: number; percentage: number };
+  let secondRowCategoryKey: string;
+  let secondRowBefore: { credits: number; percentage: number };
+  let secondRowAfter: { credits: number; percentage: number };
 
   if (isMajor) {
     categoryKey = 'major';
@@ -71,6 +91,19 @@ export function computeGraduationDelta(
       credits: currentTotals.majorEarned + afterPlanned,
       percentage: pct(currentTotals.majorEarned, afterPlanned, requirement.majorCredits),
     };
+
+    // Second row: major_required
+    secondRowCategoryKey = 'major_required';
+    const majorReqBeforePlanned = currentTotals.majorRequiredPlanned;
+    const majorReqAfterPlanned = majorReqBeforePlanned + (cat === 'major_required' ? credits : 0);
+    secondRowBefore = {
+      credits: currentTotals.majorRequiredEarned + majorReqBeforePlanned,
+      percentage: pct(currentTotals.majorRequiredEarned, majorReqBeforePlanned, requirement.majorRequiredMin),
+    };
+    secondRowAfter = {
+      credits: currentTotals.majorRequiredEarned + majorReqAfterPlanned,
+      percentage: pct(currentTotals.majorRequiredEarned, majorReqAfterPlanned, requirement.majorRequiredMin),
+    };
   } else if (isGeneral) {
     categoryKey = 'general';
     const beforePlanned = currentTotals.generalPlanned;
@@ -83,22 +116,21 @@ export function computeGraduationDelta(
       credits: currentTotals.generalEarned + afterPlanned,
       percentage: pct(currentTotals.generalEarned, afterPlanned, requirement.generalCredits),
     };
+
+    // Second row: total
+    secondRowCategoryKey = 'total';
+    secondRowBefore = totalBefore;
+    secondRowAfter = totalAfter;
   } else {
     categoryKey = 'total';
     before = { credits: 0, percentage: 0 };
     after = { credits: 0, percentage: 0 };
-  }
 
-  const totalBeforePlanned = currentTotals.totalPlanned;
-  const totalAfterPlanned = totalBeforePlanned + credits;
-  const totalBefore = {
-    credits: currentTotals.totalEarned + totalBeforePlanned,
-    percentage: pct(currentTotals.totalEarned, totalBeforePlanned, requirement.totalCredits),
-  };
-  const totalAfter = {
-    credits: currentTotals.totalEarned + totalAfterPlanned,
-    percentage: pct(currentTotals.totalEarned, totalAfterPlanned, requirement.totalCredits),
-  };
+    // Second row: total
+    secondRowCategoryKey = 'total';
+    secondRowBefore = totalBefore;
+    secondRowAfter = totalAfter;
+  }
 
   return {
     creditsDelta: credits,
@@ -108,6 +140,9 @@ export function computeGraduationDelta(
     after,
     totalBefore,
     totalAfter,
+    secondRowBefore,
+    secondRowAfter,
+    secondRowCategoryKey,
   };
 }
 
@@ -151,6 +186,8 @@ export function computeCurrentTotals(
     majorPlanned = 0;
   let generalEarned = 0,
     generalPlanned = 0;
+  let majorRequiredEarned = 0,
+    majorRequiredPlanned = 0;
 
   for (const sem of semesters) {
     for (const c of sem.courses) {
@@ -160,10 +197,12 @@ export function computeCurrentTotals(
         totalEarned += credits;
         if (MAJOR_CATEGORIES.includes(cat)) majorEarned += credits;
         if (GENERAL_CATEGORIES.includes(cat)) generalEarned += credits;
+        if (cat === 'major_required') majorRequiredEarned += credits;
       } else if (c.status === 'planned' || c.status === 'enrolled') {
         totalPlanned += credits;
         if (MAJOR_CATEGORIES.includes(cat)) majorPlanned += credits;
         if (GENERAL_CATEGORIES.includes(cat)) generalPlanned += credits;
+        if (cat === 'major_required') majorRequiredPlanned += credits;
       }
     }
   }
@@ -173,9 +212,10 @@ export function computeCurrentTotals(
     totalEarned += requirement.earnedTotalCredits || 0;
     majorEarned += requirement.earnedMajorCredits || 0;
     generalEarned += requirement.earnedGeneralCredits || 0;
+    majorRequiredEarned += requirement.earnedMajorRequiredCredits || 0;
   }
 
-  return { totalEarned, totalPlanned, majorEarned, majorPlanned, generalEarned, generalPlanned };
+  return { totalEarned, totalPlanned, majorEarned, majorPlanned, generalEarned, generalPlanned, majorRequiredEarned, majorRequiredPlanned };
 }
 
 /**

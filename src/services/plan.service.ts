@@ -252,6 +252,38 @@ async function removeSemester(
 }
 
 /**
+ * 학기의 모든 과목 제거 (학기 초기화)
+ */
+async function clearSemester(
+  planId: string,
+  year: number,
+  term: Term
+): Promise<IPlanDocument> {
+  await connectDB();
+  const plan = await Plan.findById(planId);
+  if (!plan) throw new Error('Plan not found');
+
+  const semester = plan.semesters.find(
+    (s) => s.year === year && s.term === term
+  );
+  if (!semester) throw new Error('학기를 찾을 수 없습니다.');
+
+  semester.courses = [];
+  await plan.save();
+
+  return Plan.findById(planId)
+    .populate({
+      path: 'semesters.courses.course',
+      select: 'code name credits category department prerequisites',
+      populate: [
+        { path: 'department', select: 'code name' },
+        { path: 'prerequisites', select: 'code name' },
+      ],
+    })
+    .lean() as Promise<IPlanDocument>;
+}
+
+/**
  * 계획 상태 변경 (활성화)
  */
 async function activate(planId: string, userId: string): Promise<IPlanDocument | null> {
@@ -271,15 +303,26 @@ async function activate(planId: string, userId: string): Promise<IPlanDocument |
   );
 }
 
+/**
+ * 사용자의 모든 계획 삭제 (회원 탈퇴 시 사용)
+ */
+async function deleteAllByUser(userId: string): Promise<number> {
+  await connectDB();
+  const result = await Plan.deleteMany({ user: userId });
+  return result.deletedCount;
+}
+
 export const planService = {
   findByUser,
   findById,
   create,
   addSemester,
   removeSemester,
+  clearSemester,
   addCourseToSemester,
   removeCourseFromSemester,
   updateCourseStatus,
   remove,
   activate,
+  deleteAllByUser,
 };

@@ -55,24 +55,24 @@ export function Toast() {
                             />
                           </div>
                           <span className="text-gray-400 text-[10px] w-16 text-right flex-shrink-0">
-                            {toast.graduationDelta.categoryPct.before}→{toast.graduationDelta.categoryPct.after}%
+                            {toast.graduationDelta.categoryCredits ? `${toast.graduationDelta.categoryCredits.after}/${toast.graduationDelta.categoryCredits.required}` : `${toast.graduationDelta.categoryPct.before}→${toast.graduationDelta.categoryPct.after}%`}
                           </span>
                         </div>
                       )}
                       <div className="flex items-center gap-1.5 text-xs">
-                        <span className="text-gray-500 w-7 flex-shrink-0">전체</span>
+                        <span className="text-gray-500 w-auto flex-shrink-0">{toast.graduationDelta.secondRowLabel}</span>
                         <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
                           <div
                             className="h-full bg-green-300 rounded-full absolute inset-y-0 left-0"
-                            style={{ width: `${toast.graduationDelta.totalPct.after}%` }}
+                            style={{ width: `${toast.graduationDelta.secondRowPct.after}%` }}
                           />
                           <div
                             className="h-full bg-green-500 rounded-full relative"
-                            style={{ width: `${toast.graduationDelta.totalPct.before}%` }}
+                            style={{ width: `${toast.graduationDelta.secondRowPct.before}%` }}
                           />
                         </div>
                         <span className="text-gray-400 text-[10px] w-16 text-right flex-shrink-0">
-                          {toast.graduationDelta.totalPct.before}→{toast.graduationDelta.totalPct.after}%
+                          {toast.graduationDelta.secondRowCredits ? `${toast.graduationDelta.secondRowCredits.after}/${toast.graduationDelta.secondRowCredits.required}` : `${toast.graduationDelta.secondRowPct.before}→${toast.graduationDelta.secondRowPct.after}%`}
                         </span>
                       </div>
                     </div>
