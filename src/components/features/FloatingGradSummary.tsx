@@ -9,10 +9,10 @@ import { useGraduationPreview } from '@/hooks/useGraduationPreview';
 
 interface FloatingGradSummaryProps {
   requirementsSummaryRef: React.RefObject<HTMLDivElement | null>;
-  isDragScrollActiveRef?: React.MutableRefObject<boolean>;
+  isDragScrollActive?: boolean;
 }
 
-export function FloatingGradSummary({ requirementsSummaryRef, isDragScrollActiveRef }: FloatingGradSummaryProps) {
+export function FloatingGradSummary({ requirementsSummaryRef, isDragScrollActive = false }: FloatingGradSummaryProps) {
   const [isVisible, setIsVisible] = useState(false);
 
   const { data: requirement } = useGraduationRequirement();
@@ -36,7 +36,7 @@ export function FloatingGradSummary({ requirementsSummaryRef, isDragScrollActive
   }, [requirementsSummaryRef]);
 
   // Don't render if no requirement set or if RequirementsSummary is visible
-  if (!requirement || !isVisible || isDragScrollActiveRef?.current) return null;
+  if (!requirement || !isVisible || isDragScrollActive) return null;
 
   const total = progress?.total ?? { required: requirement.totalCredits, earned: 0, planned: 0, percentage: 0 };
   const major = progress?.major ?? { required: requirement.majorCredits, earned: 0, planned: 0, percentage: 0 };

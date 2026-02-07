@@ -75,7 +75,7 @@ export default function PlannerPage() {
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
 
   // Auto-scroll to semester grid on mobile drag
-  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef } = useAutoScrollOnDrag(semesterGridRef);
+  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActive } = useAutoScrollOnDrag(semesterGridRef);
 
   // Helper: get graduation requirement imperatively (for toast delta calculation)
   const getRequirementImperative = useCallback((): GraduationRequirementInput | null => {
@@ -150,11 +150,16 @@ export default function PlannerPage() {
     };
 
     useToastStore.getState().addToast({
-      message: `${course.name} 추가됨`,
-      description,
+      message: `${course.name} 추가됨 · +${course.credits}학점 ${catLabel}`,
       type: 'success',
       action: { label: '실행 취소', onClick: undoAdd },
       duration: 5000,
+      graduationDelta: delta ? {
+        creditsDelta: course.credits,
+        categoryLabel: catLabel,
+        categoryPct: delta.categoryKey !== 'total' ? { before: delta.before.percentage, after: delta.after.percentage } : undefined,
+        totalPct: { before: delta.totalBefore.percentage, after: delta.totalAfter.percentage },
+      } : undefined,
     });
   }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation]);
 
@@ -418,7 +423,7 @@ export default function PlannerPage() {
 
   // Handle drag end
   const handleDragEnd = useCallback(
-    async (result: DropResult) => {
+    (result: DropResult) => {
       handleDragEndRestore();
       const { source, destination, draggableId } = result;
 
@@ -476,32 +481,35 @@ export default function PlannerPage() {
           draggableId
         );
 
-        // API call (or guest store update)
-        try {
-          if (isGuest) {
-            // For guest mode, add full course data directly to guest store
-            const guestAddCourse = useGuestPlanStore.getState().addCourse;
-            guestAddCourse(activePlan.id, destInfo.year, destInfo.term, optimisticCourse);
-          } else {
-            await addCourseMutation.mutateAsync({
-              planId: activePlan.id,
-              year: destInfo.year,
-              term: destInfo.term,
-              courseId: draggableId,
-            });
+        // Trigger graduation highlight animation (synchronous, fires on optimistic update)
+        triggerHighlight();
+
+        // API call (or guest store update) - fire-and-forget async
+        void (async () => {
+          try {
+            if (isGuest) {
+              const guestAddCourse = useGuestPlanStore.getState().addCourse;
+              guestAddCourse(activePlan.id, destInfo.year, destInfo.term, optimisticCourse);
+            } else {
+              await addCourseMutation.mutateAsync({
+                planId: activePlan.id,
+                year: destInfo.year,
+                term: destInfo.term,
+                courseId: draggableId,
+              });
+            }
+          } catch (error) {
+            // Only rollback if course still exists (wasn't undone)
+            const currentState = usePlanStore.getState().activePlan;
+            const stillExists = currentState?.semesters.some(sem =>
+              sem.courses.some(c => c.id === draggableId)
+            );
+            if (stillExists) {
+              removeCourseFromSemester(destInfo.year, destInfo.term, draggableId);
+            }
+            console.error('Failed to add course:', error);
           }
-          triggerHighlight();
-        } catch (error) {
-          // Only rollback if course still exists (wasn't undone)
-          const currentState = usePlanStore.getState().activePlan;
-          const stillExists = currentState?.semesters.some(sem =>
-            sem.courses.some(c => c.id === draggableId)
-          );
-          if (stillExists) {
-            removeCourseFromSemester(destInfo.year, destInfo.term, draggableId);
-          }
-          console.error('Failed to add course:', error);
-        }
+        })();
         return;
       }
 
@@ -516,22 +524,25 @@ export default function PlannerPage() {
         // Optimistic update
         removeCourseFromSemester(sourceInfo.year, sourceInfo.term, draggableId);
 
-        // API call
-        try {
-          await removeCourseMutation.mutateAsync({
-            planId: activePlan.id,
-            year: sourceInfo.year,
-            term: sourceInfo.term,
-            courseId: draggableId,
-          });
-          triggerHighlight();
-        } catch (error) {
-          // Rollback on error
-          if (courseToRemove) {
-            addCourseToSemester(sourceInfo.year, sourceInfo.term, courseToRemove);
+        triggerHighlight();
+
+        // API call - fire-and-forget async
+        void (async () => {
+          try {
+            await removeCourseMutation.mutateAsync({
+              planId: activePlan.id,
+              year: sourceInfo.year,
+              term: sourceInfo.term,
+              courseId: draggableId,
+            });
+          } catch (error) {
+            // Rollback on error
+            if (courseToRemove) {
+              addCourseToSemester(sourceInfo.year, sourceInfo.term, courseToRemove);
+            }
+            console.error('Failed to remove course:', error);
           }
-          console.error('Failed to remove course:', error);
-        }
+        })();
         return;
       }
 
@@ -546,27 +557,29 @@ export default function PlannerPage() {
         // Optimistic update
         moveCourse(sourceInfo.year, sourceInfo.term, destInfo.year, destInfo.term, draggableId);
 
-        // API call: remove from source, add to destination
-        try {
-          await removeCourseMutation.mutateAsync({
-            planId: activePlan.id,
-            year: sourceInfo.year,
-            term: sourceInfo.term,
-            courseId: draggableId,
-          });
-          await addCourseMutation.mutateAsync({
-            planId: activePlan.id,
-            year: destInfo.year,
-            term: destInfo.term,
-            courseId: draggableId,
-          });
-        } catch (error) {
-          // Rollback on error
-          if (courseToMove) {
-            moveCourse(destInfo.year, destInfo.term, sourceInfo.year, sourceInfo.term, draggableId);
+        // API call: remove from source, add to destination - fire-and-forget async
+        void (async () => {
+          try {
+            await removeCourseMutation.mutateAsync({
+              planId: activePlan.id,
+              year: sourceInfo.year,
+              term: sourceInfo.term,
+              courseId: draggableId,
+            });
+            await addCourseMutation.mutateAsync({
+              planId: activePlan.id,
+              year: destInfo.year,
+              term: destInfo.term,
+              courseId: draggableId,
+            });
+          } catch (error) {
+            // Rollback on error
+            if (courseToMove) {
+              moveCourse(destInfo.year, destInfo.term, sourceInfo.year, sourceInfo.term, draggableId);
+            }
+            console.error('Failed to move course:', error);
           }
-          console.error('Failed to move course:', error);
-        }
+        })();
         return;
       }
     },
@@ -856,7 +869,7 @@ export default function PlannerPage() {
         >
           <div className="space-y-6">
             {/* Floating Mini Graduation Summary (visible when main summary scrolls out) */}
-            <FloatingGradSummary requirementsSummaryRef={requirementsSummaryRef} isDragScrollActiveRef={isDragScrollActiveRef} />
+            <FloatingGradSummary requirementsSummaryRef={requirementsSummaryRef} isDragScrollActive={isDragScrollActive} />
 
             {/* Requirements Summary Widget */}
             <div ref={requirementsSummaryRef}>
@@ -869,7 +882,7 @@ export default function PlannerPage() {
               onClickAdd={handleClickAdd}
               focusedSemester={focusedSemester}
               isAddingCourse={addCourseMutation.isPending}
-              isDragScrollActiveRef={isDragScrollActiveRef}
+              isDragScrollActive={isDragScrollActive}
             />
 
             {/* Semester Grid - Full Width Bottom Row */}

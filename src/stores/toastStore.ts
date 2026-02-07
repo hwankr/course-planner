@@ -4,6 +4,12 @@ export interface Toast {
   id: string;
   message: string;
   description?: string;
+  graduationDelta?: {
+    creditsDelta: number;
+    categoryLabel: string;
+    categoryPct?: { before: number; after: number };
+    totalPct: { before: number; after: number };
+  };
   type: 'success' | 'info' | 'warning';
   action?: { label: string; onClick: () => void };
   duration?: number;

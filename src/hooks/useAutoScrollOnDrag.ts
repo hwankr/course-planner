@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useEffect } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 
 /**
  * 모바일 드래그 시작 시 타겟 요소로 자동 스크롤하는 훅.
@@ -9,6 +9,7 @@ import { useRef, useCallback, useEffect } from 'react';
  */
 export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | null>) {
   const isDragScrollActiveRef = useRef(false);
+  const [isDragScrollActive, setIsDragScrollActive] = useState(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleDragStartScroll = useCallback(
@@ -22,6 +23,7 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
       if (source.droppableId !== 'catalog') return;
 
       isDragScrollActiveRef.current = true;
+      setIsDragScrollActive(true);
 
       // Clear previous timeout if rapid drag
       if (scrollTimeoutRef.current) {
@@ -47,6 +49,7 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
 
   const handleDragEndRestore = useCallback(() => {
     isDragScrollActiveRef.current = false;
+    setIsDragScrollActive(false);
 
     // Cleanup pending timeout
     if (scrollTimeoutRef.current) {
@@ -64,5 +67,5 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
     };
   }, []);
 
-  return { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef };
+  return { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef, isDragScrollActive };
 }

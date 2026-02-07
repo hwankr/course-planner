@@ -21,7 +21,7 @@ interface CourseCatalogProps {
   onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => void;
   focusedSemester?: { year: number; term: string } | null;
   isAddingCourse?: boolean;
-  isDragScrollActiveRef?: React.MutableRefObject<boolean>;
+  isDragScrollActive?: boolean;
 }
 
 interface CourseGroup {
@@ -32,7 +32,7 @@ interface CourseGroup {
   totalCredits: number;
 }
 
-export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAddingCourse = false, isDragScrollActiveRef }: CourseCatalogProps) {
+export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAddingCourse = false, isDragScrollActive = false }: CourseCatalogProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [yearFilter, setYearFilter] = useState<number | undefined>(undefined);
@@ -219,7 +219,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   };
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm transition-opacity duration-200 ${isDragScrollActiveRef?.current ? 'opacity-30 pointer-events-none' : ''}`}>
+    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm transition-opacity duration-200 ${isDragScrollActive ? 'opacity-30 pointer-events-none' : ''}`}>
       {/* Header */}
       <div className="px-3 sm:px-4 py-3 border-b border-gray-200 space-y-2.5">
         {/* Row 1: Title + Actions */}

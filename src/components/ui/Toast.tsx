@@ -34,14 +34,53 @@ export function Toast() {
             >
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <div className="text-sm font-medium text-gray-900 truncate">
                     {toast.message}
-                  </p>
-                  {toast.description && (
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                  </div>
+                  {toast.graduationDelta ? (
+                    <div className="mt-1 space-y-1">
+                      {toast.graduationDelta.categoryPct && (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <span className="text-gray-500 w-7 flex-shrink-0">
+                            {toast.graduationDelta.categoryLabel.startsWith('전공') ? '전공' : '교양'}
+                          </span>
+                          <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+                            <div
+                              className="h-full bg-blue-300 rounded-full absolute inset-y-0 left-0"
+                              style={{ width: `${toast.graduationDelta.categoryPct.after}%` }}
+                            />
+                            <div
+                              className="h-full bg-blue-500 rounded-full relative"
+                              style={{ width: `${toast.graduationDelta.categoryPct.before}%` }}
+                            />
+                          </div>
+                          <span className="text-gray-400 text-[10px] w-16 text-right flex-shrink-0">
+                            {toast.graduationDelta.categoryPct.before}→{toast.graduationDelta.categoryPct.after}%
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1.5 text-xs">
+                        <span className="text-gray-500 w-7 flex-shrink-0">전체</span>
+                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+                          <div
+                            className="h-full bg-green-300 rounded-full absolute inset-y-0 left-0"
+                            style={{ width: `${toast.graduationDelta.totalPct.after}%` }}
+                          />
+                          <div
+                            className="h-full bg-green-500 rounded-full relative"
+                            style={{ width: `${toast.graduationDelta.totalPct.before}%` }}
+                          />
+                        </div>
+                        <span className="text-gray-400 text-[10px] w-16 text-right flex-shrink-0">
+                          {toast.graduationDelta.totalPct.before}→{toast.graduationDelta.totalPct.after}%
+                        </span>
+                      </div>
+                    </div>
+                  ) : toast.description ? (
+                    <div className="text-xs text-gray-500 mt-0.5">
                       {toast.description}
-                    </p>
-                  )}
+                    </div>
+                  ) : null}
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
                   {toast.action && (
