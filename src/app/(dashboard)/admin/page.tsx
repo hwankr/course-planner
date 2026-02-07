@@ -38,7 +38,7 @@ export default function AdminPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-blue-600">0</div>
+            <div className="text-3xl font-bold text-[#153974]">0</div>
             <p className="text-sm text-gray-600">등록된 과목</p>
           </CardContent>
         </Card>

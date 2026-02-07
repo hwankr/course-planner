@@ -117,7 +117,7 @@ export function AddSemesterDialog({
                       py-2.5 px-2 rounded-md border-2 transition-colors font-medium text-sm whitespace-nowrap
                       ${
                         year === grade
-                          ? 'border-blue-600 bg-blue-50 text-blue-700'
+                          ? 'border-[#153974] bg-[#153974]/10 text-[#153974]'
                           : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                       }
                       ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -143,7 +143,7 @@ export function AddSemesterDialog({
                     py-3 px-4 rounded-md border-2 transition-colors font-medium
                     ${
                       term === 'spring'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        ? 'border-[#153974] bg-[#153974]/10 text-[#153974]'
                         : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                     }
                     ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
@@ -159,7 +159,7 @@ export function AddSemesterDialog({
                     py-3 px-4 rounded-md border-2 transition-colors font-medium
                     ${
                       term === 'fall'
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        ? 'border-[#153974] bg-[#153974]/10 text-[#153974]'
                         : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                     }
                     ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}

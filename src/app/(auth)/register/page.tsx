@@ -53,7 +53,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Branded Gradient */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-indigo-600 via-blue-600 to-violet-600 animate-gradient relative overflow-hidden">
+      <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-[#003E7E] via-[#153974] to-[#3069B3] animate-gradient relative overflow-hidden">
         {/* Mesh Overlay */}
         <div className="absolute inset-0 bg-mesh opacity-30" />
 
@@ -65,8 +65,9 @@ export default function RegisterPage() {
         {/* Content */}
         <div className="relative z-10 flex items-center justify-center p-12 animate-fade-in">
           <div className="max-w-lg text-white">
+            <img src="/yu-logo-white.svg" alt="영남대학교" className="h-12 mb-6" />
             <h1 className="text-4xl lg:text-5xl font-bold mb-8 leading-tight whitespace-pre-line">
-              함께 만드는{'\n'}완벽한 학업 계획
+              영남대학교{'\n'}YU the Future
             </h1>
 
             <div className="space-y-6">
@@ -102,7 +103,10 @@ export default function RegisterPage() {
       <div className="w-full md:w-1/2 lg:w-2/5 flex items-center justify-center p-8 bg-white">
         <div className="max-w-md w-full animate-fade-in-up">
           {/* Logo */}
-          <h2 className="text-2xl font-bold mb-8 text-gradient">Course Planner</h2>
+          <div className="flex items-center gap-2 mb-8">
+            <img src="/yu-logo.svg" alt="영남대학교" className="h-6" />
+            <h2 className="text-2xl font-bold text-gradient">YU 수강 플래너</h2>
+          </div>
 
           {/* Title */}
           <div className="mb-8">
@@ -189,7 +193,7 @@ export default function RegisterPage() {
           {/* Login Link */}
           <p className="mt-6 text-center text-sm text-gray-600">
             이미 계정이 있으신가요?{' '}
-            <Link href="/login" className="text-blue-600 hover:underline font-medium">
+            <Link href="/login" className="text-[#153974] hover:underline font-medium">
               로그인
             </Link>
           </p>

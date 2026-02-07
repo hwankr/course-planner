@@ -8,8 +8,8 @@ const typeStyles = {
     actionText: 'text-green-600 hover:text-green-700',
   },
   info: {
-    border: 'border-l-blue-500',
-    actionText: 'text-blue-600 hover:text-blue-700',
+    border: 'border-l-[#3069B3]',
+    actionText: 'text-[#153974] hover:text-[#003E7E]',
   },
   warning: {
     border: 'border-l-amber-500',
@@ -46,11 +46,11 @@ export function Toast() {
                           </span>
                           <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
                             <div
-                              className="h-full bg-blue-300 rounded-full absolute inset-y-0 left-0"
+                              className="h-full bg-[#3069B3]/40 rounded-full absolute inset-y-0 left-0"
                               style={{ width: `${toast.graduationDelta.categoryPct.after}%` }}
                             />
                             <div
-                              className="h-full bg-blue-500 rounded-full relative"
+                              className="h-full bg-[#3069B3] rounded-full relative"
                               style={{ width: `${toast.graduationDelta.categoryPct.before}%` }}
                             />
                           </div>

@@ -796,7 +796,7 @@ export default function PlannerPage() {
   if (plansLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]"></div>
       </div>
     );
   }
@@ -833,7 +833,7 @@ export default function PlannerPage() {
                   value={newPlanName}
                   onChange={(e) => setNewPlanName(e.target.value)}
                   placeholder="예: 2024년 졸업 계획"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AACA]"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleCreatePlan();
                   }}
@@ -874,7 +874,7 @@ export default function PlannerPage() {
             <select
               value={selectedPlanId || ''}
               onChange={(e) => setSelectedPlanId(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AACA]"
             >
               {plans.map((plan) => (
                 <option key={plan._id.toString()} value={plan._id.toString()}>
@@ -907,7 +907,7 @@ export default function PlannerPage() {
       {/* Loading plan detail */}
       {planDetailLoading && (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]"></div>
         </div>
       )}
 
@@ -947,8 +947,8 @@ export default function PlannerPage() {
                     onClick={() => setSemesterYearFilter(y)}
                     className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
                       ${semesterYearFilter === y
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                        ? 'bg-[#153974] text-white'
+                        : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
                   >
                     {y ? `${y}학년` : '전체'}
                   </button>

@@ -207,8 +207,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                     onClick={() => setYearFilter(y)}
                     className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
                       ${yearFilter === y
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
+                        ? 'bg-[#153974] text-white'
+                        : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
                   >
                     {y ? `${y}` : '전체'}
                   </button>
@@ -258,8 +258,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                     onClick={() => setCategoryFilter(cat as RequirementCategory | undefined)}
                     className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors whitespace-nowrap
                       ${categoryFilter === cat
-                        ? (cat ? chipColors[cat].active : 'bg-violet-500 text-white')
-                        : (cat ? chipColors[cat].inactive : 'bg-violet-50 text-violet-600 hover:bg-violet-100')}`}
+                        ? (cat ? chipColors[cat].active : 'bg-[#153974] text-white')
+                        : (cat ? chipColors[cat].inactive : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20')}`}
                   >
                     {cat ? labels[cat] : '전체'}
                   </button>
@@ -282,7 +282,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
       {/* Focus Banner */}
       {!isCollapsed && focusedSemester && (
-        <div className="px-4 py-2 bg-blue-50 border-b border-blue-200 text-xs text-blue-700">
+        <div className="px-4 py-2 bg-[#153974]/5 border-b border-[#153974]/20 text-xs text-[#153974]">
           <span className="font-medium">
             {focusedSemester.year}학년 {focusedSemester.term === 'spring' ? '1학기' : '2학기'}
           </span>
@@ -295,7 +295,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         <div className="max-h-[350px] sm:max-h-[400px] overflow-y-auto p-3 sm:p-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]"></div>
             </div>
           ) : error ? (
             <div className="text-center text-red-500 p-4">
@@ -374,7 +374,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                         })}
                                         disabled={isAddingCourse}
                                         className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm z-10
-                                          ${isAddingCourse ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                                          ${isAddingCourse ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
                                         aria-label={`${course.name}을(를) 학기에 추가`}
                                       >
                                         {isAddingCourse ? '...' : '+'}
@@ -390,7 +390,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
                                     {/* In Plan badge */}
                                     {isInPlan && (
-                                      <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
+                                      <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
                                         추가됨
                                       </div>
                                     )}
@@ -460,7 +460,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                            transition-colors shadow-sm z-10
                                            ${isAddingCourse
                                              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                             : 'bg-blue-500 text-white hover:bg-blue-600'}`}
+                                             : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
                                 aria-label={`${course.name}을(를) 학기에 추가`}
                               >
                                 {isAddingCourse ? '...' : '+'}
@@ -476,7 +476,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
                             {/* In Plan badge */}
                             {isInPlan && (
-                              <div className="absolute top-0 right-0 bg-blue-500 text-white text-xs px-2 py-1 rounded-bl-md rounded-tr-md">
+                              <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-xs px-2 py-1 rounded-bl-md rounded-tr-md">
                                 추가됨
                               </div>
                             )}

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Course Planner',
-  description: '학기별 수강 계획 및 졸업 요건 추적 시스템',
+  title: 'YU 수강 플래너',
+  description: '영남대학교 학생을 위한 학기별 수강 계획 및 졸업 요건 추적 시스템',
 };
 
 export default function RootLayout({

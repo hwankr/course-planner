@@ -39,7 +39,10 @@ export default function Home() {
       {/* Sticky Navigation */}
       <nav className="sticky top-0 z-50 glass border-b border-gray-200/50 animate-fade-in-down">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gradient">Course Planner</h1>
+          <div className="flex items-center gap-2">
+            <img src="/yu-logo.svg" alt="영남대학교" className="h-6" />
+            <h1 className="text-xl font-bold text-gradient">YU 수강 플래너</h1>
+          </div>
           {status === 'authenticated' ? (
             <Link href="/planner" className="text-gray-700 hover:text-gray-900 font-medium transition-colors">
               플래너로 이동
@@ -56,29 +59,32 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center justify-center bg-mesh overflow-hidden">
         {/* Decorative Floating Shapes */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-float" />
-          <div className="absolute top-40 right-20 w-96 h-96 bg-violet-400/20 rounded-full blur-3xl animate-float anim-delay-300" />
-          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-indigo-400/15 rounded-full blur-3xl animate-float anim-delay-500" />
-          <div className="absolute bottom-40 right-1/4 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl animate-float anim-delay-700" />
+          <div className="absolute top-20 left-10 w-72 h-72 bg-[#153974]/20 rounded-full blur-3xl animate-float" />
+          <div className="absolute top-40 right-20 w-96 h-96 bg-[#00AACA]/20 rounded-full blur-3xl animate-float anim-delay-300" />
+          <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-[#3069B3]/15 rounded-full blur-3xl animate-float anim-delay-500" />
+          <div className="absolute bottom-40 right-1/4 w-64 h-64 bg-[#00AACA]/10 rounded-full blur-3xl animate-float anim-delay-700" />
         </div>
 
         <div className="container mx-auto px-4 py-16 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-blue-200 mb-8 animate-fade-in-up">
-              <Sparkles className="w-4 h-4 text-blue-600" />
-              <span className="text-sm font-medium text-gray-700">학기 계획의 새로운 기준</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border border-[#00AACA]/30 mb-8 animate-fade-in-up">
+              <Sparkles className="w-4 h-4 text-[#153974]" />
+              <span className="text-sm font-medium text-gray-700">YU the Future</span>
             </div>
+
+            {/* Logo */}
+            <img src="/yu-logo.svg" alt="영남대학교" className="h-10 mx-auto mb-4 animate-fade-in-up anim-delay-50" />
 
             {/* Title */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight animate-fade-in-up anim-delay-100">
-              <span className="block text-gray-900">학기 계획을</span>
+              <span className="block text-gray-900">영남대 수강 계획을</span>
               <span className="block text-gradient">완벽하게</span>
             </h1>
 
             {/* Subtitle */}
             <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto animate-fade-in-up anim-delay-200">
-              학기별 수강 계획을 세우고 졸업 요건을 체계적으로 추적하세요. 드래그앤드롭으로 쉽게 과목을 배치하고, 실시간으로 진행 상황을 확인할 수 있습니다.
+              영남대학교 학생을 위한 수강 계획 시스템. 학기별 과목을 드래그앤드롭으로 배치하고, 졸업 요건을 체계적으로 추적하세요.
             </p>
 
             {/* CTA Buttons */}
@@ -108,16 +114,16 @@ export default function Home() {
           {/* Section Title */}
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              왜 Course Planner인가요?
+              왜 YU 수강 플래너인가요?
             </h2>
-            <div className="w-20 h-1 bg-gradient-to-r from-blue-500 to-violet-500 mx-auto rounded-full" />
+            <div className="w-20 h-1 bg-gradient-to-r from-[#153974] to-[#00AACA] mx-auto rounded-full" />
           </div>
 
           {/* Feature Cards */}
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {/* Card 1 */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-blue-500 card-hover animate-fade-in-up anim-delay-200">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-[#153974] card-hover animate-fade-in-up anim-delay-200">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#3069B3] to-[#153974] flex items-center justify-center mb-6">
                 <LayoutGrid className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">드래그앤드롭 플래너</h3>
@@ -127,8 +133,8 @@ export default function Home() {
             </div>
 
             {/* Card 2 */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-emerald-500 card-hover animate-fade-in-up anim-delay-400">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-[#00AACA] card-hover animate-fade-in-up anim-delay-400">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00AACA] to-[#3069B3] flex items-center justify-center mb-6">
                 <Target className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">졸업 요건 추적</h3>
@@ -138,8 +144,8 @@ export default function Home() {
             </div>
 
             {/* Card 3 */}
-            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-violet-500 card-hover animate-fade-in-up anim-delay-600">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center mb-6">
+            <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 border-t-4 border-t-[#3069B3] card-hover animate-fade-in-up anim-delay-600">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#153974] to-[#003E7E] flex items-center justify-center mb-6">
                 <Users className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">비회원 체험 모드</h3>
@@ -152,7 +158,7 @@ export default function Home() {
       </section>
 
       {/* Statistics Band */}
-      <section className="relative py-16 bg-gradient-to-r from-indigo-900 via-blue-900 to-indigo-900 text-white overflow-hidden">
+      <section className="relative py-16 bg-gradient-to-r from-[#003E7E] via-[#153974] to-[#003E7E] text-white overflow-hidden">
         {/* Decorative Background */}
         <div className="absolute inset-0 bg-grid opacity-10" />
 
@@ -197,8 +203,8 @@ export default function Home() {
       {/* CTA Footer Section */}
       <section className="relative py-20 bg-mesh text-center overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-10 right-10 w-64 h-64 bg-violet-400/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-10 w-64 h-64 bg-blue-400/10 rounded-full blur-3xl" />
+          <div className="absolute top-10 right-10 w-64 h-64 bg-[#00AACA]/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 left-10 w-64 h-64 bg-[#153974]/10 rounded-full blur-3xl" />
         </div>
 
         <div className="container mx-auto px-4 relative z-10">
@@ -206,7 +212,7 @@ export default function Home() {
             지금 바로 수강 계획을 시작하세요
           </h2>
           <Link href="/login">
-            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-700 hover:to-violet-700 text-white shadow-xl shadow-blue-500/20">
+            <Button size="lg" className="bg-gradient-to-r from-[#153974] to-[#3069B3] hover:from-[#003E7E] hover:to-[#153974] text-white shadow-xl shadow-[#153974]/20">
               무료로 시작하기
             </Button>
           </Link>
@@ -217,7 +223,7 @@ export default function Home() {
       <footer className="border-t border-gray-200 py-8 bg-white">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} Course Planner. All rights reserved.
+            © {new Date().getFullYear()} YU 수강 플래너 - 영남대학교. All rights reserved.
           </p>
         </div>
       </footer>

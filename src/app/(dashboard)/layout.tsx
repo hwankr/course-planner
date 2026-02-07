@@ -12,7 +12,6 @@ import {
   Calendar,
   User,
   Shield,
-  GraduationCap,
   Menu,
   X,
   AlertTriangle,
@@ -35,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-gray-50 bg-grid">
       {/* Gradient Accent Bar */}
-      <div className="h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-violet-500" />
+      <div className="h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]" />
 
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
@@ -43,8 +42,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center gap-8">
               <Link href="/planner" className="flex items-center gap-2">
-                <GraduationCap className="w-6 h-6 text-blue-600" />
-                <span className="text-xl font-bold text-gradient">Course Planner</span>
+                <img src="/yu-logo.svg" alt="영남대학교" className="h-6" />
+                <span className="text-xl font-bold text-gradient">YU 수강 플래너</span>
               </Link>
               <nav className="hidden md:flex gap-1">
                 {visibleNavigation.map((item) => {
@@ -56,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className={cn(
                         'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
                         pathname === item.href
-                          ? 'bg-blue-50 text-blue-700 font-semibold'
+                          ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       )}
                     >
@@ -89,7 +88,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-4">
               {!isGuest && user?.name && (
                 <>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-medium">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center text-white text-xs font-medium">
                     {user.name.charAt(0)}
                   </div>
                   <span className="hidden sm:inline text-sm text-gray-600">{user.name}</span>
@@ -129,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     className={cn(
                       'px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
                       pathname === item.href
-                        ? 'bg-blue-50 text-blue-700 font-semibold'
+                        ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}
                   >

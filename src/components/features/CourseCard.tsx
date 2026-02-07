@@ -21,7 +21,7 @@ interface CourseCardProps {
 }
 
 const statusColors = {
-  planned: 'bg-blue-50 border-blue-200',
+  planned: 'bg-[#153974]/5 border-[#153974]/20',
   enrolled: 'bg-green-50 border-green-200',
   completed: 'bg-gray-50 border-gray-200',
   failed: 'bg-red-50 border-red-200',
@@ -51,7 +51,7 @@ const categoryColors: Record<string, string> = {
 };
 
 const statusDotColors = {
-  planned: 'bg-blue-400',
+  planned: 'bg-[#153974]/60',
   enrolled: 'bg-green-400',
   completed: 'bg-gray-400',
   failed: 'bg-red-400',

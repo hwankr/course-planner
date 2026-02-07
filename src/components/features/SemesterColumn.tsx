@@ -58,10 +58,10 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
   })();
 
   return (
-    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}>
+    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''}`}>
       {/* Header */}
       <div
-        className={`${compact ? 'p-2' : 'p-4'} border-b cursor-pointer transition-colors ${isFocused ? 'bg-blue-50' : 'bg-gray-50'}`}
+        className={`${compact ? 'p-2' : 'p-4'} border-b cursor-pointer transition-colors ${isFocused ? 'bg-[#153974]/5' : 'bg-gray-50'}`}
         onClick={onFocus}
       >
         <div className="flex items-center justify-between">
@@ -116,7 +116,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
               </button>
             )}
             {isFocused && (
-              <span className="text-xs px-2 py-1 bg-blue-500 text-white rounded-full font-medium">
+              <span className="text-xs px-2 py-1 bg-[#153974] text-white rounded-full font-medium">
                 Focus
               </span>
             )}
@@ -132,7 +132,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
             {...provided.droppableProps}
             className={`
               flex-1 ${compact ? 'p-2' : 'p-4'} transition-colors
-              ${snapshot.isDraggingOver ? 'bg-blue-50 border-2 border-blue-300 border-dashed' : ''}
+              ${snapshot.isDraggingOver ? 'bg-[#00AACA]/5 border-2 border-[#00AACA]/30 border-dashed' : ''}
             `}
           >
             {semester.courses.length === 0 ? (
@@ -170,7 +170,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
                 {compact && !isExpanded && hiddenCount > 0 && (
                   <button
                     onClick={() => setIsExpanded(true)}
-                    className="w-full text-xs text-blue-500 hover:text-blue-700 py-1 text-center"
+                    className="w-full text-xs text-[#3069B3] hover:text-[#153974] py-1 text-center"
                   >
                     +{hiddenCount}개 더 보기
                   </button>

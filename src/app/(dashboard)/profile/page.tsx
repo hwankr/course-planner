@@ -274,8 +274,8 @@ export default function ProfilePage() {
 
       {/* Profile Header Banner */}
       <div className="animate-fade-in">
-        <div className="h-32 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 relative mb-16">
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center ring-4 ring-white shadow-lg">
+        <div className="h-32 rounded-xl bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] relative mb-16">
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center ring-4 ring-white shadow-lg">
             <span className="text-2xl font-bold text-white">
               {userProfile?.name?.charAt(0).toUpperCase() || session?.user?.name?.charAt(0).toUpperCase() || 'U'}
             </span>
@@ -287,13 +287,13 @@ export default function ProfilePage() {
           </h2>
           <div className="flex items-center justify-center gap-2 mt-2">
             {departmentName && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-medium">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#153974]/10 text-[#153974] text-xs font-medium">
                 <Building2 className="w-3 h-3" />
                 {departmentName}
               </span>
             )}
             {enrollmentYear && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-medium">
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#00AACA]/10 text-[#00AACA] text-xs font-medium">
                 <CalendarDays className="w-3 h-3" />
                 {enrollmentYear}년 입학
               </span>

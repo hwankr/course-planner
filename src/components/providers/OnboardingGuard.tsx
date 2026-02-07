@@ -94,7 +94,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
   if (!guestHydrated || (isGuestMode && !guestProfileHydrated)) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]" />
       </div>
     );
   }
@@ -115,7 +115,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]" />
       </div>
     );
   }

@@ -192,7 +192,7 @@ body {
    ============================================ */
 
 .text-gradient {
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6, #6366f1);
+  background: linear-gradient(135deg, #153974, #3069B3, #00AACA);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -211,11 +211,11 @@ body {
 
 .bg-mesh {
   background-image:
-    radial-gradient(at 40% 20%, rgba(99, 102, 241, 0.15) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(244, 63, 94, 0.06) 0px, transparent 50%);
+    radial-gradient(at 40% 20%, rgba(21, 57, 116, 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 0%, rgba(48, 105, 179, 0.12) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, rgba(0, 170, 202, 0.1) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, rgba(48, 105, 179, 0.08) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(0, 170, 202, 0.06) 0px, transparent 50%);
 }
 
 .bg-dots {

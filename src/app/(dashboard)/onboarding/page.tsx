@@ -128,7 +128,7 @@ export default function OnboardingPage() {
             {/* Step 1 Circle */}
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
               step === 1
-                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+                ? 'bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30'
                 : 'bg-emerald-500 text-white'
             }`}>
               {step > 1 ? <Check className="w-5 h-5" /> : '1'}
@@ -137,14 +137,14 @@ export default function OnboardingPage() {
             {/* Connecting Line */}
             <div className="flex-1 h-1 mx-2 rounded-full bg-gray-200 overflow-hidden">
               <div className={`h-full rounded-full transition-all duration-500 ${
-                step > 1 ? 'w-full bg-gradient-to-r from-blue-500 to-indigo-500' : 'w-0'
+                step > 1 ? 'w-full bg-gradient-to-r from-[#153974] to-[#3069B3]' : 'w-0'
               }`} />
             </div>
 
             {/* Step 2 Circle */}
             <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
               step === 2
-                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30'
+                ? 'bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30'
                 : 'bg-gray-200 text-gray-500'
             }`}>
               2
@@ -153,17 +153,17 @@ export default function OnboardingPage() {
 
           {/* Step Labels */}
           <div className="flex justify-between w-full max-w-xs mx-auto mt-2 px-0">
-            <span className={`text-xs font-medium transition-colors duration-300 ${step >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>학과 선택</span>
-            <span className={`text-xs font-medium transition-colors duration-300 ${step >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>졸업 요건</span>
+            <span className={`text-xs font-medium transition-colors duration-300 ${step >= 1 ? 'text-[#153974]' : 'text-gray-400'}`}>학과 선택</span>
+            <span className={`text-xs font-medium transition-colors duration-300 ${step >= 2 ? 'text-[#153974]' : 'text-gray-400'}`}>졸업 요건</span>
           </div>
         </div>
 
         {/* Step Content */}
         {step === 1 ? (
-          <Card className="border-t-4 border-blue-500 animate-fade-in-up">
+          <Card className="border-t-4 border-[#3069B3] animate-fade-in-up">
             <CardHeader>
               <div className="flex items-center gap-2">
-                <School className="w-5 h-5 text-blue-600" />
+                <School className="w-5 h-5 text-[#153974]" />
                 <CardTitle>학과 및 입학 정보</CardTitle>
               </div>
             </CardHeader>
@@ -173,7 +173,7 @@ export default function OnboardingPage() {
                 <select
                   value={departmentId}
                   onChange={(e) => setDepartmentId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:border-transparent"
                   disabled={isDeptLoading}
                 >
                   <option value="">{isDeptLoading ? '불러오는 중...' : '학과를 선택하세요'}</option>
