@@ -8,7 +8,6 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import { userService } from '@/services';
-import User from '@/models/User';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -83,7 +82,7 @@ export const authOptions: NextAuthOptions = {
             token.department = dbUser.department?.toString();
             // Auto-migrate existing users with department
             if (dbUser.department && !dbUser.onboardingCompleted) {
-              await User.updateOne({ _id: dbUser._id }, { $set: { onboardingCompleted: true } });
+              await userService.update(dbUser._id.toString(), { onboardingCompleted: true });
               dbUser.onboardingCompleted = true;
             }
             token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
@@ -109,7 +108,7 @@ export const authOptions: NextAuthOptions = {
           token.department = dbUser.department?.toString();
           // Auto-migrate existing users with department
           if (dbUser.department && !dbUser.onboardingCompleted) {
-            await User.updateOne({ _id: dbUser._id }, { $set: { onboardingCompleted: true } });
+            await userService.update(dbUser._id.toString(), { onboardingCompleted: true });
             dbUser.onboardingCompleted = true;
           }
           token.onboardingCompleted = dbUser.onboardingCompleted ?? false;

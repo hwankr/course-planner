@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
 import { useQueryClient } from '@tanstack/react-query';
-import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester, useClearSemester } from '@/hooks/usePlans';
+import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester } from '@/hooks/usePlans';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
@@ -60,6 +60,7 @@ export default function PlannerPage() {
   const createPlanMutation = useCreatePlan();
   const addCourseMutation = useAddCourse();
   const removeCourseMutation = useRemoveCourse();
+  const moveCourseMutation = useMoveCourse();
   const addSemesterMutation = useAddSemester();
   const removeSemesterMutation = useRemoveSemester();
   const clearSemesterMutation = useClearSemester();
@@ -551,7 +552,7 @@ export default function PlannerPage() {
         return;
       }
 
-      // Between semesters (move course)
+      // Between semesters (move course) - atomic operation
       if (sourceInfo && destInfo && activePlan) {
         // Find course data before moving
         const semester = activePlan.semesters.find(
@@ -562,21 +563,22 @@ export default function PlannerPage() {
         // Optimistic update
         moveCourse(sourceInfo.year, sourceInfo.term, destInfo.year, destInfo.term, draggableId);
 
-        // API call: remove from source, add to destination - fire-and-forget async
+        // API call: atomic move - fire-and-forget async
         void (async () => {
           try {
-            await removeCourseMutation.mutateAsync({
-              planId: activePlan.id,
-              year: sourceInfo.year,
-              term: sourceInfo.term,
-              courseId: draggableId,
-            });
-            await addCourseMutation.mutateAsync({
-              planId: activePlan.id,
-              year: destInfo.year,
-              term: destInfo.term,
-              courseId: draggableId,
-            });
+            if (isGuest) {
+              const guestMoveCourse = useGuestPlanStore.getState().moveCourse;
+              guestMoveCourse(activePlan.id, sourceInfo.year, sourceInfo.term, destInfo.year, destInfo.term, draggableId);
+            } else {
+              await moveCourseMutation.mutateAsync({
+                planId: activePlan.id,
+                sourceYear: sourceInfo.year,
+                sourceTerm: sourceInfo.term,
+                destYear: destInfo.year,
+                destTerm: destInfo.term,
+                courseId: draggableId,
+              });
+            }
           } catch (error) {
             // Rollback on error
             if (courseToMove) {
@@ -588,7 +590,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast, handleDragEndRestore]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, moveCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast, handleDragEndRestore]
   );
 
   // Handle remove course from semester column

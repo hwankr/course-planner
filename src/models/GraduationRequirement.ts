@@ -74,12 +74,7 @@ const graduationRequirementSchema = new Schema<IGraduationRequirementDocument>(
   }
 );
 
-// Delete cached model during dev hot reload to pick up schema changes
-if (mongoose.models.GraduationRequirement) {
-  mongoose.deleteModel('GraduationRequirement');
-}
-
 const GraduationRequirement: Model<IGraduationRequirementDocument> =
-  mongoose.model<IGraduationRequirementDocument>('GraduationRequirement', graduationRequirementSchema);
+  mongoose.models.GraduationRequirement || mongoose.model<IGraduationRequirementDocument>('GraduationRequirement', graduationRequirementSchema);
 
 export default GraduationRequirement;

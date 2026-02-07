@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { planService } from '@/services';
+import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -26,6 +27,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
+    if (!isValidObjectId(id)) return invalidIdResponse('계획 ID');
     const plan = await planService.findById(id);
 
     if (!plan) {
@@ -67,6 +69,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
+    if (!isValidObjectId(id)) return invalidIdResponse('계획 ID');
     const plan = await planService.findById(id);
 
     if (!plan) {

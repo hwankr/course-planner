@@ -11,6 +11,7 @@ import type { IUserDocument } from '@/models';
 import type { CreateUserInput } from '@/types';
 import { planService } from './plan.service';
 import { courseService } from './course.service';
+import { graduationRequirementService } from './graduationRequirement.service';
 
 /**
  * 이메일로 사용자 조회
@@ -121,7 +122,10 @@ async function deleteWithCascade(userId: string): Promise<void> {
   // 2. 사용자가 생성한 커스텀 과목 삭제
   await courseService.deleteCustomByUser(userId);
 
-  // 3. 사용자 문서 삭제
+  // 3. 사용자의 졸업요건 삭제
+  await graduationRequirementService.remove(userId);
+
+  // 4. 사용자 문서 삭제
   const user = await User.findByIdAndDelete(userId);
   if (!user) {
     throw new Error('사용자를 찾을 수 없습니다.');

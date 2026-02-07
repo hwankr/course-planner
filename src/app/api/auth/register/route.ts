@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { userService } from '@/services';
 import { z } from 'zod';
+import { authLimiter, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 
 const registerSchema = z.object({
   email: z.string().email('유효한 이메일을 입력해주세요.'),
@@ -19,6 +20,11 @@ const registerSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request);
+    const rateCheck = authLimiter.check(ip);
+    if (!rateCheck.success) return rateLimitResponse();
+
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 

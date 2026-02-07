@@ -5,6 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
+import { escapeRegex } from '@/lib/validation';
 import { Course } from '@/models';
 import type { ICourseDocument } from '@/models';
 import type { CreateCourseInput, CourseFilter } from '@/types';
@@ -39,10 +40,11 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
   }
 
   if (filter?.search) {
+    const escapedSearch = escapeRegex(filter.search);
     conditions.push({
       $or: [
-        { name: { $regex: filter.search, $options: 'i' } },
-        { code: { $regex: filter.search, $options: 'i' } },
+        { name: { $regex: escapedSearch, $options: 'i' } },
+        { code: { $regex: escapedSearch, $options: 'i' } },
       ],
     });
   }
@@ -58,7 +60,8 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
   return Course.find({ $and: conditions })
     .populate('department', 'code name')
     .populate('prerequisites', 'code name')
-    .sort({ createdBy: 1, code: 1 }); // Official courses first, then custom
+    .sort({ createdBy: 1, code: 1 }) // Official courses first, then custom
+    .limit(filter?.limit ?? 200);
 }
 
 /**

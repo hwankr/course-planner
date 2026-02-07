@@ -40,6 +40,7 @@ export interface CreateUserInput {
 // Course Types
 // ============================================
 
+/** 과목 개설 학기 (Course가 어느 학기에 개설되는지) */
 export type Semester = 'spring' | 'summer' | 'fall' | 'winter';
 
 export interface ICourse {
@@ -82,12 +83,14 @@ export interface CourseFilter {
   recommendedYear?: number;
   recommendedSemester?: Semester;
   userId?: string; // Include custom courses for this user
+  limit?: number;
 }
 
 // ============================================
 // Plan Types
 // ============================================
 
+/** 수강계획 학기 (1학기=spring, 2학기=fall). 정규 학기만 지원. */
 export type Term = 'spring' | 'fall';
 
 export interface PlannedCourse {

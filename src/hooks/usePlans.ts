@@ -103,16 +103,45 @@ async function removeCourseFromPlan(params: {
 }): Promise<IPlan> {
   const { planId, year, term, courseId } = params;
 
-  const response = await fetch(`/api/plans/${planId}/courses`, {
+  const searchParams = new URLSearchParams({
+    year: String(year),
+    term,
+    courseId,
+  });
+
+  const response = await fetch(`/api/plans/${planId}/courses?${searchParams}`, {
     method: 'DELETE',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ year, term, courseId }),
   });
 
   const result: ApiResponse<IPlan> = await response.json();
 
   if (!result.success || !result.data) {
     throw new Error(result.error || 'Failed to remove course from plan');
+  }
+
+  return result.data;
+}
+
+async function moveCourseBetweenSemesters(params: {
+  planId: string;
+  sourceYear: number;
+  sourceTerm: Term;
+  destYear: number;
+  destTerm: Term;
+  courseId: string;
+}): Promise<IPlan> {
+  const { planId, sourceYear, sourceTerm, destYear, destTerm, courseId } = params;
+
+  const response = await fetch(`/api/plans/${planId}/courses/move`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceYear, sourceTerm, destYear, destTerm, courseId }),
+  });
+
+  const result: ApiResponse<IPlan> = await response.json();
+
+  if (!result.success || !result.data) {
+    throw new Error(result.error || '과목 이동에 실패했습니다.');
   }
 
   return result.data;
@@ -274,9 +303,8 @@ export function useAddCourse() {
   const apiMutation = useMutation({
     mutationFn: addCourseToPlan,
     onSuccess: (data) => {
-      // Invalidate both the list and the specific plan detail
+      queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(data._id.toString()) });
     },
   });
 
@@ -311,9 +339,8 @@ export function useRemoveCourse() {
   const apiMutation = useMutation({
     mutationFn: removeCourseFromPlan,
     onSuccess: (data) => {
-      // Invalidate both the list and the specific plan detail
+      queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
       queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(data._id.toString()) });
     },
   });
 
@@ -322,6 +349,43 @@ export function useRemoveCourse() {
       ...apiMutation,
       mutateAsync: async (params: { planId: string; year: number; term: Term; courseId: string }) => {
         guestRemoveCourse(params.planId, params.year, params.term, params.courseId);
+        return { _id: { toString: () => params.planId } } as unknown as IPlan;
+      },
+      isPending: false,
+    } as typeof apiMutation;
+  }
+
+  return apiMutation;
+}
+
+/**
+ * Move a course between semesters atomically
+ */
+export function useMoveCourse() {
+  const queryClient = useQueryClient();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestMoveCourse = useGuestPlanStore((s) => s.moveCourse);
+
+  const apiMutation = useMutation({
+    mutationFn: moveCourseBetweenSemesters,
+    onSuccess: (data) => {
+      queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
+      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
+    },
+  });
+
+  if (isGuest) {
+    return {
+      ...apiMutation,
+      mutateAsync: async (params: {
+        planId: string;
+        sourceYear: number;
+        sourceTerm: Term;
+        destYear: number;
+        destTerm: Term;
+        courseId: string;
+      }) => {
+        guestMoveCourse(params.planId, params.sourceYear, params.sourceTerm, params.destYear, params.destTerm, params.courseId);
         return { _id: { toString: () => params.planId } } as unknown as IPlan;
       },
       isPending: false,

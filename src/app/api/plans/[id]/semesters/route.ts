@@ -12,13 +12,14 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { planService } from '@/services';
 import { z } from 'zod';
+import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 const semesterSchema = z.object({
-  year: z.number(),
+  year: z.number().min(1, '학년은 1 이상이어야 합니다.').max(6, '학년은 6 이하여야 합니다.'),
   term: z.enum(['spring', 'fall']),
 });
 
@@ -33,6 +34,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     }
 
     const { id: planId } = await params;
+    if (!isValidObjectId(planId)) return invalidIdResponse('계획 ID');
     const body = await request.json();
     const { year, term } = semesterSchema.parse(body);
 
@@ -89,6 +91,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     const { id: planId } = await params;
+    if (!isValidObjectId(planId)) return invalidIdResponse('계획 ID');
     const body = await request.json();
     const { year, term } = semesterSchema.parse(body);
 
@@ -140,6 +143,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
     }
 
     const { id: planId } = await params;
+    if (!isValidObjectId(planId)) return invalidIdResponse('계획 ID');
     const body = await request.json();
     const { year, term } = semesterSchema.parse(body);
 

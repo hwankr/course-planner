@@ -12,6 +12,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { courseService } from '@/services';
 import { z } from 'zod';
+import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -20,6 +21,7 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
+    if (!isValidObjectId(id)) return invalidIdResponse('과목 ID');
     const course = await courseService.findById(id);
 
     if (!course) {
@@ -64,6 +66,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
+    if (!isValidObjectId(id)) return invalidIdResponse('과목 ID');
     const body = await request.json();
     const validatedData = updateCourseSchema.parse(body);
 
@@ -107,6 +110,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
     }
 
     const { id } = await params;
+    if (!isValidObjectId(id)) return invalidIdResponse('과목 ID');
     const course = await courseService.remove(id);
 
     if (!course) {

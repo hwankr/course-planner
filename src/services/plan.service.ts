@@ -46,6 +46,12 @@ async function create(
 ): Promise<IPlanDocument> {
   await connectDB();
 
+  // 사용자의 계획 수 제한 (최대 10개)
+  const existingCount = await Plan.countDocuments({ user: userId });
+  if (existingCount >= 10) {
+    throw new Error('수강계획은 최대 10개까지 생성할 수 있습니다.');
+  }
+
   const plan = await Plan.create({
     user: userId,
     name: input.name,
@@ -74,6 +80,11 @@ async function addSemester(
   );
   if (exists) {
     throw new Error('이미 존재하는 학기입니다.');
+  }
+
+  // 학기 수 제한 (최대 12개)
+  if (plan.semesters.length >= 12) {
+    throw new Error('학기는 최대 12개까지 추가할 수 있습니다.');
   }
 
   plan.semesters.push({ year, term, courses: [] });
@@ -131,16 +142,22 @@ async function addCourseToSemester(
     });
   }
 
+  // 학기당 과목 수 제한 (최대 10개)
+  if (semester.courses.length >= 10) {
+    throw new Error('한 학기에 최대 10개 과목까지 추가할 수 있습니다.');
+  }
+
   semester.courses.push({
     course: course._id,
     status: 'planned',
   });
 
   await plan.save();
-  return Plan.findById(planId).populate({
+  await plan.populate({
     path: 'semesters.courses.course',
     select: 'code name credits category',
   });
+  return plan;
 }
 
 /**
@@ -169,10 +186,11 @@ async function removeCourseFromSemester(
   );
 
   await plan.save();
-  return Plan.findById(planId).populate({
+  await plan.populate({
     path: 'semesters.courses.course',
     select: 'code name credits category',
   });
+  return plan;
 }
 
 /**
@@ -205,10 +223,11 @@ async function updateCourseStatus(
   if (grade) courseEntry.grade = grade;
 
   await plan.save();
-  return Plan.findById(planId).populate({
+  await plan.populate({
     path: 'semesters.courses.course',
     select: 'code name credits category',
   });
+  return plan;
 }
 
 /**
@@ -229,15 +248,17 @@ async function removeSemester(
 ): Promise<IPlanDocument> {
   await connectDB();
   const plan = await Plan.findById(planId);
-  if (!plan) throw new Error('Plan not found');
+  if (!plan) throw new Error('수강계획을 찾을 수 없습니다.');
 
   const semesterIndex = plan.semesters.findIndex(
     (s) => s.year === year && s.term === term
   );
-  if (semesterIndex === -1) throw new Error('학기를 찾을 수 없습니다.');
 
-  plan.semesters.splice(semesterIndex, 1);
-  await plan.save();
+  // 멱등성: 이미 삭제된 학기면 현재 상태 반환
+  if (semesterIndex !== -1) {
+    plan.semesters.splice(semesterIndex, 1);
+    await plan.save();
+  }
 
   return Plan.findById(planId)
     .populate({
@@ -261,15 +282,17 @@ async function clearSemester(
 ): Promise<IPlanDocument> {
   await connectDB();
   const plan = await Plan.findById(planId);
-  if (!plan) throw new Error('Plan not found');
+  if (!plan) throw new Error('수강계획을 찾을 수 없습니다.');
 
   const semester = plan.semesters.find(
     (s) => s.year === year && s.term === term
   );
-  if (!semester) throw new Error('학기를 찾을 수 없습니다.');
 
-  semester.courses = [];
-  await plan.save();
+  // 멱등성: 학기가 없으면 현재 상태 반환
+  if (semester) {
+    semester.courses = [];
+    await plan.save();
+  }
 
   return Plan.findById(planId)
     .populate({
@@ -304,6 +327,65 @@ async function activate(planId: string, userId: string): Promise<IPlanDocument |
 }
 
 /**
+ * 과목을 한 학기에서 다른 학기로 원자적으로 이동
+ */
+async function moveCourse(
+  planId: string,
+  sourceYear: number,
+  sourceTerm: Term,
+  destYear: number,
+  destTerm: Term,
+  courseId: string
+): Promise<IPlanDocument | null> {
+  await connectDB();
+
+  const plan = await Plan.findById(planId);
+  if (!plan) return null;
+
+  // 소스 학기에서 과목 찾기
+  const sourceSemester = plan.semesters.find(
+    (s) => s.year === sourceYear && s.term === sourceTerm
+  );
+  if (!sourceSemester) throw new Error('출발 학기를 찾을 수 없습니다.');
+
+  const courseIndex = sourceSemester.courses.findIndex(
+    (c) => c.course.toString() === courseId
+  );
+  if (courseIndex === -1) throw new Error('이동할 과목을 찾을 수 없습니다.');
+
+  // 과목 데이터 추출
+  const [courseEntry] = sourceSemester.courses.splice(courseIndex, 1);
+
+  // 대상 학기 찾기 또는 생성
+  let destSemester = plan.semesters.find(
+    (s) => s.year === destYear && s.term === destTerm
+  );
+  if (!destSemester) {
+    plan.semesters.push({ year: destYear, term: destTerm, courses: [] });
+    plan.semesters.sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.term === 'spring' ? -1 : 1;
+    });
+    destSemester = plan.semesters.find((s) => s.year === destYear && s.term === destTerm)!;
+  }
+
+  // 대상 학기 과목 수 제한 확인
+  if (destSemester.courses.length >= 10) {
+    // 롤백: 과목을 소스로 되돌림
+    sourceSemester.courses.splice(courseIndex, 0, courseEntry);
+    throw new Error('한 학기에 최대 10개 과목까지 추가할 수 있습니다.');
+  }
+
+  destSemester.courses.push(courseEntry);
+
+  await plan.save();
+  return Plan.findById(planId).populate({
+    path: 'semesters.courses.course',
+    select: 'code name credits category',
+  });
+}
+
+/**
  * 사용자의 모든 계획 삭제 (회원 탈퇴 시 사용)
  */
 async function deleteAllByUser(userId: string): Promise<number> {
@@ -321,6 +403,7 @@ export const planService = {
   clearSemester,
   addCourseToSemester,
   removeCourseFromSemester,
+  moveCourse,
   updateCourseStatus,
   remove,
   activate,

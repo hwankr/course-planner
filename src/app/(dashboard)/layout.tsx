@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button, Toast } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import OnboardingGuard from '@/components/providers/OnboardingGuard';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   Calendar,
   User,
@@ -181,7 +182,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content */}
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8">
-        <OnboardingGuard>{children}</OnboardingGuard>
+        <ErrorBoundary>
+          <OnboardingGuard>{children}</OnboardingGuard>
+        </ErrorBoundary>
       </main>
 
       {/* Toast Notifications */}
