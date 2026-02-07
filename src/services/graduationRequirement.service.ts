@@ -194,7 +194,7 @@ async function createDefaults(userId: string): Promise<IGraduationRequirementDoc
   return GraduationRequirement.create({
     user: userId,
     totalCredits: 120,
-    majorCredits: 53,
+    majorCredits: 63,
     majorRequiredMin: 24,
     generalCredits: 30,
     earnedTotalCredits: 0,

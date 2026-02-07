@@ -39,7 +39,7 @@ export default function OnboardingPage() {
   // Step 2 data - graduation requirements
   const [totalCredits, setTotalCredits] = useState(120);
   const [generalCredits, setGeneralCredits] = useState(30);
-  const [majorCredits, setMajorCredits] = useState(53);
+  const [majorCredits, setMajorCredits] = useState(63);
   const [majorRequiredMin, setMajorRequiredMin] = useState(24);
   const [earnedTotalCredits, setEarnedTotalCredits] = useState(0);
   const [earnedGeneralCredits, setEarnedGeneralCredits] = useState(0);
