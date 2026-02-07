@@ -28,7 +28,7 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
         clearTimeout(scrollTimeoutRef.current);
       }
 
-      // Delay 150ms to let @hello-pangea/dnd complete INITIAL_PUBLISH
+      // Delay 50ms to let @hello-pangea/dnd complete INITIAL_PUBLISH
       scrollTimeoutRef.current = setTimeout(() => {
         const el = targetRef.current;
         if (el) {
@@ -36,11 +36,11 @@ export function useAutoScrollOnDrag(targetRef: React.RefObject<HTMLElement | nul
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
           window.scrollTo({
             top: scrollTop + rect.top - 8,
-            behavior: 'smooth',
+            behavior: 'instant' as ScrollBehavior,
           });
         }
         scrollTimeoutRef.current = null;
-      }, 150);
+      }, 50);
     },
     [targetRef]
   );
