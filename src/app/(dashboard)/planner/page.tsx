@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePlans, usePlan, useCreatePlan, useAddCourse, useRemoveCourse, useAddSemester, useRemoveSemester } from '@/hooks/usePlans';
@@ -14,8 +14,14 @@ import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
+import { FloatingGradSummary } from '@/components/features/FloatingGradSummary';
 import { Button, Card, CardContent } from '@/components/ui';
 import type { Term, ICourse } from '@/types';
+import { useToastStore } from '@/stores/toastStore';
+import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
+import { graduationRequirementKeys } from '@/hooks/useGraduationRequirements';
+import { computeGraduationDelta, formatDeltaDescription, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
+import type { GraduationRequirementInput } from '@/types';
 
 // Helper to parse droppableId
 function parseSemesterId(droppableId: string): { year: number; term: Term } | null {
@@ -32,6 +38,7 @@ export default function PlannerPage() {
   const [newPlanName, setNewPlanName] = useState('');
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
+  const requirementsSummaryRef = useRef<HTMLDivElement>(null);
 
   // Guest plan store - use serialized selector for stable reference
   const guestActivePlanJson = useGuestPlanStore((s) => {
@@ -64,6 +71,87 @@ export default function PlannerPage() {
 
   // Preview store
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
+
+  // Helper: get graduation requirement imperatively (for toast delta calculation)
+  const getRequirementImperative = useCallback((): GraduationRequirementInput | null => {
+    if (isGuest) {
+      return useGuestGraduationStore.getState().requirement;
+    }
+    const raw = queryClient.getQueryData<{ totalCredits: number; majorCredits: number; majorRequiredMin: number; generalCredits: number; earnedTotalCredits?: number; earnedMajorCredits?: number; earnedGeneralCredits?: number; earnedMajorRequiredCredits?: number }>(graduationRequirementKeys.detail());
+    if (!raw) return null;
+    return {
+      totalCredits: raw.totalCredits,
+      majorCredits: raw.majorCredits,
+      majorRequiredMin: raw.majorRequiredMin,
+      generalCredits: raw.generalCredits,
+      earnedTotalCredits: raw.earnedTotalCredits ?? 0,
+      earnedMajorCredits: raw.earnedMajorCredits ?? 0,
+      earnedGeneralCredits: raw.earnedGeneralCredits ?? 0,
+      earnedMajorRequiredCredits: raw.earnedMajorRequiredCredits ?? 0,
+    };
+  }, [isGuest, queryClient]);
+
+  // Helper: show toast with graduation impact after adding a course
+  const showAddCourseToast = useCallback((course: { name: string; credits: number; category?: string }, year: number, term: string, courseId: string) => {
+    const requirement = getRequirementImperative();
+    // currentTotals was captured BEFORE the mutation by the caller
+    const currentPlanState = usePlanStore.getState().activePlan;
+    const currentTotals = computeCurrentTotals(
+      currentPlanState?.semesters ?? [],
+      requirement
+    );
+    // The course was ALREADY added to the store by this point, so subtract it back for accurate "before" state
+    const adjustedTotals = { ...currentTotals };
+    const cat = course.category || 'free_elective';
+    const majorCats = ['major_required', 'major_elective'];
+    const generalCats = ['general_required', 'general_elective'];
+    adjustedTotals.totalPlanned -= course.credits;
+    if (majorCats.includes(cat)) adjustedTotals.majorPlanned -= course.credits;
+    if (generalCats.includes(cat)) adjustedTotals.generalPlanned -= course.credits;
+
+    const delta = computeGraduationDelta(
+      { credits: course.credits, category: course.category as any },
+      requirement,
+      adjustedTotals
+    );
+
+    const catLabel = GRADUATION_CATEGORY_LABELS[course.category || 'free_elective'] || '자유선택';
+    const description = delta
+      ? formatDeltaDescription(delta)
+      : `+${course.credits}학점 ${catLabel}`;
+
+    const undoAdd = async () => {
+      removeCourseFromSemester(year, term as any, courseId);
+      try {
+        if (isGuest) {
+          const guestRemoveCourse = useGuestPlanStore.getState().removeCourse;
+          guestRemoveCourse(activePlan!.id, year, term as any, courseId);
+        } else {
+          await removeCourseMutation.mutateAsync({
+            planId: activePlan!.id,
+            year,
+            term: term as any,
+            courseId,
+          });
+        }
+        useToastStore.getState().addToast({
+          message: '실행 취소됨',
+          type: 'info',
+          duration: 1500,
+        });
+      } catch (error) {
+        console.error('Failed to undo course addition:', error);
+      }
+    };
+
+    useToastStore.getState().addToast({
+      message: `${course.name} 추가됨`,
+      description,
+      type: 'success',
+      action: { label: '실행 취소', onClick: undoAdd },
+      duration: 5000,
+    });
+  }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation]);
 
   // Auto-select first plan when plans are loaded
   useEffect(() => {
@@ -373,6 +461,14 @@ export default function PlannerPage() {
         // Optimistic update
         addCourseToSemester(destInfo.year, destInfo.term, optimisticCourse);
 
+        // Show toast with graduation impact
+        showAddCourseToast(
+          { name: optimisticCourse.name, credits: optimisticCourse.credits, category: optimisticCourse.category },
+          destInfo.year,
+          destInfo.term,
+          draggableId
+        );
+
         // API call (or guest store update)
         try {
           if (isGuest) {
@@ -389,8 +485,14 @@ export default function PlannerPage() {
           }
           triggerHighlight();
         } catch (error) {
-          // Rollback on error
-          removeCourseFromSemester(destInfo.year, destInfo.term, draggableId);
+          // Only rollback if course still exists (wasn't undone)
+          const currentState = usePlanStore.getState().activePlan;
+          const stillExists = currentState?.semesters.some(sem =>
+            sem.courses.some(c => c.id === draggableId)
+          );
+          if (stillExists) {
+            removeCourseFromSemester(destInfo.year, destInfo.term, draggableId);
+          }
           console.error('Failed to add course:', error);
         }
         return;
@@ -461,7 +563,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast]
   );
 
   // Handle remove course from semester column
@@ -538,6 +640,14 @@ export default function PlannerPage() {
       };
       addCourseToSemester(year, term, optimisticCourse);
 
+      // Show toast with graduation impact
+      showAddCourseToast(
+        { name: courseData.name, credits: courseData.credits, category: courseData.category },
+        year,
+        term,
+        courseId
+      );
+
       // API call (or guest store update)
       try {
         if (isGuest) {
@@ -553,11 +663,18 @@ export default function PlannerPage() {
           });
         }
       } catch (error) {
-        removeCourseFromSemester(year, term, courseId);
+        // Only rollback if course still exists (wasn't undone)
+        const currentState = usePlanStore.getState().activePlan;
+        const stillExists = currentState?.semesters.some(sem =>
+          sem.courses.some(c => c.id === courseId)
+        );
+        if (stillExists) {
+          removeCourseFromSemester(year, term, courseId);
+        }
         console.error('Failed to add course:', error);
       }
     },
-    [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation]
+    [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation, showAddCourseToast]
   );
 
   const handleSemesterFocus = useCallback(
@@ -731,8 +848,13 @@ export default function PlannerPage() {
           onDragEnd={handleDragEnd}
         >
           <div className="space-y-6">
+            {/* Floating Mini Graduation Summary (visible when main summary scrolls out) */}
+            <FloatingGradSummary requirementsSummaryRef={requirementsSummaryRef} />
+
             {/* Requirements Summary Widget */}
-            <RequirementsSummary />
+            <div ref={requirementsSummaryRef}>
+              <RequirementsSummary />
+            </div>
 
             {/* Course Catalog - Full Width Top Row */}
             <CourseCatalog

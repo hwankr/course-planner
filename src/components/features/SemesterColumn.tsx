@@ -37,6 +37,25 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused =
   const termLabel = semester.term === 'spring' ? '1학기' : '2학기';
   const totalCredits = semester.courses.reduce((sum, course) => sum + course.credits, 0);
 
+  const categoryBreakdown = (() => {
+    const counts: Record<string, number> = {};
+    const labels: Record<string, string> = {
+      major_required: '전핵',
+      major_elective: '전선',
+      general_required: '교필',
+      general_elective: '교선',
+      free_elective: '자선',
+    };
+    for (const course of semester.courses) {
+      const cat = course.category || 'free_elective';
+      counts[cat] = (counts[cat] || 0) + course.credits;
+    }
+    // Return in a fixed display order, only categories that have credits
+    return ['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective']
+      .filter(cat => counts[cat])
+      .map(cat => ({ key: cat, label: labels[cat], credits: counts[cat] }));
+  })();
+
   return (
     <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}>
       {/* Header */}
@@ -50,7 +69,12 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused =
               {semester.year}학년 {termLabel}
             </h3>
             <p className={`${compact ? 'text-xs' : 'text-sm'} text-gray-500 mt-1`}>
-              총 {totalCredits}학점
+              {totalCredits}학점
+              {categoryBreakdown.length > 0 && (
+                <span className="text-gray-400 ml-1">
+                  ({categoryBreakdown.map(c => `${c.label}${c.credits}`).join(' · ')})
+                </span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -110,6 +134,10 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, isFocused =
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                         className={snapshot.isDragging ? 'opacity-50' : ''}
+                        style={{
+                          ...provided.draggableProps.style,
+                          ...(snapshot.isDragging ? { width: '280px' } : {}),
+                        }}
                       >
                         <CourseCard
                           course={course}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui';
+import { Button, Toast } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import OnboardingGuard from '@/components/providers/OnboardingGuard';
 import {
@@ -183,6 +183,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="container mx-auto px-3 py-4 sm:px-4 sm:py-8">
         <OnboardingGuard>{children}</OnboardingGuard>
       </main>
+
+      {/* Toast Notifications */}
+      <Toast />
     </div>
   );
 }

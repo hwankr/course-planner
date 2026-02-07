@@ -11,6 +11,10 @@ import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
+import { useTouchPreview } from '@/hooks/useTouchPreview';
+import { usePlanStore } from '@/stores/planStore';
+import { useGraduationRequirement } from '@/hooks/useGraduationRequirements';
+import { computeGraduationDelta, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
@@ -40,8 +44,15 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const userDepartment = (isGuest ? guestDepartmentId : session?.user?.department) || undefined;
   const [showCustomForm, setShowCustomForm] = useState(false);
 
+  // Touch preview for mobile
+  const { selectedCourseId, isTouchDevice, togglePreview, clearSelection } = useTouchPreview(focusedSemester);
+
+  // Graduation data for inline impact badge
+  const { data: graduationRequirement } = useGraduationRequirement();
+  const activePlanSemesters = usePlanStore((s) => s.activePlan?.semesters);
+
   // Preview store
-  const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
+  const { setPreview, clearPreview } = useGraduationPreviewStore();
 
   // Debounce search term
   useEffect(() => {
@@ -158,8 +169,52 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
   const handleAddClick = (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => {
     if (!onClickAdd) return;
-    triggerHighlight();
     onClickAdd(courseId, courseData);
+  };
+
+  // Handle card click for touch preview
+  const handleCardClick = (course: ICourse, isInPlan: boolean) => {
+    if (!isTouchDevice || isInPlan) return;
+    togglePreview(course);
+  };
+
+  // Inline impact badge for touch preview
+  const renderInlineImpactBadge = (course: ICourse) => {
+    if (!isTouchDevice) return null;
+    const courseId = course._id.toString();
+    if (selectedCourseId !== courseId) return null;
+
+    const currentTotals = computeCurrentTotals(activePlanSemesters ?? [], graduationRequirement ?? null);
+    const delta = computeGraduationDelta(
+      { credits: course.credits, category: course.category },
+      graduationRequirement ?? null,
+      currentTotals
+    );
+
+    const catLabel = GRADUATION_CATEGORY_LABELS[course.category || 'free_elective'] || '자유선택';
+
+    return (
+      <div className="mt-1 px-2 py-1.5 rounded-md bg-blue-50 border border-blue-200 animate-scale-in">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs font-medium text-blue-700">
+            +{course.credits}학점 {catLabel}
+          </span>
+          {delta && delta.categoryKey !== 'total' && (
+            <span className="text-[10px] text-blue-600">
+              {delta.categoryKey === 'major' ? '전공' : '교양'}: {delta.before.credits}→{delta.after.credits}학점
+            </span>
+          )}
+          {delta && (
+            <span className="text-[10px] text-gray-500">
+              전체: {delta.totalBefore.percentage}%→{delta.totalAfter.percentage}%
+            </span>
+          )}
+        </div>
+        {!focusedSemester && (
+          <p className="text-[10px] text-blue-500 mt-0.5">학기를 선택하면 추가할 수 있습니다</p>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -224,14 +279,14 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         {!isCollapsed && (
           <div className="space-y-1.5">
             {/* Year + Semester filters (같은 줄) */}
-            <div className="flex items-center gap-3 overflow-x-auto pb-0.5">
-              <div className="flex items-center gap-1 flex-shrink-0">
+            <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
+              <div className="flex items-center gap-1">
                 <span className="text-[11px] font-medium text-gray-400 w-7">학년</span>
                 {[undefined, 1, 2, 3, 4].map((y) => (
                   <button
                     key={y ?? 'all'}
                     onClick={() => setYearFilter(y)}
-                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
                       ${yearFilter === y
                         ? 'bg-indigo-500 text-white'
                         : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'}`}
@@ -241,15 +296,15 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                 ))}
               </div>
 
-              <div className="w-px h-4 bg-gray-200 flex-shrink-0" />
+              <div className="w-px h-4 bg-gray-200" />
 
-              <div className="flex items-center gap-1 flex-shrink-0">
+              <div className="flex items-center gap-1">
                 <span className="text-[11px] font-medium text-gray-400 w-7">학기</span>
                 {([undefined, 'spring', 'fall'] as const).map((s) => (
                   <button
                     key={s ?? 'all'}
                     onClick={() => setSemesterFilter(s as Semester | undefined)}
-                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
                       ${semesterFilter === s
                         ? 'bg-emerald-500 text-white'
                         : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
@@ -261,8 +316,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             </div>
 
             {/* Category filter (별도 줄) */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-0.5">
-              <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">이수</span>
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="text-[11px] font-medium text-gray-400">이수</span>
               {([undefined, 'major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective'] as const).map((cat) => {
                 const labels: Record<string, string> = {
                   major_required: '전공핵심',
@@ -282,7 +337,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                   <button
                     key={cat ?? 'all'}
                     onClick={() => setCategoryFilter(cat as RequirementCategory | undefined)}
-                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors whitespace-nowrap flex-shrink-0
+                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors whitespace-nowrap
                       ${categoryFilter === cat
                         ? (cat ? chipColors[cat].active : 'bg-violet-500 text-white')
                         : (cat ? chipColors[cat].inactive : 'bg-violet-50 text-violet-600 hover:bg-violet-100')}`}
@@ -371,13 +426,18 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                 index={currentIndex}
                                 isDragDisabled={isInPlan}
                               >
-                                {(provided) => (
+                                {(provided, snapshot) => (
                                   <div
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     className={`relative ${isInPlan ? 'opacity-50' : ''}`}
                                     onMouseEnter={() => handleCourseHoverStart(course)}
                                     onMouseLeave={handleCourseHoverEnd}
+                                    onClick={() => handleCardClick(course, isInPlan)}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      ...(snapshot.isDragging ? { width: '224px' } : {}),
+                                    }}
                                   >
                                     <div {...provided.dragHandleProps}>
                                       <CourseCard
@@ -418,6 +478,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                         추가됨
                                       </div>
                                     )}
+
+                                    {/* Inline impact badge (touch preview) */}
+                                    {renderInlineImpactBadge(course)}
                                   </div>
                                 )}
                               </Draggable>
@@ -438,7 +501,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
+                  className="flex flex-wrap gap-3"
                 >
                   {filteredCourses.map((course, index) => {
                     const courseId = course._id.toString();
@@ -451,13 +514,18 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                         index={index}
                         isDragDisabled={isInPlan}
                       >
-                        {(provided) => (
+                        {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`relative ${isInPlan ? 'opacity-50' : ''}`}
+                            className={`relative w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)] ${isInPlan ? 'opacity-50' : ''}`}
                             onMouseEnter={() => handleCourseHoverStart(course)}
                             onMouseLeave={handleCourseHoverEnd}
+                            onClick={() => handleCardClick(course, isInPlan)}
+                            style={{
+                              ...provided.draggableProps.style,
+                              ...(snapshot.isDragging ? { width: '250px' } : {}),
+                            }}
                           >
                             <div {...provided.dragHandleProps}>
                               <CourseCard
@@ -502,6 +570,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                 추가됨
                               </div>
                             )}
+
+                            {/* Inline impact badge (touch preview) */}
+                            {renderInlineImpactBadge(course)}
                           </div>
                         )}
                       </Draggable>
