@@ -9,6 +9,7 @@ import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
 import { useActivatePlan } from '@/hooks/usePlanActivation';
 import { usePlanStore } from '@/stores/planStore';
+import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
 import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
@@ -39,6 +40,7 @@ export default function PlannerPage() {
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
+  const semesterGridRef = useRef<HTMLDivElement>(null);
 
   // Guest plan store - use serialized selector for stable reference
   const guestActivePlanJson = useGuestPlanStore((s) => {
@@ -71,6 +73,9 @@ export default function PlannerPage() {
 
   // Preview store
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
+
+  // Auto-scroll to semester grid on mobile drag
+  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef } = useAutoScrollOnDrag(semesterGridRef);
 
   // Helper: get graduation requirement imperatively (for toast delta calculation)
   const getRequirementImperative = useCallback((): GraduationRequirementInput | null => {
@@ -309,6 +314,7 @@ export default function PlannerPage() {
 
   // Handle drag start - set preview for remove action
   const handleDragStart = useCallback((start: DragStart) => {
+    handleDragStartScroll(start.source);
     const { source, draggableId } = start;
     const sourceInfo = parseSemesterId(source.droppableId);
 
@@ -329,7 +335,7 @@ export default function PlannerPage() {
         );
       }
     }
-  }, [findCourseData, setPreview]);
+  }, [findCourseData, setPreview, handleDragStartScroll]);
 
   // Handle drag update - update preview based on destination
   const handleDragUpdate = useCallback((update: DragUpdate) => {
@@ -413,6 +419,7 @@ export default function PlannerPage() {
   // Handle drag end
   const handleDragEnd = useCallback(
     async (result: DropResult) => {
+      handleDragEndRestore();
       const { source, destination, draggableId } = result;
 
       // Clear preview on drag end
@@ -563,7 +570,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast, handleDragEndRestore]
   );
 
   // Handle remove course from semester column
@@ -849,7 +856,7 @@ export default function PlannerPage() {
         >
           <div className="space-y-6">
             {/* Floating Mini Graduation Summary (visible when main summary scrolls out) */}
-            <FloatingGradSummary requirementsSummaryRef={requirementsSummaryRef} />
+            <FloatingGradSummary requirementsSummaryRef={requirementsSummaryRef} isDragScrollActiveRef={isDragScrollActiveRef} />
 
             {/* Requirements Summary Widget */}
             <div ref={requirementsSummaryRef}>
@@ -862,10 +869,11 @@ export default function PlannerPage() {
               onClickAdd={handleClickAdd}
               focusedSemester={focusedSemester}
               isAddingCourse={addCourseMutation.isPending}
+              isDragScrollActiveRef={isDragScrollActiveRef}
             />
 
             {/* Semester Grid - Full Width Bottom Row */}
-            <div className="space-y-4">
+            <div ref={semesterGridRef} className="space-y-4">
               {/* Year filter for semester grid */}
               <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
                 <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">학년</span>
