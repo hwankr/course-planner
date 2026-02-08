@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui';
 import { AnonymousPlanModal } from '@/components/features/AnonymousPlanModal';
+import { AllPlansModal } from '@/components/features/AllPlansModal';
 import { useDepartmentStats, useAnonymousPlans } from '@/hooks/useStatistics';
 import { useAuth } from '@/hooks/useAuth';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
@@ -50,15 +51,17 @@ function formatRelativeTime(date: Date): string {
 
 export default function StatisticsPage() {
   const [selectedCategory, setSelectedCategory] = useState<'all' | RequirementCategory>('all');
-  const [plansPage, setPlansPage] = useState(1);
+  const [selectedSemester, setSelectedSemester] = useState<'all' | string>('all');
+  const [visibleCount, setVisibleCount] = useState(3);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isAllPlansModalOpen, setIsAllPlansModalOpen] = useState(false);
 
   const { isGuest, loginWithGoogle } = useAuth();
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
   const effectiveDepartmentId = isGuest ? (guestDepartmentId || undefined) : undefined;
 
   const { data: statsData, isLoading: statsLoading, isError: statsError, error: statsErrorObj } = useDepartmentStats(effectiveDepartmentId);
-  const { data: plansData, isLoading: plansLoading } = useAnonymousPlans(effectiveDepartmentId, plansPage, 9, !isGuest);
+  const { data: plansData, isLoading: plansLoading } = useAnonymousPlans(effectiveDepartmentId, 1, 3, !isGuest);
 
   // Error handling - MUST be checked FIRST
   if (statsLoading) {
@@ -137,10 +140,46 @@ export default function StatisticsPage() {
 
   const stats = statsData.data;
 
-  // Filter courses by category (plain derivation, not useMemo — avoids Rules of Hooks violation after early returns)
-  const filteredCourses = selectedCategory === 'all'
-    ? stats.courseStats
-    : stats.courseStats.filter(c => c.category === selectedCategory);
+  // Build DYNAMIC semester options from actual data
+  // Extract unique semesters from all courseStats, then from semesterDistribution as fallback
+  const semesterOptions = (() => {
+    const semesterSet = new Set<string>();
+    for (const course of stats.courseStats) {
+      for (const sem of course.semesters || []) {
+        semesterSet.add(`${sem.year}-${sem.term}`);
+      }
+    }
+    // Also include semesters from semesterDistribution (covers cases where no course maps to it)
+    for (const sem of stats.semesterDistribution) {
+      semesterSet.add(`${sem.year}-${sem.term}`);
+    }
+    const sorted = Array.from(semesterSet).sort((a, b) => {
+      const [aYear, aTerm] = a.split('-');
+      const [bYear, bTerm] = b.split('-');
+      if (aYear !== bYear) return Number(aYear) - Number(bYear);
+      return aTerm === 'spring' ? -1 : 1;
+    });
+    return [
+      { value: 'all', label: '전체 학기' },
+      ...sorted.map((key) => {
+        const [year, term] = key.split('-');
+        return { value: key, label: `${year}학년 ${term === 'spring' ? '1' : '2'}학기` };
+      }),
+    ];
+  })();
+
+  // Filter courses by category AND semester
+  const filteredCourses = stats.courseStats.filter(c => {
+    const categoryMatch = selectedCategory === 'all' || c.category === selectedCategory;
+    if (!categoryMatch) return false;
+    if (selectedSemester === 'all') return true;
+    const [yearStr, term] = selectedSemester.split('-');
+    const year = Number(yearStr);
+    return (c.semesters || []).some(s => s.year === year && s.term === term);
+  });
+
+  const visibleCourses = filteredCourses.slice(0, visibleCount);
+  const remainingCount = Math.max(0, filteredCourses.length - visibleCount);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
@@ -205,12 +244,12 @@ export default function StatisticsPage() {
         </div>
       </div>
 
-      {/* Category Filter Tabs */}
+      {/* Filter Tabs */}
       <Card className="mb-6 p-4">
         <p className="text-sm text-gray-500 mb-3">이수구분별로 인기 과목을 필터링할 수 있습니다</p>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setSelectedCategory('all')}
+            onClick={() => { setSelectedCategory('all'); setVisibleCount(3); }}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               selectedCategory === 'all'
                 ? 'bg-gradient-to-r from-[#153974] to-[#3069B3] text-white'
@@ -222,7 +261,7 @@ export default function StatisticsPage() {
           {(Object.keys(CATEGORY_LABELS) as RequirementCategory[]).map((cat) => (
             <button
               key={cat}
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => { setSelectedCategory(cat); setVisibleCount(3); }}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 selectedCategory === cat
                   ? 'bg-gradient-to-r from-[#153974] to-[#3069B3] text-white'
@@ -232,6 +271,26 @@ export default function StatisticsPage() {
               {CATEGORY_LABELS[cat]}
             </button>
           ))}
+        </div>
+
+        {/* Semester Filter */}
+        <div className="mt-4 pt-4 border-t">
+          <p className="text-sm text-gray-500 mb-3">학기별로 필터링할 수 있습니다</p>
+          <div className="flex flex-wrap gap-2">
+            {semesterOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { setSelectedSemester(opt.value); setVisibleCount(3); }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  selectedSemester === opt.value
+                    ? 'bg-gradient-to-r from-[#153974] to-[#3069B3] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
       </Card>
 
@@ -255,11 +314,11 @@ export default function StatisticsPage() {
                   <p className="text-sm">학과 학생들이 수강 계획을 작성하면 이곳에 인기 과목이 표시됩니다</p>
                 </>
               ) : (
-                '해당 카테고리에 과목이 없습니다.'
+                '해당 조건에 맞는 과목이 없습니다.'
               )}
             </div>
           ) : (
-            filteredCourses.map((course, index) => (
+            visibleCourses.map((course, index) => (
               <div key={course.courseId} className="p-4 hover:bg-gray-50 transition-colors">
                 <div className="flex items-start gap-4">
                   {/* Rank */}
@@ -308,6 +367,26 @@ export default function StatisticsPage() {
             ))
           )}
         </div>
+        {/* Show More / Collapse button */}
+        {filteredCourses.length > 3 && (
+          <div className="p-4 border-t">
+            {remainingCount > 0 ? (
+              <button
+                onClick={() => setVisibleCount(prev => prev + 5)}
+                className="w-full py-2.5 text-sm font-medium text-[#3069B3] hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                {remainingCount}개 더보기
+              </button>
+            ) : (
+              <button
+                onClick={() => setVisibleCount(3)}
+                className="w-full py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                접기
+              </button>
+            )}
+          </div>
+        )}
         {filteredCourses.length > 0 && (
           <div className="p-4 bg-gray-50 border-t">
             <p className="text-sm text-gray-600 flex items-center gap-1">
@@ -382,15 +461,15 @@ export default function StatisticsPage() {
               <p className="text-sm text-gray-600">같은 학과 학생들의 수강 계획을 참고하세요</p>
             </div>
             <div className="p-6">
-              {plansLoading && plansPage === 1 ? (
+              {plansLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-8 h-8 animate-spin text-[#3069B3]" />
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                    {plansData?.plans.map((plan, index) => {
-                      const label = String.fromCharCode(65 + ((plansPage - 1) * 9 + index));
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    {plansData?.plans.slice(0, 3).map((plan, index) => {
+                      const label = String.fromCharCode(65 + index);
                       return (
                         <button
                           key={plan.anonymousId}
@@ -419,24 +498,14 @@ export default function StatisticsPage() {
                     </p>
                   )}
 
-                  {plansData && plansData.total > plansPage * plansData.limit && (
-                    <div className="text-center">
+                  {plansData && plansData.total > 3 && (
+                    <div className="text-center mt-4">
                       <button
-                        onClick={() => setPlansPage((p) => p + 1)}
-                        disabled={plansLoading}
-                        className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setIsAllPlansModalOpen(true)}
+                        className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors"
                       >
-                        {plansLoading ? (
-                          <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            로딩 중...
-                          </>
-                        ) : (
-                          <>
-                            더 보기
-                            <ChevronRight className="w-5 h-5" />
-                          </>
-                        )}
+                        전체 {plansData.total}개 수강계획 보기
+                        <ChevronRight className="w-5 h-5" />
                       </button>
                     </div>
                   )}
@@ -452,13 +521,22 @@ export default function StatisticsPage() {
             </div>
           </Card>
 
-          {/* Anonymous Plan Modal */}
+          {/* Anonymous Plan Detail Modal */}
           {selectedPlanId && (
             <AnonymousPlanModal
               isOpen={true}
               anonymousId={selectedPlanId}
               departmentId={effectiveDepartmentId}
               onClose={() => setSelectedPlanId(null)}
+            />
+          )}
+
+          {/* All Plans Modal */}
+          {isAllPlansModalOpen && (
+            <AllPlansModal
+              isOpen={isAllPlansModalOpen}
+              onClose={() => setIsAllPlansModalOpen(false)}
+              departmentId={effectiveDepartmentId}
             />
           )}
         </>

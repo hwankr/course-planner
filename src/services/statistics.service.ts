@@ -68,6 +68,18 @@ async function getDepartmentCourseStats(
     { $unwind: '$courseInfo' },
     // Filter out custom courses (createdBy !== null)
     { $match: { 'courseInfo.createdBy': null } },
+    // Lookup DepartmentCurriculum for authoritative category (covers old plans without PlannedCourse.category)
+    {
+      $lookup: {
+        from: 'departmentcurriculums',
+        let: { courseId: '$courseInfo._id', deptId: { $toObjectId: departmentId } },
+        pipeline: [
+          { $match: { $expr: { $and: [{ $eq: ['$course', '$$courseId'] }, { $eq: ['$department', '$$deptId'] }] } } },
+          { $limit: 1 },
+        ],
+        as: 'curriculumInfo',
+      },
+    },
     // Group by course, collect unique students
     {
       $group: {
@@ -75,8 +87,9 @@ async function getDepartmentCourseStats(
         code: { $first: '$courseInfo.code' },
         name: { $first: '$courseInfo.name' },
         credits: { $first: '$courseInfo.credits' },
-        category: { $first: '$courseInfo.category' },
+        category: { $first: { $ifNull: ['$semesters.courses.category', { $arrayElemAt: ['$curriculumInfo.category', 0] }, '$courseInfo.category'] } },
         uniqueStudents: { $addToSet: '$user' },
+        semesters: { $addToSet: { year: '$semesters.year', term: '$semesters.term' } },
       },
     },
     // Project to compute studentCount from unique students
@@ -88,6 +101,7 @@ async function getDepartmentCourseStats(
         credits: 1,
         category: 1,
         studentCount: { $size: '$uniqueStudents' },
+        semesters: 1,
       },
     },
     { $sort: { studentCount: -1 } },
@@ -103,6 +117,10 @@ async function getDepartmentCourseStats(
     category: c.category || 'free_elective',
     studentCount: c.studentCount,
     percentage: Math.round((c.studentCount / totalStudents) * 1000) / 10,
+    semesters: (c.semesters || []).sort(
+      (a: { year: number; term: string }, b: { year: number; term: string }) =>
+        a.year - b.year || (a.term === 'spring' ? -1 : 1)
+    ),
   }));
 
   // 5. Semester distribution aggregation
@@ -288,6 +306,19 @@ async function getAnonymousPlanDetail(
 
   if (!plan) return null;
 
+  // Batch lookup DepartmentCurriculum for all courses in this plan (covers old plans without PlannedCourse.category)
+  const allCourseIds = plan.semesters.flatMap((sem) =>
+    sem.courses.map((pc) => {
+      const course = pc.course as unknown as { _id: string };
+      return course?._id;
+    }).filter(Boolean)
+  ) as string[];
+  const curriculumEntries = await (await import('@/models')).DepartmentCurriculum
+    .find({ department: departmentId, course: { $in: allCourseIds } })
+    .select('course category')
+    .lean<Array<{ course: { toString(): string }; category: string }>>();
+  const curriculumMap = new Map(curriculumEntries.map((e) => [e.course.toString(), e.category]));
+
   // Build detail (filter out custom courses, strip all user info)
   const semesters = plan.semesters
     .map((sem) => ({
@@ -299,12 +330,14 @@ async function getAnonymousPlanDetail(
           return course && course.createdBy == null;
         })
         .map((pc) => {
-          const course = pc.course as unknown as { code: string; name: string; credits: number; category?: string };
+          const course = pc.course as unknown as { _id: { toString(): string }; code: string; name: string; credits: number; category?: string };
+          const pcCategory = (pc as unknown as { category?: string }).category;
+          const currCategory = curriculumMap.get(course._id.toString());
           return {
             code: course.code,
             name: course.name,
             credits: course.credits,
-            category: course.category || 'free_elective',
+            category: pcCategory || currCategory || course.category || 'free_elective',
           };
         }),
     }))

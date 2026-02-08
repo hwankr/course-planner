@@ -387,6 +387,8 @@ export interface CourseStat {
   category: string;
   studentCount: number;    // 고유 학생 수
   percentage: number;      // studentCount / totalStudents * 100 (계획 작성 학생 대비)
+  /** 이 과목이 계획에 포함된 학기 목록 (학기 필터용) */
+  semesters: Array<{ year: number; term: string }>;
 }
 
 export interface SemesterDistribution {
