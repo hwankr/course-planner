@@ -13,9 +13,6 @@ import {
   LayoutGrid,
   Target,
   Users,
-  GripVertical,
-  BarChart3,
-  Smartphone,
 } from 'lucide-react';
 
 export default function Home() {
@@ -85,7 +82,7 @@ export default function Home() {
 
             {/* Subtitle */}
             <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto animate-fade-in-up anim-delay-200">
-              1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 선배들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요.
+              1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 다른 사람들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요.
             </p>
 
             {/* CTA Buttons */}
@@ -149,53 +146,10 @@ export default function Home() {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#153974] to-[#003E7E] flex items-center justify-center mb-6">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">선배들의 수강 계획 참고</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">다른 사람들의 수강 계획 참고</h3>
               <p className="text-gray-600 leading-relaxed">
                 같은 학과 학생들의 수강 계획을 참고하여 나만의 최적 로드맵을 설계하세요.
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Statistics Band */}
-      <section className="relative py-16 bg-gradient-to-r from-[#003E7E] via-[#153974] to-[#003E7E] text-white overflow-hidden">
-        {/* Decorative Background */}
-        <div className="absolute inset-0 bg-grid opacity-10" />
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Stat 1 */}
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <GripVertical className="w-6 h-6" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-2">간편한 드래그앤드롭</h3>
-              <p className="text-blue-100">과목을 끌어서 학기에 배치</p>
-            </div>
-
-            {/* Stat 2 */}
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-2">실시간 졸업 추적</h3>
-              <p className="text-blue-100">진행률을 한눈에 확인</p>
-            </div>
-
-            {/* Stat 3 */}
-            <div className="text-center">
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                  <Smartphone className="w-6 h-6" />
-                </div>
-              </div>
-              <h3 className="text-xl font-bold mb-2">모바일 반응형 지원</h3>
-              <p className="text-blue-100">어디서든 수강 계획 관리</p>
             </div>
           </div>
         </div>

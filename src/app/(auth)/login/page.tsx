@@ -68,8 +68,8 @@ export default function LoginPage() {
               <div className="flex items-start gap-4">
                 <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="text-xl font-semibold mb-1">선수과목 자동 검증</h3>
-                  <p className="text-blue-100">스마트한 알고리즘으로 과목 순서를 검증합니다</p>
+                  <h3 className="text-xl font-semibold mb-1">다른 사람들의 수강 계획 참고</h3>
+                  <p className="text-blue-100">같은 학과 학생들의 수강 계획을 참고하세요</p>
                 </div>
               </div>
             </div>
