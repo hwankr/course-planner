@@ -9,6 +9,9 @@ import {
 } from '@/hooks/useGraduationRequirements';
 import { RequirementForm } from '@/components/features/RequirementForm';
 import { Card, CardContent, Button } from '@/components/ui';
+import { useSession } from 'next-auth/react';
+import { useGuestStore } from '@/stores/guestStore';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
 
 export function RequirementsSummary() {
   const [isEditing, setIsEditing] = useState(false);
@@ -17,6 +20,12 @@ export function RequirementsSummary() {
   const { data: progress, isLoading: loadingProgress } = useGraduationProgress();
   const upsertMutation = useUpsertGraduationRequirement();
   const createDefaults = useCreateDefaultGraduationRequirement();
+
+  // Get user's profile majorType for conditional radio display
+  const { data: session } = useSession();
+  const isGuest = useGuestStore((s) => s.isGuest);
+  const guestProfileMajorType = useGuestProfileStore((s) => s.majorType);
+  const userMajorType = isGuest ? guestProfileMajorType : (session?.user?.majorType || 'single');
 
   const isLoading = loadingReq || loadingProgress;
 
@@ -84,6 +93,7 @@ export function RequirementsSummary() {
                 onSubmit={handleUpsert}
                 onCancel={() => { setIsEditing(false); setSaveError(''); }}
                 isLoading={upsertMutation.isPending}
+                userMajorType={userMajorType}
               />
             </div>
           ) : (
@@ -145,6 +155,7 @@ export function RequirementsSummary() {
             onSubmit={handleUpsert}
             onCancel={() => { setIsEditing(false); setSaveError(''); }}
             isLoading={upsertMutation.isPending}
+            userMajorType={userMajorType}
           />
         </CardContent>
       </Card>

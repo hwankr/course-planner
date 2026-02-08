@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { HelpCircle } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
+import type { MajorType } from '@/types';
 
 interface RequirementFormData {
   majorType: 'single' | 'double' | 'minor';
@@ -35,9 +36,10 @@ interface RequirementFormProps {
   onCancel: () => void;
   isLoading?: boolean;
   onLoadFromDeptReq?: () => Promise<Partial<RequirementFormData> | null>;
+  userMajorType?: MajorType;
 }
 
-export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq }: RequirementFormProps) {
+export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq, userMajorType }: RequirementFormProps) {
   const [majorType, setMajorType] = useState<'single' | 'double' | 'minor'>(initialData?.majorType || 'single');
   const [totalCredits, setTotalCredits] = useState(initialData?.totalCredits?.toString() || '');
   const [primaryMajorCredits, setPrimaryMajorCredits] = useState(initialData?.primaryMajorCredits?.toString() || '');
@@ -65,6 +67,12 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loadMessage, setLoadMessage] = useState<string>('');
+
+  // Determine which major type radio options to show
+  // When userMajorType is undefined (prop not passed), show all options (backward compat)
+  const showDouble = !userMajorType || userMajorType === 'double' || initialData?.majorType === 'double';
+  const showMinor = !userMajorType || userMajorType === 'minor' || initialData?.majorType === 'minor';
+  const showMajorTypeSection = showDouble || showMinor;
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -220,41 +228,54 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
       {/* 전공 유형 */}
       <div className="space-y-3">
         <p className="text-sm font-semibold text-gray-800 border-b pb-2">전공 유형</p>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="majorType"
-              value="single"
-              checked={majorType === 'single'}
-              onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
-              className="w-4 h-4"
-            />
-            <span className="text-sm">단일전공</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="majorType"
-              value="double"
-              checked={majorType === 'double'}
-              onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
-              className="w-4 h-4"
-            />
-            <span className="text-sm">복수전공</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="majorType"
-              value="minor"
-              checked={majorType === 'minor'}
-              onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
-              className="w-4 h-4"
-            />
-            <span className="text-sm">부전공</span>
-          </label>
-        </div>
+        {showMajorTypeSection ? (
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="majorType"
+                value="single"
+                checked={majorType === 'single'}
+                onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
+                className="w-4 h-4"
+              />
+              <span className="text-sm">단일전공</span>
+            </label>
+            {showDouble && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="majorType"
+                  value="double"
+                  checked={majorType === 'double'}
+                  onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">복수전공</span>
+              </label>
+            )}
+            {showMinor && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="majorType"
+                  value="minor"
+                  checked={majorType === 'minor'}
+                  onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm">부전공</span>
+              </label>
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-gray-500">
+            단일전공으로 설정되어 있습니다.{' '}
+            <Link href="/profile" className="text-[#00AACA] hover:text-[#153974] underline">
+              복수전공/부전공은 프로필에서 변경하세요.
+            </Link>
+          </p>
+        )}
         {onLoadFromDeptReq && (
           <div className="space-y-1">
             <Button type="button" variant="outline" size="sm" onClick={handleLoadFromDeptReq}>

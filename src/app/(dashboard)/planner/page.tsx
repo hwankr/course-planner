@@ -21,6 +21,10 @@ import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { graduationRequirementKeys } from '@/hooks/useGraduationRequirements';
 import { computeGraduationDelta, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
 import type { GraduationRequirementInput } from '@/types';
+import { useSession } from 'next-auth/react';
+import { useDepartments } from '@/hooks/useOnboarding';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import Link from 'next/link';
 
 // Helper to parse droppableId
 function parseSemesterId(droppableId: string): { year: number; term: Term } | null {
@@ -32,6 +36,24 @@ function parseSemesterId(droppableId: string): { year: number; term: Term } | nu
 
 export default function PlannerPage() {
   const isGuest = useGuestStore((s) => s.isGuest);
+
+  // Department info for header display
+  const { data: session } = useSession();
+  const { data: departments = [] } = useDepartments();
+  const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
+  const guestMajorType = useGuestProfileStore((s) => s.majorType);
+  const guestSecondaryDepartmentName = useGuestProfileStore((s) => s.secondaryDepartmentName);
+
+  const departmentName = isGuest
+    ? guestDepartmentName
+    : departments.find(d => d._id === session?.user?.department)?.name;
+  const headerMajorType = isGuest
+    ? guestMajorType
+    : (session?.user?.majorType || 'single');
+  const secondaryDepartmentName = isGuest
+    ? guestSecondaryDepartmentName
+    : departments.find(d => d._id === session?.user?.secondaryDepartment)?.name;
+
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
@@ -835,6 +857,28 @@ export default function PlannerPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">수강 계획</h1>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {departmentName ? (
+              <>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]">
+                  {departmentName}
+                </span>
+                {headerMajorType !== 'single' && secondaryDepartmentName && (
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    headerMajorType === 'double'
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'bg-orange-100 text-orange-700'
+                  }`}>
+                    {headerMajorType === 'double' ? '복수전공' : '부전공'}: {secondaryDepartmentName}
+                  </span>
+                )}
+              </>
+            ) : (
+              <Link href="/profile" className="text-xs text-gray-400 hover:text-[#153974] underline">
+                학과를 설정해주세요
+              </Link>
+            )}
+          </div>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
