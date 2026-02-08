@@ -17,14 +17,12 @@ import {
   X,
   AlertTriangle,
   BarChart3,
-  HelpCircle,
 } from 'lucide-react';
 
 const navigation = [
   { name: '수강 계획', href: '/planner', icon: Calendar },
   { name: '학과 통계', href: '/statistics', icon: BarChart3 },
   { name: '프로필', href: '/profile', icon: User },
-  { name: '도움말', href: '/help', icon: HelpCircle },
 ];
 
 const adminNavigation = [{ name: '관리자', href: '/admin', icon: Shield }];
@@ -39,7 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     : navigation;
 
   return (
-    <div className="min-h-screen bg-gray-50 bg-grid">
+    <div className="bg-gray-50 bg-grid">
       {/* Gradient Accent Bar */}
       <div className="h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]" />
 
@@ -61,7 +59,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={item.href}
                       className={cn(
                         'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap',
-                        (item.href === '/help' ? pathname.startsWith('/help') : pathname === item.href)
+                        pathname === item.href
                           ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       )}
@@ -134,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
                       'px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
-                      (item.href === '/help' ? pathname.startsWith('/help') : pathname === item.href)
+                      pathname === item.href
                         ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}

@@ -220,14 +220,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Simple Footer */}
-      <footer className="border-t border-gray-200 py-8 bg-white">
-        <div className="container mx-auto px-4 text-center">
-          <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} YU 수강 플래너 - 영남대학교. All rights reserved.
-          </p>
-        </div>
-      </footer>
     </main>
   );
 }

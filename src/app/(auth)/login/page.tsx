@@ -29,7 +29,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex">
+    <div className="flex-1 flex">
       {/* Left Panel - Branded Gradient */}
       <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-[#003E7E] via-[#153974] to-[#3069B3] animate-gradient relative overflow-hidden">
         {/* Mesh Overlay */}

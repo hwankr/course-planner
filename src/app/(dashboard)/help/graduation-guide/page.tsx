@@ -9,7 +9,6 @@ import {
   BookOpen,
   Search,
   FileText,
-  ExternalLink,
   X,
 } from 'lucide-react';
 
@@ -120,15 +119,15 @@ export default function GraduationGuidePage() {
   }, [zoomImage]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100">
+    <div className="bg-gradient-to-b from-slate-50 via-white to-slate-100">
       <div className="mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10">
         <header className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
           <Link
-            href="/help"
+            href="/planner"
             className="mb-4 inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-[#00AACA]"
           >
             <ArrowLeft className="h-4 w-4" />
-            도움말로 돌아가기
+            플래너로 돌아가기
           </Link>
 
           <p className="inline-flex items-center gap-2 rounded-full bg-[#153974]/5 px-3 py-1 text-xs font-semibold text-[#153974]">
@@ -264,27 +263,15 @@ export default function GraduationGuidePage() {
           </section>
         </div>
 
-        <footer className="mt-8 text-center">
+        <nav className="mt-8 text-center" aria-label="페이지 내 이동">
           <Link
-            href="/help"
+            href="/planner"
             className="inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
           >
             <ArrowLeft className="h-4 w-4" />
-            도움말 페이지로 돌아가기
+            플래너로 돌아가기
           </Link>
-          <p className="mt-2 text-xs text-slate-500">
-            공식 홈페이지 바로가기:{' '}
-            <a
-              href="https://www.yu.ac.kr/main/index.do"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[#153974] underline decoration-slate-300 underline-offset-2 hover:text-[#00AACA]"
-            >
-              https://www.yu.ac.kr/main/index.do
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          </p>
-        </footer>
+        </nav>
       </div>
 
       {zoomImage && (
