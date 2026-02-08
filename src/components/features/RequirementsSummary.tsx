@@ -207,7 +207,7 @@ export function RequirementsSummary() {
               {total.planned > 0 && (
                 <div
                   className={`h-full absolute inset-y-0 left-0 rounded-full ${
-                    total.percentage >= 100 ? 'bg-green-300' : total.percentage >= 50 ? 'bg-blue-300' : 'bg-orange-300'
+                    total.percentage >= 100 ? 'bg-green-300' : 'bg-blue-300'
                   }`}
                   style={{ width: `${Math.min(Math.round(((total.earned + total.planned) / total.required) * 100), 100)}%` }}
                 />
@@ -215,7 +215,7 @@ export function RequirementsSummary() {
               {/* Earned segment */}
               <div
                 className={`h-full relative transition-all rounded-full ${
-                  total.percentage >= 100 ? 'bg-green-600' : total.percentage >= 50 ? 'bg-blue-600' : 'bg-orange-600'
+                  total.percentage >= 100 ? 'bg-green-600' : 'bg-blue-600'
                 }`}
                 style={{ width: `${Math.min(total.percentage, 100)}%` }}
               />
@@ -223,7 +223,7 @@ export function RequirementsSummary() {
               {priorTotal > 0 && (
                 <div
                   className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${
-                    total.percentage >= 100 ? 'bg-green-400' : total.percentage >= 50 ? 'bg-blue-400' : 'bg-orange-400'
+                    total.percentage >= 100 ? 'bg-green-400' : 'bg-blue-400'
                   }`}
                   style={{ width: `${Math.min(Math.round((priorTotal / total.required) * 100), 100)}%` }}
                 />
@@ -245,30 +245,38 @@ export function RequirementsSummary() {
           </div>
         </div>
 
+        {/* Progress bar legend */}
+        <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400 flex-wrap">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-600 inline-block"></span> 이수</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-blue-300 inline-block"></span> 계획</span>
+          <span className="text-gray-300">|</span>
+          <span className="text-gray-400">과목 상태를 &apos;이수&apos;로 변경하면 진행률에 반영됩니다</span>
+        </div>
+
         {/* Detail section - always visible */}
         <div className="mt-3 space-y-3 pt-3 border-t">
           {/* 전공학점 */}
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full flex-shrink-0 bg-red-500" />
+              <div className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500" />
               <span className="text-xs text-gray-600 w-14">전공</span>
               <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
                 {/* Planned segment (behind) */}
                 {major.planned > 0 && (
                   <div
-                    className="h-full absolute inset-y-0 left-0 rounded-full bg-red-300"
+                    className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-300"
                     style={{ width: `${Math.min(Math.round(((major.earned + major.planned) / major.required) * 100), 100)}%` }}
                   />
                 )}
                 {/* Earned segment */}
                 <div
-                  className={`h-full relative rounded-full ${major.percentage >= 100 ? 'bg-green-600' : 'bg-red-600'}`}
+                  className={`h-full relative rounded-full ${major.percentage >= 100 ? 'bg-green-600' : 'bg-blue-600'}`}
                   style={{ width: `${Math.min(major.percentage, 100)}%` }}
                 />
                 {/* Prior earned segment (기이수) */}
                 {priorMajor > 0 && (
                   <div
-                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${major.percentage >= 100 ? 'bg-green-400' : 'bg-red-400'}`}
+                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${major.percentage >= 100 ? 'bg-green-400' : 'bg-blue-400'}`}
                     style={{ width: `${Math.min(Math.round((priorMajor / major.required) * 100), 100)}%` }}
                   />
                 )}
@@ -284,19 +292,19 @@ export function RequirementsSummary() {
                 {/* Planned segment (behind) */}
                 {(major.requiredMin.planned ?? 0) > 0 && (
                   <div
-                    className="h-full absolute inset-y-0 left-0 rounded-full bg-red-200"
+                    className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-200"
                     style={{ width: `${Math.min(Math.round(((major.requiredMin.earned + (major.requiredMin.planned ?? 0)) / major.requiredMin.required) * 100), 100)}%` }}
                   />
                 )}
                 {/* Earned segment */}
                 <div
-                  className={`h-full relative rounded-full ${major.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-red-400'}`}
+                  className={`h-full relative rounded-full ${major.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
                   style={{ width: `${Math.min(major.requiredMin.percentage, 100)}%` }}
                 />
                 {/* Prior earned segment (기이수) */}
                 {priorMajorRequired > 0 && (
                   <div
-                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${major.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-red-300'}`}
+                    className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${major.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-blue-300'}`}
                     style={{ width: `${Math.min(Math.round((priorMajorRequired / major.requiredMin.required) * 100), 100)}%` }}
                   />
                 )}
@@ -310,7 +318,7 @@ export function RequirementsSummary() {
               <div className="flex items-center gap-2 pl-4">
                 <span className="text-xs text-gray-400 w-14 whitespace-nowrap">주전공최소</span>
                 <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${minorPrimaryMajorMin.percentage >= 100 ? 'bg-green-500' : 'bg-red-300'}`}
+                  <div className={`h-full rounded-full ${minorPrimaryMajorMin.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
                     style={{ width: `${Math.min(minorPrimaryMajorMin.percentage, 100)}%` }} />
                 </div>
                 <span className="text-xs text-gray-400 w-20 text-right">
@@ -324,17 +332,17 @@ export function RequirementsSummary() {
           {secondaryMajor && (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-purple-500" />
+                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500" />
                 <span className="text-xs text-gray-600 w-14">복수전공</span>
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
                   {secondaryMajor.planned > 0 && (
-                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-purple-300"
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-300"
                       style={{ width: `${Math.min(Math.round(((secondaryMajor.earned + secondaryMajor.planned) / secondaryMajor.required) * 100), 100)}%` }} />
                   )}
-                  <div className={`h-full relative rounded-full ${secondaryMajor.percentage >= 100 ? 'bg-green-600' : 'bg-purple-600'}`}
+                  <div className={`h-full relative rounded-full ${secondaryMajor.percentage >= 100 ? 'bg-green-600' : 'bg-blue-600'}`}
                     style={{ width: `${Math.min(secondaryMajor.percentage, 100)}%` }} />
                   {priorSecondaryMajor > 0 && (
-                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${secondaryMajor.percentage >= 100 ? 'bg-green-400' : 'bg-purple-400'}`}
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${secondaryMajor.percentage >= 100 ? 'bg-green-400' : 'bg-blue-400'}`}
                       style={{ width: `${Math.min(Math.round((priorSecondaryMajor / secondaryMajor.required) * 100), 100)}%` }} />
                   )}
                 </div>
@@ -347,13 +355,13 @@ export function RequirementsSummary() {
                 <span className="text-xs text-gray-400 w-14">핵심</span>
                 <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden relative">
                   {(secondaryMajor.requiredMin.planned ?? 0) > 0 && (
-                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-purple-200"
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-200"
                       style={{ width: `${Math.min(Math.round(((secondaryMajor.requiredMin.earned + (secondaryMajor.requiredMin.planned ?? 0)) / secondaryMajor.requiredMin.required) * 100), 100)}%` }} />
                   )}
-                  <div className={`h-full relative rounded-full ${secondaryMajor.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-purple-400'}`}
+                  <div className={`h-full relative rounded-full ${secondaryMajor.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
                     style={{ width: `${Math.min(secondaryMajor.requiredMin.percentage, 100)}%` }} />
                   {priorSecondaryMajorRequired > 0 && (
-                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${secondaryMajor.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-purple-300'}`}
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${secondaryMajor.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-blue-300'}`}
                       style={{ width: `${Math.min(Math.round((priorSecondaryMajorRequired / secondaryMajor.requiredMin.required) * 100), 100)}%` }} />
                   )}
                 </div>
@@ -368,17 +376,17 @@ export function RequirementsSummary() {
           {minor && (
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-orange-500" />
+                <div className="w-2 h-2 rounded-full flex-shrink-0 bg-blue-500" />
                 <span className="text-xs text-gray-600 w-14">부전공</span>
                 <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
                   {minor.planned > 0 && (
-                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-orange-300"
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-300"
                       style={{ width: `${Math.min(Math.round(((minor.earned + minor.planned) / minor.required) * 100), 100)}%` }} />
                   )}
-                  <div className={`h-full relative rounded-full ${minor.percentage >= 100 ? 'bg-green-600' : 'bg-orange-600'}`}
+                  <div className={`h-full relative rounded-full ${minor.percentage >= 100 ? 'bg-green-600' : 'bg-blue-600'}`}
                     style={{ width: `${Math.min(minor.percentage, 100)}%` }} />
                   {priorMinor > 0 && (
-                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${minor.percentage >= 100 ? 'bg-green-400' : 'bg-orange-400'}`}
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${minor.percentage >= 100 ? 'bg-green-400' : 'bg-blue-400'}`}
                       style={{ width: `${Math.min(Math.round((priorMinor / minor.required) * 100), 100)}%` }} />
                   )}
                 </div>
@@ -391,13 +399,13 @@ export function RequirementsSummary() {
                 <span className="text-xs text-gray-400 w-14">핵심</span>
                 <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden relative">
                   {(minor.requiredMin.planned ?? 0) > 0 && (
-                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-orange-200"
+                    <div className="h-full absolute inset-y-0 left-0 rounded-full bg-blue-200"
                       style={{ width: `${Math.min(Math.round(((minor.requiredMin.earned + (minor.requiredMin.planned ?? 0)) / minor.requiredMin.required) * 100), 100)}%` }} />
                   )}
-                  <div className={`h-full relative rounded-full ${minor.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-orange-400'}`}
+                  <div className={`h-full relative rounded-full ${minor.requiredMin.percentage >= 100 ? 'bg-green-500' : 'bg-blue-500'}`}
                     style={{ width: `${Math.min(minor.requiredMin.percentage, 100)}%` }} />
                   {priorMinorRequired > 0 && (
-                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${minor.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-orange-300'}`}
+                    <div className={`h-full absolute inset-y-0 left-0 rounded-full z-10 ${minor.requiredMin.percentage >= 100 ? 'bg-green-300' : 'bg-blue-300'}`}
                       style={{ width: `${Math.min(Math.round((priorMinorRequired / minor.requiredMin.required) * 100), 100)}%` }} />
                   )}
                 </div>

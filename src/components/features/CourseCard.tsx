@@ -55,18 +55,27 @@ const categoryColors: Record<string, string> = {
   free_elective: 'bg-gray-100 text-gray-600',
 };
 
-const statusDotColors = {
-  planned: 'bg-[#153974]/60',
-  enrolled: 'bg-green-400',
-  completed: 'bg-gray-400',
-  failed: 'bg-red-400',
+const statusPillColors = {
+  planned: 'bg-blue-100 text-blue-700',
+  enrolled: 'bg-green-100 text-green-700',
+  completed: 'bg-emerald-100 text-emerald-700',
+  failed: 'bg-red-100 text-red-700',
 };
 
-// Helper to cycle status: planned -> enrolled -> completed -> failed -> planned
+const statusPillLabels = {
+  planned: '예정',
+  enrolled: '수강중',
+  completed: '이수',
+  failed: '재수강',
+};
+
+// Module-level variable to track if hint has been shown
+let statusHintShown = false;
+
+// Helper to toggle status: planned <-> completed (2-step toggle)
 function getNextStatus(current: 'planned' | 'enrolled' | 'completed' | 'failed'): 'planned' | 'enrolled' | 'completed' | 'failed' {
-  const cycle: Array<'planned' | 'enrolled' | 'completed' | 'failed'> = ['planned', 'enrolled', 'completed', 'failed'];
-  const currentIndex = cycle.indexOf(current);
-  return cycle[(currentIndex + 1) % cycle.length];
+  // Toggle between planned and completed; any other status → completed
+  return current === 'completed' ? 'planned' : 'completed';
 }
 
 export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, compact = false, departmentLabel }: CourseCardProps) {
@@ -79,6 +88,7 @@ export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, c
 
   // Handle status click
   const handleStatusClick = (e: React.MouseEvent) => {
+    statusHintShown = true;
     e.stopPropagation();
     if (onStatusChange && courseId) {
       const nextStatus = getNextStatus(status);
@@ -88,6 +98,8 @@ export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, c
 
   // Compact mode: single-line condensed view
   if (compact) {
+    const showPulse = !statusHintShown && status === 'planned' && onStatusChange;
+
     return (
       <Card
         className={`
@@ -102,10 +114,12 @@ export function CourseCard({ course, onRemove, onStatusChange, isDragDisabled, c
             {onStatusChange && (
               <button
                 onClick={handleStatusClick}
-                className={`w-2 h-2 rounded-full flex-shrink-0 hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 transition-all ${statusDotColors[status]}`}
+                className={`px-1.5 py-0.5 rounded text-[9px] font-medium flex-shrink-0 cursor-pointer transition-all hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 ${statusPillColors[status]} ${showPulse ? 'animate-pulse ring-2 ring-blue-300/50' : ''}`}
                 aria-label={`상태 변경: ${statusLabels[status]}`}
-                title={statusLabels[status]}
-              />
+                title="클릭하여 상태 변경: 예정 ↔ 이수"
+              >
+                {statusPillLabels[status]}
+              </button>
             )}
             {course.category && categoryLabels[course.category] && (
               <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>

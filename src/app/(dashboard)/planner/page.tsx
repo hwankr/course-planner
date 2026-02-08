@@ -15,7 +15,7 @@ import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
 import { Button } from '@/components/ui';
-import type { Term, ICourse, RequirementCategory } from '@/types';
+import type { Term, ICourse, RequirementCategory, AddCourseToSemesterInput } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { graduationRequirementKeys } from '@/hooks/useGraduationRequirements';
@@ -211,6 +211,19 @@ export default function PlannerPage() {
   useEffect(() => {
     if (isGuest) return;
     if (myPlan) {
+      // Build category lookup from courses query cache (DepartmentCurriculum-enriched data)
+      const categoryMap = new Map<string, string>();
+      const allCourseQueries = queryClient.getQueriesData<ICourse[]>({ queryKey: ['courses'] });
+      for (const [, courses] of allCourseQueries) {
+        if (courses) {
+          for (const c of courses) {
+            if (c.category) {
+              categoryMap.set(c._id.toString(), c.category);
+            }
+          }
+        }
+      }
+
       // Transform API plan to store format
       const storePlan = {
         id: myPlan._id.toString(),
@@ -226,12 +239,13 @@ export default function PlannerPage() {
               credits: number;
               category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
             };
+            const courseId = course._id?.toString() || (pc.course as unknown as string);
             return {
-              id: course._id?.toString() || (pc.course as unknown as string),
+              id: courseId,
               code: course.code || 'N/A',
               name: course.name || 'Unknown Course',
               credits: course.credits || 0,
-              category: course.category as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
+              category: (pc.category || course.category || categoryMap.get(courseId)) as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
               status: pc.status,
             };
           }),
@@ -239,7 +253,7 @@ export default function PlannerPage() {
       };
       setActivePlan(storePlan);
     }
-  }, [isGuest, myPlan, setActivePlan]);
+  }, [isGuest, myPlan, setActivePlan, queryClient]);
 
   // Sync guest plan to Zustand planStore (use serialized selector to avoid infinite loop)
   useEffect(() => {
@@ -545,6 +559,7 @@ export default function PlannerPage() {
                 year: destInfo.year,
                 term: destInfo.term,
                 courseId: draggableId,
+                category: catalogCourse?.category as AddCourseToSemesterInput['category'],
               });
             }
           } catch (error) {
@@ -781,6 +796,7 @@ export default function PlannerPage() {
             year,
             term,
             courseId,
+            category: courseData.category,
           });
         }
       } catch (error) {
@@ -941,14 +957,29 @@ export default function PlannerPage() {
                 </div>
               )}
 
-{Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => (
+{(() => {
+                  let hintShown = false;
+                  return Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => {
+                    const showHint = !hintShown;
+                    if (showHint) hintShown = true;
+                    return (
                   <div key={year} className="space-y-2">
-                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                      {year}학년
-                      <span className="ml-2 text-xs font-normal text-gray-400">
-                        ({semesters.reduce((total, sem) => total + sem.courses.reduce((sum, c) => sum + c.credits, 0), 0)}학점)
-                      </span>
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+                        {year}학년
+                        <span className="ml-2 text-xs font-normal text-gray-400">
+                          ({semesters.reduce((total, sem) => total + sem.courses.reduce((sum, c) => sum + c.credits, 0), 0)}학점)
+                        </span>
+                      </h3>
+                      {showHint && (
+                        <span className="flex items-center gap-1 text-[10px]">
+                          <span className="px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700">예정</span>
+                          <span className="text-gray-400">↔</span>
+                          <span className="px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700">이수</span>
+                          <span className="text-gray-400 ml-0.5">클릭하여 변경</span>
+                        </span>
+                      )}
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {semesters.map((semester) => (
                           <div key={`${semester.year}-${semester.term}`}>
@@ -966,7 +997,9 @@ export default function PlannerPage() {
                         ))}
                     </div>
                   </div>
-                ))}
+                    );
+                  });
+                })()}
 
               {/* Add Semester Button */}
               <div className="flex justify-center py-4">

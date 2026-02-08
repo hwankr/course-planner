@@ -10,7 +10,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, LayoutGrid, List } from 'lucide-react';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
@@ -29,6 +29,27 @@ interface CourseGroup {
   totalCredits: number;
 }
 
+// Category labels and colors for list view
+const catalogCategoryLabels: Record<string, string> = {
+  major_required: '전핵',
+  major_compulsory: '전필',
+  major_elective: '전선',
+  general_required: '교필',
+  general_elective: '교선',
+  teaching: '교직',
+  free_elective: '자선',
+};
+
+const catalogCategoryColors: Record<string, string> = {
+  major_required: 'bg-red-100 text-red-700',
+  major_compulsory: 'bg-rose-100 text-rose-700',
+  major_elective: 'bg-orange-100 text-orange-700',
+  general_required: 'bg-blue-100 text-blue-700',
+  general_elective: 'bg-green-100 text-green-700',
+  teaching: 'bg-violet-100 text-violet-700',
+  free_elective: 'bg-gray-100 text-gray-600',
+};
+
 export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAddingCourse = false, isDragScrollActive = false }: CourseCatalogProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -36,6 +57,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const [semesterFilter, setSemesterFilter] = useState<Semester | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<RequirementCategory | undefined>(undefined);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
@@ -216,6 +238,22 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             <span className="text-xs text-gray-500 hidden sm:inline">
               {isLoading ? '로딩...' : `${courseCount}개`}
             </span>
+            <div className="flex items-center border rounded-md overflow-hidden">
+              <button
+                onClick={() => setViewMode('card')}
+                className={`p-1 transition-colors ${viewMode === 'card' ? 'bg-[#153974] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                aria-label="카드 뷰"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1 transition-colors ${viewMode === 'list' ? 'bg-[#153974] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                aria-label="리스트 뷰"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+            </div>
             <button
               onClick={() => setShowCustomForm(true)}
               className="px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
@@ -426,9 +464,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                         </div>
 
                         {/* Courses in vertical list within this column */}
-                        <div className="flex-1 overflow-y-auto max-h-[320px] space-y-2 pt-2">
+                        <div className={`flex-1 overflow-y-auto max-h-[320px] pt-2 ${viewMode === 'list' ? 'space-y-0.5' : 'space-y-2'}`}>
                           {group.courses.map((course) => {
-                            const courseId = course._id.toString();
+                            const courseId = String(course._id);
                             const isInPlan = planCourseIds.includes(courseId);
                             const currentIndex = globalIndex++;
 
@@ -449,45 +487,88 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                                       ...(snapshot.isDragging ? { width: '224px' } : {}),
                                     }}
                                   >
-                                    <div {...provided.dragHandleProps}>
-                                      <CourseCard
-                                        course={course}
-                                        isDragDisabled={isInPlan}
-                                        compact={false}
-                                        departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
-                                      />
-                                    </div>
-
-                                    {/* "+" button */}
-                                    {focusedSemester && !isInPlan && onClickAdd && (
-                                      <button
-                                        onClick={() => handleAddClick(course._id.toString(), {
-                                          code: course.code,
-                                          name: course.name,
-                                          credits: course.credits,
-                                          category: course.category,
-                                        })}
-                                        disabled={isAddingCourse}
-                                        className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm z-10
-                                          ${isAddingCourse ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
-                                        aria-label={`${course.name}을(를) 학기에 추가`}
-                                      >
-                                        {isAddingCourse ? '...' : '+'}
-                                      </button>
-                                    )}
-
-                                    {/* Custom badge */}
-                                    {course.createdBy && (
-                                      <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-br-md rounded-tl-md">
-                                        커스텀
+                                    {viewMode === 'list' ? (
+                                      <div {...provided.dragHandleProps} className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs">
+                                        {course.category && (
+                                          <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${catalogCategoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
+                                            {catalogCategoryLabels[course.category]}
+                                          </span>
+                                        )}
+                                        {deptFilter === 'secondary' && (
+                                          <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${majorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
+                                            {majorType === 'double' ? '복수' : '부전'}
+                                          </span>
+                                        )}
+                                        <span className="flex-1 truncate text-gray-800 font-medium">{course.name}</span>
+                                        <span className="text-[10px] text-gray-500 whitespace-nowrap">{course.credits}학점</span>
+                                        {course.createdBy && (
+                                          <span className="text-[10px] text-emerald-600 font-medium">커스텀</span>
+                                        )}
+                                        {isInPlan && (
+                                          <span className="text-[10px] text-[#153974]/60">추가됨</span>
+                                        )}
+                                        {focusedSemester && !isInPlan && onClickAdd && (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleAddClick(String(course._id), {
+                                                code: course.code,
+                                                name: course.name,
+                                                credits: course.credits,
+                                                category: course.category,
+                                              });
+                                            }}
+                                            disabled={isAddingCourse}
+                                            className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isAddingCourse ? 'bg-gray-300 text-gray-500' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
+                                            aria-label={`${course.name} 추가`}
+                                          >
+                                            +
+                                          </button>
+                                        )}
                                       </div>
-                                    )}
+                                    ) : (
+                                      <>
+                                        <div {...provided.dragHandleProps}>
+                                          <CourseCard
+                                            course={course}
+                                            isDragDisabled={isInPlan}
+                                            compact={false}
+                                            departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
+                                          />
+                                        </div>
 
-                                    {/* In Plan badge */}
-                                    {isInPlan && (
-                                      <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
-                                        추가됨
-                                      </div>
+                                        {/* "+" button */}
+                                        {focusedSemester && !isInPlan && onClickAdd && (
+                                          <button
+                                            onClick={() => handleAddClick(String(course._id), {
+                                              code: course.code,
+                                              name: course.name,
+                                              credits: course.credits,
+                                              category: course.category,
+                                            })}
+                                            disabled={isAddingCourse}
+                                            className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm z-10
+                                              ${isAddingCourse ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
+                                            aria-label={`${course.name}을(를) 학기에 추가`}
+                                          >
+                                            {isAddingCourse ? '...' : '+'}
+                                          </button>
+                                        )}
+
+                                        {/* Custom badge */}
+                                        {course.createdBy && (
+                                          <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-br-md rounded-tl-md">
+                                            커스텀
+                                          </div>
+                                        )}
+
+                                        {/* In Plan badge */}
+                                        {isInPlan && (
+                                          <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
+                                            추가됨
+                                          </div>
+                                        )}
+                                      </>
                                     )}
                                   </div>
                                 )}
@@ -509,10 +590,10 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
-                  className="flex flex-wrap gap-3"
+                  className={viewMode === 'list' ? 'space-y-0.5' : 'flex flex-wrap gap-3'}
                 >
                   {filteredCourses.map((course, index) => {
-                    const courseId = course._id.toString();
+                    const courseId = String(course._id);
                     const isInPlan = planCourseIds.includes(courseId);
 
                     return (
@@ -526,55 +607,98 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`relative w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)] ${isInPlan ? 'opacity-50' : ''}`}
+                            className={`relative ${viewMode === 'card' ? `w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)]` : ''} ${isInPlan ? 'opacity-50' : ''}`}
                             style={{
                               ...provided.draggableProps.style,
                               ...(snapshot.isDragging ? { width: '250px' } : {}),
                             }}
                           >
-                            <div {...provided.dragHandleProps}>
-                              <CourseCard
-                                course={course}
-                                isDragDisabled={isInPlan}
-                                compact={false}
-                                departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
-                              />
-                            </div>
-
-                            {/* "+" button */}
-                            {focusedSemester && !isInPlan && onClickAdd && (
-                              <button
-                                onClick={() => handleAddClick(course._id.toString(), {
-                                  code: course.code,
-                                  name: course.name,
-                                  credits: course.credits,
-                                  category: course.category,
-                                })}
-                                disabled={isAddingCourse}
-                                className={`absolute top-2 right-2 w-6 h-6 rounded-full
-                                           flex items-center justify-center text-sm font-bold
-                                           transition-colors shadow-sm z-10
-                                           ${isAddingCourse
-                                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                             : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
-                                aria-label={`${course.name}을(를) 학기에 추가`}
-                              >
-                                {isAddingCourse ? '...' : '+'}
-                              </button>
-                            )}
-
-                            {/* Custom badge */}
-                            {course.createdBy && (
-                              <div className="absolute top-0 left-0 bg-emerald-500 text-white text-xs px-2 py-1 rounded-br-md rounded-tl-md">
-                                커스텀
+                            {viewMode === 'list' ? (
+                              <div {...provided.dragHandleProps} className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs">
+                                {course.category && (
+                                  <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${catalogCategoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
+                                    {catalogCategoryLabels[course.category]}
+                                  </span>
+                                )}
+                                {deptFilter === 'secondary' && (
+                                  <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${majorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
+                                    {majorType === 'double' ? '복수' : '부전'}
+                                  </span>
+                                )}
+                                <span className="flex-1 truncate text-gray-800 font-medium">{course.name}</span>
+                                <span className="text-[10px] text-gray-500 whitespace-nowrap">{course.credits}학점</span>
+                                {course.createdBy && (
+                                  <span className="text-[10px] text-emerald-600 font-medium">커스텀</span>
+                                )}
+                                {isInPlan && (
+                                  <span className="text-[10px] text-[#153974]/60">추가됨</span>
+                                )}
+                                {focusedSemester && !isInPlan && onClickAdd && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleAddClick(String(course._id), {
+                                        code: course.code,
+                                        name: course.name,
+                                        credits: course.credits,
+                                        category: course.category,
+                                      });
+                                    }}
+                                    disabled={isAddingCourse}
+                                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isAddingCourse ? 'bg-gray-300 text-gray-500' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
+                                    aria-label={`${course.name} 추가`}
+                                  >
+                                    +
+                                  </button>
+                                )}
                               </div>
-                            )}
+                            ) : (
+                              <>
+                                <div {...provided.dragHandleProps}>
+                                  <CourseCard
+                                    course={course}
+                                    isDragDisabled={isInPlan}
+                                    compact={false}
+                                    departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
+                                  />
+                                </div>
 
-                            {/* In Plan badge */}
-                            {isInPlan && (
-                              <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-xs px-2 py-1 rounded-bl-md rounded-tr-md">
-                                추가됨
-                              </div>
+                                {/* "+" button */}
+                                {focusedSemester && !isInPlan && onClickAdd && (
+                                  <button
+                                    onClick={() => handleAddClick(String(course._id), {
+                                      code: course.code,
+                                      name: course.name,
+                                      credits: course.credits,
+                                      category: course.category,
+                                    })}
+                                    disabled={isAddingCourse}
+                                    className={`absolute top-2 right-2 w-6 h-6 rounded-full
+                                               flex items-center justify-center text-sm font-bold
+                                               transition-colors shadow-sm z-10
+                                               ${isAddingCourse
+                                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                                 : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
+                                    aria-label={`${course.name}을(를) 학기에 추가`}
+                                  >
+                                    {isAddingCourse ? '...' : '+'}
+                                  </button>
+                                )}
+
+                                {/* Custom badge */}
+                                {course.createdBy && (
+                                  <div className="absolute top-0 left-0 bg-emerald-500 text-white text-xs px-2 py-1 rounded-br-md rounded-tl-md">
+                                    커스텀
+                                  </div>
+                                )}
+
+                                {/* In Plan badge */}
+                                {isInPlan && (
+                                  <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-xs px-2 py-1 rounded-bl-md rounded-tr-md">
+                                    추가됨
+                                  </div>
+                                )}
+                              </>
                             )}
                           </div>
                         )}

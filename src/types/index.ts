@@ -99,6 +99,7 @@ export interface PlannedCourse {
   course: Types.ObjectId;
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
   grade?: string;
+  category?: RequirementCategory; // Stored from DepartmentCurriculum
 }
 
 export interface SemesterPlan {
@@ -121,6 +122,7 @@ export interface AddCourseToSemesterInput {
   year: number;
   term: Term;
   courseId: string;
+  category?: RequirementCategory;
 }
 
 // ============================================

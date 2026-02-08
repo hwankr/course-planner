@@ -5,7 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
-import { Plan, Course } from '@/models';
+import { Plan, Course, DepartmentCurriculum } from '@/models';
 import type { IPlanDocument } from '@/models';
 import type { AddCourseToSemesterInput, Term } from '@/types';
 
@@ -135,7 +135,7 @@ async function addCourseToSemester(
 ): Promise<IPlanDocument | null> {
   await connectDB();
 
-  const { planId, year, term, courseId } = input;
+  const { planId, year, term, courseId, category } = input;
 
   // 과목 존재 확인
   const course = await Course.findById(courseId);
@@ -175,9 +175,19 @@ async function addCourseToSemester(
       throw new Error('한 학기에 최대 10개 과목까지 추가할 수 있습니다.');
     }
 
+    // Determine category: use provided value, fall back to DepartmentCurriculum lookup, then Course.category
+    let resolvedCategory = category;
+    if (!resolvedCategory) {
+      const currEntry = await DepartmentCurriculum.findOne({ course: courseId })
+        .select('category')
+        .lean<{ category: string }>();
+      resolvedCategory = (currEntry?.category || course.category) as typeof category;
+    }
+
     semester.courses.push({
       course: course._id,
       status: 'planned',
+      category: resolvedCategory,
     });
 
     await plan.save();

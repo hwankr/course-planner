@@ -64,12 +64,12 @@ async function resetPlan(id: string): Promise<IPlan> {
 }
 
 async function addCourseToPlan(params: AddCourseToSemesterInput): Promise<IPlan> {
-  const { planId, year, term, courseId } = params;
+  const { planId, year, term, courseId, category } = params;
 
   const response = await fetch(`/api/plans/${planId}/courses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ year, term, courseId }),
+    body: JSON.stringify({ year, term, courseId, category }),
   });
 
   const result: ApiResponse<IPlan> = await response.json();
@@ -265,8 +265,7 @@ export function useAddCourse() {
   const apiMutation = useMutation({
     mutationFn: addCourseToPlan,
     onSuccess: (data) => {
-      queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
@@ -302,8 +301,7 @@ export function useRemoveCourse() {
   const apiMutation = useMutation({
     mutationFn: removeCourseFromPlan,
     onSuccess: (data) => {
-      queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
@@ -333,8 +331,7 @@ export function useMoveCourse() {
   const apiMutation = useMutation({
     mutationFn: moveCourseBetweenSemesters,
     onSuccess: (data) => {
-      queryClient.setQueryData(planKeys.detail(data._id.toString()), data);
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
@@ -379,11 +376,11 @@ export function useAddSemester() {
         const error = await res.json();
         throw new Error(error.error || 'Failed to add semester');
       }
-      return res.json();
+      const result = await res.json();
+      return result.data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+    onSuccess: (data) => {
+      if (data) queryClient.setQueryData(planKeys.detail('my'), data);
     },
   });
 
@@ -419,11 +416,11 @@ export function useRemoveSemester() {
         const error = await res.json();
         throw new Error(error.error || 'Failed to remove semester');
       }
-      return res.json();
+      const result = await res.json();
+      return result.data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+    onSuccess: (data) => {
+      if (data) queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });
@@ -460,11 +457,11 @@ export function useClearSemester() {
         const error = await res.json();
         throw new Error(error.error || 'Failed to clear semester');
       }
-      return res.json();
+      const result = await res.json();
+      return result.data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+    onSuccess: (data) => {
+      if (data) queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
     },
   });

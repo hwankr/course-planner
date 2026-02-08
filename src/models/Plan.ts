@@ -24,6 +24,10 @@ const plannedCourseSchema = new Schema(
     grade: {
       type: String,
     },
+    category: {
+      type: String,
+      enum: ['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'free_elective', 'teaching'],
+    },
   },
   { _id: false }
 );
