@@ -10,6 +10,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { HelpCircle } from 'lucide-react';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
@@ -56,6 +57,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
     ? guestSecondaryDepartmentName
     : departments.find(d => d._id === secondaryDepartment)?.name;
   const [showCustomForm, setShowCustomForm] = useState(false);
+  const [showCurriculumInfo, setShowCurriculumInfo] = useState(false);
 
   // Debounce search term
   useEffect(() => {
@@ -186,13 +188,29 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="text-base font-semibold text-gray-900">과목 리스트</h2>
-            <p className="text-xs text-gray-400 truncate">
-              {activeDepartment
-                ? (deptFilter === 'secondary' && secondaryDepartment
-                  ? `${majorType === 'double' ? '복수전공' : '부전공'}: ${secondaryDepartmentName || '학과'} 커리큘럼`
-                  : `${primaryDepartmentName || '내 학과'} 커리큘럼`)
-                : '학과를 설정하면 커리큘럼이 표시됩니다'}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs text-gray-400 truncate">
+                {activeDepartment
+                  ? (deptFilter === 'secondary' && secondaryDepartment
+                    ? `${majorType === 'double' ? '복수전공' : '부전공'}: ${secondaryDepartmentName || '학과'} 커리큘럼`
+                    : `${primaryDepartmentName || '내 학과'} 커리큘럼`)
+                  : '학과를 설정하면 커리큘럼이 표시됩니다'}
+              </p>
+              {activeDepartment && (
+                <button
+                  onClick={() => setShowCurriculumInfo(!showCurriculumInfo)}
+                  className="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors"
+                  aria-label="커리큘럼 안내"
+                >
+                  <HelpCircle className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            {showCurriculumInfo && (
+              <p className="text-[11px] text-amber-600 bg-amber-50 rounded px-2 py-1 mt-1">
+                본 커리큘럼은 2025년 기준이며, 실제와 누락·차이가 있을 수 있습니다.
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <span className="text-xs text-gray-500 hidden sm:inline">
