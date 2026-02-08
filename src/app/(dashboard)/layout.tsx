@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button, Toast } from '@/components/ui';
@@ -15,10 +16,12 @@ import {
   Menu,
   X,
   AlertTriangle,
+  BarChart3,
 } from 'lucide-react';
 
 const navigation = [
   { name: '수강 계획', href: '/planner', icon: Calendar },
+  { name: '학과 통계', href: '/statistics', icon: BarChart3 },
   { name: '프로필', href: '/profile', icon: User },
 ];
 
@@ -29,7 +32,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, logout, isAdmin, isGuest } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const visibleNavigation = navigation;
+  const visibleNavigation = isGuest
+    ? navigation.filter((item) => item.href !== '/statistics')
+    : navigation;
 
   return (
     <div className="min-h-screen bg-gray-50 bg-grid">
@@ -40,10 +45,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-8">
-              <Link href="/planner" className="flex items-center gap-2">
-                <img src="/yu-logo.svg" alt="영남대학교" className="h-6" />
-                <span className="text-xl font-bold text-gradient">YU 수강 플래너</span>
+            <div className="flex items-center gap-3 md:gap-8 min-w-0">
+              <Link href="/planner" className="flex items-center gap-2 min-w-0">
+                <Image src="/yu-logo.svg" alt="영남대학교" className="h-5 md:h-6 shrink-0" width={60} height={24} style={{ width: 'auto' }} />
+                <span className="text-base md:text-xl font-bold text-gradient truncate">YU 수강 플래너</span>
               </Link>
               <nav className="hidden md:flex gap-1">
                 {visibleNavigation.map((item) => {
@@ -165,10 +170,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Guest Warning Banner */}
       {isGuest && (
         <div className="bg-amber-50 border-b border-amber-200">
-          <div className="container mx-auto px-4 py-2 flex items-center justify-between">
+          <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-800" />
-              <p className="text-sm text-amber-800">
+              <p className="text-xs sm:text-sm text-amber-800">
                 비회원 모드입니다. 데이터가 이 브라우저에만 저장됩니다.
               </p>
             </div>

@@ -17,7 +17,6 @@ import {
   Star,
   Pencil,
   X,
-  UserX,
   Chrome,
   Trash2,
   Check,
@@ -255,7 +254,7 @@ export default function ProfilePage() {
         </Card>
 
         {/* Major Type Settings - Guest */}
-        <Card className="animate-fade-in-up anim-delay-50">
+        <Card className="animate-fade-in-up anim-delay-50 relative z-[5]">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Building2 className="w-5 h-5 text-gray-600" />
@@ -393,7 +392,7 @@ export default function ProfilePage() {
           <h2 className="text-xl font-bold text-gray-900">
             {userProfile?.name || session?.user?.name || '사용자'}
           </h2>
-          <div className="flex items-center justify-center gap-2 mt-2">
+          <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
             {departmentName && (
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#153974]/10 text-[#153974] text-xs font-medium">
                 <Building2 className="w-3 h-3" />
@@ -422,7 +421,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Basic Info */}
-      <Card className="animate-fade-in-up">
+      <Card className="animate-fade-in-up relative z-10">
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
             <User className="w-5 h-5 text-gray-600" />
@@ -541,7 +540,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Major Type Settings - Authenticated */}
-      <Card className="animate-fade-in-up anim-delay-50">
+      <Card className="animate-fade-in-up anim-delay-50 relative z-[5]">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Building2 className="w-5 h-5 text-gray-600" />
