@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "help:screenshots": "node scripts/capture-help-screenshots.mjs",
     "seed": "tsx scripts/seed.ts",
     "seed:dept-req": "tsx scripts/seed-department-requirements.ts",
     "seed:sync-dept": "tsx scripts/sync-departments.ts"
@@ -39,6 +40,7 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "playwright": "^1.58.2",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

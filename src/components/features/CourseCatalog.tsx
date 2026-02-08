@@ -9,6 +9,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import ContextualTip from '@/components/features/ContextualTip';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
@@ -187,12 +188,14 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             <span className="text-xs text-gray-500 hidden sm:inline">
               {isLoading ? '로딩...' : `${courseCount}개`}
             </span>
-            <button
-              onClick={() => setShowCustomForm(true)}
-              className="px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
-            >
-              + 추가
-            </button>
+            <ContextualTip tipId="tip-custom-course" content="학교 커리큘럼에 없는 과목을 직접 추가할 수 있습니다." position="bottom">
+              <button
+                onClick={() => setShowCustomForm(true)}
+                className="px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+              >
+                + 추가
+              </button>
+            </ContextualTip>
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="p-1 hover:bg-gray-100 rounded transition-colors"

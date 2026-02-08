@@ -25,9 +25,10 @@ interface SemesterColumnProps {
   onFocus?: () => void;
   compact?: boolean;
   onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void;
+  'data-tour'?: string;
 }
 
-export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, isFocused = false, onFocus, compact = false, onStatusChange }: SemesterColumnProps) {
+export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, isFocused = false, onFocus, compact = false, onStatusChange, 'data-tour': dataTour }: SemesterColumnProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const MAX_VISIBLE = 4;
   const visibleCourses = compact && !isExpanded
@@ -60,7 +61,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
   })();
 
   return (
-    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''}`}>
+    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''}`} data-tour={dataTour}>
       {/* Header */}
       <div
         className={`${compact ? 'p-2' : 'p-4'} border-b cursor-pointer transition-colors ${isFocused ? 'bg-[#153974]/5' : 'bg-gray-50'}`}

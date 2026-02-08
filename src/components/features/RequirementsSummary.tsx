@@ -9,6 +9,7 @@ import {
 } from '@/hooks/useGraduationRequirements';
 import { RequirementForm } from '@/components/features/RequirementForm';
 import { Card, CardContent, Button } from '@/components/ui';
+import ContextualTip from '@/components/features/ContextualTip';
 
 export function RequirementsSummary() {
   const [isEditing, setIsEditing] = useState(false);
@@ -431,15 +432,17 @@ export function RequirementsSummary() {
 
           {/* Edit button */}
           <div className="pt-3 flex justify-end border-t mt-1">
-            <button
-              onClick={() => setIsEditing(true)}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#153974] bg-[#153974]/10 hover:bg-[#153974]/20 rounded-md transition-colors"
-            >
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              요건 수정
-            </button>
+            <ContextualTip tipId="tip-edit-requirements" content="졸업 요건이 변경되었다면 여기서 수정할 수 있습니다." position="left">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#153974] bg-[#153974]/10 hover:bg-[#153974]/20 rounded-md transition-colors"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                요건 수정
+              </button>
+            </ContextualTip>
           </div>
         </div>
       </CardContent>
