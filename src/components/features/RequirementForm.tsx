@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { HelpCircle } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 
 interface RequirementFormData {
@@ -201,6 +203,20 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5 p-4 bg-gray-50 rounded-lg border">
+      {/* 안내 링크 */}
+      <div className="flex items-center gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
+        <HelpCircle className="w-3.5 h-3.5 text-[#00AACA] flex-shrink-0" />
+        <span>
+          졸업 기준과 취득 학점을 잘 모르시나요?{' '}
+          <Link
+            href="/help/graduation-guide"
+            className="text-[#00AACA] hover:text-[#153974] underline"
+          >
+            확인 방법 보기
+          </Link>
+        </span>
+      </div>
+
       {/* 전공 유형 */}
       <div className="space-y-3">
         <p className="text-sm font-semibold text-gray-800 border-b pb-2">전공 유형</p>

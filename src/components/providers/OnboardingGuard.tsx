@@ -32,6 +32,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
   const isGuestMode = isGuest || isGuestFromStorage();
 
   const isOnboardingPage = pathname === '/onboarding';
+  const isHelpPage = pathname.startsWith('/help');
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
   const onboardingCompleted = session?.user?.onboardingCompleted === true;
@@ -52,7 +53,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
 
     // Guest mode routing
     if (isGuestMode) {
-      if (!guestOnboarded && !isOnboardingPage) {
+      if (!guestOnboarded && !isOnboardingPage && !isHelpPage) {
         // Guest needs onboarding -> redirect
         router.replace('/onboarding');
         return;
@@ -77,8 +78,8 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
     // On onboarding page and not yet onboarded -> allow (prevent redirect loop)
     if (isOnboardingPage && !onboardingCompleted) return;
 
-    // Not onboarded -> redirect to onboarding
-    if (!onboardingCompleted) {
+    // Not onboarded -> redirect to onboarding (but allow help pages)
+    if (!onboardingCompleted && !isHelpPage) {
       router.replace('/onboarding');
       return;
     }
@@ -88,7 +89,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
       router.replace('/planner');
       return;
     }
-  }, [guestHydrated, guestProfileHydrated, isGuestMode, guestOnboarded, isLoading, isAuthenticated, onboardingCompleted, isOnboardingPage, router, exitGuestMode]);
+  }, [guestHydrated, guestProfileHydrated, isGuestMode, guestOnboarded, isLoading, isAuthenticated, onboardingCompleted, isOnboardingPage, isHelpPage, router, exitGuestMode]);
 
   // Rule 1: Stores still hydrating -> spinner
   if (!guestHydrated || (isGuestMode && !guestProfileHydrated)) {
@@ -101,8 +102,8 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
 
   // Rule 2: Guest mode
   if (isGuestMode) {
-    // Guest not onboarded and on onboarding page -> allow
-    if (!guestOnboarded && isOnboardingPage) return <>{children}</>;
+    // Guest not onboarded and on onboarding or help page -> allow
+    if (!guestOnboarded && (isOnboardingPage || isHelpPage)) return <>{children}</>;
     // Guest not onboarded -> show nothing (useEffect handles redirect)
     if (!guestOnboarded) return null;
     // Guest onboarded and on onboarding page -> show nothing (useEffect handles redirect)
@@ -123,8 +124,8 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
   // Rule 4: Not authenticated -> show nothing (useEffect handles redirect)
   if (!isAuthenticated) return null;
 
-  // Rule 5: On onboarding page and not yet onboarded -> allow
-  if (isOnboardingPage && !onboardingCompleted) return <>{children}</>;
+  // Rule 5: On onboarding or help page and not yet onboarded -> allow
+  if ((isOnboardingPage || isHelpPage) && !onboardingCompleted) return <>{children}</>;
 
   // Rule 6: Not onboarded -> show nothing (useEffect handles redirect)
   if (!onboardingCompleted) return null;

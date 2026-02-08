@@ -17,12 +17,14 @@ import {
   X,
   AlertTriangle,
   BarChart3,
+  HelpCircle,
 } from 'lucide-react';
 
 const navigation = [
   { name: '수강 계획', href: '/planner', icon: Calendar },
   { name: '학과 통계', href: '/statistics', icon: BarChart3 },
   { name: '프로필', href: '/profile', icon: User },
+  { name: '도움말', href: '/help', icon: HelpCircle },
 ];
 
 const adminNavigation = [{ name: '관리자', href: '/admin', icon: Shield }];
@@ -59,7 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={item.href}
                       className={cn(
                         'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap',
-                        pathname === item.href
+                        (item.href === '/help' ? pathname.startsWith('/help') : pathname === item.href)
                           ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       )}
@@ -132,7 +134,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     onClick={() => setMobileMenuOpen(false)}
                     className={cn(
                       'px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
-                      pathname === item.href
+                      (item.href === '/help' ? pathname.startsWith('/help') : pathname === item.href)
                         ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}

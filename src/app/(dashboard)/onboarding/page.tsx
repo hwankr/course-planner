@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
 import { useDepartments, useCompleteOnboarding } from '@/hooks/useOnboarding';
 import {
@@ -14,7 +15,7 @@ import {
   ArrowRight,
   ArrowLeft,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
@@ -435,6 +436,15 @@ export default function OnboardingPage() {
                 <GraduationCap className="w-5 h-5 text-emerald-600" />
                 <CardTitle>졸업 요건 설정</CardTitle>
               </div>
+              <p className="text-xs text-gray-500 mt-1">
+                졸업 기준과 취득 학점을 잘 모르시나요?{' '}
+                <Link
+                  href="/help/graduation-guide"
+                  className="text-[#00AACA] hover:text-[#153974] underline"
+                >
+                  확인 방법 보기
+                </Link>
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Warning banner for multi-major */}
