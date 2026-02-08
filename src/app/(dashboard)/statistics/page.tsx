@@ -113,10 +113,17 @@ export default function StatisticsPage() {
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto p-8 text-center">
           <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">아직 충분한 데이터가 없습니다</h2>
-          <p className="text-gray-600">
-            더 많은 학생들이 수강 계획을 작성하면 통계가 표시됩니다.
+          <h2 className="text-2xl font-bold mb-2">통계 데이터를 찾을 수 없습니다</h2>
+          <p className="text-gray-600 mb-4">
+            설정된 학과 정보를 확인할 수 없습니다. 프로필에서 학과를 다시 설정해주세요.
           </p>
+          <Link
+            href="/profile"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg hover:opacity-90 transition-opacity"
+          >
+            프로필 설정하기
+            <ChevronRight className="w-5 h-5" />
+          </Link>
         </Card>
       </div>
     );
@@ -147,8 +154,23 @@ export default function StatisticsPage() {
         </div>
       </div>
 
+      {/* Data Scope Info Banner */}
+      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-[#3069B3] mt-0.5 flex-shrink-0" />
+          <div className="text-sm text-gray-700 space-y-1">
+            <p className="font-medium text-gray-900">이 페이지는 어떤 데이터를 보여주나요?</p>
+            <p>
+              <strong>{stats.departmentName}</strong> 소속 학생들이 작성한 수강 계획을 분석한 결과입니다.
+              직접 추가한 과목(커스텀 과목)은 통계에서 제외되며, 공식 교과목만 집계됩니다.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Category Filter Tabs */}
       <Card className="mb-6 p-4">
+        <p className="text-sm text-gray-500 mb-3">이수구분별로 인기 과목을 필터링할 수 있습니다</p>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => setSelectedCategory('all')}
@@ -183,11 +205,21 @@ export default function StatisticsPage() {
             <BookOpen className="w-5 h-5 text-[#3069B3]" />
             인기 과목 순위
           </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {stats.totalStudents}명 중 해당 과목을 계획에 포함한 학생 비율 순으로 정렬됩니다
+          </p>
         </div>
         <div className="divide-y">
           {filteredCourses.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              해당 카테고리에 과목이 없습니다.
+              {stats.courseStats.length === 0 ? (
+                <>
+                  <p className="font-medium mb-1">아직 수강 계획 데이터가 없습니다</p>
+                  <p className="text-sm">학과 학생들이 수강 계획을 작성하면 이곳에 인기 과목이 표시됩니다</p>
+                </>
+              ) : (
+                '해당 카테고리에 과목이 없습니다.'
+              )}
             </div>
           ) : (
             filteredCourses.map((course, index) => (
@@ -256,6 +288,9 @@ export default function StatisticsPage() {
             <BarChart3 className="w-5 h-5 text-[#3069B3]" />
             학기별 평균 수강 현황
           </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            같은 학과 학생들의 학기별 평균 수강 과목 수와 학점입니다
+          </p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -310,6 +345,13 @@ export default function StatisticsPage() {
                 })}
               </div>
 
+              {plansData && plansData.plans.length > 0 && (
+                <p className="text-xs text-gray-400 mt-4 flex items-center gap-1">
+                  <Info className="w-3.5 h-3.5" />
+                  모든 계획은 익명으로 표시됩니다
+                </p>
+              )}
+
               {plansData && plansData.total > plansPage * plansData.limit && (
                 <div className="text-center">
                   <button
@@ -334,7 +376,8 @@ export default function StatisticsPage() {
 
               {plansData?.plans.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
-                  아직 공개된 수강 계획이 없습니다.
+                  <p className="font-medium mb-1">아직 공개된 수강 계획이 없습니다</p>
+                  <p className="text-sm">학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다</p>
                 </div>
               )}
             </>

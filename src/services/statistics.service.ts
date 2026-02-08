@@ -20,8 +20,6 @@ const STATS_TTL = 10 * 60 * 1000;  // 10 minutes
 const PLANS_TTL = 10 * 60 * 1000;  // 10 minutes
 const DETAIL_TTL = 30 * 60 * 1000; // 30 minutes
 
-const MIN_STUDENTS_THRESHOLD = 5;
-
 interface PlansCache {
   plans: AnonymousPlanSummary[];
   idMapping: Map<string, string>;  // anonymousId -> planObjectId
@@ -49,12 +47,7 @@ async function getDepartmentCourseStats(
   ).lean();
   const userIds = users.map((u) => u._id);
 
-  // 2. Minimum threshold check
-  if (userIds.length < MIN_STUDENTS_THRESHOLD) {
-    return null;
-  }
-
-  // 3. Get department info
+  // 2. Get department info
   const department = await Department.findById(departmentId).lean();
   if (!department) return null;
 
@@ -190,9 +183,7 @@ async function getAnonymousPlans(
       { department: departmentId },
       { _id: 1 }
     ).lean();
-    const userIds = users
-      .map((u) => u._id)
-      .filter((id) => id.toString() !== excludeUserId);
+    const userIds = users.map((u) => u._id);
 
     // Get plans with populated courses (only official courses)
     const plans = await Plan.find({ user: { $in: userIds } })
