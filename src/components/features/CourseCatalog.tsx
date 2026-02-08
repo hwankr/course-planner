@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useSession } from 'next-auth/react';
 import { useCourses } from '@/hooks/useCourses';
+import { useDepartments } from '@/hooks/useOnboarding';
 import { Input } from '@/components/ui/Input';
 import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
@@ -44,6 +45,16 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const majorType = (isGuest ? guestMajorType : session?.user?.majorType) || 'single';
   const [deptFilter, setDeptFilter] = useState<'primary' | 'secondary'>('primary');
   const activeDepartment = (deptFilter === 'secondary' && secondaryDepartment) ? secondaryDepartment : userDepartment;
+  // Resolve department names for display
+  const { data: departments = [] } = useDepartments();
+  const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
+  const guestSecondaryDepartmentName = useGuestProfileStore((s) => s.secondaryDepartmentName);
+  const primaryDepartmentName = isGuest
+    ? guestDepartmentName
+    : departments.find(d => d._id === userDepartment)?.name;
+  const secondaryDepartmentName = isGuest
+    ? guestSecondaryDepartmentName
+    : departments.find(d => d._id === secondaryDepartment)?.name;
   const [showCustomForm, setShowCustomForm] = useState(false);
 
   // Debounce search term
@@ -178,8 +189,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             <p className="text-xs text-gray-400 truncate">
               {activeDepartment
                 ? (deptFilter === 'secondary' && secondaryDepartment
-                  ? (majorType === 'double' ? '복수전공 학과 커리큘럼' : '부전공 학과 커리큘럼')
-                  : '내 학과 커리큘럼')
+                  ? `${majorType === 'double' ? '복수전공' : '부전공'}: ${secondaryDepartmentName || '학과'} 커리큘럼`
+                  : `${primaryDepartmentName || '내 학과'} 커리큘럼`)
                 : '학과를 설정하면 커리큘럼이 표시됩니다'}
             </p>
           </div>
