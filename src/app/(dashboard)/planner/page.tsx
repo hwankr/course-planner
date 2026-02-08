@@ -14,8 +14,6 @@ import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
-import GuideTour from '@/components/features/GuideTour';
-import { useGuideStore } from '@/stores/guideStore';
 import { Button } from '@/components/ui';
 import type { Term, ICourse, RequirementCategory } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
@@ -67,9 +65,6 @@ export default function PlannerPage() {
 
   // Preview store
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
-
-  // Guide store
-  const { tourCompleted, tourDismissed, startTour } = useGuideStore();
 
   // Auto-scroll to semester grid on mobile drag
   const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef, isDragScrollActive } = useAutoScrollOnDrag(semesterGridRef);
@@ -280,16 +275,6 @@ export default function PlannerPage() {
       }
     }
   }, [activePlan, focusedSemester, setFocusedSemester]);
-
-  // Auto-start guide tour for first-time users
-  useEffect(() => {
-    if (!tourCompleted && !tourDismissed && activePlan && !planLoading) {
-      const timer = setTimeout(() => {
-        startTour();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [tourCompleted, tourDismissed, activePlan, planLoading, startTour]);
 
   // Compute all course IDs currently in the plan
   const planCourseIds = useMemo(() => {
@@ -876,12 +861,12 @@ export default function PlannerPage() {
         >
           <div className="space-y-6">
             {/* Requirements Summary Widget */}
-            <div ref={requirementsSummaryRef} data-tour="requirements-summary">
+            <div ref={requirementsSummaryRef}>
               <RequirementsSummary />
             </div>
 
             {/* Course Catalog - Full Width Top Row */}
-            <div ref={courseCatalogRef} style={{ scrollMarginTop: '72px' }} data-tour="course-catalog">
+            <div ref={courseCatalogRef} style={{ scrollMarginTop: '72px' }}>
               <CourseCatalog
                 planCourseIds={planCourseIds}
                 onClickAdd={handleClickAdd}
@@ -912,9 +897,7 @@ export default function PlannerPage() {
                 </div>
               )}
 
-{(() => {
-                let isFirstSemester = true;
-                return Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => (
+{Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => (
                   <div key={year} className="space-y-2">
                     <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
                       {year}학년
@@ -923,11 +906,8 @@ export default function PlannerPage() {
                       </span>
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {semesters.map((semester) => {
-                        const isFirst = isFirstSemester;
-                        if (isFirstSemester) isFirstSemester = false;
-                        return (
-                          <div key={`${semester.year}-${semester.term}`} {...(isFirst ? { 'data-tour': 'semester-column' } : {})}>
+                      {semesters.map((semester) => (
+                          <div key={`${semester.year}-${semester.term}`}>
                             <SemesterColumn
                               semester={semester}
                               compact={true}
@@ -939,15 +919,13 @@ export default function PlannerPage() {
                               onStatusChange={handleStatusChange}
                             />
                           </div>
-                        );
-                      })}
+                        ))}
                     </div>
                   </div>
-                ));
-              })()}
+                ))}
 
               {/* Add Semester Button */}
-              <div className="flex justify-center py-4" data-tour="add-semester">
+              <div className="flex justify-center py-4">
                 <Button
                   variant="ghost"
                   onClick={handleAddSemester}
@@ -984,8 +962,6 @@ export default function PlannerPage() {
         />
       )}
 
-      {/* Guide Tour */}
-      <GuideTour />
     </div>
   );
 }
