@@ -18,6 +18,10 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* ============================================
    KEYFRAME ANIMATIONS
    ============================================ */
@@ -271,4 +275,133 @@ body {
 .card-hover:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* ============================================
+   SCROLL-TRIGGERED ANIMATIONS
+   ============================================ */
+
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-on-scroll.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================
+   SCROLL STAGGER DELAYS (transition-delay)
+
+   IMPORTANT: These use `transition-delay`, NOT
+   `animation-delay`. The existing `anim-delay-*`
+   classes set `animation-delay` which does NOT
+   affect CSS transitions. Use these `scroll-delay-*`
+   classes exclusively with `.animate-on-scroll`.
+   ============================================ */
+
+.scroll-delay-0 {
+  transition-delay: 0ms;
+}
+
+.scroll-delay-100 {
+  transition-delay: 100ms;
+}
+
+.scroll-delay-150 {
+  transition-delay: 150ms;
+}
+
+.scroll-delay-200 {
+  transition-delay: 200ms;
+}
+
+.scroll-delay-300 {
+  transition-delay: 300ms;
+}
+
+.scroll-delay-400 {
+  transition-delay: 400ms;
+}
+
+.scroll-delay-450 {
+  transition-delay: 450ms;
+}
+
+.scroll-delay-500 {
+  transition-delay: 500ms;
+}
+
+/* ============================================
+   GRADIENT BORDER EFFECT
+   ============================================ */
+
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #153974, #3069B3, #00AACA);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================
+   GLOW SHADOW
+   ============================================ */
+
+.shadow-glow {
+  box-shadow: 0 4px 24px rgba(21, 57, 116, 0.2), 0 0 48px rgba(0, 170, 202, 0.08);
+}
+
+/* ============================================
+   SECTION DECORATIVE LINE
+   ============================================ */
+
+.section-line {
+  width: 40px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #153974, #00AACA);
+  margin: 0 auto;
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-fade-in-up,
+  .animate-fade-in-down,
+  .animate-slide-in-left,
+  .animate-slide-in-right,
+  .animate-slide-up,
+  .animate-slide-down,
+  .animate-float,
+  .animate-scale-in,
+  .animate-gradient,
+  .animate-shimmer,
+  .animate-bounce-soft,
+  .animate-pulse-soft {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .animate-on-scroll {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
 }
