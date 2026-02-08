@@ -14,7 +14,6 @@ import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
-import { FloatingGradSummary } from '@/components/features/FloatingGradSummary';
 import { Button } from '@/components/ui';
 import type { Term, ICourse, RequirementCategory } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
@@ -37,6 +36,8 @@ export default function PlannerPage() {
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
   const semesterGridRef = useRef<HTMLDivElement>(null);
+  const courseCatalogRef = useRef<HTMLDivElement>(null);
+  const scrollBackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Guest plan store - use serialized selector for stable reference
   const guestActivePlanJson = useGuestPlanStore((s) => {
@@ -66,7 +67,7 @@ export default function PlannerPage() {
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
 
   // Auto-scroll to semester grid on mobile drag
-  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActive } = useAutoScrollOnDrag(semesterGridRef);
+  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef, isDragScrollActive } = useAutoScrollOnDrag(semesterGridRef);
 
   // Helper: get graduation requirement imperatively (for toast delta calculation)
   const getRequirementImperative = useCallback((): GraduationRequirementInput | null => {
@@ -254,6 +255,15 @@ export default function PlannerPage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setFocusedSemester]);
 
+  // Cleanup scroll-back timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollBackTimeoutRef.current) {
+        clearTimeout(scrollBackTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Clear focus if focused semester no longer exists
   useEffect(() => {
     if (focusedSemester && activePlan) {
@@ -330,6 +340,11 @@ export default function PlannerPage() {
 
   // Handle drag start - set preview for remove action
   const handleDragStart = useCallback((start: DragStart) => {
+    // Clear pending scroll-back on new drag
+    if (scrollBackTimeoutRef.current) {
+      clearTimeout(scrollBackTimeoutRef.current);
+      scrollBackTimeoutRef.current = null;
+    }
     handleDragStartScroll(start.source);
     const { source, draggableId } = start;
     const sourceInfo = parseSemesterId(source.droppableId);
@@ -435,6 +450,7 @@ export default function PlannerPage() {
   // Handle drag end
   const handleDragEnd = useCallback(
     (result: DropResult) => {
+      const wasDragScrollActive = isDragScrollActiveRef.current;
       handleDragEndRestore();
       const { source, destination, draggableId } = result;
 
@@ -521,6 +537,13 @@ export default function PlannerPage() {
             console.error('Failed to add course:', error);
           }
         })();
+        // Auto-scroll back to catalog on touch devices after successful placement
+        if (wasDragScrollActive && courseCatalogRef.current) {
+          scrollBackTimeoutRef.current = setTimeout(() => {
+            courseCatalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            scrollBackTimeoutRef.current = null;
+          }, 300);
+        }
         return;
       }
 
@@ -837,22 +860,21 @@ export default function PlannerPage() {
           onDragEnd={handleDragEnd}
         >
           <div className="space-y-6">
-            {/* Floating Mini Graduation Summary (visible when main summary scrolls out) */}
-            <FloatingGradSummary requirementsSummaryRef={requirementsSummaryRef} isDragScrollActive={isDragScrollActive} />
-
             {/* Requirements Summary Widget */}
             <div ref={requirementsSummaryRef}>
               <RequirementsSummary />
             </div>
 
             {/* Course Catalog - Full Width Top Row */}
-            <CourseCatalog
-              planCourseIds={planCourseIds}
-              onClickAdd={handleClickAdd}
-              focusedSemester={focusedSemester}
-              isAddingCourse={addCourseMutation.isPending}
-              isDragScrollActive={isDragScrollActive}
-            />
+            <div ref={courseCatalogRef} style={{ scrollMarginTop: '72px' }}>
+              <CourseCatalog
+                planCourseIds={planCourseIds}
+                onClickAdd={handleClickAdd}
+                focusedSemester={focusedSemester}
+                isAddingCourse={addCourseMutation.isPending}
+                isDragScrollActive={isDragScrollActive}
+              />
+            </div>
 
             {/* Semester Grid - Full Width Bottom Row */}
             <div ref={semesterGridRef} className="space-y-4">
