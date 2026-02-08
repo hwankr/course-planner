@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { useSession } from 'next-auth/react';
 import { useCourses } from '@/hooks/useCourses';
@@ -82,6 +82,31 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
       course.name.toLowerCase().includes(search)
     );
   });
+
+  // Persist usedCategories across category filter changes.
+  // When categoryFilter is active, the API returns only courses of that category,
+  // so we must NOT recompute from the filtered courses -- use the cached ref instead.
+  const usedCategoriesRef = useRef<RequirementCategory[]>([]);
+  const usedCategories = useMemo(() => {
+    if (categoryFilter) return usedCategoriesRef.current;
+    const cats = new Set<RequirementCategory>();
+    for (const course of courses) {
+      if (course.category) cats.add(course.category);
+    }
+    const order: RequirementCategory[] = [
+      'major_required', 'major_compulsory', 'major_elective',
+      'general_required', 'general_elective', 'teaching', 'free_elective'
+    ];
+    const result = order.filter(cat => cats.has(cat));
+    usedCategoriesRef.current = result;
+    return result;
+  }, [courses, categoryFilter]);
+
+  useEffect(() => {
+    if (categoryFilter && !usedCategories.includes(categoryFilter)) {
+      setCategoryFilter(undefined);
+    }
+  }, [usedCategories, categoryFilter]);
 
   // Group courses by year and semester when in grouped view
   const courseGroups = useMemo(() => {
@@ -273,7 +298,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             {/* Category filter (별도 줄) */}
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-[11px] font-medium text-gray-400">이수</span>
-              {([undefined, 'major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'teaching', 'free_elective'] as const).map((cat) => {
+              {([undefined, ...usedCategories] as (RequirementCategory | undefined)[]).map((cat) => {
                 const labels: Record<string, string> = {
                   major_required: '전공핵심',
                   major_compulsory: '전공필수',
@@ -537,7 +562,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
       {/* Custom Course Form Modal */}
       {showCustomForm && (
-        <CustomCourseForm onClose={() => setShowCustomForm(false)} />
+        <CustomCourseForm onClose={() => setShowCustomForm(false)} availableCategories={usedCategories} />
       )}
     </div>
   );

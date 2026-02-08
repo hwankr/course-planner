@@ -10,6 +10,7 @@ import type { RequirementCategory, Semester } from '@/types';
 
 interface CustomCourseFormProps {
   onClose: () => void;
+  availableCategories?: RequirementCategory[];
 }
 
 const categoryLabels: Record<RequirementCategory, string> = {
@@ -22,7 +23,7 @@ const categoryLabels: Record<RequirementCategory, string> = {
   free_elective: '자유선택',
 };
 
-export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
+export function CustomCourseForm({ onClose, availableCategories }: CustomCourseFormProps) {
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
@@ -120,13 +121,14 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
             >
               <option value="">선택 안함</option>
-              {(Object.entries(categoryLabels) as [RequirementCategory, string][]).map(
-                ([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                )
-              )}
+              {(availableCategories
+                ? availableCategories.map(cat => [cat, categoryLabels[cat]] as [RequirementCategory, string])
+                : (Object.entries(categoryLabels) as [RequirementCategory, string][])
+              ).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
 

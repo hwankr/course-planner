@@ -44,13 +44,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3 md:gap-8 min-w-0">
-              <Link href="/planner" className="flex items-center gap-2 min-w-0">
+          <div className="flex h-16 items-center justify-between gap-2">
+            <div className="flex items-center gap-3 md:gap-8 min-w-0 flex-1 overflow-hidden">
+              <Link href="/planner" className="flex items-center gap-2 min-w-0 shrink">
                 <Image src="/yu-logo.svg" alt="영남대학교" className="h-5 md:h-6 shrink-0" width={60} height={24} style={{ width: 'auto' }} />
-                <span className="text-base md:text-xl font-bold text-gradient truncate">YU 수강 플래너</span>
+                <span className="text-sm sm:text-base md:text-xl font-bold text-gradient truncate">YU 수강 플래너</span>
               </Link>
-              <nav className="hidden md:flex gap-1">
+              <nav className="hidden md:flex gap-1 flex-shrink-0">
                 {visibleNavigation.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={item.href}
                       href={item.href}
                       className={cn(
-                        'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
+                        'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap',
                         pathname === item.href
                           ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -77,7 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
+                          'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap',
                           pathname.startsWith(item.href)
                             ? 'bg-purple-50 text-purple-600'
                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -90,21 +90,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   })}
               </nav>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
               {!isGuest && user?.name && (
                 <>
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center text-white text-xs font-medium">
                     {user.name.charAt(0)}
                   </div>
-                  <span className="hidden sm:inline text-sm text-gray-600">{user.name}</span>
+                  <span className="hidden sm:inline text-sm text-gray-600 max-w-[100px] truncate">{user.name}</span>
                 </>
               )}
               {isGuest ? (
                 <Link href="/register">
-                  <Button variant="default" size="sm">회원가입</Button>
+                  <Button variant="default" size="sm" className="text-xs sm:text-sm whitespace-nowrap">회원가입</Button>
                 </Link>
               ) : (
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <Button variant="ghost" size="sm" onClick={logout} className="text-xs sm:text-sm whitespace-nowrap">
                   로그아웃
                 </Button>
               )}

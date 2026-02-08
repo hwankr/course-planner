@@ -250,243 +250,251 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
       </div>
 
       {/* 졸업 기준 */}
-      <div className="space-y-3 border-t pt-4">
-        <p className="text-sm font-semibold text-gray-800 border-b pb-2">졸업 기준</p>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>
-          <Input
-            type="number"
-            value={totalCredits}
-            onChange={(e) => setTotalCredits(e.target.value)}
-            placeholder="예: 130"
-            min="1"
-            className={errors.totalCredits ? 'border-red-500' : ''}
-          />
-          {errors.totalCredits && <p className="text-xs text-red-500 mt-1">{errors.totalCredits}</p>}
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">교양학점</label>
-          <Input
-            type="number"
-            value={generalCredits}
-            onChange={(e) => setGeneralCredits(e.target.value)}
-            placeholder="예: 30"
-            min="0"
-            className={errors.generalCredits ? 'border-red-500' : ''}
-          />
-          {errors.generalCredits && <p className="text-xs text-red-500 mt-1">{errors.generalCredits}</p>}
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">전공학점</label>
-          <Input
-            type="number"
-            value={primaryMajorCredits}
-            onChange={(e) => setPrimaryMajorCredits(e.target.value)}
-            placeholder="예: 60"
-            min="0"
-            className={errors.primaryMajorCredits ? 'border-red-500' : ''}
-          />
-          {errors.primaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.primaryMajorCredits}</p>}
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">전공핵심 (최소)</label>
-          <Input
-            type="number"
-            value={primaryMajorRequiredMin}
-            onChange={(e) => setPrimaryMajorRequiredMin(e.target.value)}
-            placeholder="예: 24"
-            min="0"
-            className={errors.primaryMajorRequiredMin ? 'border-red-500' : ''}
-          />
-          {errors.primaryMajorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.primaryMajorRequiredMin}</p>}
+      <div className="border-t pt-4">
+        <p className="text-sm font-semibold text-gray-800 border-b pb-2 mb-3">졸업 기준</p>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>
+            <Input
+              type="number"
+              value={totalCredits}
+              onChange={(e) => setTotalCredits(e.target.value)}
+              placeholder="예: 130"
+              min="1"
+              className={errors.totalCredits ? 'border-red-500' : ''}
+            />
+            {errors.totalCredits && <p className="text-xs text-red-500 mt-1">{errors.totalCredits}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">교양학점</label>
+            <Input
+              type="number"
+              value={generalCredits}
+              onChange={(e) => setGeneralCredits(e.target.value)}
+              placeholder="예: 30"
+              min="0"
+              className={errors.generalCredits ? 'border-red-500' : ''}
+            />
+            {errors.generalCredits && <p className="text-xs text-red-500 mt-1">{errors.generalCredits}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">전공학점</label>
+            <Input
+              type="number"
+              value={primaryMajorCredits}
+              onChange={(e) => setPrimaryMajorCredits(e.target.value)}
+              placeholder="예: 60"
+              min="0"
+              className={errors.primaryMajorCredits ? 'border-red-500' : ''}
+            />
+            {errors.primaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.primaryMajorCredits}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">전공핵심 (최소)</label>
+            <Input
+              type="number"
+              value={primaryMajorRequiredMin}
+              onChange={(e) => setPrimaryMajorRequiredMin(e.target.value)}
+              placeholder="예: 24"
+              min="0"
+              className={errors.primaryMajorRequiredMin ? 'border-red-500' : ''}
+            />
+            {errors.primaryMajorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.primaryMajorRequiredMin}</p>}
+          </div>
         </div>
       </div>
 
       {/* 복수전공 */}
       {majorType === 'double' && (
-        <div className="space-y-3 border-t pt-4">
-          <p className="text-sm font-semibold text-gray-800 border-b pb-2">복수전공</p>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">복수전공 학점</label>
-            <Input
-              type="number"
-              value={secondaryMajorCredits}
-              onChange={(e) => setSecondaryMajorCredits(e.target.value)}
-              placeholder="예: 60"
-              min="0"
-              className={errors.secondaryMajorCredits ? 'border-red-500' : ''}
-            />
-            {errors.secondaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.secondaryMajorCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">복수전공핵심 (최소)</label>
-            <Input
-              type="number"
-              value={secondaryMajorRequiredMin}
-              onChange={(e) => setSecondaryMajorRequiredMin(e.target.value)}
-              placeholder="예: 24"
-              min="0"
-              className={errors.secondaryMajorRequiredMin ? 'border-red-500' : ''}
-            />
-            {errors.secondaryMajorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.secondaryMajorRequiredMin}</p>}
+        <div className="border-t pt-4">
+          <p className="text-sm font-semibold text-gray-800 border-b pb-2 mb-3">복수전공</p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">복수전공 학점</label>
+              <Input
+                type="number"
+                value={secondaryMajorCredits}
+                onChange={(e) => setSecondaryMajorCredits(e.target.value)}
+                placeholder="예: 60"
+                min="0"
+                className={errors.secondaryMajorCredits ? 'border-red-500' : ''}
+              />
+              {errors.secondaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.secondaryMajorCredits}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">복수전공핵심 (최소)</label>
+              <Input
+                type="number"
+                value={secondaryMajorRequiredMin}
+                onChange={(e) => setSecondaryMajorRequiredMin(e.target.value)}
+                placeholder="예: 24"
+                min="0"
+                className={errors.secondaryMajorRequiredMin ? 'border-red-500' : ''}
+              />
+              {errors.secondaryMajorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.secondaryMajorRequiredMin}</p>}
+            </div>
           </div>
         </div>
       )}
 
       {/* 부전공 */}
       {majorType === 'minor' && (
-        <div className="space-y-3 border-t pt-4">
-          <p className="text-sm font-semibold text-gray-800 border-b pb-2">부전공</p>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">부전공 학점</label>
-            <Input
-              type="number"
-              value={minorCredits}
-              onChange={(e) => setMinorCredits(e.target.value)}
-              placeholder="예: 21"
-              min="0"
-              className={errors.minorCredits ? 'border-red-500' : ''}
-            />
-            {errors.minorCredits && <p className="text-xs text-red-500 mt-1">{errors.minorCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">부전공핵심 (최소)</label>
-            <Input
-              type="number"
-              value={minorRequiredMin}
-              onChange={(e) => setMinorRequiredMin(e.target.value)}
-              placeholder="예: 9"
-              min="0"
-              className={errors.minorRequiredMin ? 'border-red-500' : ''}
-            />
-            {errors.minorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.minorRequiredMin}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">주전공 최소 학점</label>
-            <Input
-              type="number"
-              value={minorPrimaryMajorMin}
-              onChange={(e) => setMinorPrimaryMajorMin(e.target.value)}
-              placeholder="예: 63"
-              min="0"
-              className={errors.minorPrimaryMajorMin ? 'border-red-500' : ''}
-            />
-            {errors.minorPrimaryMajorMin && <p className="text-xs text-red-500 mt-1">{errors.minorPrimaryMajorMin}</p>}
+        <div className="border-t pt-4">
+          <p className="text-sm font-semibold text-gray-800 border-b pb-2 mb-3">부전공</p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">부전공 학점</label>
+              <Input
+                type="number"
+                value={minorCredits}
+                onChange={(e) => setMinorCredits(e.target.value)}
+                placeholder="예: 21"
+                min="0"
+                className={errors.minorCredits ? 'border-red-500' : ''}
+              />
+              {errors.minorCredits && <p className="text-xs text-red-500 mt-1">{errors.minorCredits}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">부전공핵심 (최소)</label>
+              <Input
+                type="number"
+                value={minorRequiredMin}
+                onChange={(e) => setMinorRequiredMin(e.target.value)}
+                placeholder="예: 9"
+                min="0"
+                className={errors.minorRequiredMin ? 'border-red-500' : ''}
+              />
+              {errors.minorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.minorRequiredMin}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">주전공 최소 학점</label>
+              <Input
+                type="number"
+                value={minorPrimaryMajorMin}
+                onChange={(e) => setMinorPrimaryMajorMin(e.target.value)}
+                placeholder="예: 63"
+                min="0"
+                className={errors.minorPrimaryMajorMin ? 'border-red-500' : ''}
+              />
+              {errors.minorPrimaryMajorMin && <p className="text-xs text-red-500 mt-1">{errors.minorPrimaryMajorMin}</p>}
+            </div>
           </div>
         </div>
       )}
 
       {/* 기이수 학점 */}
-      <div className="space-y-3 border-t pt-4">
+      <div className="border-t pt-4">
         <div>
           <p className="text-sm font-semibold text-gray-800">기이수 학점</p>
-          <p className="text-xs text-gray-400 mt-0.5">계획에 포함되지 않은 이미 이수한 학점</p>
+          <p className="text-xs text-gray-400 mt-0.5 mb-3">계획에 포함되지 않은 이미 이수한 학점</p>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>
-          <Input
-            type="number"
-            value={earnedTotalCredits}
-            onChange={(e) => setEarnedTotalCredits(e.target.value)}
-            placeholder="0"
-            min="0"
-            className={errors.earnedTotalCredits ? 'border-red-500' : ''}
-          />
-          <p className="text-xs text-gray-400 mt-0.5">이미 이수한 총 학점 (전공+교양+기타 포함)</p>
-          {errors.earnedTotalCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedTotalCredits}</p>}
+        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>
+            <Input
+              type="number"
+              value={earnedTotalCredits}
+              onChange={(e) => setEarnedTotalCredits(e.target.value)}
+              placeholder="0"
+              min="0"
+              className={errors.earnedTotalCredits ? 'border-red-500' : ''}
+            />
+            <p className="text-xs text-gray-400 mt-0.5">이미 이수한 총 학점 (전공+교양+기타 포함)</p>
+            {errors.earnedTotalCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedTotalCredits}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">교양</label>
+            <Input
+              type="number"
+              value={earnedGeneralCredits}
+              onChange={(e) => setEarnedGeneralCredits(e.target.value)}
+              placeholder="0"
+              min="0"
+              className={errors.earnedGeneralCredits ? 'border-red-500' : ''}
+            />
+            {errors.earnedGeneralCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedGeneralCredits}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">전공</label>
+            <Input
+              type="number"
+              value={earnedPrimaryMajorCredits}
+              onChange={(e) => setEarnedPrimaryMajorCredits(e.target.value)}
+              placeholder="0"
+              min="0"
+              className={errors.earnedPrimaryMajorCredits ? 'border-red-500' : ''}
+            />
+            {errors.earnedPrimaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedPrimaryMajorCredits}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">전공핵심</label>
+            <Input
+              type="number"
+              value={earnedPrimaryMajorRequiredCredits}
+              onChange={(e) => setEarnedPrimaryMajorRequiredCredits(e.target.value)}
+              placeholder="0"
+              min="0"
+              className={errors.earnedPrimaryMajorRequiredCredits ? 'border-red-500' : ''}
+            />
+            {errors.earnedPrimaryMajorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedPrimaryMajorRequiredCredits}</p>}
+          </div>
+          {majorType === 'double' && (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">복수전공</label>
+                <Input
+                  type="number"
+                  value={earnedSecondaryMajorCredits}
+                  onChange={(e) => setEarnedSecondaryMajorCredits(e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  className={errors.earnedSecondaryMajorCredits ? 'border-red-500' : ''}
+                />
+                {errors.earnedSecondaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedSecondaryMajorCredits}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">복수전공핵심</label>
+                <Input
+                  type="number"
+                  value={earnedSecondaryMajorRequiredCredits}
+                  onChange={(e) => setEarnedSecondaryMajorRequiredCredits(e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  className={errors.earnedSecondaryMajorRequiredCredits ? 'border-red-500' : ''}
+                />
+                {errors.earnedSecondaryMajorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedSecondaryMajorRequiredCredits}</p>}
+              </div>
+            </>
+          )}
+          {majorType === 'minor' && (
+            <>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">부전공</label>
+                <Input
+                  type="number"
+                  value={earnedMinorCredits}
+                  onChange={(e) => setEarnedMinorCredits(e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  className={errors.earnedMinorCredits ? 'border-red-500' : ''}
+                />
+                {errors.earnedMinorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedMinorCredits}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">부전공핵심</label>
+                <Input
+                  type="number"
+                  value={earnedMinorRequiredCredits}
+                  onChange={(e) => setEarnedMinorRequiredCredits(e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  className={errors.earnedMinorRequiredCredits ? 'border-red-500' : ''}
+                />
+                {errors.earnedMinorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedMinorRequiredCredits}</p>}
+              </div>
+            </>
+          )}
         </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">교양</label>
-          <Input
-            type="number"
-            value={earnedGeneralCredits}
-            onChange={(e) => setEarnedGeneralCredits(e.target.value)}
-            placeholder="0"
-            min="0"
-            className={errors.earnedGeneralCredits ? 'border-red-500' : ''}
-          />
-          {errors.earnedGeneralCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedGeneralCredits}</p>}
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">전공</label>
-          <Input
-            type="number"
-            value={earnedPrimaryMajorCredits}
-            onChange={(e) => setEarnedPrimaryMajorCredits(e.target.value)}
-            placeholder="0"
-            min="0"
-            className={errors.earnedPrimaryMajorCredits ? 'border-red-500' : ''}
-          />
-          {errors.earnedPrimaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedPrimaryMajorCredits}</p>}
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">전공핵심</label>
-          <Input
-            type="number"
-            value={earnedPrimaryMajorRequiredCredits}
-            onChange={(e) => setEarnedPrimaryMajorRequiredCredits(e.target.value)}
-            placeholder="0"
-            min="0"
-            className={errors.earnedPrimaryMajorRequiredCredits ? 'border-red-500' : ''}
-          />
-          {errors.earnedPrimaryMajorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedPrimaryMajorRequiredCredits}</p>}
-        </div>
-        {majorType === 'double' && (
-          <>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">복수전공</label>
-              <Input
-                type="number"
-                value={earnedSecondaryMajorCredits}
-                onChange={(e) => setEarnedSecondaryMajorCredits(e.target.value)}
-                placeholder="0"
-                min="0"
-                className={errors.earnedSecondaryMajorCredits ? 'border-red-500' : ''}
-              />
-              {errors.earnedSecondaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedSecondaryMajorCredits}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">복수전공핵심</label>
-              <Input
-                type="number"
-                value={earnedSecondaryMajorRequiredCredits}
-                onChange={(e) => setEarnedSecondaryMajorRequiredCredits(e.target.value)}
-                placeholder="0"
-                min="0"
-                className={errors.earnedSecondaryMajorRequiredCredits ? 'border-red-500' : ''}
-              />
-              {errors.earnedSecondaryMajorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedSecondaryMajorRequiredCredits}</p>}
-            </div>
-          </>
-        )}
-        {majorType === 'minor' && (
-          <>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">부전공</label>
-              <Input
-                type="number"
-                value={earnedMinorCredits}
-                onChange={(e) => setEarnedMinorCredits(e.target.value)}
-                placeholder="0"
-                min="0"
-                className={errors.earnedMinorCredits ? 'border-red-500' : ''}
-              />
-              {errors.earnedMinorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedMinorCredits}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">부전공핵심</label>
-              <Input
-                type="number"
-                value={earnedMinorRequiredCredits}
-                onChange={(e) => setEarnedMinorRequiredCredits(e.target.value)}
-                placeholder="0"
-                min="0"
-                className={errors.earnedMinorRequiredCredits ? 'border-red-500' : ''}
-              />
-              {errors.earnedMinorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedMinorRequiredCredits}</p>}
-            </div>
-          </>
-        )}
       </div>
 
       <div className="flex gap-2 pt-2">
