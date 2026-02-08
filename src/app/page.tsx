@@ -85,14 +85,14 @@ export default function Home() {
 
             {/* Subtitle */}
             <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto animate-fade-in-up anim-delay-200">
-              영남대학교 학생을 위한 수강 계획 시스템. 학기별 과목을 드래그앤드롭으로 배치하고, 졸업 요건을 체계적으로 추적하세요.
+              1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 선배들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-4 animate-fade-in-up anim-delay-300">
               <Link href="/login">
                 <Button size="lg" className="group">
-                  지금 시작하기
+                  바로 시작하기
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -149,9 +149,9 @@ export default function Home() {
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#153974] to-[#003E7E] flex items-center justify-center mb-6">
                 <Users className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">비회원 체험 모드</h3>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">선배들의 수강 계획 참고</h3>
               <p className="text-gray-600 leading-relaxed">
-                회원가입 없이 바로 체험해보세요. 모든 기능을 자유롭게 사용할 수 있습니다.
+                같은 학과 학생들의 수강 계획을 참고하여 나만의 최적 로드맵을 설계하세요.
               </p>
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function Home() {
           </h2>
           <Link href="/login">
             <Button size="lg" className="bg-gradient-to-r from-[#153974] to-[#3069B3] hover:from-[#003E7E] hover:to-[#153974] text-white shadow-xl shadow-[#153974]/20">
-              무료로 시작하기
+              바로 시작하기
             </Button>
           </Link>
         </div>
