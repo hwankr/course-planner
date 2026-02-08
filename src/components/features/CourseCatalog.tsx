@@ -13,7 +13,7 @@ import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
-  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => void;
+  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
   focusedSemester?: { year: number; term: string } | null;
   isAddingCourse?: boolean;
   isDragScrollActive?: boolean;
@@ -137,7 +137,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
   const courseCount = filteredCourses.length;
 
-  const handleAddClick = (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => {
+  const handleAddClick = (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => {
     if (!onClickAdd) return;
     onClickAdd(courseId, courseData);
   };
@@ -237,7 +237,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
               <div className="flex items-center gap-1">
                 <span className="text-[11px] font-medium text-gray-400 w-7">학년</span>
-                {[undefined, 1, 2, 3, 4].map((y) => (
+                {[undefined, 1, 2, 3, 4, 5, 6].map((y) => (
                   <button
                     key={y ?? 'all'}
                     onClick={() => setYearFilter(y)}
@@ -273,19 +273,23 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             {/* Category filter (별도 줄) */}
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-[11px] font-medium text-gray-400">이수</span>
-              {([undefined, 'major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective'] as const).map((cat) => {
+              {([undefined, 'major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'teaching', 'free_elective'] as const).map((cat) => {
                 const labels: Record<string, string> = {
                   major_required: '전공핵심',
+                  major_compulsory: '전공필수',
                   major_elective: '전공선택',
                   general_required: '교양필수',
                   general_elective: '교양선택',
+                  teaching: '교직',
                   free_elective: '자유선택',
                 };
                 const chipColors: Record<string, { active: string; inactive: string }> = {
                   major_required: { active: 'bg-red-500 text-white', inactive: 'bg-red-50 text-red-600 hover:bg-red-100' },
+                  major_compulsory: { active: 'bg-rose-500 text-white', inactive: 'bg-rose-50 text-rose-600 hover:bg-rose-100' },
                   major_elective: { active: 'bg-orange-500 text-white', inactive: 'bg-orange-50 text-orange-600 hover:bg-orange-100' },
                   general_required: { active: 'bg-blue-500 text-white', inactive: 'bg-blue-50 text-blue-600 hover:bg-blue-100' },
                   general_elective: { active: 'bg-green-500 text-white', inactive: 'bg-green-50 text-green-600 hover:bg-green-100' },
+                  teaching: { active: 'bg-violet-500 text-white', inactive: 'bg-violet-50 text-violet-600 hover:bg-violet-100' },
                   free_elective: { active: 'bg-gray-500 text-white', inactive: 'bg-gray-100 text-gray-600 hover:bg-gray-200' },
                 };
                 return (

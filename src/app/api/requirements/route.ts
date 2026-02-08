@@ -44,10 +44,12 @@ const createRequirementSchema = z.object({
   name: z.string().min(1, '요건 이름은 필수입니다.'),
   category: z.enum([
     'major_required',
+    'major_compulsory',
     'major_elective',
     'general_required',
     'general_elective',
     'free_elective',
+    'teaching',
   ]),
   requiredCredits: z.number().min(0),
   description: z.string().optional(),

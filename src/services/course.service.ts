@@ -4,18 +4,145 @@
  * @migration-notes 분리 시 백엔드로 이동. HTTP 의존성 없음.
  */
 
+import mongoose from 'mongoose';
 import { connectDB } from '@/lib/db/mongoose';
 import { escapeRegex } from '@/lib/validation';
-import { Course } from '@/models';
+import { Course, DepartmentCurriculum } from '@/models';
 import type { ICourseDocument } from '@/models';
 import type { CreateCourseInput, CourseFilter } from '@/types';
 
 /**
  * 과목 목록 조회 (필터 적용)
+ * - departmentId가 제공되면 DepartmentCurriculum 조인테이블을 통해 조회
+ * - 그 외의 경우 기존 Course 직접 조회 방식 유지
  */
 async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
   await connectDB();
 
+  // Curriculum-aware fetching when departmentId is provided
+  if (filter?.departmentId) {
+    // Build curriculum filter
+    const curriculumFilter: Record<string, unknown> = {
+      department: filter.departmentId
+    };
+
+    if (filter.category) {
+      curriculumFilter.category = filter.category;
+    }
+    if (filter.recommendedYear) {
+      curriculumFilter.recommendedYear = filter.recommendedYear;
+    }
+    if (filter.recommendedSemester) {
+      curriculumFilter.recommendedSemester = filter.recommendedSemester;
+    }
+
+    // Fetch curriculum entries for this department
+    interface CurriculumEntry {
+      course: mongoose.Types.ObjectId;
+      category: string;
+      recommendedYear: number;
+      recommendedSemester: string;
+    }
+
+    const curriculumEntries = await DepartmentCurriculum.find(curriculumFilter)
+      .select('course category recommendedYear recommendedSemester')
+      .lean<CurriculumEntry[]>();
+
+    const courseIds = curriculumEntries.map(e => e.course);
+
+    // Build course query conditions
+    const conditions: Record<string, unknown>[] = [
+      { isActive: true },
+      { _id: { $in: courseIds } },
+    ];
+
+    if (filter.search) {
+      const escapedSearch = escapeRegex(filter.search);
+      conditions.push({
+        $or: [
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { code: { $regex: escapedSearch, $options: 'i' } },
+        ],
+      });
+    }
+
+    if (filter.semester) {
+      conditions.push({ semesters: filter.semester });
+    }
+
+    // Fetch official courses
+    const officialCourses = await Course.find({ $and: conditions })
+      .populate('department', 'code name')
+      .populate('prerequisites', 'code name')
+      .sort({ code: 1 })
+      .limit(filter.limit ?? 200)
+      .lean();
+
+    // Enrich courses with curriculum metadata
+    const curriculumMap = new Map(
+      curriculumEntries.map(e => [e.course.toString(), e])
+    );
+
+    const enrichedCourses = officialCourses.map(course => {
+      const currEntry = curriculumMap.get(course._id.toString());
+      if (currEntry) {
+        // Override with department-specific metadata
+        return {
+          ...course,
+          category: currEntry.category,
+          recommendedYear: currEntry.recommendedYear,
+          recommendedSemester: currEntry.recommendedSemester,
+        };
+      }
+      return course;
+    });
+
+    // Add custom courses for this user if applicable
+    if (filter.userId) {
+      const customConditions: Record<string, unknown>[] = [
+        { isActive: true },
+        { createdBy: filter.userId },
+      ];
+
+      if (filter.search) {
+        const escapedSearch = escapeRegex(filter.search);
+        customConditions.push({
+          $or: [
+            { name: { $regex: escapedSearch, $options: 'i' } },
+            { code: { $regex: escapedSearch, $options: 'i' } },
+          ],
+        });
+      }
+
+      if (filter.category) {
+        customConditions.push({ category: filter.category });
+      }
+
+      if (filter.semester) {
+        customConditions.push({ semesters: filter.semester });
+      }
+
+      if (filter.recommendedYear) {
+        customConditions.push({ recommendedYear: filter.recommendedYear });
+      }
+
+      if (filter.recommendedSemester) {
+        customConditions.push({ recommendedSemester: filter.recommendedSemester });
+      }
+
+      const customCourses = await Course.find({ $and: customConditions })
+        .populate('department', 'code name')
+        .populate('prerequisites', 'code name')
+        .sort({ code: 1 })
+        .lean();
+
+      return [...enrichedCourses, ...customCourses] as ICourseDocument[];
+    }
+
+    return enrichedCourses as ICourseDocument[];
+  }
+
+  // Original logic for non-department queries (unchanged)
   const conditions: Record<string, unknown>[] = [{ isActive: true }];
 
   // Ownership filter: show official courses + user's custom courses
@@ -25,10 +152,6 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     });
   } else {
     conditions.push({ createdBy: null }); // Only official courses
-  }
-
-  if (filter?.departmentId) {
-    conditions.push({ department: filter.departmentId });
   }
 
   if (filter?.semester) {
@@ -140,10 +263,11 @@ async function remove(id: string): Promise<ICourseDocument | null> {
 
 /**
  * 학과별 과목 수 조회
+ * DepartmentCurriculum 조인테이블을 통해 조회
  */
 async function countByDepartment(departmentId: string): Promise<number> {
   await connectDB();
-  return Course.countDocuments({ department: departmentId, isActive: true });
+  return DepartmentCurriculum.countDocuments({ department: departmentId });
 }
 
 /**

@@ -10,7 +10,7 @@ interface CourseCardProps {
     code: string;
     name: string;
     credits: number;
-    category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
+    category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
     status?: 'planned' | 'enrolled' | 'completed' | 'failed';
   };
   index?: number;        // Optional: only needed in SemesterColumn
@@ -37,17 +37,21 @@ const statusLabels = {
 
 const categoryLabels: Record<string, string> = {
   major_required: '전공핵심',
+  major_compulsory: '전공필수',
   major_elective: '전공선택',
   general_required: '교양필수',
   general_elective: '교양선택',
+  teaching: '교직',
   free_elective: '자유선택',
 };
 
 const categoryColors: Record<string, string> = {
   major_required: 'bg-red-100 text-red-700',
+  major_compulsory: 'bg-rose-100 text-rose-700',
   major_elective: 'bg-orange-100 text-orange-700',
   general_required: 'bg-blue-100 text-blue-700',
   general_elective: 'bg-green-100 text-green-700',
+  teaching: 'bg-violet-100 text-violet-700',
   free_elective: 'bg-gray-100 text-gray-600',
 };
 

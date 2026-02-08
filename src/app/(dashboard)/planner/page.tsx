@@ -128,7 +128,7 @@ export default function PlannerPage() {
     // The course was ALREADY added to the store by this point, so subtract it back for accurate "before" state
     const adjustedTotals = { ...currentTotals };
     const cat = course.category || 'free_elective';
-    const majorCats = ['major_required', 'major_elective'];
+    const majorCats = ['major_required', 'major_compulsory', 'major_elective'];
     const generalCats = ['general_required', 'general_elective'];
     adjustedTotals.totalPlanned -= course.credits;
     if (majorCats.includes(cat)) adjustedTotals.primaryMajorPlanned -= course.credits;
@@ -201,14 +201,14 @@ export default function PlannerPage() {
               code: string;
               name: string;
               credits: number;
-              category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
+              category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
             };
             return {
               id: course._id?.toString() || (pc.course as unknown as string),
               code: course.code || 'N/A',
               name: course.name || 'Unknown Course',
               credits: course.credits || 0,
-              category: course.category as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
+              category: course.category as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
               status: pc.status,
             };
           }),
@@ -279,7 +279,7 @@ export default function PlannerPage() {
       code: string;
       name: string;
       credits: number;
-      category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
+      category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
       status: 'planned' | 'enrolled' | 'completed' | 'failed';
     }> }>>();
     const map = new Map<number, typeof activePlan.semesters>();
@@ -477,7 +477,7 @@ export default function PlannerPage() {
           code: catalogCourse?.code ?? 'Loading...',
           name: catalogCourse?.name ?? 'Loading...',
           credits: catalogCourse?.credits ?? 0,
-          category: catalogCourse?.category as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
+          category: catalogCourse?.category as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
           status: 'planned' as const,
         };
 
@@ -692,7 +692,7 @@ export default function PlannerPage() {
 
   // Handle click-to-add course to focused semester
   const handleClickAdd = useCallback(
-    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' }) => {
+    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => {
       if (!activePlan || !focusedSemester) return;
 
       const { year, term } = focusedSemester;
@@ -711,7 +711,7 @@ export default function PlannerPage() {
         code: courseData.code,
         name: courseData.name,
         credits: courseData.credits,
-        category: courseData.category as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
+        category: courseData.category as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
         status: 'planned' as const,
       };
       addCourseToSemester(year, term, optimisticCourse);

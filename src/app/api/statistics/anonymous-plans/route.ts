@@ -1,0 +1,55 @@
+/**
+ * @api-separable
+ * @endpoint GET /api/statistics/anonymous-plans
+ * @service statisticsService.getAnonymousPlans
+ * @migration-notes Express 변환 시: app.get('/api/statistics/anonymous-plans', ...)
+ */
+
+import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth/options';
+import { statisticsService } from '@/services';
+
+export async function GET(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: '로그인이 필요합니다.' },
+        { status: 401 }
+      );
+    }
+
+    const departmentId = session.user.department;
+    if (!departmentId) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: '학과를 설정해주세요.',
+          code: 'DEPARTMENT_NOT_SET',
+          redirectTo: '/profile',
+        },
+        { status: 400 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(20, Math.max(1, parseInt(searchParams.get('limit') || '10', 10)));
+
+    const result = await statisticsService.getAnonymousPlans(
+      departmentId,
+      session.user.id,
+      page,
+      limit
+    );
+
+    return NextResponse.json({ success: true, data: result });
+  } catch (error) {
+    console.error('GET /api/statistics/anonymous-plans error:', error);
+    return NextResponse.json(
+      { success: false, error: '익명 계획을 불러오는데 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}

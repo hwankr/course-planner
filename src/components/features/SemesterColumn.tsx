@@ -14,7 +14,7 @@ interface SemesterColumnProps {
       code: string;
       name: string;
       credits: number;
-      category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
+      category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
       status: 'planned' | 'enrolled' | 'completed' | 'failed';
     }>;
   };
@@ -42,9 +42,11 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
     const counts: Record<string, number> = {};
     const labels: Record<string, string> = {
       major_required: '전핵',
+      major_compulsory: '전필',
       major_elective: '전선',
       general_required: '교필',
       general_elective: '교선',
+      teaching: '교직',
       free_elective: '자선',
     };
     for (const course of semester.courses) {
@@ -52,7 +54,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
       counts[cat] = (counts[cat] || 0) + course.credits;
     }
     // Return in a fixed display order, only categories that have credits
-    return ['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective']
+    return ['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'teaching', 'free_elective']
       .filter(cat => counts[cat])
       .map(cat => ({ key: cat, label: labels[cat], credits: counts[cat] }));
   })();

@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const filter: CourseFilter = {
       departmentId: searchParams.get('departmentId') || undefined,
       semester: searchParams.get('semester') as Semester | undefined,
-      category: searchParams.get('category') as 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | undefined,
+      category: searchParams.get('category') as import('@/types').RequirementCategory | undefined,
       search: searchParams.get('search') || undefined,
       recommendedYear: recommendedYear ? parseInt(recommendedYear, 10) : undefined,
       recommendedSemester: recommendedSemester as Semester | undefined,
@@ -48,13 +48,13 @@ export async function GET(request: Request) {
 const createCourseSchema = z.object({
   code: z.string().min(1, '과목 코드는 필수입니다.'),
   name: z.string().min(1, '과목명은 필수입니다.'),
-  credits: z.number().min(1).max(6),
+  credits: z.number().min(1).max(12),
   department: z.string().min(1, '학과는 필수입니다.'),
   prerequisites: z.array(z.string()).optional(),
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])),
-  category: z.enum(['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective']).optional(),
-  recommendedYear: z.number().min(1).max(4).optional(),
+  category: z.enum(['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'free_elective', 'teaching']).optional(),
+  recommendedYear: z.number().min(1).max(6).optional(),
   recommendedSemester: z.enum(['spring', 'summer', 'fall', 'winter']).optional(),
 });
 

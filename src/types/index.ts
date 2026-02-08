@@ -50,7 +50,7 @@ export interface ICourse {
   code: string;
   name: string;
   credits: number;
-  department: Types.ObjectId;
+  department?: Types.ObjectId;
   prerequisites: Types.ObjectId[];
   description?: string;
   semesters: Semester[]; // 개설 학기
@@ -67,7 +67,7 @@ export interface CreateCourseInput {
   code: string;
   name: string;
   credits: number;
-  department: string;
+  department?: string;
   prerequisites?: string[];
   description?: string;
   semesters: Semester[];
@@ -144,15 +144,32 @@ export interface CreateDepartmentInput {
 }
 
 // ============================================
+// DepartmentCurriculum Types (학과별 커리큘럼 중간 테이블)
+// ============================================
+
+export interface IDepartmentCurriculum {
+  _id: Types.ObjectId;
+  department: Types.ObjectId;
+  course: Types.ObjectId;
+  category: RequirementCategory;
+  recommendedYear: number;
+  recommendedSemester: 'spring' | 'fall';
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ============================================
 // Requirement Types
 // ============================================
 
 export type RequirementCategory =
-  | 'major_required'    // 전공필수
+  | 'major_required'    // 전공핵심
+  | 'major_compulsory'  // 전공필수
   | 'major_elective'    // 전공선택
   | 'general_required'  // 교양필수
   | 'general_elective'  // 교양선택
-  | 'free_elective';    // 자유선택
+  | 'free_elective'     // 자유선택
+  | 'teaching';         // 교직
 
 // ============================================
 // Major Track Types (전공 유형)

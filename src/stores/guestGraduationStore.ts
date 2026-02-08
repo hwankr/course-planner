@@ -132,9 +132,9 @@ export function calculateGuestProgress(
       .filter((c) => categories.includes(c.category))
       .reduce((sum, c) => sum + c.credits, 0);
 
-  const majorCategories = ['major_required', 'major_elective'];
+  const majorCategories = ['major_required', 'major_compulsory', 'major_elective'];
   const generalCategories = ['general_required', 'general_elective'];
-  const allCategories = [...majorCategories, ...generalCategories, 'free_elective'];
+  const allCategories = [...majorCategories, ...generalCategories, 'free_elective', 'teaching'];
 
   const totalEarned = sumCredits(completed, allCategories);
   const totalEnrolled = sumCredits(enrolled, allCategories);

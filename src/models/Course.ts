@@ -26,12 +26,11 @@ const courseSchema = new Schema<ICourseDocument>(
       type: Number,
       required: [true, '학점은 필수입니다.'],
       min: [1, '학점은 1 이상이어야 합니다.'],
-      max: [6, '학점은 6 이하여야 합니다.'],
+      max: [12, '학점은 12 이하여야 합니다.'],
     },
     department: {
       type: Schema.Types.ObjectId,
       ref: 'Department',
-      required: [true, '학과는 필수입니다.'],
     },
     prerequisites: [
       {
@@ -51,13 +50,13 @@ const courseSchema = new Schema<ICourseDocument>(
     ],
     category: {
       type: String,
-      enum: ['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective'],
+      enum: ['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'free_elective', 'teaching'],
       trim: true,
     },
     recommendedYear: {
       type: Number,
       min: [1, '학년은 1 이상이어야 합니다.'],
-      max: [4, '학년은 4 이하여야 합니다.'],
+      max: [6, '학년은 6 이하여야 합니다.'],
     },
     recommendedSemester: {
       type: String,

@@ -13,10 +13,12 @@ interface CustomCourseFormProps {
 }
 
 const categoryLabels: Record<RequirementCategory, string> = {
-  major_required: '전공필수',
+  major_required: '전공핵심',
+  major_compulsory: '전공필수',
   major_elective: '전공선택',
   general_required: '교양필수',
   general_elective: '교양선택',
+  teaching: '교직',
   free_elective: '자유선택',
 };
 
@@ -104,7 +106,7 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
               value={formData.credits}
               onChange={handleChange}
               min={1}
-              max={6}
+              max={12}
               required
             />
           </div>
@@ -138,7 +140,7 @@ export function CustomCourseForm({ onClose }: CustomCourseFormProps) {
                 className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
               >
                 <option value="">선택 안함</option>
-                {[1, 2, 3, 4].map((y) => (
+                {[1, 2, 3, 4, 5, 6].map((y) => (
                   <option key={y} value={y}>
                     {y}학년
                   </option>

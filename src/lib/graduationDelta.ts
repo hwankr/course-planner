@@ -2,7 +2,7 @@ import type { GraduationRequirementInput } from '@/types';
 
 interface CourseForDelta {
   credits: number;
-  category?: 'major_required' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective';
+  category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
 }
 
 export interface CurrentTotals {
@@ -43,13 +43,15 @@ export interface GraduationDelta {
 
 const CATEGORY_LABELS: Record<string, string> = {
   major_required: '전공핵심',
+  major_compulsory: '전공필수',
   major_elective: '전공선택',
   general_required: '교양필수',
   general_elective: '교양선택',
+  teaching: '교직',
   free_elective: '자유선택',
 };
 
-const MAJOR_CATEGORIES = ['major_required', 'major_elective'];
+const MAJOR_CATEGORIES = ['major_required', 'major_compulsory', 'major_elective'];
 const GENERAL_CATEGORIES = ['general_required', 'general_elective'];
 
 /**

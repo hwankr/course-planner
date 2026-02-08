@@ -47,12 +47,12 @@ export async function GET(request: Request, { params }: RouteParams) {
 const updateCourseSchema = z.object({
   code: z.string().min(1).optional(),
   name: z.string().min(1).optional(),
-  credits: z.number().min(1).max(6).optional(),
+  credits: z.number().min(1).max(12).optional(),
   department: z.string().optional(),
   prerequisites: z.array(z.string()).optional(),
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])).optional(),
-  category: z.enum(['major_required', 'major_elective', 'general_required', 'general_elective', 'free_elective']).optional(),
+  category: z.enum(['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'free_elective', 'teaching']).optional(),
 });
 
 export async function PUT(request: Request, { params }: RouteParams) {

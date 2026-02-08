@@ -217,7 +217,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       if (entry.status === 'failed') continue;
 
       const credits = info.credits;
-      const isMajorCategory = ['major_required', 'major_elective'].includes(info.category);
+      const isMajorCategory = ['major_required', 'major_compulsory', 'major_elective'].includes(info.category);
       const isGeneralCategory = ['general_required', 'general_elective'].includes(info.category);
       const isMajorRequired = info.category === 'major_required';
 

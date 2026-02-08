@@ -25,10 +25,12 @@ const requirementSchema = new Schema<IRequirementDocument>(
       type: String,
       enum: [
         'major_required',
+        'major_compulsory',
         'major_elective',
         'general_required',
         'general_elective',
         'free_elective',
+        'teaching',
       ] as RequirementCategory[],
       required: [true, '카테고리는 필수입니다.'],
     },

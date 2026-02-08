@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
-import type { ICourse } from '@/types';
+import type { ICourse, RequirementCategory } from '@/types';
 
 /**
  * Hook for mobile tap-to-preview on course cards.
@@ -36,7 +36,7 @@ export function useTouchPreview(focusedSemester: { year: number; term: string } 
             code: course.code,
             name: course.name,
             credits: course.credits,
-            category: course.category ?? 'free_elective',
+            category: (course.category ?? 'free_elective') as RequirementCategory,
           },
           'add',
           focusedSemester ?? null
