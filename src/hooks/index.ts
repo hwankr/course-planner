@@ -12,3 +12,8 @@ export {
   useRemoveCourse,
 } from './usePlans';
 export { useCourses, useCourse } from './useCourses';
+export {
+  useDepartmentStats,
+  useAnonymousPlans,
+  useAnonymousPlanDetail,
+} from './useStatistics';

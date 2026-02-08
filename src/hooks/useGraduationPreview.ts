@@ -54,7 +54,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
   const rawRequirement = isGuest ? guestRequirement : memberRequirement;
 
   // Adapt requirement to GraduationRequirementInput (strips _id, user, timestamps for member mode)
-  const requirement: GraduationRequirementInput | null = rawRequirement ? {
+  const requirement = useMemo((): GraduationRequirementInput | null => rawRequirement ? {
     majorType: rawRequirement.majorType ?? 'single',
     totalCredits: rawRequirement.totalCredits,
     primaryMajorCredits: rawRequirement.primaryMajorCredits,
@@ -73,7 +73,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
     earnedSecondaryMajorRequiredCredits: rawRequirement.earnedSecondaryMajorRequiredCredits,
     earnedMinorCredits: rawRequirement.earnedMinorCredits,
     earnedMinorRequiredCredits: rawRequirement.earnedMinorRequiredCredits,
-  } : null;
+  } : null, [rawRequirement]);
 
   // Get semesters (member or guest)
   const semesters = isGuest ? (guestPlan?.semesters ?? null) : (memberSemesters ?? null);

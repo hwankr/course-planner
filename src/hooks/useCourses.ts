@@ -111,9 +111,9 @@ export function useCourses(filter?: CourseFilter) {
       ...apiCourses,
       ...guestCustomCourses.map((c) => ({
         ...c,
-        _id: c._id as any,
-        department: c.department as any,
-        prerequisites: [] as any[],
+        _id: c._id as unknown as ICourse['_id'],
+        department: c.department as unknown as ICourse['department'],
+        prerequisites: [] as unknown as ICourse['prerequisites'],
       })),
     ] as ICourse[];
     return {

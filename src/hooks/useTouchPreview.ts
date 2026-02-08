@@ -30,7 +30,6 @@ export function useTouchPreview(focusedSemester: { year: number; term: string } 
         // Select new course
         setSelectedCourseId(courseId);
         // Also set preview store for RequirementsSummary consistency
-        const isInPlan = false; // Caller should not call this for in-plan courses
         setPreview(
           {
             id: courseId,

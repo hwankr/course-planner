@@ -155,7 +155,7 @@ export function useMyPlan(options?: { enabled?: boolean }) {
     // Ensure guest plan exists
     const plan = guestPlan || getOrCreatePlan();
     const data = {
-      _id: { toString: () => plan.id } as any,
+      _id: { toString: () => plan.id } as unknown as IPlan['_id'],
       semesters: plan.semesters.map((sem) => ({
         year: sem.year,
         term: sem.term,
@@ -166,11 +166,11 @@ export function useMyPlan(options?: { enabled?: boolean }) {
             name: c.name,
             credits: c.credits,
             category: c.category,
-          } as any,
+          } as unknown as IPlan['semesters'][number]['courses'][number]['course'],
           status: c.status,
         })),
       })),
-      user: {} as any,
+      user: {} as unknown as IPlan['user'],
       createdAt: new Date(),
       updatedAt: new Date(),
     } as unknown as IPlan;
@@ -196,7 +196,7 @@ export function usePlan(id: string, options?: { enabled?: boolean }) {
   if (isGuest) {
     if (guestPlan) {
       const data = {
-        _id: { toString: () => guestPlan.id } as any,
+        _id: { toString: () => guestPlan.id } as unknown as IPlan['_id'],
         semesters: guestPlan.semesters.map((sem) => ({
           year: sem.year,
           term: sem.term,
@@ -207,11 +207,11 @@ export function usePlan(id: string, options?: { enabled?: boolean }) {
               name: c.name,
               credits: c.credits,
               category: c.category,
-            } as any,
+            } as unknown as IPlan['semesters'][number]['courses'][number]['course'],
             status: c.status,
           })),
         })),
-        user: {} as any,
+        user: {} as unknown as IPlan['user'],
         createdAt: new Date(),
         updatedAt: new Date(),
       } as unknown as IPlan;
@@ -242,7 +242,8 @@ export function useResetPlan() {
   if (isGuest) {
     return {
       ...apiMutation,
-      mutateAsync: async (_id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      mutateAsync: async (_: string) => {
         guestResetPlan();
         return {} as unknown as IPlan;
       },

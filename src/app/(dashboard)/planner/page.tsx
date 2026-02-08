@@ -16,11 +16,11 @@ import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
 import { FloatingGradSummary } from '@/components/features/FloatingGradSummary';
 import { Button } from '@/components/ui';
-import type { Term, ICourse } from '@/types';
+import type { Term, ICourse, RequirementCategory } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { graduationRequirementKeys } from '@/hooks/useGraduationRequirements';
-import { computeGraduationDelta, formatDeltaDescription, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
+import { computeGraduationDelta, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
 import type { GraduationRequirementInput } from '@/types';
 
 // Helper to parse droppableId
@@ -136,27 +136,24 @@ export default function PlannerPage() {
     if (cat === 'major_required') adjustedTotals.primaryMajorRequiredPlanned -= course.credits;
 
     const delta = computeGraduationDelta(
-      { credits: course.credits, category: course.category as any },
+      { credits: course.credits, category: course.category as RequirementCategory | undefined },
       requirement,
       adjustedTotals
     );
 
     const catLabel = GRADUATION_CATEGORY_LABELS[course.category || 'free_elective'] || '자유선택';
-    const description = delta
-      ? formatDeltaDescription(delta)
-      : `+${course.credits}학점 ${catLabel}`;
 
     const undoAdd = async () => {
-      removeCourseFromSemester(year, term as any, courseId);
+      removeCourseFromSemester(year, term as Term, courseId);
       try {
         if (isGuest) {
           const guestRemoveCourse = useGuestPlanStore.getState().removeCourse;
-          guestRemoveCourse(activePlan!.id, year, term as any, courseId);
+          guestRemoveCourse(activePlan!.id, year, term as Term, courseId);
         } else {
           await removeCourseMutation.mutateAsync({
             planId: activePlan!.id,
             year,
-            term: term as any,
+            term: term as Term,
             courseId,
           });
         }
@@ -753,7 +750,7 @@ export default function PlannerPage() {
         console.error('Failed to add course:', error);
       }
     },
-    [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation, showAddCourseToast]
+    [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation, showAddCourseToast, isGuest]
   );
 
   const handleSemesterFocus = useCallback(

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button, Input } from '@/components/ui';
@@ -65,7 +66,7 @@ export default function RegisterPage() {
         {/* Content */}
         <div className="relative z-10 flex items-center justify-center p-12 animate-fade-in">
           <div className="max-w-lg text-white">
-            <img src="/yu-logo-white.svg" alt="영남대학교" className="h-12 mb-6" />
+            <Image src="/yu-logo-white.svg" alt="영남대학교" className="h-12 mb-6" width={120} height={48} style={{ width: 'auto' }} />
             <h1 className="text-4xl lg:text-5xl font-bold mb-8 leading-tight whitespace-pre-line">
               영남대학교{'\n'}YU the Future
             </h1>
@@ -104,7 +105,7 @@ export default function RegisterPage() {
         <div className="max-w-md w-full animate-fade-in-up">
           {/* Logo */}
           <div className="flex items-center gap-2 mb-8">
-            <img src="/yu-logo.svg" alt="영남대학교" className="h-6" />
+            <Image src="/yu-logo.svg" alt="영남대학교" className="h-6" width={60} height={24} style={{ width: 'auto' }} />
             <h2 className="text-2xl font-bold text-gradient">YU 수강 플래너</h2>
           </div>
 

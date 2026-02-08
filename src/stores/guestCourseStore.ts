@@ -36,7 +36,7 @@ interface GuestCourseState {
 
 export const useGuestCourseStore = create<GuestCourseState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       customCourses: [],
       _hasHydrated: false,
 

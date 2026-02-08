@@ -168,7 +168,6 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
   if (!plan) return emptyProgress();
 
   // User department info for course attribution
-  const userDeptId = user?.department?.toString();
   const secondaryDeptId = user?.secondaryDepartment?.toString();
 
   // Track accumulators

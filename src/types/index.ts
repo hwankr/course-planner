@@ -355,3 +355,55 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     totalPages: number;
   };
 }
+
+// ============================================
+// Statistics Types (학과별 익명 수강 통계)
+// ============================================
+
+export interface CourseStat {
+  courseId: string;
+  code: string;
+  name: string;
+  credits: number;
+  category: string;
+  studentCount: number;    // 고유 학생 수
+  percentage: number;      // studentCount / totalStudents * 100 (계획 작성 학생 대비)
+}
+
+export interface SemesterDistribution {
+  year: number;
+  term: string;
+  avgCourses: number;
+  avgCredits: number;
+}
+
+export interface DepartmentCourseStats {
+  departmentId: string;
+  departmentName: string;
+  totalStudents: number;
+  updatedAt: string;
+  courseStats: CourseStat[];
+  semesterDistribution: SemesterDistribution[];
+}
+
+export interface AnonymousPlanSummary {
+  anonymousId: string;
+  totalCredits: number;
+  totalCourses: number;
+  semesterCount: number;
+}
+
+export interface AnonymousPlanDetail {
+  anonymousId: string;
+  semesters: Array<{
+    year: number;
+    term: string;
+    courses: Array<{
+      code: string;
+      name: string;
+      credits: number;
+      category: string;
+    }>;
+  }>;
+  totalCredits: number;
+}

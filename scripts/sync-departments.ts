@@ -113,7 +113,7 @@ async function syncDepartments(): Promise<SyncStats> {
 
         const code = await generateUniqueCode(college, currentIndex);
 
-        const newDept = await Department.create({
+        await Department.create({
           code,
           name: departmentName,
           college,

@@ -8,3 +8,5 @@ export { SemesterColumn } from './SemesterColumn';
 export { CourseCatalog } from './CourseCatalog';
 export { RequirementForm } from './RequirementForm';
 export { RequirementsSummary } from './RequirementsSummary';
+export { ReadOnlySemesterColumn } from './ReadOnlySemesterColumn';
+export { AnonymousPlanModal } from './AnonymousPlanModal';

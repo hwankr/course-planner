@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -19,7 +20,7 @@ import {
 
 export default function Home() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const enterGuestMode = useGuestStore((s) => s.enterGuestMode);
 
   // 로그인된 사용자는 플래너로 리다이렉트
@@ -40,7 +41,7 @@ export default function Home() {
       <nav className="sticky top-0 z-50 glass border-b border-gray-200/50 animate-fade-in-down">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <img src="/yu-logo.svg" alt="영남대학교" className="h-6" />
+            <Image src="/yu-logo.svg" alt="영남대학교" className="h-6" width={60} height={24} style={{ width: 'auto' }} />
             <h1 className="text-xl font-bold text-gradient">YU 수강 플래너</h1>
           </div>
           {status === 'authenticated' ? (
@@ -74,7 +75,7 @@ export default function Home() {
             </div>
 
             {/* Logo */}
-            <img src="/yu-logo.svg" alt="영남대학교" className="h-10 mx-auto mb-4 animate-fade-in-up anim-delay-50" />
+            <Image src="/yu-logo.svg" alt="영남대학교" className="h-10 mx-auto mb-4 animate-fade-in-up anim-delay-50" width={100} height={40} style={{ width: 'auto' }} />
 
             {/* Title */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight animate-fade-in-up anim-delay-100">

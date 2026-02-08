@@ -191,7 +191,7 @@ export function useUpsertGraduationRequirement() {
       ...apiMutation,
       mutateAsync: async (input: GraduationRequirementInput) => {
         guestSetRequirement(input);
-        return input as any;
+        return input as unknown as GraduationRequirement;
       },
       mutate: (input: GraduationRequirementInput) => {
         guestSetRequirement(input);
@@ -224,7 +224,7 @@ export function useCreateDefaultGraduationRequirement() {
       ...apiMutation,
       mutateAsync: async () => {
         guestCreateDefaults();
-        return {} as any;
+        return {} as unknown as GraduationRequirement;
       },
       isPending: false,
     } as typeof apiMutation;

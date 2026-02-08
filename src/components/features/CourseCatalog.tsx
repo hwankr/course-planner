@@ -9,7 +9,7 @@ import { CourseCard } from './CourseCard';
 import { CustomCourseForm } from './CustomCourseForm';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
-import type { Semester, ICourse, RequirementCategory, MajorType } from '@/types';
+import type { Semester, ICourse, RequirementCategory } from '@/types';
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
