@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { Card } from '@/components/ui';
 import { AnonymousPlanModal } from '@/components/features/AnonymousPlanModal';
 import { useDepartmentStats, useAnonymousPlans } from '@/hooks/useStatistics';
-import { BarChart3, Users, BookOpen, ChevronRight, AlertCircle, Loader2, Info } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { BarChart3, Users, BookOpen, ChevronRight, AlertCircle, Loader2, Info, LogIn } from 'lucide-react';
 import type { RequirementCategory } from '@/types';
 
 const CATEGORY_LABELS: Record<RequirementCategory, string> = {
@@ -51,8 +53,12 @@ export default function StatisticsPage() {
   const [plansPage, setPlansPage] = useState(1);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
-  const { data: statsData, isLoading: statsLoading, isError: statsError, error: statsErrorObj } = useDepartmentStats();
-  const { data: plansData, isLoading: plansLoading } = useAnonymousPlans(plansPage, 9);
+  const { isGuest, loginWithGoogle } = useAuth();
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const effectiveDepartmentId = isGuest ? (guestDepartmentId || undefined) : undefined;
+
+  const { data: statsData, isLoading: statsLoading, isError: statsError, error: statsErrorObj } = useDepartmentStats(effectiveDepartmentId);
+  const { data: plansData, isLoading: plansLoading } = useAnonymousPlans(effectiveDepartmentId, plansPage, 9, !isGuest);
 
   // Error handling - MUST be checked FIRST
   if (statsLoading) {
@@ -80,7 +86,7 @@ export default function StatisticsPage() {
           </div>
           <h2 className="text-2xl font-bold mb-2">학과를 설정해주세요</h2>
           <p className="text-gray-600 mb-6">
-            학과별 수강 통계를 확인하려면 먼저 프로필에서 학과를 설정해야 합니다.
+            학과별 수강 통계를 확인하려면 프로필에서 학과를 설정해야 합니다.
           </p>
           <Link
             href="/profile"
@@ -153,6 +159,37 @@ export default function StatisticsPage() {
           <span>{formatRelativeTime(new Date(stats.updatedAt))} 갱신</span>
         </div>
       </div>
+
+      {/* Guest Login Recommendation Banner */}
+      {isGuest && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start gap-3">
+            <LogIn className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-900 mb-1">
+                회원가입하고 다른 학생들도 통계를 볼 수 있도록 도와주세요!
+              </p>
+              <p className="text-sm text-amber-800 mb-3">
+                로그인하면 나의 수강 계획이 통계에 반영되어, 같은 학과 학생들이 더 정확한 데이터를 참고할 수 있습니다.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={loginWithGoogle}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium"
+                >
+                  구글로 로그인
+                </button>
+                <Link
+                  href="/register"
+                  className="text-sm font-medium text-amber-900 hover:text-amber-700 underline"
+                >
+                  회원가입하기
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Data Scope Info Banner */}
       <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -309,89 +346,122 @@ export default function StatisticsPage() {
       </Card>
 
       {/* Anonymous Plans Section */}
-      <Card>
-        <div className="p-6 border-b">
-          <h2 className="text-xl font-bold mb-1">익명 수강계획 열람</h2>
-          <p className="text-sm text-gray-600">같은 학과 학생들의 수강 계획을 참고하세요</p>
-        </div>
-        <div className="p-6">
-          {plansLoading && plansPage === 1 ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-[#3069B3]" />
+      {isGuest ? (
+        <Card>
+          <div className="p-6 border-b">
+            <h2 className="text-xl font-bold mb-1">익명 수강계획 열람</h2>
+            <p className="text-sm text-gray-600">같은 학과 학생들의 수강 계획을 참고하세요</p>
+          </div>
+          <div className="p-8 text-center">
+            <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="font-medium text-gray-900 mb-2">로그인하면 다른 학생들의 수강 계획을 열람할 수 있습니다</p>
+            <p className="text-sm text-gray-500 mb-6">
+              회원가입 후 나의 계획을 등록하면, 같은 학과 학생들의 익명 수강 계획도 참고할 수 있어요.
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={loginWithGoogle}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
+              >
+                구글로 로그인
+              </button>
+              <Link
+                href="/register"
+                className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors text-sm font-medium"
+              >
+                회원가입하기
+              </Link>
             </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                {plansData?.plans.map((plan, index) => {
-                  const label = String.fromCharCode(65 + ((plansPage - 1) * 9 + index));
-                  return (
-                    <button
-                      key={plan.anonymousId}
-                      onClick={() => setSelectedPlanId(plan.anonymousId)}
-                      className="p-4 border-2 border-gray-200 rounded-lg hover:border-[#3069B3] hover:shadow-md transition-all text-left"
-                    >
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] text-white flex items-center justify-center font-bold text-sm">
-                          {label}
-                        </div>
-                        <span className="font-semibold text-gray-900">계획 {label}</span>
-                      </div>
-                      <div className="space-y-1 text-sm text-gray-600">
-                        <p>{plan.semesterCount}개 학기</p>
-                        <p>{plan.totalCourses}개 과목 · {plan.totalCredits}학점</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {plansData && plansData.plans.length > 0 && (
-                <p className="text-xs text-gray-400 mt-4 flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5" />
-                  모든 계획은 익명으로 표시됩니다
-                </p>
-              )}
-
-              {plansData && plansData.total > plansPage * plansData.limit && (
-                <div className="text-center">
-                  <button
-                    onClick={() => setPlansPage((p) => p + 1)}
-                    disabled={plansLoading}
-                    className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {plansLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        로딩 중...
-                      </>
-                    ) : (
-                      <>
-                        더 보기
-                        <ChevronRight className="w-5 h-5" />
-                      </>
-                    )}
-                  </button>
+          </div>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold mb-1">익명 수강계획 열람</h2>
+              <p className="text-sm text-gray-600">같은 학과 학생들의 수강 계획을 참고하세요</p>
+            </div>
+            <div className="p-6">
+              {plansLoading && plansPage === 1 ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#3069B3]" />
                 </div>
-              )}
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {plansData?.plans.map((plan, index) => {
+                      const label = String.fromCharCode(65 + ((plansPage - 1) * 9 + index));
+                      return (
+                        <button
+                          key={plan.anonymousId}
+                          onClick={() => setSelectedPlanId(plan.anonymousId)}
+                          className="p-4 border-2 border-gray-200 rounded-lg hover:border-[#3069B3] hover:shadow-md transition-all text-left"
+                        >
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] text-white flex items-center justify-center font-bold text-sm">
+                              {label}
+                            </div>
+                            <span className="font-semibold text-gray-900">계획 {label}</span>
+                          </div>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p>{plan.semesterCount}개 학기</p>
+                            <p>{plan.totalCourses}개 과목 · {plan.totalCredits}학점</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
 
-              {plansData?.plans.length === 0 && (
-                <div className="text-center py-12 text-gray-500">
-                  <p className="font-medium mb-1">아직 공개된 수강 계획이 없습니다</p>
-                  <p className="text-sm">학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다</p>
-                </div>
+                  {plansData && plansData.plans.length > 0 && (
+                    <p className="text-xs text-gray-400 mt-4 flex items-center gap-1">
+                      <Info className="w-3.5 h-3.5" />
+                      모든 계획은 익명으로 표시됩니다
+                    </p>
+                  )}
+
+                  {plansData && plansData.total > plansPage * plansData.limit && (
+                    <div className="text-center">
+                      <button
+                        onClick={() => setPlansPage((p) => p + 1)}
+                        disabled={plansLoading}
+                        className="inline-flex items-center gap-2 px-6 py-3 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {plansLoading ? (
+                          <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            로딩 중...
+                          </>
+                        ) : (
+                          <>
+                            더 보기
+                            <ChevronRight className="w-5 h-5" />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {plansData?.plans.length === 0 && (
+                    <div className="text-center py-12 text-gray-500">
+                      <p className="font-medium mb-1">아직 공개된 수강 계획이 없습니다</p>
+                      <p className="text-sm">학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다</p>
+                    </div>
+                  )}
+                </>
               )}
-            </>
+            </div>
+          </Card>
+
+          {/* Anonymous Plan Modal */}
+          {selectedPlanId && (
+            <AnonymousPlanModal
+              isOpen={true}
+              anonymousId={selectedPlanId}
+              departmentId={effectiveDepartmentId}
+              onClose={() => setSelectedPlanId(null)}
+            />
           )}
-        </div>
-      </Card>
-
-      {/* Anonymous Plan Modal */}
-      {selectedPlanId && (
-        <AnonymousPlanModal
-          isOpen={true}
-          anonymousId={selectedPlanId}
-          onClose={() => setSelectedPlanId(null)}
-        />
+        </>
       )}
     </div>
   );

@@ -9,11 +9,12 @@ interface AnonymousPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   anonymousId: string | null;
+  departmentId?: string;
 }
 
-export function AnonymousPlanModal({ isOpen, onClose, anonymousId }: AnonymousPlanModalProps) {
+export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId }: AnonymousPlanModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading, isError } = useAnonymousPlanDetail(isOpen ? anonymousId : null);
+  const { data, isLoading, isError } = useAnonymousPlanDetail(isOpen ? anonymousId : null, departmentId);
 
   // ESC key handler
   const handleKeyDown = useCallback(

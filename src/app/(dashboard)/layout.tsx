@@ -29,12 +29,10 @@ const adminNavigation = [{ name: '관리자', href: '/admin', icon: Shield }];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout, isAdmin, isGuest } = useAuth();
+  const { user, logout, isAdmin, isGuest, loginWithGoogle } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const visibleNavigation = isGuest
-    ? navigation.filter((item) => item.href !== '/statistics')
-    : navigation;
+  const visibleNavigation = navigation;
 
   return (
     <div className="bg-gray-50 bg-grid">
@@ -100,9 +98,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </>
               )}
               {isGuest ? (
-                <Link href="/register">
-                  <Button variant="default" size="sm" className="text-xs sm:text-sm whitespace-nowrap">회원가입</Button>
-                </Link>
+                <>
+                  <Button variant="ghost" size="sm" onClick={loginWithGoogle} className="text-xs sm:text-sm whitespace-nowrap">
+                    구글 로그인
+                  </Button>
+                  <Link href="/register">
+                    <Button variant="default" size="sm" className="text-xs sm:text-sm whitespace-nowrap">회원가입</Button>
+                  </Link>
+                </>
               ) : (
                 <Button variant="ghost" size="sm" onClick={logout} className="text-xs sm:text-sm whitespace-nowrap">
                   로그아웃
@@ -177,9 +180,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 비회원 모드입니다. 데이터가 이 브라우저에만 저장됩니다.
               </p>
             </div>
-            <Link href="/register" className="text-sm font-medium text-amber-900 hover:text-amber-700 underline">
-              회원가입하기
-            </Link>
+            <div className="flex items-center gap-3">
+              <button onClick={loginWithGoogle} className="text-sm font-medium text-amber-900 hover:text-amber-700 underline">
+                구글로 로그인
+              </button>
+              <Link href="/register" className="text-sm font-medium text-amber-900 hover:text-amber-700 underline">
+                회원가입하기
+              </Link>
+            </div>
           </div>
         </div>
       )}

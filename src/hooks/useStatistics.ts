@@ -22,10 +22,10 @@ export const statisticsKeys = {
   all: ['statistics'] as const,
   department: (departmentId?: string) =>
     [...statisticsKeys.all, 'department', departmentId] as const,
-  plans: (page: number, limit: number) =>
-    [...statisticsKeys.all, 'plans', { page, limit }] as const,
-  planDetail: (anonymousId: string) =>
-    [...statisticsKeys.all, 'plan', anonymousId] as const,
+  plans: (departmentId?: string, page: number = 1, limit: number = 10) =>
+    [...statisticsKeys.all, 'plans', departmentId, { page, limit }] as const,
+  planDetail: (anonymousId: string, departmentId?: string) =>
+    [...statisticsKeys.all, 'plan', anonymousId, departmentId] as const,
 };
 
 // ============================================
@@ -50,16 +50,21 @@ async function fetchDepartmentStats(
 }
 
 async function fetchAnonymousPlans(
-  page: number,
-  limit: number
+  departmentId?: string,
+  page: number = 1,
+  limit: number = 10
 ): Promise<{
   plans: AnonymousPlanSummary[];
   total: number;
   page: number;
   limit: number;
 }> {
+  const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (departmentId) {
+    params.append('departmentId', departmentId);
+  }
   const response = await fetch(
-    `/api/statistics/anonymous-plans?page=${page}&limit=${limit}`
+    `/api/statistics/anonymous-plans?${params.toString()}`
   );
   const result: ApiResponse<{
     plans: AnonymousPlanSummary[];
@@ -82,10 +87,12 @@ async function fetchAnonymousPlans(
 }
 
 async function fetchAnonymousPlanDetail(
-  anonymousId: string
+  anonymousId: string,
+  departmentId?: string
 ): Promise<AnonymousPlanDetail> {
+  const params = departmentId ? `?departmentId=${departmentId}` : '';
   const response = await fetch(
-    `/api/statistics/anonymous-plans/${anonymousId}`
+    `/api/statistics/anonymous-plans/${anonymousId}${params}`
   );
   const result: ApiResponse<AnonymousPlanDetail> = await response.json();
 
@@ -117,10 +124,11 @@ export function useDepartmentStats(departmentId?: string) {
 /**
  * 같은 학과 익명 계획 목록 (offset 기반 페이지네이션)
  */
-export function useAnonymousPlans(page: number = 1, limit: number = 10) {
+export function useAnonymousPlans(departmentId?: string, page: number = 1, limit: number = 10, enabled: boolean = true) {
   return useQuery({
-    queryKey: statisticsKeys.plans(page, limit),
-    queryFn: () => fetchAnonymousPlans(page, limit),
+    queryKey: statisticsKeys.plans(departmentId, page, limit),
+    queryFn: () => fetchAnonymousPlans(departmentId, page, limit),
+    enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
     placeholderData: (previousData) => previousData,  // keepPreviousData equivalent in v5
@@ -131,12 +139,12 @@ export function useAnonymousPlans(page: number = 1, limit: number = 10) {
  * 익명 계획 상세 조회
  * - 404 시 plans 목록 자동 invalidate
  */
-export function useAnonymousPlanDetail(anonymousId: string | null) {
+export function useAnonymousPlanDetail(anonymousId: string | null, departmentId?: string) {
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: statisticsKeys.planDetail(anonymousId || ''),
-    queryFn: () => fetchAnonymousPlanDetail(anonymousId!),
+    queryKey: statisticsKeys.planDetail(anonymousId || '', departmentId),
+    queryFn: () => fetchAnonymousPlanDetail(anonymousId!, departmentId),
     enabled: !!anonymousId,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,

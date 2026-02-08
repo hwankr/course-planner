@@ -2,7 +2,8 @@
  * @api-separable
  * @endpoint GET /api/statistics/anonymous-plans/:anonymousId
  * @service statisticsService.getAnonymousPlanDetail
- * @migration-notes Express 변환 시: app.get('/api/statistics/anonymous-plans/:anonymousId', ...)
+ * @access public (with departmentId param) | authenticated
+ * @migration-notes Express 변환 시: 인증 미들웨어를 optional로 설정, departmentId query param으로 게스트 접근 허용
  */
 
 import { NextResponse } from 'next/server';
@@ -17,14 +18,11 @@ interface RouteParams {
 export async function GET(request: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: '로그인이 필요합니다.' },
-        { status: 401 }
-      );
-    }
+    const { searchParams } = new URL(request.url);
 
-    const departmentId = session.user.department;
+    // Allow guest access with departmentId query param
+    const departmentId = searchParams.get('departmentId') || session?.user?.department;
+
     if (!departmentId) {
       return NextResponse.json(
         {
