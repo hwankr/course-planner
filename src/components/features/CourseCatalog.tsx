@@ -57,7 +57,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const [semesterFilter, setSemesterFilter] = useState<Semester | undefined>(undefined);
   const [categoryFilter, setCategoryFilter] = useState<RequirementCategory | undefined>(undefined);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [viewMode, setViewMode] = useState<'card' | 'list'>('card');
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
