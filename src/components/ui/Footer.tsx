@@ -29,6 +29,9 @@ export function Footer() {
               <p className="mt-1 text-sm text-gray-400">
                 영남대학교 학생을 위한 수강 계획 도우미
               </p>
+              <div className="mt-3">
+                <CopyEmail email="fabronjeon@naver.com" />
+              </div>
             </div>
 
             {/* Links Column */}
@@ -66,7 +69,27 @@ export function Footer() {
                 >
                   영남대학교 바로가기
                 </a>
-                <CopyEmail email="fabronjeon@naver.com" />
+                <Link
+                  href="/help/feedback"
+                  className="block text-sm text-[#00AACA]/80 transition-colors hover:text-[#00AACA]"
+                >
+                  문의 및 피드백
+                </Link>
+                <div className="flex items-center justify-center md:justify-start gap-3 pt-1">
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-gray-400 transition-colors hover:text-white"
+                  >
+                    개인정보처리방침
+                  </Link>
+                  <span className="text-gray-600">|</span>
+                  <Link
+                    href="/terms"
+                    className="text-sm text-gray-400 transition-colors hover:text-white"
+                  >
+                    이용약관
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

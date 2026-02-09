@@ -13,3 +13,4 @@ export { graduationRequirementService } from './graduationRequirement.service';
 export { onboardingService } from './onboarding.service';
 export { departmentRequirementService } from './departmentRequirement.service';
 export { statisticsService } from './statistics.service';
+export { feedbackService } from './feedback.service';

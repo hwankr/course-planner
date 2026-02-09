@@ -279,6 +279,20 @@ export default function HelpPage() {
           </p>
         </div>
 
+        {/* 문의하기 안내 */}
+        <div className="mb-8 rounded-2xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-6 text-center">
+          <p className="mb-3 text-sm text-slate-600 md:text-base">
+            궁금한 점이나 오류를 발견하셨나요?
+          </p>
+          <Link
+            href="/help/feedback"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#153974] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f]"
+          >
+            문의 및 피드백 보내기
+            <ExternalLink className="h-4 w-4" />
+          </Link>
+        </div>
+
         {/* Bottom Navigation */}
         <div className="flex flex-wrap justify-center gap-4">
           <Link
