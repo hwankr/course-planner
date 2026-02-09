@@ -483,6 +483,22 @@ html {
   background-clip: text;
 }
 
+.text-gradient-typing {
+  background: linear-gradient(90deg, #4dd9f0, #60a5fa, #a78bfa, #4dd9f0);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientFlow 4s ease infinite;
+  filter: drop-shadow(0 0 20px rgba(0, 170, 202, 0.4));
+}
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
 /* ============================================
    REDUCED MOTION SUPPORT
    ============================================ */

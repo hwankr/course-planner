@@ -26,7 +26,7 @@ export function Footer() {
                 <span className="font-bold text-lg text-white">YU 수강 플래너</span>
               </Link>
               <p className="text-gray-400 text-sm leading-relaxed mb-3">
-                영남대학교 학생들을 위해 학생들이 직접 만든 오픈소스 프로젝트. 더 나은 캠퍼스 라이프를 지향합니다.
+                
               </p>
               <CopyEmail email="fabronjeon@naver.com" />
             </div>
@@ -46,8 +46,7 @@ export function Footer() {
             <div>
               <h4 className="text-xs font-semibold text-white tracking-widest uppercase mb-5">Support</h4>
               <ul className="space-y-3 text-sm text-gray-400">
-                <li><Link href="/help/feedback" className="hover:text-[#00AACA] transition-colors">개발자 문의</Link></li>
-                <li><Link href="/help/feedback" className="hover:text-[#00AACA] transition-colors">버그 제보</Link></li>
+                <li><Link href="/help/feedback" className="hover:text-[#00AACA] transition-colors">문의 및 건의</Link></li>
                 <li>
                   <a
                     href="https://www.yu.ac.kr/main/index.do"
@@ -80,8 +79,6 @@ export function Footer() {
               {'\u00A9'} {new Date().getFullYear()} YU 수강 플래너. All rights reserved.
             </p>
             <div className="flex space-x-5">
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white transition-colors"><Github className="w-4 h-4" /></a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white transition-colors"><Instagram className="w-4 h-4" /></a>
               <a href="mailto:fabronjeon@naver.com" className="text-gray-500 hover:text-white transition-colors"><Mail className="w-4 h-4" /></a>
             </div>
           </div>

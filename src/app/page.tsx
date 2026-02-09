@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Sparkles,
   LayoutGrid,
-  BookOpen,
   MousePointerClick,
   CheckCircle,
 } from 'lucide-react';
@@ -166,6 +165,26 @@ export default function Home() {
         {/* Dark navy fullbleed background */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a1e3d] via-[#153974] to-[#1a2f5a]" />
 
+        {/* Product screenshots mosaic background */}
+        <div className="absolute inset-0 opacity-[0.08] pointer-events-none overflow-hidden">
+          <div className="absolute -top-10 -left-10 w-[45%] rotate-[-3deg]">
+            <Image src="/help/planner-semesters.png" alt="" width={800} height={400} className="rounded-xl blur-[1px]" />
+          </div>
+          <div className="absolute top-[15%] right-[-5%] w-[40%] rotate-[2deg]">
+            <Image src="/help/onboarding-screen.png" alt="" width={700} height={350} className="rounded-xl blur-[1px]" />
+          </div>
+          <div className="absolute bottom-[10%] left-[5%] w-[35%] rotate-[1deg]">
+            <Image src="/help/statistics-overview.png" alt="" width={600} height={300} className="rounded-xl blur-[1px]" />
+          </div>
+          <div className="absolute bottom-[-5%] right-[10%] w-[38%] rotate-[-2deg]">
+            <Image src="/help/requirements-widget.png" alt="" width={650} height={325} className="rounded-xl blur-[1px]" />
+          </div>
+          <div className="absolute top-[50%] left-[30%] w-[30%] rotate-[3deg]">
+            <Image src="/help/course-catalog.png" alt="" width={500} height={250} className="rounded-xl blur-[1px]" />
+          </div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1e3d]/60 via-[#153974]/30 to-[#0a1e3d]/80 pointer-events-none" />
+
         {/* Decorative geometric elements */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-20 -right-20 deco-ring deco-ring-lg opacity-30" />
@@ -175,9 +194,8 @@ export default function Home() {
         </div>
 
         <div className="container mx-auto px-4 relative z-10 py-20 lg:py-32">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto">
-            {/* Left column - Text */}
-            <div className="text-center lg:text-left">
+          <div className="max-w-3xl mx-auto">
+            <div className="text-center">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-8 animate-scale-in">
                 <Sparkles className="w-4 h-4 text-white/80" />
@@ -190,7 +208,7 @@ export default function Home() {
               <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight animate-fade-in-up anim-delay-100">
                 <span className="block text-white/90">영남대학교 생활을</span>
                 <span className="relative block whitespace-nowrap">
-                  <span className="relative z-10 text-gradient-light">
+                  <span className="relative z-10 text-gradient-typing">
                     {typedText}<span className="animate-cursor">|</span>
                   </span>
                   <span className="absolute -bottom-2 left-0 w-full h-3 bg-[#00AACA]/30 -skew-x-12 -z-0 blur-sm"></span>
@@ -198,13 +216,13 @@ export default function Home() {
               </h1>
 
               {/* Description */}
-              <p className="text-base lg:text-lg text-white/60 mb-6 leading-relaxed max-w-xl mx-auto lg:mx-0 animate-fade-in-up anim-delay-200">
+              <p className="text-base lg:text-lg text-white/60 mb-6 leading-relaxed max-w-xl mx-auto animate-fade-in-up anim-delay-200">
                 1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 다른 사람들의
                 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요.
               </p>
 
               {/* CTA Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start items-center mt-10 animate-fade-in-up anim-delay-300">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10 animate-fade-in-up anim-delay-300">
                 <Link href="/login">
                   <Button
                     size="lg"
@@ -225,104 +243,10 @@ export default function Home() {
               </div>
 
               {/* Small Notice */}
-              <p className="text-sm text-white/40 mt-4 animate-fade-in-up anim-delay-300 text-center lg:text-left">
+              <p className="text-sm text-white/40 mt-4 animate-fade-in-up anim-delay-300 text-center">
                 비회원은 데이터가 저장되지 않습니다
               </p>
 
-              {/* Inline Stats - NO CARDS */}
-              <div className="flex items-center justify-center lg:justify-start gap-6 mt-12 animate-fade-in-up anim-delay-400">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">4년</div>
-                  <div className="text-xs text-white/50 mt-1">전체 학기 관리</div>
-                </div>
-                <div className="stat-separator" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">130+</div>
-                  <div className="text-xs text-white/50 mt-1">학점 추적</div>
-                </div>
-                <div className="stat-separator" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-white">100%</div>
-                  <div className="text-xs text-white/50 mt-1">졸업 요건 달성</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right column - Mock planner (desktop only, NO animate-float) */}
-            <div className="hidden lg:block">
-              <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-2xl p-6 shadow-2xl max-w-sm mx-auto">
-                {/* Card header */}
-                <div className="flex items-center justify-between mb-5">
-                  <div>
-                    <h3 className="font-bold text-white text-lg">
-                      2025년 1학기
-                    </h3>
-                    <p className="text-sm text-white/50">18학점 수강중</p>
-                  </div>
-                  <div className="text-xs font-medium text-[#00AACA] bg-[#00AACA]/10 rounded-full px-3 py-1">
-                    4학년
-                  </div>
-                </div>
-
-                {/* Course items - only 3 */}
-                <div className="space-y-2.5">
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border-l-4 border-[#153974]">
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-white/70" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">
-                        캡스톤디자인
-                      </div>
-                      <div className="text-xs text-white/40">
-                        전공필수 | 3학점
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border-l-4 border-[#3069B3]">
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-white/70" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">
-                        소프트웨어공학
-                      </div>
-                      <div className="text-xs text-white/40">
-                        전공선택 | 3학점
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border-l-4 border-[#00AACA]">
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                      <BookOpen className="w-4 h-4 text-white/70" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">
-                        영어커뮤니케이션
-                      </div>
-                      <div className="text-xs text-white/40">
-                        교양필수 | 3학점
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="mt-5 pt-4 border-t border-white/10">
-                  <div className="flex justify-between text-xs mb-2">
-                    <span className="text-white/50">졸업 요건 달성률</span>
-                    <span className="font-semibold text-[#00AACA]">78%</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]"
-                      style={{ width: '78%' }}
-                    />
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
