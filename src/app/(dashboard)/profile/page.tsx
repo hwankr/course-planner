@@ -7,6 +7,10 @@ import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSele
 import type { ApiResponse, MajorType } from '@/types';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
+import { useGuestCourseStore } from '@/stores/guestCourseStore';
+import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   User,
@@ -44,6 +48,11 @@ export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestProfile = useGuestProfileStore();
+  const router = useRouter();
+  const clearAllGuestData = useGuestStore((s) => s.clearAllGuestData);
+  const clearAllPlans = useGuestPlanStore((s) => s.clearAll);
+  const clearAllCourses = useGuestCourseStore((s) => s.clearAll);
+  const resetGraduation = useGuestGraduationStore((s) => s.reset);
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -74,6 +83,25 @@ export default function ProfilePage() {
       alert('계정 삭제에 실패했습니다. 다시 시도해주세요.');
       setIsDeleting(false);
     }
+  };
+
+  const handleResetGuestData = () => {
+    const confirmed = window.confirm(
+      '정말로 모든 데이터를 초기화하시겠습니까?\n\n프로필, 수강계획, 커스텀 과목, 졸업요건 등 모든 데이터가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.'
+    );
+    if (!confirmed) return;
+
+    // Reset in-memory Zustand state
+    guestProfile.reset();
+    clearAllPlans();
+    clearAllCourses();
+    resetGraduation();
+
+    // Clear localStorage as safety net
+    clearAllGuestData();
+
+    // Navigate to home
+    router.push('/');
   };
 
   // Fetch current user profile
@@ -366,6 +394,28 @@ export default function ProfilePage() {
                 <Button variant="outline" className="w-full">회원가입하여 데이터 영구 저장</Button>
               </Link>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Account Reset */}
+        <Card className="animate-fade-in-up anim-delay-200 border-red-200">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-red-500" />
+              <CardTitle className="text-red-600">계정 초기화</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              모든 게스트 데이터(프로필, 수강계획, 커스텀 과목, 졸업요건)를 초기화합니다. 이 작업은 되돌릴 수 없습니다.
+            </p>
+            <Button
+              variant="outline"
+              onClick={handleResetGuestData}
+              className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+            >
+              계정 초기화
+            </Button>
           </CardContent>
         </Card>
       </div>
