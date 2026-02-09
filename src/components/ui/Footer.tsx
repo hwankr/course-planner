@@ -28,7 +28,7 @@ export function Footer() {
               <p className="text-gray-400 text-sm leading-relaxed mb-3">
                 
               </p>
-              <CopyEmail email="fabronjeon@naver.com" />
+              <CopyEmail email="fabronjeon@gmail.com" />
             </div>
 
             {/* Service Column */}
@@ -79,7 +79,7 @@ export function Footer() {
               {'\u00A9'} {new Date().getFullYear()} YU 수강 플래너. All rights reserved.
             </p>
             <div className="flex space-x-5">
-              <a href="mailto:fabronjeon@naver.com" className="text-gray-500 hover:text-white transition-colors"><Mail className="w-4 h-4" /></a>
+              <a href="mailto:fabronjeon@gmail.com" className="text-gray-500 hover:text-white transition-colors"><Mail className="w-4 h-4" /></a>
             </div>
           </div>
         </div>

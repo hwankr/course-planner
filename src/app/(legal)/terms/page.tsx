@@ -277,7 +277,7 @@ export default function TermsPage() {
               <p>본 약관은 2026년 2월 9일부터 시행됩니다.</p>
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  <strong>문의:</strong> fabronjeon@naver.com
+                  <strong>문의:</strong> fabronjeon@gmail.com
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
                   <strong>운영자:</strong> 개인 프로젝트 (영남대학교 학생)

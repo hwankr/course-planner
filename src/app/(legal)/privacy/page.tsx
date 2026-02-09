@@ -184,7 +184,7 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p className="text-gray-700 mt-3">
               권리 행사는 서비스 내 프로필 페이지에서 직접 수행하거나,
-              개인정보 보호책임자에게 이메일(fabronjeon@naver.com)로 요청하실 수 있습니다.
+              개인정보 보호책임자에게 이메일(fabronjeon@gmail.com)로 요청하실 수 있습니다.
             </p>
           </section>
 
@@ -275,7 +275,7 @@ export default function PrivacyPolicyPage() {
               <p className="font-semibold text-gray-800 mb-2">개인정보 보호책임자</p>
               <ul className="text-gray-700 space-y-1">
                 <li>담당자: 전상범 (서비스 운영자)</li>
-                <li>이메일: fabronjeon@naver.com</li>
+                <li>이메일: fabronjeon@gmail.com</li>
               </ul>
             </div>
 
