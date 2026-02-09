@@ -18,12 +18,14 @@ import {
   AlertTriangle,
   BarChart3,
   HelpCircle,
+  Gift,
 } from 'lucide-react';
 
 const navigation = [
   { name: '수강 계획', href: '/planner', icon: Calendar },
   { name: '학과 통계', href: '/statistics', icon: BarChart3 },
   { name: '프로필', href: '/profile', icon: User },
+  { name: '이벤트', href: '/event', icon: Gift },
   { name: '도움말', href: '/help', icon: HelpCircle },
 ];
 
