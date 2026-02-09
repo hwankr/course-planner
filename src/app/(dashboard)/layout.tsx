@@ -17,12 +17,14 @@ import {
   X,
   AlertTriangle,
   BarChart3,
+  HelpCircle,
 } from 'lucide-react';
 
 const navigation = [
   { name: '수강 계획', href: '/planner', icon: Calendar },
   { name: '학과 통계', href: '/statistics', icon: BarChart3 },
   { name: '프로필', href: '/profile', icon: User },
+  { name: '도움말', href: '/help', icon: HelpCircle },
 ];
 
 const adminNavigation = [{ name: '관리자', href: '/admin', icon: Shield }];

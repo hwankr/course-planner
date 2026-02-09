@@ -6,7 +6,7 @@ const footerLinks = [
   { name: '수강 계획', href: '/planner' },
   { name: '학과 통계', href: '/statistics' },
   { name: '프로필', href: '/profile' },
-  { name: '도움말', href: '/help/graduation-guide' },
+  { name: '도움말', href: '/help' },
 ];
 
 export function Footer() {

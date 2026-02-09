@@ -205,7 +205,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
         code: course.code || 'N/A',
         name: course.name || 'Unknown',
         credits: course.credits || 0,
-        category: course.category || 'free_elective',
+        category: (entry as unknown as { category?: string }).category || course.category || 'free_elective',
       };
 
       if (entry.status === 'completed') completed.push(info);

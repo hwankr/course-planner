@@ -377,6 +377,104 @@ html {
 }
 
 /* ============================================
+   CLIP PATH UTILITIES
+   ============================================ */
+
+.clip-diagonal-top {
+  clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
+}
+
+.clip-diagonal-both {
+  clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%);
+}
+
+.clip-hero-bottom {
+  clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
+}
+
+/* ============================================
+   DECORATIVE NUMBERS
+   ============================================ */
+
+.deco-number {
+  font-size: clamp(80px, 15vw, 160px);
+  font-weight: 800;
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(21, 57, 116, 0.08);
+  pointer-events: none;
+  user-select: none;
+}
+
+.deco-number-light {
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.06);
+}
+
+/* ============================================
+   GEOMETRIC DECORATIONS
+   ============================================ */
+
+.deco-ring {
+  border-radius: 50%;
+  border: 2px solid rgba(0, 170, 202, 0.15);
+  pointer-events: none;
+}
+
+.deco-ring-lg {
+  width: 400px;
+  height: 400px;
+}
+
+.deco-ring-sm {
+  width: 200px;
+  height: 200px;
+}
+
+.deco-dot-accent {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00AACA;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* ============================================
+   DIVIDER LINES
+   ============================================ */
+
+.divider-vertical-gradient {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
+}
+
+.divider-horizontal-gradient {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
+}
+
+/* ============================================
+   STAT SEPARATOR
+   ============================================ */
+
+.stat-separator {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   TEXT GRADIENT LIGHT (for dark backgrounds)
+   ============================================ */
+
+.text-gradient-light {
+  background: linear-gradient(135deg, #00AACA, #4dd9f0, #80e8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
    REDUCED MOTION SUPPORT
    ============================================ */
 
@@ -402,6 +500,10 @@ html {
   .animate-on-scroll {
     opacity: 1 !important;
     transform: none !important;
+    transition: none !important;
+  }
+
+  .deco-bar {
     transition: none !important;
   }
 }
