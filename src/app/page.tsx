@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui';
 import { useGuestStore } from '@/stores/guestStore';
@@ -20,6 +20,7 @@ export default function Home() {
   const router = useRouter();
   const { status } = useSession();
   const enterGuestMode = useGuestStore((s) => s.enterGuestMode);
+  const [typedText, setTypedText] = useState('');
 
   // 로그인된 사용자는 플래너로 리다이렉트
   useEffect(() => {
@@ -27,6 +28,41 @@ export default function Home() {
       router.push('/planner');
     }
   }, [status, router]);
+
+  // Typing effect
+  useEffect(() => {
+    const words = ["스마트하게 설계하다.", "직관적으로 관리하다.", "아름답게 기록하다."];
+    let wordIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let timeoutId: NodeJS.Timeout;
+
+    const type = () => {
+      const currentWord = words[wordIndex];
+      if (!currentWord) return;
+
+      if (isDeleting) {
+        setTypedText(currentWord.substring(0, charIndex - 1));
+        charIndex--;
+      } else {
+        setTypedText(currentWord.substring(0, charIndex + 1));
+        charIndex++;
+      }
+
+      let typeDelay = isDeleting ? 50 : 100;
+      if (!isDeleting && charIndex === currentWord.length) {
+        typeDelay = 2000;
+        isDeleting = true;
+      } else if (isDeleting && charIndex === 0) {
+        isDeleting = false;
+        wordIndex = (wordIndex + 1) % words.length;
+      }
+      timeoutId = setTimeout(type, typeDelay);
+    };
+
+    type();
+    return () => clearTimeout(timeoutId);
+  }, []);
 
   // Scroll-triggered animation observer
   useEffect(() => {
@@ -151,9 +187,14 @@ export default function Home() {
               </div>
 
               {/* Title - white text with cyan gradient accent */}
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight tracking-tighter animate-fade-in-up anim-delay-100">
-                <span className="block text-white/90">영남대 수강 계획을</span>
-                <span className="block text-gradient-light">완벽하게</span>
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight animate-fade-in-up anim-delay-100">
+                <span className="block text-white/90">영남대학교 생활을</span>
+                <span className="relative block whitespace-nowrap">
+                  <span className="relative z-10 text-gradient-light">
+                    {typedText}<span className="animate-cursor">|</span>
+                  </span>
+                  <span className="absolute -bottom-2 left-0 w-full h-3 bg-[#00AACA]/30 -skew-x-12 -z-0 blur-sm"></span>
+                </span>
               </h1>
 
               {/* Description */}

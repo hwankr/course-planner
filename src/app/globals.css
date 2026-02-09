@@ -134,6 +134,11 @@ html {
   }
 }
 
+@keyframes cursorBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 /* ============================================
    ANIMATION UTILITY CLASSES
    ============================================ */
@@ -189,6 +194,10 @@ html {
 
 .animate-slide-down {
   animation: slideDown 0.3s ease-out both;
+}
+
+.animate-cursor {
+  animation: cursorBlink 1s step-end infinite;
 }
 
 /* ============================================
@@ -491,7 +500,8 @@ html {
   .animate-gradient,
   .animate-shimmer,
   .animate-bounce-soft,
-  .animate-pulse-soft {
+  .animate-pulse-soft,
+  .animate-cursor {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

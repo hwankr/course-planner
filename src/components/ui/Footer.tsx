@@ -1,107 +1,93 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { Github, Instagram, Mail } from 'lucide-react';
 import { CopyEmail } from './CopyEmail';
-
-const footerLinks = [
-  { name: '수강 계획', href: '/planner' },
-  { name: '학과 통계', href: '/statistics' },
-  { name: '프로필', href: '/profile' },
-  { name: '도움말', href: '/help' },
-];
 
 export function Footer() {
   return (
     <footer className="mt-auto">
-      <div className="bg-[#0d2654] py-12">
+      {/* Gradient line at top */}
+      <div className="h-px bg-gradient-to-r from-transparent via-[#3069B3] to-transparent"></div>
+
+      <div className="bg-[#0d2654] pt-16 pb-8">
         <div className="container mx-auto px-4">
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
             {/* Brand Column */}
-            <div className="text-center md:text-left">
-              <Image
-                src="/yu-logo-white.svg"
-                alt="영남대학교"
-                width={120}
-                height={48}
-                style={{ width: 'auto' }}
-                className="h-8 mx-auto md:mx-0"
-              />
-              <p className="mt-3 text-lg font-bold text-white">YU 수강 플래너</p>
-              <p className="mt-1 text-sm text-gray-400">
-                영남대학교 학생을 위한 수강 계획 도우미
+            <div className="col-span-2 md:col-span-1">
+              <Link href="/" className="flex items-center gap-2 mb-4">
+                <Image
+                  src="/yu-logo-white.svg"
+                  alt="영남대학교"
+                  width={120}
+                  height={48}
+                  style={{ width: 'auto' }}
+                  className="h-6"
+                />
+                <span className="font-bold text-lg text-white">YU 수강 플래너</span>
+              </Link>
+              <p className="text-gray-400 text-sm leading-relaxed mb-3">
+                영남대학교 학생들을 위해 학생들이 직접 만든 오픈소스 프로젝트. 더 나은 캠퍼스 라이프를 지향합니다.
               </p>
-              <div className="mt-3">
-                <CopyEmail email="fabronjeon@naver.com" />
-              </div>
+              <CopyEmail email="fabronjeon@naver.com" />
             </div>
 
-            {/* Links Column */}
-            <div className="text-center md:text-left">
-              <h3 className="text-sm font-semibold text-white">바로가기</h3>
-              <ul className="mt-3 space-y-2">
-                {footerLinks.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-gray-400 transition-colors hover:text-white"
-                    >
-                      {link.name}
-                    </Link>
-                  </li>
-                ))}
+            {/* Service Column */}
+            <div>
+              <h4 className="text-xs font-semibold text-white tracking-widest uppercase mb-5">Service</h4>
+              <ul className="space-y-3 text-sm text-gray-400">
+                <li><Link href="/planner" className="hover:text-[#00AACA] transition-colors">수강 계획</Link></li>
+                <li><Link href="/planner" className="hover:text-[#00AACA] transition-colors">졸업 요건 추적</Link></li>
+                <li><Link href="/statistics" className="hover:text-[#00AACA] transition-colors">학과 통계</Link></li>
+                <li><Link href="/help" className="hover:text-[#00AACA] transition-colors">도움말</Link></li>
               </ul>
             </div>
 
-            {/* Info Column */}
-            <div className="text-center md:text-left">
-              <h3 className="text-sm font-semibold text-white">정보</h3>
-              <div className="mt-3 space-y-2">
-                <p className="text-sm text-gray-400">
-                  이 서비스는 영남대학교 공식 서비스가 아닙니다
-                </p>
-                <p className="text-sm text-gray-400">
-                  학생 프로젝트로 제작되었습니다
-                </p>
-                <a
-                  href="https://www.yu.ac.kr/main/index.do"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-sm text-[#00AACA]/80 transition-colors hover:text-[#00AACA]"
-                >
-                  영남대학교 바로가기
-                </a>
-                <Link
-                  href="/help/feedback"
-                  className="block text-sm text-[#00AACA]/80 transition-colors hover:text-[#00AACA]"
-                >
-                  문의 및 피드백
-                </Link>
-                <div className="flex items-center justify-center md:justify-start gap-3 pt-1">
-                  <Link
-                    href="/privacy"
-                    className="text-sm text-gray-400 transition-colors hover:text-white"
+            {/* Support Column */}
+            <div>
+              <h4 className="text-xs font-semibold text-white tracking-widest uppercase mb-5">Support</h4>
+              <ul className="space-y-3 text-sm text-gray-400">
+                <li><Link href="/help/feedback" className="hover:text-[#00AACA] transition-colors">개발자 문의</Link></li>
+                <li><Link href="/help/feedback" className="hover:text-[#00AACA] transition-colors">버그 제보</Link></li>
+                <li>
+                  <a
+                    href="https://www.yu.ac.kr/main/index.do"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:text-[#00AACA] transition-colors"
                   >
-                    개인정보처리방침
-                  </Link>
-                  <span className="text-gray-600">|</span>
-                  <Link
-                    href="/terms"
-                    className="text-sm text-gray-400 transition-colors hover:text-white"
-                  >
-                    이용약관
-                  </Link>
-                </div>
-              </div>
+                    영남대학교 바로가기
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Legal Column */}
+            <div>
+              <h4 className="text-xs font-semibold text-white tracking-widest uppercase mb-5">Legal</h4>
+              <ul className="space-y-3 text-sm text-gray-400">
+                <li><Link href="/privacy" className="hover:text-[#00AACA] transition-colors">개인정보처리방침</Link></li>
+                <li><Link href="/terms" className="hover:text-[#00AACA] transition-colors">이용약관</Link></li>
+              </ul>
+              <p className="mt-4 text-xs text-gray-500 leading-relaxed">
+                이 서비스는 영남대학교 공식 서비스가 아닙니다
+              </p>
             </div>
           </div>
 
           {/* Bottom Bar */}
-          <div className="mt-8 border-t border-white/10 pt-8 text-center md:text-left">
-            <p className="text-sm text-gray-500">
+          <div className="border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-gray-500">
               {'\u00A9'} {new Date().getFullYear()} YU 수강 플래너. All rights reserved.
             </p>
+            <div className="flex space-x-5">
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white transition-colors"><Github className="w-4 h-4" /></a>
+              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-gray-500 hover:text-white transition-colors"><Instagram className="w-4 h-4" /></a>
+              <a href="mailto:fabronjeon@naver.com" className="text-gray-500 hover:text-white transition-colors"><Mail className="w-4 h-4" /></a>
+            </div>
           </div>
         </div>
       </div>
+
       {/* Bottom Gradient Bar */}
       <div className="h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]" />
     </footer>
