@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Gift,
   Coffee,
-  Trophy,
   Camera,
   Send,
   ExternalLink,
@@ -62,39 +61,16 @@ export default function EventPage() {
             </div>
 
             {/* 상품 안내 */}
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* 일반 당첨 */}
-              <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4">
-                <Coffee className="h-5 w-5 flex-shrink-0 text-green-600" />
-                <div>
-                  <p className="text-sm font-semibold text-green-900">
-                    일반 당첨
-                  </p>
-                  <p className="mt-1 text-xs text-green-700">
-                    스타벅스 5,000원 × 8명
-                  </p>
-                </div>
+            <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 p-4">
+              <Coffee className="h-5 w-5 flex-shrink-0 text-green-600" />
+              <div>
+                <p className="text-sm font-semibold text-green-900">
+                  당첨
+                </p>
+                <p className="mt-1 text-xs text-green-700">
+                  스타벅스 5,000원 × 10명
+                </p>
               </div>
-
-              {/* 특별 당첨 */}
-              <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <Trophy className="h-5 w-5 flex-shrink-0 text-amber-600" />
-                <div>
-                  <p className="text-sm font-semibold text-amber-900">
-                    특별 당첨
-                  </p>
-                  <p className="mt-1 text-xs text-amber-700">
-                    스타벅스 10,000원 × 1명
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs text-slate-600">
-                <span className="font-semibold text-[#153974]">총 예산:</span>{' '}
-                50,000원
-              </p>
             </div>
           </div>
         </div>
