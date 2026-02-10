@@ -13,12 +13,62 @@ import { planService } from './plan.service';
 import { courseService } from './course.service';
 import { graduationRequirementService } from './graduationRequirement.service';
 
+const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+const MAX_LOGIN_ATTEMPTS = 5;
+
+/**
+ * Check if account is locked
+ */
+async function isAccountLocked(email: string): Promise<boolean> {
+  await connectDB();
+  const user = await User.findOne({ email: email.toLowerCase() }).select('lockUntil').lean();
+  if (!user?.lockUntil) return false;
+  if (new Date() > user.lockUntil) {
+    // Lock expired, reset
+    await User.updateOne(
+      { email: email.toLowerCase() },
+      { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } }
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Record failed login attempt
+ */
+async function recordFailedLogin(email: string): Promise<void> {
+  await connectDB();
+  const user = await User.findOneAndUpdate(
+    { email: email.toLowerCase() },
+    { $inc: { failedLoginAttempts: 1 } },
+    { new: true, select: 'failedLoginAttempts' }
+  );
+  if (user && (user.failedLoginAttempts ?? 0) >= MAX_LOGIN_ATTEMPTS) {
+    await User.updateOne(
+      { email: email.toLowerCase() },
+      { $set: { lockUntil: new Date(Date.now() + LOCK_TIME) } }
+    );
+  }
+}
+
+/**
+ * Reset failed login attempts on successful login
+ */
+async function resetFailedLogins(email: string): Promise<void> {
+  await connectDB();
+  await User.updateOne(
+    { email: email.toLowerCase() },
+    { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } }
+  );
+}
+
 /**
  * 이메일로 사용자 조회
  */
 async function findByEmail(email: string): Promise<IUserDocument | null> {
   await connectDB();
-  return User.findOne({ email: email.toLowerCase() });
+  return User.findOne({ email: email.toLowerCase() }).lean();
 }
 
 /**
@@ -34,7 +84,7 @@ async function findByEmailWithPassword(email: string): Promise<IUserDocument | n
  */
 async function findById(id: string): Promise<IUserDocument | null> {
   await connectDB();
-  return User.findById(id).populate('department secondaryDepartment');
+  return User.findById(id).populate('department secondaryDepartment').lean();
 }
 
 /**
@@ -146,4 +196,7 @@ export const userService = {
   update,
   findOrCreateOAuthUser,
   deleteWithCascade,
+  isAccountLocked,
+  recordFailedLogin,
+  resetFailedLogins,
 };

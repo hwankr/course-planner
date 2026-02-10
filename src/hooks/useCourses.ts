@@ -101,7 +101,8 @@ export function useCourses(filter?: CourseFilter) {
   const apiResult = useQuery({
     queryKey: ['courses', effectiveFilter],
     queryFn: () => fetchCourses(effectiveFilter),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutes - course catalog is relatively static
+    refetchOnWindowFocus: false,
   });
 
   // 게스트 커스텀 과목을 API 결과에 병합
@@ -136,7 +137,8 @@ export function useCourse(id: string) {
     queryKey: ['courses', id],
     queryFn: () => fetchCourse(id),
     enabled: !!id, // Only run query when id is provided
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - course catalog is relatively static
+    refetchOnWindowFocus: false,
   });
 }
 

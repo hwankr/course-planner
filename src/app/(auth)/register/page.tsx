@@ -31,8 +31,9 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.');
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$/;
+    if (!passwordRegex.test(formData.password)) {
+      setError('비밀번호는 8자 이상이며, 대문자, 소문자, 숫자를 포함해야 합니다.');
       return;
     }
 
@@ -163,9 +164,12 @@ export default function RegisterPage() {
                 type="password"
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="6자 이상"
+                placeholder="8자 이상 (대문자, 소문자, 숫자 포함)"
                 required
               />
+              <p className="mt-1 text-xs text-gray-500">
+                8자 이상, 대문자·소문자·숫자 포함
+              </p>
             </div>
 
             <div>

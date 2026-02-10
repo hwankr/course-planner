@@ -11,6 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { graduationRequirementService } from '@/services';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET() {
   try {
@@ -29,7 +30,7 @@ export async function GET() {
       data: requirement,
     });
   } catch (error) {
-    console.error('GET /api/graduation-requirements error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '졸업요건을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -107,7 +108,7 @@ export async function PUT(request: Request) {
         { status: 400 }
       );
     }
-    console.error('PUT /api/graduation-requirements error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '졸업요건 저장에 실패했습니다.' },
       { status: 500 }

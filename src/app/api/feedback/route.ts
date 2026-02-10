@@ -12,6 +12,7 @@ import { authOptions } from '@/lib/auth/options';
 import { feedbackService } from '@/services/feedback.service';
 import { createRateLimiter, getClientIp, rateLimitResponse } from '@/lib/rateLimit';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 
 // Feedback-specific rate limiter: 5 submissions per 15 minutes
 const feedbackLimiter = createRateLimiter({
@@ -57,7 +58,7 @@ export async function GET(request: Request) {
       data: feedbacks,
     });
   } catch (error) {
-    console.error('GET /api/feedback error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '피드백 목록을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -73,6 +74,15 @@ export async function POST(request: Request) {
 
     if (!rateLimitResult.success) {
       return rateLimitResponse();
+    }
+
+    // Body size limit check (defense-in-depth)
+    const contentLength = parseInt(request.headers.get('content-length') || '0');
+    if (contentLength > 100 * 1024) { // 100KB limit for this endpoint
+      return NextResponse.json(
+        { success: false, error: '요청 데이터가 너무 큽니다.' },
+        { status: 413 }
+      );
     }
 
     // Validate request body
@@ -108,7 +118,7 @@ export async function POST(request: Request) {
       );
     }
 
-    console.error('POST /api/feedback error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '피드백 제출에 실패했습니다.' },
       { status: 500 }

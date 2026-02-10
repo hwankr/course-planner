@@ -15,7 +15,7 @@ import type { GraduationRequirementInput, GraduationProgress, CourseInfo } from 
  */
 async function findByUser(userId: string): Promise<IGraduationRequirementDocument | null> {
   await connectDB();
-  return GraduationRequirement.findOne({ user: userId });
+  return GraduationRequirement.findOne({ user: userId }).lean();
 }
 
 /**
@@ -63,10 +63,10 @@ async function remove(userId: string): Promise<IGraduationRequirementDocument | 
 async function calculateProgress(userId: string): Promise<GraduationProgress | null> {
   await connectDB();
 
-  const requirement = await GraduationRequirement.findOne({ user: userId });
+  const requirement = await GraduationRequirement.findOne({ user: userId }).lean();
   if (!requirement) return null;
 
-  const user = await User.findById(userId).select('department secondaryDepartment majorType');
+  const user = await User.findById(userId).select('department secondaryDepartment majorType').lean();
 
   const pct = (earned: number, required: number) =>
     required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;

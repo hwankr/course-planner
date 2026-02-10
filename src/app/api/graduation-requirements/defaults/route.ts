@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { graduationRequirementService } from '@/services';
+import * as Sentry from '@sentry/nextjs';
 
 export async function POST() {
   try {
@@ -37,7 +38,7 @@ export async function POST() {
       message: '기본 졸업요건이 생성되었습니다.',
     });
   } catch (error) {
-    console.error('POST /api/graduation-requirements/defaults error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '기본 졸업요건 생성에 실패했습니다.' },
       { status: 500 }

@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { graduationRequirementService } from '@/services';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET() {
   try {
@@ -27,7 +28,7 @@ export async function GET() {
       data: progress,
     });
   } catch (error) {
-    console.error('GET /api/graduation-requirements/progress error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '졸업요건 충족 현황을 불러오는데 실패했습니다.' },
       { status: 500 }

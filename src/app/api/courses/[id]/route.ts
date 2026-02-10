@@ -13,6 +13,7 @@ import { authOptions } from '@/lib/auth/options';
 import { courseService } from '@/services';
 import { z } from 'zod';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
+import * as Sentry from '@sentry/nextjs';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -36,7 +37,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       data: course,
     });
   } catch (error) {
-    console.error('GET /api/courses/[id] error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '과목을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -125,7 +126,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       message: '과목이 삭제되었습니다.',
     });
   } catch (error) {
-    console.error('DELETE /api/courses/[id] error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '과목 삭제에 실패했습니다.' },
       { status: 500 }

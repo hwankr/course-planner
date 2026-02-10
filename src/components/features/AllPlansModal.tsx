@@ -50,11 +50,14 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
     }
   }, [isOpen, selectedPlanId]);
 
-  // Reset state when modal closes
+  // Reset state when modal closes - use layout effect to avoid cascading renders
   useEffect(() => {
     if (!isOpen) {
-      setPlansPage(1);
-      setSelectedPlanId(null);
+      // Queue state updates to avoid synchronous setState in effect
+      Promise.resolve().then(() => {
+        setPlansPage(1);
+        setSelectedPlanId(null);
+      });
     }
   }, [isOpen]);
 

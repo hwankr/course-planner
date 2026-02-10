@@ -184,7 +184,8 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     .populate('department', 'code name')
     .populate('prerequisites', 'code name')
     .sort({ createdBy: 1, code: 1 }) // Official courses first, then custom
-    .limit(filter?.limit ?? 200);
+    .limit(filter?.limit ?? 200)
+    .lean();
 }
 
 /**
@@ -194,7 +195,8 @@ async function findById(id: string): Promise<ICourseDocument | null> {
   await connectDB();
   return Course.findById(id)
     .populate('department', 'code name')
-    .populate('prerequisites', 'code name credits');
+    .populate('prerequisites', 'code name credits')
+    .lean();
 }
 
 /**
@@ -204,7 +206,8 @@ async function findByCode(code: string): Promise<ICourseDocument | null> {
   await connectDB();
   return Course.findOne({ code: code.toUpperCase() })
     .populate('department', 'code name')
-    .populate('prerequisites', 'code name');
+    .populate('prerequisites', 'code name')
+    .lean();
 }
 
 /**

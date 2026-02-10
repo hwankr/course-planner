@@ -11,6 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { departmentService } from '@/services';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET() {
   try {
@@ -21,7 +22,7 @@ export async function GET() {
       data: departments,
     });
   } catch (error) {
-    console.error('GET /api/departments error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '학과 목록을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -63,13 +64,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '학과 생성에 실패했습니다.' },
       { status: 500 }

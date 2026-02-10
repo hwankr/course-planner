@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { Card } from '@/components/ui';
 import { AnonymousPlanModal } from '@/components/features/AnonymousPlanModal';
@@ -155,7 +155,7 @@ export default function StatisticsPage() {
     }
     const sorted = Array.from(semesterSet).sort((a, b) => {
       const [aYear, aTerm] = a.split('-');
-      const [bYear, bTerm] = b.split('-');
+      const [bYear] = b.split('-');
       if (aYear !== bYear) return Number(aYear) - Number(bYear);
       return aTerm === 'spring' ? -1 : 1;
     });

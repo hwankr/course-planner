@@ -13,6 +13,7 @@ import { authOptions } from '@/lib/auth/options';
 import { planService } from '@/services';
 import { z } from 'zod';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
+import * as Sentry from '@sentry/nextjs';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -66,13 +67,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       );
     }
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '학기 추가에 실패했습니다.' },
       { status: 500 }
@@ -118,13 +113,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '학기 제거에 실패했습니다.' },
       { status: 500 }
@@ -170,13 +159,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '학기 초기화에 실패했습니다.' },
       { status: 500 }

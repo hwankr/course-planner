@@ -25,6 +25,8 @@ export interface IUser {
   role: UserRole;
   provider?: 'credentials' | 'google';
   onboardingCompleted: boolean;
+  failedLoginAttempts?: number;
+  lockUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

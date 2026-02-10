@@ -4,13 +4,13 @@
  * @migration-notes 분리 시 백엔드 프로젝트의 lib/db/mongoose.ts로 이동
  */
 
+// NOTE: MongoDB Atlas 클러스터는 Seoul 리전 (ap-northeast-2) 권장
+// Vercel icn1 리전과의 최소 지연시간을 위해
+
 import mongoose from 'mongoose';
+import { env } from '@/lib/env';
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('MONGODB_URI 환경변수를 설정해주세요.');
-}
+const MONGODB_URI = env.MONGODB_URI;
 
 interface MongooseCache {
   conn: typeof mongoose | null;
@@ -41,11 +41,13 @@ export async function connectDB(): Promise<typeof mongoose> {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      console.log('MongoDB 연결 성공');
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose;
     });
   }

@@ -65,7 +65,8 @@ async function findAll(filter?: FeedbackFilter): Promise<IFeedbackDocument[]> {
   return Feedback.find(conditions)
     .populate('userId', 'email name')
     .sort({ createdAt: -1 })
-    .limit(limit);
+    .limit(limit)
+    .lean();
 }
 
 /**

@@ -14,8 +14,9 @@ export function Providers({ children }: ProvidersProps) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000, // 1분
-            refetchOnWindowFocus: false,
+            staleTime: 60 * 1000, // 1 minute - default for dynamic data
+            refetchOnWindowFocus: false, // Prevent unnecessary refetches on focus
+            gcTime: 5 * 60 * 1000, // 5 minutes - cache cleanup time
           },
         },
       })

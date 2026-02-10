@@ -27,6 +27,7 @@ import { useSession } from 'next-auth/react';
 import { useDepartments } from '@/hooks/useOnboarding';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 
 // Helper to parse droppableId
 function parseSemesterId(droppableId: string): { year: number; term: Term } | null {
@@ -214,7 +215,7 @@ export default function PlannerPage() {
           duration: 1500,
         });
       } catch (error) {
-        console.error('Failed to undo course addition:', error);
+        Sentry.captureException(error);
       }
     };
 
@@ -404,7 +405,7 @@ export default function PlannerPage() {
         duration: 3000,
       });
     } catch (error) {
-      console.error('Failed to reset plan:', error);
+      Sentry.captureException(error);
     }
   }, [activePlan, resetPlanMutation]);
 
@@ -522,7 +523,7 @@ export default function PlannerPage() {
       });
       setIsAddSemesterOpen(false);
     } catch (error) {
-      console.error('Failed to add semester:', error);
+      Sentry.captureException(error);
       // Dialog stays open on error
     }
   };
@@ -615,7 +616,7 @@ export default function PlannerPage() {
             if (stillExists) {
               removeCourseFromSemester(destInfo.year, destInfo.term, draggableId);
             }
-            console.error('Failed to add course:', error);
+            Sentry.captureException(error);
           }
         })();
         // Auto-scroll back to catalog on touch devices after successful placement
@@ -655,7 +656,7 @@ export default function PlannerPage() {
             if (courseToRemove) {
               addCourseToSemester(sourceInfo.year, sourceInfo.term, courseToRemove);
             }
-            console.error('Failed to remove course:', error);
+            Sentry.captureException(error);
           }
         })();
         return;
@@ -693,7 +694,7 @@ export default function PlannerPage() {
             if (courseToMove) {
               moveCourse(destInfo.year, destInfo.term, sourceInfo.year, sourceInfo.term, draggableId);
             }
-            console.error('Failed to move course:', error);
+            Sentry.captureException(error);
           }
         })();
         return;
@@ -727,7 +728,7 @@ export default function PlannerPage() {
         if (courseToRemove) {
           addCourseToSemester(year, term, courseToRemove);
         }
-        console.error('Failed to remove course:', error);
+        Sentry.captureException(error);
       }
     },
     [activePlan, removeCourseFromSemester, addCourseToSemester, removeCourseMutation]
@@ -744,7 +745,7 @@ export default function PlannerPage() {
           term,
         });
       } catch (error) {
-        console.error('Failed to delete semester:', error);
+        Sentry.captureException(error);
       }
     },
     [activePlan, removeSemesterMutation]
@@ -788,7 +789,7 @@ export default function PlannerPage() {
             }
           }
         }
-        console.error('Failed to clear semester:', error);
+        Sentry.captureException(error);
       }
     },
     [activePlan, clearSemester, clearSemesterMutation, isGuest]
@@ -852,7 +853,7 @@ export default function PlannerPage() {
         if (stillExists) {
           removeCourseFromSemester(year, term, courseId);
         }
-        console.error('Failed to add course:', error);
+        Sentry.captureException(error);
       }
     },
     [activePlan, focusedSemester, planCourseIds, addCourseToSemester, removeCourseFromSemester, addCourseMutation, showAddCourseToast, isGuest]
@@ -886,7 +887,7 @@ export default function PlannerPage() {
           status: newStatus,
         });
       } catch (error) {
-        console.error('Failed to update course status:', error);
+        Sentry.captureException(error);
       }
     },
     [activePlan, updateStatusMutation]

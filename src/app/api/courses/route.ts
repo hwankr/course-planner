@@ -12,6 +12,7 @@ import { authOptions } from '@/lib/auth/options';
 import { courseService } from '@/services';
 import { z } from 'zod';
 import type { CourseFilter, Semester } from '@/types';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: Request) {
   try {
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
       data: courses,
     });
   } catch (error) {
-    console.error('GET /api/courses error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '과목 목록을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -92,13 +93,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '과목 생성에 실패했습니다.' },
       { status: 500 }

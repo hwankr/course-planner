@@ -11,6 +11,7 @@ import { authOptions } from '@/lib/auth/options';
 import { planService } from '@/services';
 import { z } from 'zod';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
+import * as Sentry from '@sentry/nextjs';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -79,7 +80,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
         { status: 400 }
       );
     }
-    console.error('PATCH /api/plans/[id]/courses/status error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '과목 상태 업데이트에 실패했습니다.' },
       { status: 500 }

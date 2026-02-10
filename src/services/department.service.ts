@@ -14,7 +14,7 @@ import type { CreateDepartmentInput } from '@/types';
  */
 async function findAll(): Promise<IDepartmentDocument[]> {
   await connectDB();
-  return Department.find({ isActive: true }).sort({ name: 1 });
+  return Department.find({ isActive: true }).sort({ name: 1 }).lean();
 }
 
 /**
@@ -22,7 +22,7 @@ async function findAll(): Promise<IDepartmentDocument[]> {
  */
 async function findById(id: string): Promise<IDepartmentDocument | null> {
   await connectDB();
-  return Department.findById(id);
+  return Department.findById(id).lean();
 }
 
 /**
@@ -30,7 +30,7 @@ async function findById(id: string): Promise<IDepartmentDocument | null> {
  */
 async function findByCode(code: string): Promise<IDepartmentDocument | null> {
   await connectDB();
-  return Department.findOne({ code: code.toUpperCase(), isActive: true });
+  return Department.findOne({ code: code.toUpperCase(), isActive: true }).lean();
 }
 
 /**
@@ -79,7 +79,7 @@ async function remove(id: string): Promise<IDepartmentDocument | null> {
  */
 async function findByCollege(college: string): Promise<IDepartmentDocument[]> {
   await connectDB();
-  return Department.find({ college, isActive: true }).sort({ name: 1 });
+  return Department.find({ college, isActive: true }).sort({ name: 1 }).lean();
 }
 
 export const departmentService = {

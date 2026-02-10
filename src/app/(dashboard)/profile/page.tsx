@@ -12,6 +12,7 @@ import { useGuestCourseStore } from '@/stores/guestCourseStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import * as Sentry from '@sentry/nextjs';
 import {
   User,
   Mail,
@@ -79,7 +80,7 @@ export default function ProfilePage() {
       }
       await signOut({ callbackUrl: '/' });
     } catch (error) {
-      console.error('Account deletion failed:', error);
+      Sentry.captureException(error);
       alert('계정 삭제에 실패했습니다. 다시 시도해주세요.');
       setIsDeleting(false);
     }

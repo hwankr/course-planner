@@ -11,6 +11,7 @@ import { authOptions } from '@/lib/auth/options';
 import { feedbackService } from '@/services';
 import { z } from 'zod';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
+import * as Sentry from '@sentry/nextjs';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -60,7 +61,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    console.error('PATCH /api/feedback/[id] error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '피드백 상태 업데이트에 실패했습니다.' },
       { status: 500 }

@@ -149,6 +149,7 @@ export function useMyPlan(options?: { enabled?: boolean }) {
     queryKey: planKeys.detail('my'),
     queryFn: fetchMyPlan,
     enabled: !isGuest && (options?.enabled ?? true),
+    staleTime: 30 * 1000, // 30 seconds - plan changes frequently via drag-and-drop
   });
 
   if (isGuest) {
@@ -191,6 +192,7 @@ export function usePlan(id: string, options?: { enabled?: boolean }) {
     queryKey: planKeys.detail(id),
     queryFn: () => fetchPlan(id),
     enabled: !isGuest && (options?.enabled ?? true) && !!id,
+    staleTime: 30 * 1000, // 30 seconds - plan changes frequently via drag-and-drop
   });
 
   if (isGuest) {

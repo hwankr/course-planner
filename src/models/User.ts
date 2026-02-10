@@ -60,6 +60,13 @@ const userSchema = new Schema<IUserDocument>(
       type: Schema.Types.ObjectId,
       ref: 'Department',
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockUntil: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

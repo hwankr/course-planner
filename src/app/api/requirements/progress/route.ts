@@ -9,6 +9,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { requirementService } from '@/services';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: Request) {
   try {
@@ -40,14 +41,7 @@ export async function GET(request: Request) {
       data: progress,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { success: false, error: error.message },
-        { status: 400 }
-      );
-    }
-
-    console.error('GET /api/requirements/progress error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '졸업요건 현황을 불러오는데 실패했습니다.' },
       { status: 500 }

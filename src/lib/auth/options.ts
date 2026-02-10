@@ -9,12 +9,14 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import type { MajorType } from '@/types';
 import { userService } from '@/services';
+import { env } from '@/lib/env';
+import * as Sentry from '@sentry/nextjs';
 
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     }),
     CredentialsProvider({
       name: 'credentials',
@@ -25,6 +27,12 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           throw new Error('이메일과 비밀번호를 입력해주세요.');
+        }
+
+        // Check account lockout
+        const isLocked = await userService.isAccountLocked(credentials.email);
+        if (isLocked) {
+          throw new Error('로그인 시도가 너무 많습니다. 15분 후에 다시 시도해주세요.');
         }
 
         const user = await userService.findByEmailWithPassword(credentials.email);
@@ -41,8 +49,12 @@ export const authOptions: NextAuthOptions = {
           user.password
         );
         if (!isValid) {
+          await userService.recordFailedLogin(credentials.email);
           throw new Error('비밀번호가 일치하지 않습니다.');
         }
+
+        // Reset failed login attempts on success
+        await userService.resetFailedLogins(credentials.email);
 
         return {
           id: user._id.toString(),
@@ -69,7 +81,7 @@ export const authOptions: NextAuthOptions = {
           );
           return true;
         } catch (error) {
-          console.error('OAuth sign in error:', error);
+          Sentry.captureException(error);
           return false;
         }
       }
@@ -143,7 +155,19 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 7 * 24 * 60 * 60, // 7 days
+    updateAge: 24 * 60 * 60, // 24 hours - refresh daily
   },
   secret: process.env.NEXTAUTH_SECRET,
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
 };

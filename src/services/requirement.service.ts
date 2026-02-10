@@ -16,7 +16,8 @@ async function findByDepartment(departmentId: string): Promise<IRequirementDocum
   await connectDB();
   return Requirement.find({ department: departmentId })
     .populate('allowedCourses', 'code name credits')
-    .sort({ category: 1, name: 1 });
+    .sort({ category: 1, name: 1 })
+    .lean();
 }
 
 /**
@@ -26,7 +27,8 @@ async function findById(id: string): Promise<IRequirementDocument | null> {
   await connectDB();
   return Requirement.findById(id)
     .populate('department', 'code name')
-    .populate('allowedCourses', 'code name credits');
+    .populate('allowedCourses', 'code name credits')
+    .lean();
 }
 
 /**
@@ -105,7 +107,8 @@ async function calculateProgress(
 
   // 학과 졸업요건 조회
   const requirements = await Requirement.find({ department: departmentId })
-    .populate('allowedCourses', 'code name credits');
+    .populate('allowedCourses', 'code name credits')
+    .lean();
 
   // 각 요건별 충족 현황 계산
   const progress: RequirementProgress[] = requirements.map((req) => {
@@ -138,7 +141,8 @@ async function findByCategory(
 ): Promise<IRequirementDocument[]> {
   await connectDB();
   return Requirement.find({ department: departmentId, category })
-    .populate('allowedCourses', 'code name credits');
+    .populate('allowedCourses', 'code name credits')
+    .lean();
 }
 
 export const requirementService = {

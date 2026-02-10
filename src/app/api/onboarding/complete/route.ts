@@ -9,6 +9,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { onboardingService } from '@/services/onboarding.service';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 
 const completeOnboardingSchema = z.object({
   departmentId: z.string().min(1, '학과를 선택해주세요.'),
@@ -74,9 +75,9 @@ export async function POST(request: Request) {
 
     return Response.json({ success: true, data: result });
   } catch (error) {
-    console.error('Onboarding complete error:', error);
+    Sentry.captureException(error);
     return Response.json(
-      { success: false, error: error instanceof Error ? error.message : '온보딩 처리 중 오류가 발생했습니다.' },
+      { success: false, error: '온보딩 처리 중 오류가 발생했습니다.' },
       { status: 500 }
     );
   }

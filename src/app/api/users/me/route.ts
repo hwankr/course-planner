@@ -12,6 +12,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { userService } from '@/services';
 import { z } from 'zod';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET() {
   try {
@@ -46,7 +47,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('GET /api/users/me error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '사용자 정보를 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -112,7 +113,7 @@ export async function PATCH(request: Request) {
       );
     }
 
-    console.error('PATCH /api/users/me error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '프로필 업데이트에 실패했습니다.' },
       { status: 500 }
@@ -137,7 +138,7 @@ export async function DELETE() {
       message: '계정이 삭제되었습니다.',
     });
   } catch (error) {
-    console.error('DELETE /api/users/me error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '계정 삭제에 실패했습니다.' },
       { status: 500 }

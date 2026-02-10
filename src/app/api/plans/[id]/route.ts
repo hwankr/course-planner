@@ -11,6 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { planService } from '@/services';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
+import * as Sentry from '@sentry/nextjs';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -50,7 +51,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       data: plan,
     });
   } catch (error) {
-    console.error('GET /api/plans/[id] error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '계획을 불러오는데 실패했습니다.' },
       { status: 500 }
@@ -94,7 +95,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       message: '계획이 초기화되었습니다.',
     });
   } catch (error) {
-    console.error('DELETE /api/plans/[id] error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '계획 초기화에 실패했습니다.' },
       { status: 500 }

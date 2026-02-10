@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Github, Instagram, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { CopyEmail } from './CopyEmail';
 
 export function Footer() {

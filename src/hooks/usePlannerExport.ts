@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 import { toPng } from 'html-to-image';
 import { usePlanStore } from '@/stores/planStore';
 import { useToastStore } from '@/stores/toastStore';
+import * as Sentry from '@sentry/nextjs';
 
 interface UsePlannerExportOptions {
   targetRef: React.RefObject<HTMLDivElement | null>;
@@ -125,7 +126,7 @@ export function usePlannerExport({
           duration: 3000,
         });
       } catch (error) {
-        console.error('Export failed:', error);
+        Sentry.captureException(error);
         useToastStore.getState().addToast({
           message: '내보내기에 실패했습니다.',
           type: 'warning',

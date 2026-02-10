@@ -171,8 +171,8 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
         if (data.minorPrimaryMajorMin !== undefined) setMinorPrimaryMajorMin(data.minorPrimaryMajorMin.toString());
         setLoadMessage('학과 기준표에서 불러왔습니다. 수정할 수 있습니다.');
       }
-    } catch (error) {
-      console.error('Failed to load from department requirements:', error);
+    } catch {
+      // Silently fail - user can manually enter values
     }
   };
 

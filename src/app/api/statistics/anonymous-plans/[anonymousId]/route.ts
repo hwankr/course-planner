@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { statisticsService } from '@/services';
+import * as Sentry from '@sentry/nextjs';
 
 interface RouteParams {
   params: Promise<{ anonymousId: string }>;
@@ -50,7 +51,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, data: detail });
   } catch (error) {
-    console.error('GET /api/statistics/anonymous-plans/[anonymousId] error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '계획을 불러오는데 실패했습니다.' },
       { status: 500 }

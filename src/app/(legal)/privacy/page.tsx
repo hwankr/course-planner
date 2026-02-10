@@ -26,7 +26,7 @@ export default function PrivacyPolicyPage() {
           {/* 서비스 소개 */}
           <section>
             <p className="text-gray-700 leading-relaxed">
-              YU 수강 플래너(이하 "본 서비스")는 영남대학교 학생들의 수강 계획 수립을 돕기 위한 개인 프로젝트입니다.
+              YU 수강 플래너(이하 {'"'}본 서비스{'"'})는 영남대학교 학생들의 수강 계획 수립을 돕기 위한 개인 프로젝트입니다.
               본 서비스는 영남대학교의 공식 서비스가 아니며, 학생이 개인적으로 운영하는 서비스입니다.
             </p>
             <p className="text-gray-700 leading-relaxed mt-2">

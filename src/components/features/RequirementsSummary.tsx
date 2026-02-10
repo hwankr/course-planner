@@ -12,6 +12,7 @@ import { Card, CardContent, Button } from '@/components/ui';
 import { useSession } from 'next-auth/react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import * as Sentry from '@sentry/nextjs';
 
 export function RequirementsSummary() {
   const [isEditing, setIsEditing] = useState(false);
@@ -33,7 +34,7 @@ export function RequirementsSummary() {
     try {
       await createDefaults.mutateAsync();
     } catch (error) {
-      console.error('Failed to create default requirements:', error);
+      Sentry.captureException(error);
     }
   };
 
@@ -64,7 +65,7 @@ export function RequirementsSummary() {
       await upsertMutation.mutateAsync(data);
       setIsEditing(false);
     } catch (error) {
-      console.error('Failed to save graduation requirement:', error);
+      Sentry.captureException(error);
       setSaveError(error instanceof Error ? error.message : '저장에 실패했습니다.');
     }
   };

@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { statisticsService } from '@/services';
+import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: Request) {
   try {
@@ -46,7 +47,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
-    console.error('GET /api/statistics/department error:', error);
+    Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '통계를 불러오는데 실패했습니다.' },
       { status: 500 }

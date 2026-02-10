@@ -117,6 +117,8 @@ export function useGraduationRequirement() {
     queryKey: graduationRequirementKeys.detail(),
     queryFn: fetchGraduationRequirement,
     enabled: !isGuest,
+    staleTime: 10 * 60 * 1000, // 10 minutes - requirements change infrequently
+    refetchOnWindowFocus: false,
   });
 
   if (isGuest) {
@@ -146,6 +148,7 @@ export function useGraduationProgress(options?: { enabled?: boolean }) {
     queryKey: graduationRequirementKeys.progress(),
     queryFn: fetchGraduationProgress,
     enabled: !isGuest && (options?.enabled ?? true),
+    staleTime: 60 * 1000, // 1 minute - progress updates when plan changes
   });
 
   if (isGuest) {

@@ -18,18 +18,18 @@ async function findByDepartmentName(
   await connectDB();
 
   // 1. Exact match (college + departmentName)
-  let doc = await DepartmentRequirement.findOne({ college, departmentName });
+  let doc = await DepartmentRequirement.findOne({ college, departmentName }).lean();
   if (doc) return doc;
 
   // 2. Match by departmentName only (ignore college mismatch)
-  doc = await DepartmentRequirement.findOne({ departmentName });
+  doc = await DepartmentRequirement.findOne({ departmentName }).lean();
   if (doc) return doc;
 
   // 3. Partial match: departmentName contains the search term
   const escaped = departmentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   doc = await DepartmentRequirement.findOne({
     departmentName: { $regex: escaped, $options: 'i' }
-  });
+  }).lean();
   if (doc) return doc;
 
   return null;
@@ -40,13 +40,13 @@ async function findByCollege(
   college: string
 ): Promise<IDepartmentRequirementDocument[]> {
   await connectDB();
-  return DepartmentRequirement.find({ college }).sort({ departmentName: 1 });
+  return DepartmentRequirement.find({ college }).sort({ departmentName: 1 }).lean();
 }
 
 /** 모든 대학 목록 조회 (distinct) */
 async function listColleges(): Promise<string[]> {
   await connectDB();
-  return DepartmentRequirement.distinct('college').sort();
+  return DepartmentRequirement.distinct('college').sort().lean();
 }
 
 /** 모든 학과 조회 (선택적 대학 필터) */
@@ -55,7 +55,7 @@ async function findAll(
 ): Promise<IDepartmentRequirementDocument[]> {
   await connectDB();
   const query = filter?.college ? { college: filter.college } : {};
-  return DepartmentRequirement.find(query).sort({ college: 1, departmentName: 1 });
+  return DepartmentRequirement.find(query).sort({ college: 1, departmentName: 1 }).lean();
 }
 
 /** 특정 학과에서 가용한 전공유형 목록 */

@@ -60,7 +60,7 @@ const POPULATE_COURSES_DETAIL = {
  */
 async function findByUser(userId: string): Promise<IPlanDocument | null> {
   await connectDB();
-  return Plan.findOne({ user: userId }).populate(POPULATE_COURSES);
+  return Plan.findOne({ user: userId }).populate(POPULATE_COURSES).lean();
 }
 
 /**
@@ -86,7 +86,7 @@ async function findOrCreateByUser(userId: string): Promise<IPlanDocument> {
  */
 async function findById(id: string): Promise<IPlanDocument | null> {
   await connectDB();
-  return Plan.findById(id).populate(POPULATE_COURSES_DETAIL);
+  return Plan.findById(id).populate(POPULATE_COURSES_DETAIL).lean();
 }
 
 /**

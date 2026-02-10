@@ -46,6 +46,8 @@ export function useDepartments() {
       if (!result.success || !result.data) throw new Error(result.error || '학과 목록을 불러올 수 없습니다.');
       return result.data;
     },
+    staleTime: 10 * 60 * 1000, // 10 minutes - department list is static
+    refetchOnWindowFocus: false,
   });
 }
 
