@@ -60,13 +60,9 @@ export function useAutoScrollOnDrag(
         if (el) {
           const rect = el.getBoundingClientRect();
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          // Use instant scroll to avoid conflicting with @dnd-kit coordinate tracking.
-          // Smooth scroll animations cause droppable rect changes while pointer stays still,
-          // which confuses collision detection.
-          window.scrollTo({
-            top: scrollTop + rect.top - 8,
-            behavior: 'instant',
-          });
+          // Short duration (200ms) smooth scroll: provides visual feedback
+          // without prolonged conflict with @dnd-kit coordinate tracking.
+          smoothScrollTo(scrollTop + rect.top - 8, 200);
         }
         scrollTimeoutRef.current = null;
       }, 80);
