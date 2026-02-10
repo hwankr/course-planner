@@ -469,9 +469,7 @@ export default function PlannerPage() {
       type: data.type as 'catalog' | 'semester',
     });
 
-    // NOTE: Custom auto-scroll disabled — conflicts with @dnd-kit coordinate tracking.
-    // @dnd-kit's built-in autoScroll handles edge-of-viewport scrolling instead.
-    // handleDragStartScroll({ droppableId: data.containerId });
+    handleDragStartScroll({ droppableId: data.containerId });
 
     // Only preview removal if dragging FROM a semester
     if (data.type === 'semester') {

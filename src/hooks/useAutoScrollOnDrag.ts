@@ -54,16 +54,18 @@ export function useAutoScrollOnDrag(
         clearTimeout(scrollTimeoutRef.current);
       }
 
-      // Delay 80ms to let @hello-pangea/dnd complete INITIAL_PUBLISH
+      // Delay 80ms to let @dnd-kit complete initial setup
       scrollTimeoutRef.current = setTimeout(() => {
         const el = targetRef.current;
         if (el) {
           const rect = el.getBoundingClientRect();
           const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-          // Use browser smooth scroll (single call, no rAF loop to conflict with dnd)
+          // Use instant scroll to avoid conflicting with @dnd-kit coordinate tracking.
+          // Smooth scroll animations cause droppable rect changes while pointer stays still,
+          // which confuses collision detection.
           window.scrollTo({
             top: scrollTop + rect.top - 8,
-            behavior: 'smooth',
+            behavior: 'instant',
           });
         }
         scrollTimeoutRef.current = null;
