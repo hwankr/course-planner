@@ -9,7 +9,7 @@ import { Feedback } from '@/models/Feedback';
 import type { IFeedbackDocument } from '@/models/Feedback';
 
 interface CreateFeedbackInput {
-  category: 'bug' | 'feature' | 'data-error' | 'other';
+  category: 'bug' | 'feature' | 'data-error' | 'other' | 'contact';
   message: string;
   email?: string;
   userId?: string;
@@ -17,6 +17,8 @@ interface CreateFeedbackInput {
 
 interface FeedbackFilter {
   status?: 'pending' | 'resolved';
+  category?: 'bug' | 'feature' | 'data-error' | 'other' | 'contact';
+  limit?: number;
 }
 
 /**
@@ -54,9 +56,16 @@ async function findAll(filter?: FeedbackFilter): Promise<IFeedbackDocument[]> {
     conditions.status = filter.status;
   }
 
+  if (filter?.category) {
+    conditions.category = filter.category;
+  }
+
+  const limit = filter?.limit ?? 50;
+
   return Feedback.find(conditions)
     .populate('userId', 'email name')
-    .sort({ createdAt: -1 });
+    .sort({ createdAt: -1 })
+    .limit(limit);
 }
 
 /**

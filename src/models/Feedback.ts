@@ -7,7 +7,7 @@ import mongoose, { Schema, Model } from 'mongoose';
 
 export interface IFeedback {
   _id: string;
-  category: 'bug' | 'feature' | 'data-error' | 'other';
+  category: 'bug' | 'feature' | 'data-error' | 'other' | 'contact';
   message: string;
   email?: string;
   userId?: mongoose.Types.ObjectId;
@@ -23,7 +23,7 @@ const feedbackSchema = new Schema<IFeedbackDocument>(
     category: {
       type: String,
       required: true,
-      enum: ['bug', 'feature', 'data-error', 'other'],
+      enum: ['bug', 'feature', 'data-error', 'other', 'contact'],
     },
     message: {
       type: String,
@@ -52,6 +52,7 @@ const feedbackSchema = new Schema<IFeedbackDocument>(
 
 // Index for efficient admin queries
 feedbackSchema.index({ status: 1, createdAt: -1 });
+feedbackSchema.index({ category: 1, status: 1, createdAt: -1 });
 
 export const Feedback: Model<IFeedbackDocument> =
   mongoose.models.Feedback || mongoose.model<IFeedbackDocument>('Feedback', feedbackSchema);

@@ -24,6 +24,11 @@ const adminMenus = [
     description: '사용자 목록과 권한을 관리합니다.',
     href: '/admin/users',
   },
+  {
+    title: '피드백 관리',
+    description: '사용자 피드백과 문의를 관리합니다.',
+    href: '/admin/feedback',
+  },
 ];
 
 export default function AdminPage() {
