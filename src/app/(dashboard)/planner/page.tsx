@@ -947,7 +947,17 @@ export default function PlannerPage() {
             <div ref={exportMenuRef} className="relative">
               <Button
                 variant="outline"
-                onClick={() => setShowExportMenu(!showExportMenu)}
+                onClick={() => {
+                  if (isGuest) {
+                    useToastStore.getState().addToast({
+                      message: '로그인 후 이용할 수 있는 기능입니다.',
+                      type: 'info',
+                      duration: 3000,
+                    });
+                    return;
+                  }
+                  setShowExportMenu(!showExportMenu);
+                }}
                 disabled={isExporting}
                 className="text-sm"
               >

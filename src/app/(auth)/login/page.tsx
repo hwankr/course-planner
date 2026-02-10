@@ -2,17 +2,26 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useGuestStore } from '@/stores/guestStore';
 import { Button, Input } from '@/components/ui';
 
 export default function LoginPage() {
+  const router = useRouter();
   const { login, loginWithGoogle, isLoading } = useAuth();
+  const enterGuestMode = useGuestStore((s) => s.enterGuestMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleGuestMode = () => {
+    enterGuestMode();
+    router.push('/planner');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -171,6 +180,15 @@ export default function LoginPage() {
               </svg>
               Google로 로그인
             </Button>
+
+            {/* Guest Mode */}
+            <button
+              type="button"
+              onClick={handleGuestMode}
+              className="w-full mt-3 text-sm text-gray-500 hover:text-[#153974] transition-colors py-2"
+            >
+              비회원으로 시작하기
+            </button>
           </div>
 
           {/* Register Link */}
