@@ -16,18 +16,22 @@ export default async function proxy(request: NextRequest) {
 
   // API 라우트: CSRF 검증 + 보안 헤더만 적용 (라우트 보호 건너뛰기)
   if (pathname.startsWith('/api')) {
-    const csrfError = validateCsrf(request);
-    if (csrfError) return csrfError;
+    // NextAuth는 자체 CSRF 보호가 있으므로 제외
+    if (!pathname.startsWith('/api/auth')) {
+      const csrfError = validateCsrf(request);
+      if (csrfError) return csrfError;
+    }
 
     const response = NextResponse.next();
     addSecurityHeaders(response, isProduction);
     return response;
   }
 
-  // JWT 토큰 확인
+  // JWT 토큰 확인 (auth options의 커스텀 쿠키 이름과 일치시킴)
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
+    cookieName: 'next-auth.session-token',
   });
 
   // 인증된 사용자가 로그인/회원가입/랜딩 페이지 접근 시 플래너로 리다이렉트
