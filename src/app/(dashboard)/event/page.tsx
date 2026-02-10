@@ -5,7 +5,7 @@ import {
   ArrowLeft,
   Gift,
   Coffee,
-  Camera,
+  Download,
   Send,
   ExternalLink,
   CalendarPlus,
@@ -105,13 +105,14 @@ export default function EventPage() {
               </div>
               <div className="flex-1">
                 <div className="mb-2 flex items-center gap-2">
-                  <Camera className="h-5 w-5 text-[#153974]" />
+                  <Download className="h-5 w-5 text-[#153974]" />
                   <h3 className="text-sm font-semibold text-[#153974]">
-                    수강계획 화면 캡쳐
+                    수강계획 이미지 다운로드
                   </h3>
                 </div>
                 <p className="text-sm text-slate-600">
-                  작성한 수강계획 화면을 캡쳐하세요. (플래너 페이지)
+                  플래너 페이지 상단의 &apos;내보내기&apos; 버튼을 눌러 PNG
+                  또는 PDF로 다운로드하세요.
                 </p>
               </div>
             </div>
@@ -129,7 +130,8 @@ export default function EventPage() {
                   </h3>
                 </div>
                 <p className="text-sm text-slate-600">
-                  학교 이메일과 스크린샷을 Google Form으로 제출하세요.
+                  학교 이메일과 다운로드한 수강계획 이미지를 Google Form으로
+                  제출하세요.
                 </p>
               </div>
             </div>
@@ -187,7 +189,7 @@ export default function EventPage() {
                 <span className="font-semibold text-red-600">
                   부정 참여 금지:
                 </span>{' '}
-                조작되거나 허위 스크린샷 제출 시 당첨이 취소됩니다.
+                조작되거나 허위 이미지 제출 시 당첨이 취소됩니다.
               </p>
             </div>
           </div>

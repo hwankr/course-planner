@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import { Card } from '@/components/ui';
 import { CourseCard } from './CourseCard';
+import { usePlanStore } from '@/stores/planStore';
 
 interface SemesterColumnProps {
   semester: {
@@ -29,8 +30,9 @@ interface SemesterColumnProps {
 
 export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, isFocused = false, onFocus, compact = false, onStatusChange }: SemesterColumnProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isExporting = usePlanStore((s) => s.isExporting);
   const MAX_VISIBLE = 4;
-  const visibleCourses = compact && !isExpanded
+  const visibleCourses = compact && !isExpanded && !isExporting
     ? semester.courses.slice(0, MAX_VISIBLE)
     : semester.courses;
   const hiddenCount = semester.courses.length - MAX_VISIBLE;
@@ -60,7 +62,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
   })();
 
   return (
-    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''}`}>
+    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused && !isExporting ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''}`}>
       {/* Header */}
       <div
         className={`${compact ? 'p-2' : 'p-4'} border-b cursor-pointer transition-colors ${isFocused ? 'bg-[#153974]/5' : 'bg-gray-50'}`}
@@ -81,7 +83,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {onClear && semester.courses.length > 0 && (
+            {onClear && semester.courses.length > 0 && !isExporting && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -97,7 +99,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
                 </svg>
               </button>
             )}
-            {onDelete && (
+            {onDelete && !isExporting && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -144,7 +146,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
                 </p>
               </div>
             ) : (
-              <div className={`transition-all duration-200 ${compact && !isExpanded ? 'max-h-[280px] overflow-hidden' : ''}`}>
+              <div className={`transition-all duration-200 ${compact && !isExpanded && !isExporting ? 'max-h-[280px] overflow-hidden' : ''}`}>
                 {visibleCourses.map((course, index) => (
                   <Draggable key={course.id} draggableId={course.id} index={index}>
                     {(provided, snapshot) => (
@@ -169,7 +171,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
                     )}
                   </Draggable>
                 ))}
-                {compact && !isExpanded && hiddenCount > 0 && (
+                {compact && !isExpanded && hiddenCount > 0 && !isExporting && (
                   <button
                     onClick={() => setIsExpanded(true)}
                     className="w-full text-xs text-[#3069B3] hover:text-[#153974] py-1 text-center"
@@ -177,7 +179,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
                     +{hiddenCount}개 더 보기
                   </button>
                 )}
-                {compact && isExpanded && semester.courses.length > MAX_VISIBLE && (
+                {compact && isExpanded && semester.courses.length > MAX_VISIBLE && !isExporting && (
                   <button
                     onClick={() => setIsExpanded(false)}
                     className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 text-center"

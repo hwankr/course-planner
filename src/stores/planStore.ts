@@ -30,12 +30,14 @@ interface PlanState {
   activePlan: Plan | null;
   isLoading: boolean;
   focusedSemester: { year: number; term: Term } | null;
+  isExporting: boolean;
 
   // Actions
   setActivePlan: (plan: Plan | null) => void;
   setLoading: (loading: boolean) => void;
   setFocusedSemester: (semester: { year: number; term: Term } | null) => void;
   toggleFocusedSemester: (year: number, term: Term) => void;
+  setIsExporting: (exporting: boolean) => void;
 
   // Optimistic updates (for drag & drop)
   addCourseToSemester: (
@@ -68,10 +70,12 @@ export const usePlanStore = create<PlanState>((set, get) => ({
   activePlan: null,
   isLoading: false,
   focusedSemester: null,
+  isExporting: false,
 
   setActivePlan: (plan) => set({ activePlan: plan }),
   setLoading: (isLoading) => set({ isLoading }),
   setFocusedSemester: (semester) => set({ focusedSemester: semester }),
+  setIsExporting: (isExporting) => set({ isExporting }),
   toggleFocusedSemester: (year, term) => {
     const { focusedSemester } = get();
     if (focusedSemester?.year === year && focusedSemester?.term === term) {

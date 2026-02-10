@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
+import { usePlannerExport } from '@/hooks/usePlannerExport';
+import { Download } from 'lucide-react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
@@ -56,10 +58,14 @@ export default function PlannerPage() {
 
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
   const semesterGridRef = useRef<HTMLDivElement>(null);
   const courseCatalogRef = useRef<HTMLDivElement>(null);
   const scrollBackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
+  const exportMenuRef = useRef<HTMLDivElement>(null);
+  const semesterYearFilterRef = useRef<number | null>(null);
 
   // Guest plan store - use serialized selector for stable reference
   const guestActivePlanJson = useGuestPlanStore((s) => {
@@ -87,6 +93,28 @@ export default function PlannerPage() {
 
   // Preview store
   const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
+
+  // Export hook
+  const { exportAsPng, exportAsPdf, isExporting } = usePlannerExport({
+    targetRef: exportRef,
+    beforeCapture: () => {
+      semesterYearFilterRef.current = semesterYearFilter;
+      setSemesterYearFilter(null);
+      usePlanStore.getState().setFocusedSemester(null);
+      // Force desktop layout on mobile for export
+      if (exportRef.current) {
+        exportRef.current.style.minWidth = '768px';
+      }
+    },
+    afterCapture: () => {
+      setSemesterYearFilter(semesterYearFilterRef.current);
+      semesterYearFilterRef.current = null;
+      // Restore mobile layout
+      if (exportRef.current) {
+        exportRef.current.style.minWidth = '';
+      }
+    },
+  });
 
   // Auto-scroll to semester grid on mobile drag
   const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef, isDragScrollActive } = useAutoScrollOnDrag(semesterGridRef);
@@ -279,6 +307,22 @@ export default function PlannerPage() {
       setActivePlan(null);
     }
   }, [isGuest, guestActivePlanJson, setActivePlan]);
+
+  // Close export menu on outside click
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target as Node)) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('touchstart', handler);
+    };
+  }, [showExportMenu]);
 
   // Escape key clears semester focus
   useEffect(() => {
@@ -895,9 +939,48 @@ export default function PlannerPage() {
               </Link>
             )}
           </div>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
+          <p data-export-ignore className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {/* Export Button */}
+          {activePlan && activePlan.semesters.length > 0 && (
+            <div ref={exportMenuRef} className="relative">
+              <Button
+                variant="outline"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={isExporting}
+                className="text-sm"
+              >
+                {isExporting ? (
+                  <span className="flex items-center gap-1">
+                    <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600"></span>
+                    내보내는 중...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1">
+                    <Download className="w-4 h-4" />
+                    내보내기
+                  </span>
+                )}
+              </Button>
+              {showExportMenu && (
+                <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[140px]">
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                    onClick={() => { exportAsPng(); setShowExportMenu(false); }}
+                  >
+                    PNG 이미지
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                    onClick={() => { exportAsPdf(); setShowExportMenu(false); }}
+                  >
+                    PDF 문서
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           {/* Reset Plan Button */}
           {activePlan && activePlan.semesters.length > 0 && (
             <Button
@@ -919,14 +1002,35 @@ export default function PlannerPage() {
           onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
         >
-          <div className="space-y-6">
+          <div className="space-y-6" ref={exportRef}>
+            {/* Export-only header (visible only during capture) */}
+            {isExporting && (
+              <div className="pb-2">
+                <h1 className="text-xl font-bold text-gray-900">수강 계획</h1>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {departmentName && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]">
+                      {departmentName}
+                    </span>
+                  )}
+                  {headerMajorType !== 'single' && secondaryDepartmentName && (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      headerMajorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {headerMajorType === 'double' ? '복수전공' : '부전공'}: {secondaryDepartmentName}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Requirements Summary Widget */}
             <div ref={requirementsSummaryRef}>
               <RequirementsSummary />
             </div>
 
             {/* Course Catalog - Full Width Top Row */}
-            <div ref={courseCatalogRef} style={{ scrollMarginTop: '72px' }}>
+            <div ref={courseCatalogRef} data-export-ignore style={{ scrollMarginTop: '72px' }}>
               <CourseCatalog
                 planCourseIds={planCourseIds}
                 onClickAdd={handleClickAdd}
@@ -940,7 +1044,7 @@ export default function PlannerPage() {
             <div ref={semesterGridRef} className="space-y-4">
               {/* Year filter for semester grid */}
               {semestersByYear.size > 0 && (
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                <div data-export-ignore className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
                   <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">학년</span>
                   {[null, ...Array.from(semestersByYear.keys()).sort()].map((y) => (
                     <button
@@ -1002,7 +1106,7 @@ export default function PlannerPage() {
                 })()}
 
               {/* Add Semester Button */}
-              <div className="flex justify-center py-4">
+              <div data-export-ignore className="flex justify-center py-4">
                 <Button
                   variant="ghost"
                   onClick={handleAddSemester}
