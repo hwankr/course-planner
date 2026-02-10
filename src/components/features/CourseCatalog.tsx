@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Droppable, Draggable } from '@hello-pangea/dnd';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { useSession } from 'next-auth/react';
 import { useCourses } from '@/hooks/useCourses';
 import { useDepartments } from '@/hooks/useOnboarding';
@@ -18,7 +19,6 @@ interface CourseCatalogProps {
   onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
   focusedSemester?: { year: number; term: string } | null;
   isAddingCourse?: boolean;
-  isDragScrollActive?: boolean;
 }
 
 interface CourseGroup {
@@ -50,7 +50,136 @@ const catalogCategoryColors: Record<string, string> = {
   free_elective: 'bg-gray-100 text-gray-600',
 };
 
-export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAddingCourse = false, isDragScrollActive = false }: CourseCatalogProps) {
+// Draggable wrapper for a catalog course item
+function CatalogCourseItem({
+  course,
+  isInPlan,
+  viewMode,
+  focusedSemester,
+  isAddingCourse,
+  onClickAdd,
+  deptFilter,
+  majorType,
+  className: extraClassName,
+}: {
+  course: ICourse;
+  isInPlan: boolean;
+  viewMode: 'card' | 'list';
+  focusedSemester: { year: number; term: string } | null | undefined;
+  isAddingCourse: boolean;
+  onClickAdd?: (courseId: string, data: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
+  deptFilter: 'primary' | 'secondary';
+  majorType: string;
+  className?: string;
+}) {
+  const courseId = String(course._id);
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: `catalog-${courseId}`,
+    disabled: isInPlan,
+    data: { containerId: 'catalog', course, type: 'catalog' },
+  });
+
+  const handleAdd = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onClickAdd?.(courseId, {
+      code: course.code,
+      name: course.name,
+      credits: course.credits,
+      category: course.category,
+    });
+  };
+
+  if (viewMode === 'list') {
+    return (
+      <div
+        ref={setNodeRef}
+        {...attributes}
+        {...listeners}
+        className={`relative ${isInPlan ? 'opacity-50' : ''} ${isDragging ? 'opacity-50' : ''} ${extraClassName || ''}`}
+        style={{ transform: CSS.Translate.toString(transform) }}
+      >
+        <div className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs">
+          {course.category && (
+            <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${catalogCategoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
+              {catalogCategoryLabels[course.category]}
+            </span>
+          )}
+          {deptFilter === 'secondary' && (
+            <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${majorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
+              {majorType === 'double' ? '복수' : '부전'}
+            </span>
+          )}
+          <span className="flex-1 truncate text-gray-800 font-medium">{course.name}</span>
+          <span className="text-[10px] text-gray-500 whitespace-nowrap">{course.credits}학점</span>
+          {course.createdBy && (
+            <span className="text-[10px] text-emerald-600 font-medium">커스텀</span>
+          )}
+          {isInPlan && (
+            <span className="text-[10px] text-[#153974]/60">추가됨</span>
+          )}
+          {focusedSemester && !isInPlan && onClickAdd && (
+            <button
+              onClick={handleAdd}
+              disabled={isAddingCourse}
+              className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isAddingCourse ? 'bg-gray-300 text-gray-500' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
+              aria-label={`${course.name} 추가`}
+            >
+              +
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Card view
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`relative ${isInPlan ? 'opacity-50' : ''} ${isDragging ? 'opacity-50' : ''} ${extraClassName || ''}`}
+      style={{ transform: CSS.Translate.toString(transform) }}
+    >
+      <CourseCard
+        course={course}
+        isDragDisabled={isInPlan}
+        compact={false}
+        departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
+      />
+
+      {/* "+" button */}
+      {focusedSemester && !isInPlan && onClickAdd && (
+        <button
+          onClick={handleAdd}
+          disabled={isAddingCourse}
+          className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm z-10
+            ${isAddingCourse ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
+          aria-label={`${course.name}을(를) 학기에 추가`}
+        >
+          {isAddingCourse ? '...' : '+'}
+        </button>
+      )}
+
+      {/* Custom badge */}
+      {course.createdBy && (
+        <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-br-md rounded-tl-md">
+          커스텀
+        </div>
+      )}
+
+      {/* In Plan badge */}
+      {isInPlan && (
+        <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
+          추가됨
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAddingCourse = false }: CourseCatalogProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [yearFilter, setYearFilter] = useState<number | undefined>(undefined);
@@ -80,6 +209,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
     : departments.find(d => d._id === secondaryDepartment)?.name;
   const [showCustomForm, setShowCustomForm] = useState(false);
   const [showCurriculumInfo, setShowCurriculumInfo] = useState(false);
+
+  const { setNodeRef: catalogDropRef } = useDroppable({ id: 'catalog' });
 
   // Debounce search term
   useEffect(() => {
@@ -119,8 +250,6 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   });
 
   // Persist usedCategories across category filter changes.
-  // When categoryFilter is active, the API returns only courses of that category,
-  // so we must NOT recompute from the filtered courses -- use the cached ref instead.
   const usedCategoriesRef = useRef<RequirementCategory[]>([]);
   const usedCategories = useMemo(() => {
     if (categoryFilter) return usedCategoriesRef.current;
@@ -197,13 +326,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
   const courseCount = filteredCourses.length;
 
-  const handleAddClick = (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => {
-    if (!onClickAdd) return;
-    onClickAdd(courseId, courseData);
-  };
-
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm transition-opacity duration-200 ${isDragScrollActive ? 'opacity-30 pointer-events-none' : ''}`}>
+    <div className="bg-white border border-gray-200 rounded-lg shadow-sm transition-opacity duration-200">
       {/* Header */}
       <div className="px-3 sm:px-4 py-3 border-b border-gray-200 space-y-2.5">
         {/* Row 1: Title + Actions */}
@@ -325,7 +449,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                 </button>
               </div>
             )}
-            {/* Year + Semester filters (같은 줄) */}
+            {/* Year + Semester filters */}
             <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
               <div className="flex items-center gap-1">
                 <span className="text-[11px] font-medium text-gray-400 w-7">학년</span>
@@ -362,7 +486,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
               </div>
             </div>
 
-            {/* Category filter (별도 줄) */}
+            {/* Category filter */}
             <div className="flex items-center gap-1 flex-wrap">
               <span className="text-[11px] font-medium text-gray-400">이수</span>
               {([undefined, ...usedCategories] as (RequirementCategory | undefined)[]).map((cat) => {
@@ -439,276 +563,73 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             </div>
           ) : isGroupedView ? (
             // Grouped view: Horizontal columns for each year-semester group
-            <Droppable droppableId="catalog" isDropDisabled={true}>
-              {(provided) => (
+            <div
+              ref={catalogDropRef}
+              className="flex gap-4 overflow-x-auto pb-2"
+            >
+              {courseGroups.map((group) => (
                 <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="flex gap-4 overflow-x-auto pb-2"
+                  key={group.label}
+                  className="flex-shrink-0 w-56 sm:w-64 flex flex-col"
                 >
-                  {(() => {
-                    let globalIndex = 0;
-                    return courseGroups.map((group) => (
-                      <div
-                        key={group.label}
-                        className="flex-shrink-0 w-56 sm:w-64 flex flex-col"
-                      >
-                        {/* Non-draggable group header */}
-                        <div className="bg-gray-100 px-3 py-2 rounded-t-md border-b-2 border-gray-300 sticky top-0 z-10">
-                          <div className="text-sm font-semibold text-gray-800">
-                            {group.label}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
-                            {group.courses.length}과목 · {group.totalCredits}학점
-                          </div>
-                        </div>
+                  {/* Non-draggable group header */}
+                  <div className="bg-gray-100 px-3 py-2 rounded-t-md border-b-2 border-gray-300 sticky top-0 z-10">
+                    <div className="text-sm font-semibold text-gray-800">
+                      {group.label}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {group.courses.length}과목 · {group.totalCredits}학점
+                    </div>
+                  </div>
 
-                        {/* Courses in vertical list within this column */}
-                        <div className={`flex-1 overflow-y-auto max-h-[320px] pt-2 ${viewMode === 'list' ? 'space-y-0.5' : 'space-y-2'}`}>
-                          {group.courses.map((course) => {
-                            const courseId = String(course._id);
-                            const isInPlan = planCourseIds.includes(courseId);
-                            const currentIndex = globalIndex++;
-
-                            return (
-                              <Draggable
-                                key={courseId}
-                                draggableId={courseId}
-                                index={currentIndex}
-                                isDragDisabled={isInPlan}
-                              >
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    className={`relative ${isInPlan ? 'opacity-50' : ''}`}
-                                    style={{
-                                      ...provided.draggableProps.style,
-                                      ...(snapshot.isDragging ? { width: '224px' } : {}),
-                                    }}
-                                  >
-                                    {viewMode === 'list' ? (
-                                      <div {...provided.dragHandleProps} className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs">
-                                        {course.category && (
-                                          <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${catalogCategoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
-                                            {catalogCategoryLabels[course.category]}
-                                          </span>
-                                        )}
-                                        {deptFilter === 'secondary' && (
-                                          <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${majorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
-                                            {majorType === 'double' ? '복수' : '부전'}
-                                          </span>
-                                        )}
-                                        <span className="flex-1 truncate text-gray-800 font-medium">{course.name}</span>
-                                        <span className="text-[10px] text-gray-500 whitespace-nowrap">{course.credits}학점</span>
-                                        {course.createdBy && (
-                                          <span className="text-[10px] text-emerald-600 font-medium">커스텀</span>
-                                        )}
-                                        {isInPlan && (
-                                          <span className="text-[10px] text-[#153974]/60">추가됨</span>
-                                        )}
-                                        {focusedSemester && !isInPlan && onClickAdd && (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              handleAddClick(String(course._id), {
-                                                code: course.code,
-                                                name: course.name,
-                                                credits: course.credits,
-                                                category: course.category,
-                                              });
-                                            }}
-                                            disabled={isAddingCourse}
-                                            className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isAddingCourse ? 'bg-gray-300 text-gray-500' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
-                                            aria-label={`${course.name} 추가`}
-                                          >
-                                            +
-                                          </button>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <div {...provided.dragHandleProps}>
-                                          <CourseCard
-                                            course={course}
-                                            isDragDisabled={isInPlan}
-                                            compact={false}
-                                            departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
-                                          />
-                                        </div>
-
-                                        {/* "+" button */}
-                                        {focusedSemester && !isInPlan && onClickAdd && (
-                                          <button
-                                            onClick={() => handleAddClick(String(course._id), {
-                                              code: course.code,
-                                              name: course.name,
-                                              credits: course.credits,
-                                              category: course.category,
-                                            })}
-                                            disabled={isAddingCourse}
-                                            className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold transition-colors shadow-sm z-10
-                                              ${isAddingCourse ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
-                                            aria-label={`${course.name}을(를) 학기에 추가`}
-                                          >
-                                            {isAddingCourse ? '...' : '+'}
-                                          </button>
-                                        )}
-
-                                        {/* Custom badge */}
-                                        {course.createdBy && (
-                                          <div className="absolute top-0 left-0 bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-br-md rounded-tl-md">
-                                            커스텀
-                                          </div>
-                                        )}
-
-                                        {/* In Plan badge */}
-                                        {isInPlan && (
-                                          <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
-                                            추가됨
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ));
-                  })()}
-                  {provided.placeholder}
+                  {/* Courses in vertical list within this column */}
+                  <div className={`flex-1 overflow-y-auto max-h-[320px] pt-2 ${viewMode === 'list' ? 'space-y-0.5' : 'space-y-2'}`}>
+                    {group.courses.map((course) => {
+                      const courseId = String(course._id);
+                      const isInPlan = planCourseIds.includes(courseId);
+                      return (
+                        <CatalogCourseItem
+                          key={courseId}
+                          course={course}
+                          isInPlan={isInPlan}
+                          viewMode={viewMode}
+                          focusedSemester={focusedSemester}
+                          isAddingCourse={isAddingCourse}
+                          onClickAdd={onClickAdd}
+                          deptFilter={deptFilter}
+                          majorType={majorType}
+                        />
+                      );
+                    })}
+                  </div>
                 </div>
-              )}
-            </Droppable>
+              ))}
+            </div>
           ) : (
             // Flat view: Multi-column grid when filters/search active
-            <Droppable droppableId="catalog" isDropDisabled={true}>
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className={viewMode === 'list' ? 'space-y-0.5' : 'flex flex-wrap gap-3'}
-                >
-                  {filteredCourses.map((course, index) => {
-                    const courseId = String(course._id);
-                    const isInPlan = planCourseIds.includes(courseId);
-
-                    return (
-                      <Draggable
-                        key={courseId}
-                        draggableId={courseId}
-                        index={index}
-                        isDragDisabled={isInPlan}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={`relative ${viewMode === 'card' ? `w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)]` : ''} ${isInPlan ? 'opacity-50' : ''}`}
-                            style={{
-                              ...provided.draggableProps.style,
-                              ...(snapshot.isDragging ? { width: '250px' } : {}),
-                            }}
-                          >
-                            {viewMode === 'list' ? (
-                              <div {...provided.dragHandleProps} className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs">
-                                {course.category && (
-                                  <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${catalogCategoryColors[course.category] || 'bg-gray-100 text-gray-600'}`}>
-                                    {catalogCategoryLabels[course.category]}
-                                  </span>
-                                )}
-                                {deptFilter === 'secondary' && (
-                                  <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${majorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
-                                    {majorType === 'double' ? '복수' : '부전'}
-                                  </span>
-                                )}
-                                <span className="flex-1 truncate text-gray-800 font-medium">{course.name}</span>
-                                <span className="text-[10px] text-gray-500 whitespace-nowrap">{course.credits}학점</span>
-                                {course.createdBy && (
-                                  <span className="text-[10px] text-emerald-600 font-medium">커스텀</span>
-                                )}
-                                {isInPlan && (
-                                  <span className="text-[10px] text-[#153974]/60">추가됨</span>
-                                )}
-                                {focusedSemester && !isInPlan && onClickAdd && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleAddClick(String(course._id), {
-                                        code: course.code,
-                                        name: course.name,
-                                        credits: course.credits,
-                                        category: course.category,
-                                      });
-                                    }}
-                                    disabled={isAddingCourse}
-                                    className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isAddingCourse ? 'bg-gray-300 text-gray-500' : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
-                                    aria-label={`${course.name} 추가`}
-                                  >
-                                    +
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <>
-                                <div {...provided.dragHandleProps}>
-                                  <CourseCard
-                                    course={course}
-                                    isDragDisabled={isInPlan}
-                                    compact={false}
-                                    departmentLabel={deptFilter === 'secondary' ? (majorType === 'double' ? '복수전공' : '부전공') : undefined}
-                                  />
-                                </div>
-
-                                {/* "+" button */}
-                                {focusedSemester && !isInPlan && onClickAdd && (
-                                  <button
-                                    onClick={() => handleAddClick(String(course._id), {
-                                      code: course.code,
-                                      name: course.name,
-                                      credits: course.credits,
-                                      category: course.category,
-                                    })}
-                                    disabled={isAddingCourse}
-                                    className={`absolute top-2 right-2 w-6 h-6 rounded-full
-                                               flex items-center justify-center text-sm font-bold
-                                               transition-colors shadow-sm z-10
-                                               ${isAddingCourse
-                                                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                                 : 'bg-[#153974] text-white hover:bg-[#003E7E]'}`}
-                                    aria-label={`${course.name}을(를) 학기에 추가`}
-                                  >
-                                    {isAddingCourse ? '...' : '+'}
-                                  </button>
-                                )}
-
-                                {/* Custom badge */}
-                                {course.createdBy && (
-                                  <div className="absolute top-0 left-0 bg-emerald-500 text-white text-xs px-2 py-1 rounded-br-md rounded-tl-md">
-                                    커스텀
-                                  </div>
-                                )}
-
-                                {/* In Plan badge */}
-                                {isInPlan && (
-                                  <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-xs px-2 py-1 rounded-bl-md rounded-tr-md">
-                                    추가됨
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </Draggable>
-                    );
-                  })}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
+            <div
+              ref={catalogDropRef}
+              className={viewMode === 'list' ? 'space-y-0.5' : 'flex flex-wrap gap-3'}
+            >
+              {filteredCourses.map((course) => {
+                const courseId = String(course._id);
+                const isInPlan = planCourseIds.includes(courseId);
+                return (
+                  <CatalogCourseItem
+                    key={courseId}
+                    course={course}
+                    isInPlan={isInPlan}
+                    viewMode={viewMode}
+                    focusedSemester={focusedSemester}
+                    isAddingCourse={isAddingCourse}
+                    onClickAdd={onClickAdd}
+                    deptFilter={deptFilter}
+                    majorType={majorType}
+                    className={viewMode === 'card' ? 'w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)]' : undefined}
+                  />
+                );
+              })}
+            </div>
           )}
         </div>
       )}

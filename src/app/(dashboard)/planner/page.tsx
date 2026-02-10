@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { DragDropContext, type DropResult, type DragStart, type DragUpdate } from '@hello-pangea/dnd';
+import { DndContext, DragOverlay, closestCenter, useSensor, useSensors, PointerSensor, TouchSensor, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
 import { usePlannerExport } from '@/hooks/usePlannerExport';
@@ -10,7 +10,8 @@ import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
 import { usePlanStore } from '@/stores/planStore';
-import { useAutoScrollOnDrag } from '@/hooks/useAutoScrollOnDrag';
+import { useAutoScrollOnDrag, smoothScrollTo } from '@/hooks/useAutoScrollOnDrag';
+import { CourseCard } from '@/components/features/CourseCard';
 import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
@@ -60,6 +61,18 @@ export default function PlannerPage() {
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [activeDragData, setActiveDragData] = useState<{
+    id: string;
+    containerId: string;
+    course: Record<string, unknown>;
+    type: 'catalog' | 'semester';
+  } | null>(null);
+
+  // @dnd-kit sensors: distance constraint for mouse, delay for touch
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
   const semesterGridRef = useRef<HTMLDivElement>(null);
   const courseCatalogRef = useRef<HTMLDivElement>(null);
@@ -118,7 +131,7 @@ export default function PlannerPage() {
   });
 
   // Auto-scroll to semester grid on mobile drag
-  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef, isDragScrollActive } = useAutoScrollOnDrag(semesterGridRef);
+  const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef } = useAutoScrollOnDrag(semesterGridRef, courseCatalogRef);
 
   // Helper: get graduation requirement imperatively (for toast delta calculation)
   const getRequirementImperative = useCallback((): GraduationRequirementInput | null => {
@@ -419,20 +432,30 @@ export default function PlannerPage() {
     return null;
   }, [activePlan]);
 
-  // Handle drag start - set preview for remove action
-  const handleDragStart = useCallback((start: DragStart) => {
+  // Handle drag start - set preview and track active drag for DragOverlay
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     // Clear pending scroll-back on new drag
     if (scrollBackTimeoutRef.current) {
       clearTimeout(scrollBackTimeoutRef.current);
       scrollBackTimeoutRef.current = null;
     }
-    handleDragStartScroll(start.source);
-    const { source, draggableId } = start;
-    const sourceInfo = parseSemesterId(source.droppableId);
+
+    const { active } = event;
+    const data = active.data.current as { containerId: string; course: Record<string, unknown>; type: string } | undefined;
+    if (!data) return;
+
+    setActiveDragData({
+      id: String(active.id),
+      containerId: data.containerId,
+      course: data.course,
+      type: data.type as 'catalog' | 'semester',
+    });
+
+    handleDragStartScroll({ droppableId: data.containerId });
 
     // Only preview removal if dragging FROM a semester
-    if (sourceInfo) {
-      const course = findCourseData(draggableId);
+    if (data.type === 'semester') {
+      const course = findCourseData(String(active.id));
       if (course) {
         setPreview(
           {
@@ -448,64 +471,6 @@ export default function PlannerPage() {
       }
     }
   }, [findCourseData, setPreview, handleDragStartScroll]);
-
-  // Handle drag update - update preview based on destination
-  const handleDragUpdate = useCallback((update: DragUpdate) => {
-    const { source, destination, draggableId } = update;
-
-    if (!destination) {
-      // No destination - maintain remove preview
-      const sourceInfo = parseSemesterId(source.droppableId);
-      if (sourceInfo) {
-        const course = findCourseData(draggableId);
-        if (course) {
-          setPreview(
-            {
-              id: course.id,
-              code: course.code,
-              name: course.name,
-              credits: course.credits,
-              category: course.category ?? 'free_elective',
-            },
-            'remove',
-            null
-          );
-        }
-      }
-      return;
-    }
-
-    const sourceInfo = parseSemesterId(source.droppableId);
-    const destInfo = parseSemesterId(destination.droppableId);
-
-    // From catalog to semester - preview add
-    if (source.droppableId === 'catalog' && destInfo) {
-      // Course data will be fetched in onDragEnd, for now we can't preview accurately
-      // Skip preview for catalog drag (hover handles this better)
-      clearPreview();
-    }
-    // From semester to catalog - preview remove
-    else if (sourceInfo && destination.droppableId === 'catalog') {
-      const course = findCourseData(draggableId);
-      if (course) {
-        setPreview(
-          {
-            id: course.id,
-            code: course.code,
-            name: course.name,
-            credits: course.credits,
-            category: course.category ?? 'free_elective',
-          },
-          'remove',
-          null
-        );
-      }
-    }
-    // Between semesters - no net change in total credits, skip preview
-    else if (sourceInfo && destInfo) {
-      clearPreview();
-    }
-  }, [findCourseData, setPreview, clearPreview]);
 
   // Handle adding a new semester
   const handleAddSemester = () => {
@@ -530,27 +495,32 @@ export default function PlannerPage() {
 
   // Handle drag end
   const handleDragEnd = useCallback(
-    (result: DropResult) => {
+    (event: DragEndEvent) => {
       const wasDragScrollActive = isDragScrollActiveRef.current;
       handleDragEndRestore();
-      const { source, destination, draggableId } = result;
-
-      // Clear preview on drag end
       clearPreview();
+      setActiveDragData(null);
+
+      const { active, over } = event;
 
       // Dropped outside a droppable
-      if (!destination) return;
+      if (!over) return;
 
-      // Dropped in same position
-      if (source.droppableId === destination.droppableId && source.index === destination.index) {
-        return;
-      }
+      const sourceContainerId = (active.data.current as { containerId?: string })?.containerId ?? '';
+      const destContainerId = String(over.id);
 
-      const sourceInfo = parseSemesterId(source.droppableId);
-      const destInfo = parseSemesterId(destination.droppableId);
+      // Same container drop - ignore
+      if (sourceContainerId === destContainerId) return;
+
+      // Extract course ID (strip 'catalog-' prefix for catalog items)
+      const rawId = String(active.id);
+      const draggableId = rawId.startsWith('catalog-') ? rawId.slice(8) : rawId;
+
+      const sourceInfo = parseSemesterId(sourceContainerId);
+      const destInfo = parseSemesterId(destContainerId);
 
       // From catalog to semester (add course)
-      if (source.droppableId === 'catalog' && destInfo && activePlan) {
+      if (sourceContainerId === 'catalog' && destInfo && activePlan) {
         // Duplicate guard: check current state directly to prevent race condition
         const currentPlan = usePlanStore.getState().activePlan;
         const alreadyInPlan = currentPlan?.semesters.some(sem =>
@@ -622,15 +592,20 @@ export default function PlannerPage() {
         // Auto-scroll back to catalog on touch devices after successful placement
         if (wasDragScrollActive && courseCatalogRef.current) {
           scrollBackTimeoutRef.current = setTimeout(() => {
-            courseCatalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const el = courseCatalogRef.current;
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+              smoothScrollTo(scrollTop + rect.top - 72, 250);
+            }
             scrollBackTimeoutRef.current = null;
-          }, 300);
+          }, 150);
         }
         return;
       }
 
       // From semester to catalog (remove course)
-      if (sourceInfo && destination.droppableId === 'catalog' && activePlan) {
+      if (sourceInfo && destContainerId === 'catalog' && activePlan) {
         // Find course data before removing
         const semester = activePlan.semesters.find(
           (s) => s.year === sourceInfo.year && s.term === sourceInfo.term
@@ -1008,9 +983,10 @@ export default function PlannerPage() {
 
       {/* Drag and Drop Context */}
       {activePlan && (
-        <DragDropContext
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
           onDragStart={handleDragStart}
-          onDragUpdate={handleDragUpdate}
           onDragEnd={handleDragEnd}
         >
           <div className="space-y-6" ref={exportRef}>
@@ -1047,7 +1023,6 @@ export default function PlannerPage() {
                 onClickAdd={handleClickAdd}
                 focusedSemester={focusedSemester}
                 isAddingCourse={addCourseMutation.isPending}
-                isDragScrollActive={isDragScrollActive}
               />
             </div>
 
@@ -1140,7 +1115,17 @@ export default function PlannerPage() {
               </div>
             </div>
           </div>
-        </DragDropContext>
+          <DragOverlay>
+            {activeDragData ? (
+              <div className="w-[250px] shadow-lg rounded-lg opacity-90 pointer-events-none">
+                <CourseCard
+                  course={activeDragData.course as Record<string, unknown> & { code: string; name: string; credits: number }}
+                  compact={true}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
 
       {/* Add Semester Dialog */}

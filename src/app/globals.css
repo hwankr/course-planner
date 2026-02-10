@@ -18,9 +18,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* NOTE: scroll-behavior: smooth removed from html to prevent conflict with
+   @hello-pangea/dnd's internal scroll tracking during drag operations.
+   Use the smoothScrollTo() utility for explicit smooth scrolls instead. */
 
 /* ============================================
    KEYFRAME ANIMATIONS
@@ -532,4 +532,11 @@ html {
   .deco-bar {
     transition: none !important;
   }
+}
+
+/* Drag-scroll visual fade applied via DOM (avoids React re-render during drag) */
+.drag-scroll-active {
+  opacity: 0.3;
+  pointer-events: none;
+  transition: opacity 200ms ease;
 }

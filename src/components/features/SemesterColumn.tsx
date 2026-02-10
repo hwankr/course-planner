@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Droppable, Draggable } from '@hello-pangea/dnd';
+import { useDroppable, useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui';
 import { CourseCard } from './CourseCard';
 import { usePlanStore } from '@/stores/planStore';
@@ -28,6 +29,45 @@ interface SemesterColumnProps {
   onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void;
 }
 
+function DraggableSemesterCourse({
+  course,
+  index,
+  compact,
+  containerId,
+  onRemove,
+  onStatusChange,
+}: {
+  course: SemesterColumnProps['semester']['courses'][number];
+  index: number;
+  compact: boolean;
+  containerId: string;
+  onRemove: () => void;
+  onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: course.id,
+    data: { containerId, course, type: 'semester' },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={isDragging ? 'opacity-50' : ''}
+      style={{ transform: CSS.Translate.toString(transform) }}
+    >
+      <CourseCard
+        course={course}
+        index={index}
+        compact={compact}
+        onRemove={onRemove}
+        onStatusChange={onStatusChange}
+      />
+    </div>
+  );
+}
+
 export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, isFocused = false, onFocus, compact = false, onStatusChange }: SemesterColumnProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isExporting = usePlanStore((s) => s.isExporting);
@@ -39,6 +79,8 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
   const droppableId = `semester-${semester.year}-${semester.term}`;
   const termLabel = semester.term === 'spring' ? '1학기' : '2학기';
   const totalCredits = semester.courses.reduce((sum, course) => sum + course.credits, 0);
+
+  const { setNodeRef, isOver } = useDroppable({ id: droppableId });
 
   const categoryBreakdown = (() => {
     const counts: Record<string, number> = {};
@@ -55,7 +97,6 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
       const cat = course.category || 'free_elective';
       counts[cat] = (counts[cat] || 0) + course.credits;
     }
-    // Return in a fixed display order, only categories that have credits
     return ['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'teaching', 'free_elective']
       .filter(cat => counts[cat])
       .map(cat => ({ key: cat, label: labels[cat], credits: counts[cat] }));
@@ -129,70 +170,51 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
       </div>
 
       {/* Droppable Area */}
-      <Droppable droppableId={droppableId}>
-        {(provided, snapshot) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className={`
-              flex-1 ${compact ? 'p-2' : 'p-4'} transition-colors
-              ${snapshot.isDraggingOver ? 'bg-[#00AACA]/5 border-2 border-[#00AACA]/30 border-dashed' : ''}
-            `}
-          >
-            {semester.courses.length === 0 ? (
-              <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
-                <p className={`${compact ? 'text-xs' : 'text-sm'} text-gray-400`}>
-                  {isFocused ? '과목 리스트에서 + 버튼으로 과목을 추가하세요' : '과목을 드래그하세요'}
-                </p>
-              </div>
-            ) : (
-              <div className={`transition-all duration-200 ${compact && !isExpanded && !isExporting ? 'max-h-[280px] overflow-hidden' : ''}`}>
-                {visibleCourses.map((course, index) => (
-                  <Draggable key={course.id} draggableId={course.id} index={index}>
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={snapshot.isDragging ? 'opacity-50' : ''}
-                        style={{
-                          ...provided.draggableProps.style,
-                          ...(snapshot.isDragging ? { width: '280px' } : {}),
-                        }}
-                      >
-                        <CourseCard
-                          course={course}
-                          index={index}
-                          compact={compact}
-                          onRemove={() => onRemoveCourse(course.id)}
-                          onStatusChange={onStatusChange}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {compact && !isExpanded && hiddenCount > 0 && !isExporting && (
-                  <button
-                    onClick={() => setIsExpanded(true)}
-                    className="w-full text-xs text-[#3069B3] hover:text-[#153974] py-1 text-center"
-                  >
-                    +{hiddenCount}개 더 보기
-                  </button>
-                )}
-                {compact && isExpanded && semester.courses.length > MAX_VISIBLE && !isExporting && (
-                  <button
-                    onClick={() => setIsExpanded(false)}
-                    className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 text-center"
-                  >
-                    접기
-                  </button>
-                )}
-              </div>
+      <div
+        ref={setNodeRef}
+        className={`
+          flex-1 ${compact ? 'p-2' : 'p-4'} transition-colors
+          ${isOver ? 'bg-[#00AACA]/5 border-2 border-[#00AACA]/30 border-dashed' : ''}
+        `}
+      >
+        {semester.courses.length === 0 ? (
+          <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
+            <p className={`${compact ? 'text-xs' : 'text-sm'} text-gray-400`}>
+              {isFocused ? '과목 리스트에서 + 버튼으로 과목을 추가하세요' : '과목을 드래그하세요'}
+            </p>
+          </div>
+        ) : (
+          <div className={`transition-all duration-200 ${compact && !isExpanded && !isExporting ? 'max-h-[280px] overflow-hidden' : ''}`}>
+            {visibleCourses.map((course, index) => (
+              <DraggableSemesterCourse
+                key={course.id}
+                course={course}
+                index={index}
+                compact={compact}
+                containerId={droppableId}
+                onRemove={() => onRemoveCourse(course.id)}
+                onStatusChange={onStatusChange}
+              />
+            ))}
+            {compact && !isExpanded && hiddenCount > 0 && !isExporting && (
+              <button
+                onClick={() => setIsExpanded(true)}
+                className="w-full text-xs text-[#3069B3] hover:text-[#153974] py-1 text-center"
+              >
+                +{hiddenCount}개 더 보기
+              </button>
             )}
-            {provided.placeholder}
+            {compact && isExpanded && semester.courses.length > MAX_VISIBLE && !isExporting && (
+              <button
+                onClick={() => setIsExpanded(false)}
+                className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 text-center"
+              >
+                접기
+              </button>
+            )}
           </div>
         )}
-      </Droppable>
+      </div>
     </Card>
   );
 }
