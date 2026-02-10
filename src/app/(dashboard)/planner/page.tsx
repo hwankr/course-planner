@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { DndContext, DragOverlay, closestCenter, useSensor, useSensors, PointerSensor, TouchSensor, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin, useSensor, useSensors, PointerSensor, TouchSensor, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
 import { usePlannerExport } from '@/hooks/usePlannerExport';
@@ -985,7 +985,7 @@ export default function PlannerPage() {
       {activePlan && (
         <DndContext
           sensors={sensors}
-          collisionDetection={closestCenter}
+          collisionDetection={pointerWithin}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >

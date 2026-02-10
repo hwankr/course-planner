@@ -103,7 +103,10 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
   })();
 
   return (
-    <Card className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused && !isExporting ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''}`}>
+    <Card
+      ref={setNodeRef}
+      className={`flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused && !isExporting ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''} ${isOver ? 'ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5' : ''}`}
+    >
       {/* Header */}
       <div
         className={`${compact ? 'p-2' : 'p-4'} border-b cursor-pointer transition-colors ${isFocused ? 'bg-[#153974]/5' : 'bg-gray-50'}`}
@@ -171,11 +174,7 @@ export function SemesterColumn({ semester, onRemoveCourse, onDelete, onClear, is
 
       {/* Droppable Area */}
       <div
-        ref={setNodeRef}
-        className={`
-          flex-1 ${compact ? 'p-2' : 'p-4'} transition-colors
-          ${isOver ? 'bg-[#00AACA]/5 border-2 border-[#00AACA]/30 border-dashed' : ''}
-        `}
+        className={`flex-1 ${compact ? 'p-2' : 'p-4'} transition-colors`}
       >
         {semester.courses.length === 0 ? (
           <div className="h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg">
