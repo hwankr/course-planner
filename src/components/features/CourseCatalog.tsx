@@ -97,7 +97,7 @@ function CatalogCourseItem({
         {...attributes}
         {...listeners}
         className={`relative ${isInPlan ? 'opacity-50' : ''} ${isDragging ? 'opacity-50' : ''} ${extraClassName || ''}`}
-        style={{ transform: CSS.Translate.toString(transform) }}
+        style={{ transform: CSS.Translate.toString(transform), touchAction: 'none' }}
       >
         <div className="flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs">
           {course.category && (
@@ -140,7 +140,7 @@ function CatalogCourseItem({
       {...attributes}
       {...listeners}
       className={`relative ${isInPlan ? 'opacity-50' : ''} ${isDragging ? 'opacity-50' : ''} ${extraClassName || ''}`}
-      style={{ transform: CSS.Translate.toString(transform) }}
+      style={{ transform: CSS.Translate.toString(transform), touchAction: 'none' }}
     >
       <CourseCard
         course={course}

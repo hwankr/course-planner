@@ -55,7 +55,7 @@ function DraggableSemesterCourse({
       {...attributes}
       {...listeners}
       className={isDragging ? 'opacity-50' : ''}
-      style={{ transform: CSS.Translate.toString(transform) }}
+      style={{ transform: CSS.Translate.toString(transform), touchAction: 'none' }}
     >
       <CourseCard
         course={course}

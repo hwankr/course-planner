@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { DndContext, DragOverlay, pointerWithin, closestCenter, useSensor, useSensors, PointerSensor, TouchSensor, type DragStartEvent, type DragEndEvent, type CollisionDetection } from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin, closestCenter, useSensor, useSensors, MouseSensor, TouchSensor, type DragStartEvent, type DragEndEvent, type CollisionDetection } from '@dnd-kit/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
 import { usePlannerExport } from '@/hooks/usePlannerExport';
@@ -84,10 +84,12 @@ export default function PlannerPage() {
     type: 'catalog' | 'semester';
   } | null>(null);
 
-  // @dnd-kit sensors: distance constraint for mouse, delay for touch
+  // @dnd-kit sensors: MouseSensor for desktop, TouchSensor for mobile
+  // IMPORTANT: Do NOT use PointerSensor + TouchSensor together — PointerSensor
+  // also captures touch events, causing conflicts that break mobile drag.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
   );
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
   const semesterGridRef = useRef<HTMLDivElement>(null);
