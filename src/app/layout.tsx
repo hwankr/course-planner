@@ -17,6 +17,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'YU 수강 플래너',
   description: '영남대학교 학생을 위한 학기별 수강 계획 및 졸업 요건 추적 시스템',
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL || 'https://yu-planner.vercel.app'
+  ),
+  openGraph: {
+    title: 'YU 수강 플래너',
+    description: '영남대학교 학생을 위한 학기별 수강 계획 및 졸업 요건 추적 시스템',
+    type: 'website',
+    locale: 'ko_KR',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'YU 수강 플래너',
+    description: '영남대학교 학생을 위한 학기별 수강 계획 및 졸업 요건 추적 시스템',
+  },
 };
 
 export default function RootLayout({
