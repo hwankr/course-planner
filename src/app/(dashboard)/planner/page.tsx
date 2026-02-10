@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { DndContext, DragOverlay, pointerWithin, useSensor, useSensors, PointerSensor, TouchSensor, type DragStartEvent, type DragEndEvent } from '@dnd-kit/core';
+import { DndContext, DragOverlay, pointerWithin, closestCenter, useSensor, useSensors, PointerSensor, TouchSensor, type DragStartEvent, type DragEndEvent, type CollisionDetection } from '@dnd-kit/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
 import { usePlannerExport } from '@/hooks/usePlannerExport';
@@ -29,6 +29,22 @@ import { useDepartments } from '@/hooks/useOnboarding';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import Link from 'next/link';
 import * as Sentry from '@sentry/nextjs';
+
+// Custom collision detection: pointerWithin first, then closestCenter excluding source container
+const smartCollision: CollisionDetection = (args) => {
+  // pointerWithin is most accurate when pointer is inside a droppable
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) return pointerCollisions;
+
+  // Fallback: closestCenter but prefer droppables other than the source container
+  const sourceId = (args.active.data.current as { containerId?: string })?.containerId;
+  const centerCollisions = closestCenter(args);
+  if (sourceId) {
+    const nonSource = centerCollisions.filter(c => String(c.id) !== sourceId);
+    if (nonSource.length > 0) return nonSource;
+  }
+  return centerCollisions;
+};
 
 // Helper to parse droppableId
 function parseSemesterId(droppableId: string): { year: number; term: Term } | null {
@@ -451,7 +467,9 @@ export default function PlannerPage() {
       type: data.type as 'catalog' | 'semester',
     });
 
-    handleDragStartScroll({ droppableId: data.containerId });
+    // NOTE: Custom auto-scroll disabled — conflicts with @dnd-kit coordinate tracking.
+    // @dnd-kit's built-in autoScroll handles edge-of-viewport scrolling instead.
+    // handleDragStartScroll({ droppableId: data.containerId });
 
     // Only preview removal if dragging FROM a semester
     if (data.type === 'semester') {
@@ -985,7 +1003,7 @@ export default function PlannerPage() {
       {activePlan && (
         <DndContext
           sensors={sensors}
-          collisionDetection={pointerWithin}
+          collisionDetection={smartCollision}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
