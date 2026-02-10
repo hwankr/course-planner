@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,7 +9,6 @@ import { useGuestStore } from '@/stores/guestStore';
 import { Button, Input } from '@/components/ui';
 
 export default function LoginPage() {
-  const router = useRouter();
   const { login, loginWithGoogle, isLoading } = useAuth();
   const enterGuestMode = useGuestStore((s) => s.enterGuestMode);
   const [email, setEmail] = useState('');
@@ -20,7 +18,7 @@ export default function LoginPage() {
 
   const handleGuestMode = () => {
     enterGuestMode();
-    router.push('/planner');
+    window.location.href = '/planner';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

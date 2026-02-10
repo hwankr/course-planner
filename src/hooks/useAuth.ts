@@ -75,8 +75,8 @@ export function useAuth() {
 
   const startGuestMode = useCallback(() => {
     enterGuestMode();
-    router.push('/planner');
-  }, [router, enterGuestMode]);
+    window.location.href = '/planner';
+  }, [enterGuestMode]);
 
   return {
     user,

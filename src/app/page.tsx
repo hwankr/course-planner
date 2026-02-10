@@ -94,7 +94,7 @@ export default function Home() {
 
   const handleGuestMode = () => {
     enterGuestMode();
-    router.push('/planner');
+    window.location.href = '/planner';
   };
 
   return (
