@@ -11,7 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { courseService } from '@/services';
 import { z } from 'zod';
-import type { CourseFilter, Semester } from '@/types';
+import type { CourseFilter, Semester, RequirementCategory } from '@/types';
 import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: Request) {
@@ -20,12 +20,24 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const recommendedYear = searchParams.get('recommendedYear');
     const recommendedSemester = searchParams.get('recommendedSemester');
+    const isCommon = searchParams.get('common') === 'true';
+    const category = searchParams.get('category') as RequirementCategory | undefined;
+    const search = searchParams.get('search') || undefined;
+
+    // 공통 과목 조회
+    if (isCommon) {
+      const courses = await courseService.findCommonCourses({
+        category: category || undefined,
+        search,
+      });
+      return NextResponse.json({ success: true, data: courses });
+    }
 
     const filter: CourseFilter = {
       departmentId: searchParams.get('departmentId') || undefined,
       semester: searchParams.get('semester') as Semester | undefined,
-      category: searchParams.get('category') as import('@/types').RequirementCategory | undefined,
-      search: searchParams.get('search') || undefined,
+      category,
+      search,
       recommendedYear: recommendedYear ? parseInt(recommendedYear, 10) : undefined,
       recommendedSemester: recommendedSemester as Semester | undefined,
       userId: session?.user?.id, // Include user's custom courses
@@ -50,7 +62,7 @@ const createCourseSchema = z.object({
   code: z.string().min(1, '과목 코드는 필수입니다.'),
   name: z.string().min(1, '과목명은 필수입니다.'),
   credits: z.number().min(1).max(12),
-  department: z.string().min(1, '학과는 필수입니다.'),
+  department: z.string().min(1).optional(),
   prerequisites: z.array(z.string()).optional(),
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])),

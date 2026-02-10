@@ -9,7 +9,7 @@ import { connectDB } from '@/lib/db/mongoose';
 import { escapeRegex } from '@/lib/validation';
 import { Course, DepartmentCurriculum } from '@/models';
 import type { ICourseDocument } from '@/models';
-import type { CreateCourseInput, CourseFilter } from '@/types';
+import type { CreateCourseInput, CourseFilter, RequirementCategory } from '@/types';
 
 /**
  * 과목 목록 조회 (필터 적용)
@@ -284,6 +284,39 @@ async function deleteCustomByUser(userId: string): Promise<number> {
   return result.deletedCount;
 }
 
+/**
+ * 공통 과목 조회 (학과 무관, 모든 학생이 사용 가능)
+ * department: null, createdBy: null 인 과목들
+ */
+async function findCommonCourses(filter?: { category?: RequirementCategory; search?: string }): Promise<ICourseDocument[]> {
+  await connectDB();
+
+  const conditions: Record<string, unknown>[] = [
+    { isActive: true },
+    { department: null },
+    { createdBy: null },
+  ];
+
+  if (filter?.category) {
+    conditions.push({ category: filter.category });
+  }
+
+  if (filter?.search) {
+    const escapedSearch = escapeRegex(filter.search);
+    conditions.push({
+      $or: [
+        { name: { $regex: escapedSearch, $options: 'i' } },
+        { code: { $regex: escapedSearch, $options: 'i' } },
+      ],
+    });
+  }
+
+  return Course.find({ $and: conditions })
+    .sort({ category: 1, credits: 1, code: 1 })
+    .limit(100)
+    .lean();
+}
+
 export const courseService = {
   findAll,
   findById,
@@ -293,4 +326,5 @@ export const courseService = {
   remove,
   countByDepartment,
   deleteCustomByUser,
+  findCommonCourses,
 };

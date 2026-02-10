@@ -68,6 +68,8 @@ async function getDepartmentCourseStats(
     { $unwind: '$courseInfo' },
     // Filter out custom courses (createdBy !== null)
     { $match: { 'courseInfo.createdBy': null } },
+    // Filter out common courses (no department) to prevent them from dominating rankings
+    { $match: { 'courseInfo.department': { $ne: null } } },
     // Lookup DepartmentCurriculum for authoritative category (covers old plans without PlannedCourse.category)
     {
       $lookup: {
@@ -138,6 +140,8 @@ async function getDepartmentCourseStats(
     },
     { $unwind: '$courseInfo' },
     { $match: { 'courseInfo.createdBy': null } },
+    // Filter out common courses (no department) to prevent them from dominating rankings
+    { $match: { 'courseInfo.department': { $ne: null } } },
     {
       $group: {
         _id: {

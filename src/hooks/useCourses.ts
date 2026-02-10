@@ -7,6 +7,14 @@ import { useGuestCourseStore } from '@/stores/guestCourseStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 
 /**
+ * Extended filter that supports common courses (department-independent).
+ * We extend locally to avoid modifying the shared CourseFilter type.
+ */
+export interface ExtendedCourseFilter extends CourseFilter {
+  common?: boolean;
+}
+
+/**
  * TanStack Query hooks for course data fetching
  * @migration-notes 분리 시 API base URL을 환경변수로 변경
  */
@@ -18,12 +26,16 @@ import { useGuestProfileStore } from '@/stores/guestProfileStore';
 /**
  * Build URL search params from filter object
  */
-function buildCourseFilterParams(filter?: CourseFilter): string {
+function buildCourseFilterParams(filter?: ExtendedCourseFilter): string {
   if (!filter) return '';
 
   const params = new URLSearchParams();
 
-  if (filter.departmentId) params.set('departmentId', filter.departmentId);
+  if (filter.common) {
+    params.set('common', 'true');
+  } else if (filter.departmentId) {
+    params.set('departmentId', filter.departmentId);
+  }
   if (filter.semester) params.set('semester', filter.semester);
   if (filter.category) params.set('category', filter.category);
   if (filter.search) params.set('search', filter.search);
@@ -37,7 +49,7 @@ function buildCourseFilterParams(filter?: CourseFilter): string {
 /**
  * Fetch courses from API
  */
-async function fetchCourses(filter?: CourseFilter): Promise<ICourse[]> {
+async function fetchCourses(filter?: ExtendedCourseFilter): Promise<ICourse[]> {
   const url = `/api/courses${buildCourseFilterParams(filter)}`;
 
   const response = await fetch(url);
@@ -88,18 +100,20 @@ async function fetchCourse(id: string): Promise<ICourse> {
  *   category: 'major_required'
  * });
  */
-export function useCourses(filter?: CourseFilter) {
+export function useCourses(filter?: ExtendedCourseFilter) {
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
   const guestCustomCourses = useGuestCourseStore((s) => s.customCourses);
 
-  // 게스트일 때 department를 게스트 프로필에서 가져옴
-  const effectiveFilter = isGuest
-    ? { ...filter, departmentId: filter?.departmentId || guestDepartmentId || undefined }
-    : filter;
+  // 공통 과목은 department 불필요, 게스트일 때 department를 게스트 프로필에서 가져옴
+  const effectiveFilter: ExtendedCourseFilter | undefined = filter?.common
+    ? filter
+    : isGuest
+      ? { ...filter, departmentId: filter?.departmentId || guestDepartmentId || undefined }
+      : filter;
 
   const apiResult = useQuery({
-    queryKey: ['courses', effectiveFilter],
+    queryKey: filter?.common ? ['courses', 'common', effectiveFilter] : ['courses', effectiveFilter],
     queryFn: () => fetchCourses(effectiveFilter),
     staleTime: 5 * 60 * 1000, // 5 minutes - course catalog is relatively static
     refetchOnWindowFocus: false,

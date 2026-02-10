@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { useSession } from 'next-auth/react';
-import { useCourses } from '@/hooks/useCourses';
+import { useCourses, useCreateCourse } from '@/hooks/useCourses';
 import { useDepartments } from '@/hooks/useOnboarding';
 import { Input } from '@/components/ui/Input';
 import { CourseCard } from './CourseCard';
@@ -13,6 +13,14 @@ import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { HelpCircle, LayoutGrid, List } from 'lucide-react';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
+
+// Quick-add category definitions for common courses tab
+const COMMON_QUICK_ADD_CATEGORIES = [
+  { key: 'general_required' as RequirementCategory, label: '교양필수', codePrefix: 'PLH-GR', bgColor: 'bg-blue-500', hoverColor: 'hover:bg-blue-600', borderColor: 'border-blue-200', textColor: 'text-blue-700', lightBg: 'bg-blue-50' },
+  { key: 'general_elective' as RequirementCategory, label: '교양선택', codePrefix: 'PLH-GE', bgColor: 'bg-green-500', hoverColor: 'hover:bg-green-600', borderColor: 'border-green-200', textColor: 'text-green-700', lightBg: 'bg-green-50' },
+  { key: 'free_elective' as RequirementCategory, label: '자유선택', codePrefix: 'PLH-FE', bgColor: 'bg-gray-500', hoverColor: 'hover:bg-gray-600', borderColor: 'border-gray-200', textColor: 'text-gray-700', lightBg: 'bg-gray-50' },
+  { key: 'teaching' as RequirementCategory, label: '교직', codePrefix: 'PLH-TC', bgColor: 'bg-violet-500', hoverColor: 'hover:bg-violet-600', borderColor: 'border-violet-200', textColor: 'text-violet-700', lightBg: 'bg-violet-50' },
+];
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
@@ -68,7 +76,7 @@ function CatalogCourseItem({
   focusedSemester: { year: number; term: string } | null | undefined;
   isAddingCourse: boolean;
   onClickAdd?: (courseId: string, data: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
-  deptFilter: 'primary' | 'secondary';
+  deptFilter: 'primary' | 'secondary' | 'common';
   majorType: string;
   className?: string;
 }) {
@@ -108,6 +116,11 @@ function CatalogCourseItem({
           {deptFilter === 'secondary' && (
             <span className={`text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${majorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'}`}>
               {majorType === 'double' ? '복수' : '부전'}
+            </span>
+          )}
+          {deptFilter === 'common' && (
+            <span className="text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap bg-indigo-100 text-indigo-700">
+              공통
             </span>
           )}
           <span className="flex-1 truncate text-gray-800 font-medium">{course.name}</span>
@@ -169,6 +182,13 @@ function CatalogCourseItem({
         </div>
       )}
 
+      {/* Common badge */}
+      {deptFilter === 'common' && !course.createdBy && (
+        <div className="absolute top-0 left-0 bg-indigo-500 text-white text-[10px] px-1.5 py-0.5 rounded-br-md rounded-tl-md">
+          공통
+        </div>
+      )}
+
       {/* In Plan badge */}
       {isInPlan && (
         <div className="absolute top-0 right-0 bg-[#153974]/10 text-[#153974] text-[10px] px-1.5 py-0.5 rounded-bl-md rounded-tr-md">
@@ -195,8 +215,9 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const userDepartment = (isGuest ? guestDepartmentId : session?.user?.department) || undefined;
   const secondaryDepartment = (isGuest ? guestSecondaryDepartmentId : session?.user?.secondaryDepartment) || undefined;
   const majorType = (isGuest ? guestMajorType : session?.user?.majorType) || 'single';
-  const [deptFilter, setDeptFilter] = useState<'primary' | 'secondary'>('primary');
-  const activeDepartment = (deptFilter === 'secondary' && secondaryDepartment) ? secondaryDepartment : userDepartment;
+  const [deptFilter, setDeptFilter] = useState<'primary' | 'secondary' | 'common'>(userDepartment ? 'primary' : 'common');
+  const isCommonTab = deptFilter === 'common';
+  const activeDepartment = isCommonTab ? undefined : (deptFilter === 'secondary' && secondaryDepartment) ? secondaryDepartment : userDepartment;
   // Resolve department names for display
   const { data: departments = [] } = useDepartments();
   const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
@@ -221,19 +242,30 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
+  // Reset year/semester filters when switching to common tab
+  useEffect(() => {
+    if (isCommonTab) {
+      setYearFilter(undefined);
+      setSemesterFilter(undefined);
+    }
+  }, [isCommonTab]);
+
   // Conditional fetch strategy: grouped view fetches all, filtered view uses filters
-  const isGroupedView = !debouncedSearch && !yearFilter && !semesterFilter && !categoryFilter;
+  // Common tab uses quick-add UI, no course fetching needed
+  const isGroupedView = !isCommonTab && !debouncedSearch && !yearFilter && !semesterFilter && !categoryFilter;
 
   const { data: courses = [], isLoading, error } = useCourses(
-    isGroupedView
-      ? { departmentId: activeDepartment }
-      : {
-          departmentId: activeDepartment,
-          search: debouncedSearch || undefined,
-          recommendedYear: yearFilter,
-          recommendedSemester: semesterFilter,
-          category: categoryFilter,
-        }
+    isCommonTab
+      ? undefined // Common tab uses quick-add UI, skip fetch
+      : isGroupedView
+        ? { departmentId: activeDepartment }
+        : {
+            departmentId: activeDepartment,
+            search: debouncedSearch || undefined,
+            recommendedYear: yearFilter,
+            recommendedSemester: semesterFilter,
+            category: categoryFilter,
+          }
   );
 
   // Filter courses locally for instant feedback while typing
@@ -324,6 +356,43 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
     return groups;
   }, [filteredCourses, isGroupedView, courses.length]);
 
+  // Quick-add handler for common courses
+  const createCourseMutation = useCreateCourse();
+  const [creatingCommon, setCreatingCommon] = useState<string | null>(null);
+
+  const handleQuickAddCommon = useCallback(async (
+    categoryKey: RequirementCategory,
+    credits: number,
+    categoryLabel: string,
+  ) => {
+    if (!focusedSemester || !onClickAdd) return;
+
+    const loadingKey = `${categoryKey}-${credits}`;
+    setCreatingCommon(loadingKey);
+
+    try {
+      const code = `PLH-${categoryKey.split('_').map(w => w[0]).join('').toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+      const name = `${categoryLabel} ${credits}학점`;
+
+      const course = await createCourseMutation.mutateAsync({
+        code,
+        name,
+        credits,
+        semesters: ['spring', 'fall'] as Semester[],
+        category: categoryKey,
+      });
+
+      onClickAdd(String(course._id), {
+        code,
+        name,
+        credits,
+        category: categoryKey,
+      });
+    } finally {
+      setCreatingCommon(null);
+    }
+  }, [focusedSemester, onClickAdd, createCourseMutation]);
+
   const courseCount = filteredCourses.length;
 
   return (
@@ -336,13 +405,15 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             <h2 className="text-base font-semibold text-gray-900">과목 리스트</h2>
             <div className="flex items-center gap-1">
               <p className="text-xs text-gray-400 truncate">
-                {activeDepartment
-                  ? (deptFilter === 'secondary' && secondaryDepartment
-                    ? `${majorType === 'double' ? '복수전공' : '부전공'}: ${secondaryDepartmentName || '학과'} 커리큘럼`
-                    : `${primaryDepartmentName || '내 학과'} 커리큘럼`)
-                  : '학과를 설정하면 커리큘럼이 표시됩니다'}
+                {isCommonTab
+                  ? '공통 교양/선택 과목'
+                  : activeDepartment
+                    ? (deptFilter === 'secondary' && secondaryDepartment
+                      ? `${majorType === 'double' ? '복수전공' : '부전공'}: ${secondaryDepartmentName || '학과'} 커리큘럼`
+                      : `${primaryDepartmentName || '내 학과'} 커리큘럼`)
+                    : '학과를 설정하면 커리큘럼이 표시됩니다'}
               </p>
-              {activeDepartment && (
+              {(activeDepartment || isCommonTab) && (
                 <button
                   onClick={() => setShowCurriculumInfo(!showCurriculumInfo)}
                   className="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors"
@@ -359,25 +430,29 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             )}
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span className="text-xs text-gray-500 hidden sm:inline">
-              {isLoading ? '로딩...' : `${courseCount}개`}
-            </span>
-            <div className="flex items-center border rounded-md overflow-hidden">
-              <button
-                onClick={() => setViewMode('card')}
-                className={`p-1 transition-colors ${viewMode === 'card' ? 'bg-[#153974] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                aria-label="카드 뷰"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-1 transition-colors ${viewMode === 'list' ? 'bg-[#153974] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                aria-label="리스트 뷰"
-              >
-                <List className="w-3.5 h-3.5" />
-              </button>
-            </div>
+            {!isCommonTab && (
+              <>
+                <span className="text-xs text-gray-500 hidden sm:inline">
+                  {isLoading ? '로딩...' : `${courseCount}개`}
+                </span>
+                <div className="flex items-center border rounded-md overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('card')}
+                    className={`p-1 transition-colors ${viewMode === 'card' ? 'bg-[#153974] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    aria-label="카드 뷰"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-1 transition-colors ${viewMode === 'list' ? 'bg-[#153974] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    aria-label="리스트 뷰"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
+            )}
             <button
               onClick={() => setShowCustomForm(true)}
               className="px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
@@ -404,8 +479,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
           </div>
         </div>
 
-        {/* Row 2: Search + Count (mobile) */}
-        {!isCollapsed && (
+        {/* Row 2: Search + Count (mobile) - hidden for common tab */}
+        {!isCollapsed && !isCommonTab && (
           <div className="flex items-center gap-2">
             <Input
               type="text"
@@ -423,10 +498,10 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         {/* Row 3: Filters */}
         {!isCollapsed && (
           <div className="space-y-1.5">
-            {/* Department filter (for multi-major) */}
-            {secondaryDepartment && majorType !== 'single' && (
-              <div className="flex items-center gap-1 pb-1">
-                <span className="text-[11px] font-medium text-gray-400">학과</span>
+            {/* Department filter - always show with at least primary + common */}
+            <div className="flex items-center gap-1 pb-1">
+              <span className="text-[11px] font-medium text-gray-400">학과</span>
+              {userDepartment && (
                 <button
                   onClick={() => setDeptFilter('primary')}
                   className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors ${
@@ -435,8 +510,10 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                       : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'
                   }`}
                 >
-                  주전공
+                  {secondaryDepartment && majorType !== 'single' ? '주전공' : '내 학과'}
                 </button>
+              )}
+              {secondaryDepartment && majorType !== 'single' && (
                 <button
                   onClick={() => setDeptFilter('secondary')}
                   className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors ${
@@ -447,47 +524,59 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                 >
                   {majorType === 'double' ? '복수전공' : '부전공'}
                 </button>
+              )}
+              <button
+                onClick={() => setDeptFilter('common')}
+                className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors ${
+                  deptFilter === 'common'
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                }`}
+              >
+                공통
+              </button>
+            </div>
+            {/* Year + Semester filters (hidden for common tab) */}
+            {!isCommonTab && (
+              <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-medium text-gray-400 w-7">학년</span>
+                  {[undefined, 1, 2, 3, 4, 5, 6].map((y) => (
+                    <button
+                      key={y ?? 'all'}
+                      onClick={() => setYearFilter(y)}
+                      className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
+                        ${yearFilter === y
+                          ? 'bg-[#153974] text-white'
+                          : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
+                    >
+                      {y ? `${y}` : '전체'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="w-px h-4 bg-gray-200" />
+
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-medium text-gray-400 w-7">학기</span>
+                  {([undefined, 'spring', 'fall'] as const).map((s) => (
+                    <button
+                      key={s ?? 'all'}
+                      onClick={() => setSemesterFilter(s as Semester | undefined)}
+                      className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
+                        ${semesterFilter === s
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
+                    >
+                      {s === 'spring' ? '1학기' : s === 'fall' ? '2학기' : '전체'}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
-            {/* Year + Semester filters */}
-            <div className="flex items-center gap-x-3 gap-y-1 flex-wrap">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] font-medium text-gray-400 w-7">학년</span>
-                {[undefined, 1, 2, 3, 4, 5, 6].map((y) => (
-                  <button
-                    key={y ?? 'all'}
-                    onClick={() => setYearFilter(y)}
-                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
-                      ${yearFilter === y
-                        ? 'bg-[#153974] text-white'
-                        : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
-                  >
-                    {y ? `${y}` : '전체'}
-                  </button>
-                ))}
-              </div>
 
-              <div className="w-px h-4 bg-gray-200" />
-
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] font-medium text-gray-400 w-7">학기</span>
-                {([undefined, 'spring', 'fall'] as const).map((s) => (
-                  <button
-                    key={s ?? 'all'}
-                    onClick={() => setSemesterFilter(s as Semester | undefined)}
-                    className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors
-                      ${semesterFilter === s
-                        ? 'bg-emerald-500 text-white'
-                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'}`}
-                  >
-                    {s === 'spring' ? '1학기' : s === 'fall' ? '2학기' : '전체'}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Category filter */}
-            <div className="flex items-center gap-1 flex-wrap">
+            {/* Category filter - hidden for common tab */}
+            {!isCommonTab && <div className="flex items-center gap-1 flex-wrap">
               <span className="text-[11px] font-medium text-gray-400">이수</span>
               {([undefined, ...usedCategories] as (RequirementCategory | undefined)[]).map((cat) => {
                 const labels: Record<string, string> = {
@@ -521,13 +610,13 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                   </button>
                 );
               })}
-            </div>
+            </div>}
           </div>
         )}
       </div>
 
       {/* No Department Banner */}
-      {!isCollapsed && !userDepartment && (
+      {!isCollapsed && !userDepartment && !isCommonTab && (
         <div className="px-4 py-3 bg-amber-50 border-b border-amber-200 text-sm text-amber-700">
           <a href="/profile" className="font-medium underline hover:text-amber-800">
             프로필 설정
@@ -549,7 +638,53 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
       {/* Content Area - Only visible when not collapsed */}
       {!isCollapsed && (
         <div className="max-h-[350px] sm:max-h-[400px] overflow-y-auto p-3 sm:p-4">
-          {isLoading ? (
+          {isCommonTab ? (
+            // Quick-add UI for common courses
+            <div className="space-y-3">
+              {!focusedSemester && (
+                <div className="text-center text-sm text-amber-600 bg-amber-50 rounded-lg p-3">
+                  학기를 먼저 클릭하여 포커스한 후 과목을 추가하세요
+                </div>
+              )}
+              <p className="text-xs text-gray-500">
+                카테고리와 학점을 선택하면 포커스된 학기에 바로 추가됩니다
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {COMMON_QUICK_ADD_CATEGORIES.map((cat) => (
+                  <div key={cat.key} className={`border rounded-lg p-3 ${cat.borderColor} ${cat.lightBg}`}>
+                    <div className={`text-sm font-semibold mb-2.5 ${cat.textColor}`}>
+                      {cat.label}
+                    </div>
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3].map((credits) => {
+                        const loadingKey = `${cat.key}-${credits}`;
+                        const isCreating = creatingCommon === loadingKey;
+                        return (
+                          <button
+                            key={credits}
+                            onClick={() => handleQuickAddCommon(cat.key, credits, cat.label)}
+                            disabled={!focusedSemester || creatingCommon !== null}
+                            className={`flex-1 py-1.5 rounded text-sm font-medium transition-colors
+                              ${!focusedSemester
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : isCreating
+                                  ? 'bg-gray-300 text-gray-500 cursor-wait'
+                                  : `${cat.bgColor} ${cat.hoverColor} text-white cursor-pointer`
+                              }`}
+                          >
+                            {isCreating ? '...' : `${credits}학점`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">
+                추가된 과목은 졸업요건에 자동 반영됩니다. 교양선택→교양학점, 자유선택→전체학점
+              </p>
+            </div>
+          ) : isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]"></div>
             </div>
