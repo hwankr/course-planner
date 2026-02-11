@@ -207,7 +207,7 @@ async function removeCourseFromSemester(
 ): Promise<IPlanDocument | null> {
   await connectDB();
 
-  return withVersionRetry(async () => {
+  const plan = await withVersionRetry(async () => {
     const plan = await Plan.findById(planId);
     if (!plan) return null;
 
@@ -226,6 +226,19 @@ async function removeCourseFromSemester(
     await plan.populate(POPULATE_COURSES);
     return plan;
   });
+
+  // 커스텀 과목이면 DB에서도 삭제 (해당 유저만 사용하므로)
+  // withVersionRetry 밖에서 실행하여 plan 저장과 독립적으로 처리
+  try {
+    const course = await Course.findById(courseId).lean();
+    if (course?.createdBy) {
+      await Course.deleteOne({ _id: courseId });
+    }
+  } catch {
+    // 과목 삭제 실패해도 학기에서 제거는 유지
+  }
+
+  return plan;
 }
 
 /**
@@ -274,7 +287,14 @@ async function removeSemester(
 ): Promise<IPlanDocument> {
   await connectDB();
 
-  return withVersionRetry(async () => {
+  // 커스텀 과목 삭제를 위해 학기의 과목 ID를 미리 수집
+  const planSnapshot = await Plan.findById(planId).lean();
+  const targetSemester = planSnapshot?.semesters.find(
+    (s) => s.year === year && s.term === term
+  );
+  const courseIds = targetSemester?.courses.map((c) => c.course.toString()) || [];
+
+  const result = await withVersionRetry(async () => {
     const plan = await Plan.findById(planId);
     if (!plan) throw new Error('수강계획을 찾을 수 없습니다.');
 
@@ -292,6 +312,20 @@ async function removeSemester(
       .populate(POPULATE_COURSES_DETAIL)
       .lean() as Promise<IPlanDocument>;
   });
+
+  // 커스텀 과목이면 DB에서도 삭제 (해당 유저만 사용하므로)
+  try {
+    if (courseIds.length > 0) {
+      await Course.deleteMany({
+        _id: { $in: courseIds },
+        createdBy: { $ne: null },
+      });
+    }
+  } catch {
+    // 커스텀 과목 삭제 실패해도 학기 제거는 유지
+  }
+
+  return result;
 }
 
 /**
@@ -304,7 +338,14 @@ async function clearSemester(
 ): Promise<IPlanDocument> {
   await connectDB();
 
-  return withVersionRetry(async () => {
+  // 커스텀 과목 삭제를 위해 학기의 과목 ID를 미리 수집
+  const planSnapshot = await Plan.findById(planId).lean();
+  const targetSemester = planSnapshot?.semesters.find(
+    (s) => s.year === year && s.term === term
+  );
+  const courseIds = targetSemester?.courses.map((c) => c.course.toString()) || [];
+
+  const result = await withVersionRetry(async () => {
     const plan = await Plan.findById(planId);
     if (!plan) throw new Error('수강계획을 찾을 수 없습니다.');
 
@@ -322,6 +363,20 @@ async function clearSemester(
       .populate(POPULATE_COURSES_DETAIL)
       .lean() as Promise<IPlanDocument>;
   });
+
+  // 커스텀 과목이면 DB에서도 삭제 (해당 유저만 사용하므로)
+  try {
+    if (courseIds.length > 0) {
+      await Course.deleteMany({
+        _id: { $in: courseIds },
+        createdBy: { $ne: null },
+      });
+    }
+  } catch {
+    // 커스텀 과목 삭제 실패해도 학기 초기화는 유지
+  }
+
+  return result;
 }
 
 /**
@@ -388,7 +443,13 @@ async function moveCourse(
 async function resetPlan(planId: string): Promise<IPlanDocument> {
   await connectDB();
 
-  return withVersionRetry(async () => {
+  // 커스텀 과목 삭제를 위해 모든 학기의 과목 ID를 미리 수집
+  const planSnapshot = await Plan.findById(planId).lean();
+  const courseIds = planSnapshot?.semesters.flatMap(
+    (s) => s.courses.map((c) => c.course.toString())
+  ) || [];
+
+  const result = await withVersionRetry(async () => {
     const plan = await Plan.findById(planId);
     if (!plan) throw new Error('수강계획을 찾을 수 없습니다.');
 
@@ -398,6 +459,20 @@ async function resetPlan(planId: string): Promise<IPlanDocument> {
     await plan.populate(POPULATE_COURSES_DETAIL);
     return plan;
   });
+
+  // 커스텀 과목이면 DB에서도 삭제 (해당 유저만 사용하므로)
+  try {
+    if (courseIds.length > 0) {
+      await Course.deleteMany({
+        _id: { $in: courseIds },
+        createdBy: { $ne: null },
+      });
+    }
+  } catch {
+    // 커스텀 과목 삭제 실패해도 계획 초기화는 유지
+  }
+
+  return result;
 }
 
 /**

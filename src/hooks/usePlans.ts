@@ -238,6 +238,8 @@ export function useResetPlan() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: planKeys.all });
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
+      // 커스텀 과목은 계획 초기화 시 DB에서도 삭제되므로 카탈로그 캐시 갱신
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 
@@ -305,6 +307,8 @@ export function useRemoveCourse() {
     onSuccess: (data) => {
       queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
+      // 커스텀 과목은 학기에서 제거 시 DB에서도 삭제되므로 카탈로그 캐시 갱신
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 
@@ -424,6 +428,8 @@ export function useRemoveSemester() {
     onSuccess: (data) => {
       if (data) queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
+      // 커스텀 과목은 학기 삭제 시 DB에서도 삭제되므로 카탈로그 캐시 갱신
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 
@@ -465,6 +471,8 @@ export function useClearSemester() {
     onSuccess: (data) => {
       if (data) queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
+      // 커스텀 과목은 학기 초기화 시 DB에서도 삭제되므로 카탈로그 캐시 갱신
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
     },
   });
 

@@ -61,13 +61,13 @@ export async function GET(request: Request) {
 const createCourseSchema = z.object({
   code: z.string().min(1, '과목 코드는 필수입니다.'),
   name: z.string().min(1, '과목명은 필수입니다.'),
-  credits: z.number().min(1).max(12),
+  credits: z.coerce.number().min(1).max(12),
   department: z.string().min(1).optional(),
   prerequisites: z.array(z.string()).optional(),
   description: z.string().optional(),
   semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])),
   category: z.enum(['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'free_elective', 'teaching']).optional(),
-  recommendedYear: z.number().min(1).max(6).optional(),
+  recommendedYear: z.coerce.number().min(1).max(6).optional(),
   recommendedSemester: z.enum(['spring', 'summer', 'fall', 'winter']).optional(),
 });
 
@@ -84,10 +84,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createCourseSchema.parse(body);
 
-    // Non-admin: force createdBy (custom course). Admin: official course (createdBy = null)
+    // 모든 사용자(admin 포함)가 이 API로 생성하는 과목은 커스텀 과목
+    // 공식 과목은 seed 스크립트로만 생성됨
     const courseData = {
       ...validatedData,
-      createdBy: session.user.role === 'admin' ? undefined : session.user.id,
+      createdBy: session.user.id,
     };
 
     const course = await courseService.create(courseData);
