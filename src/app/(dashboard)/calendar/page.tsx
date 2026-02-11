@@ -150,16 +150,29 @@ export default function CalendarPage() {
 
   const eventsByDate = useMemo(() => {
     const map = new Map<string, CalendarEvent[]>();
+    const addToDate = (key: string, event: CalendarEvent) => {
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(event);
+    };
+
     allEvents.forEach((event) => {
       const start = new Date(event.startDate);
       const end = event.endDate ? new Date(event.endDate) : start;
-      const current = new Date(start);
+      const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-      while (current <= end) {
-        const key = current.toISOString().split('T')[0];
-        if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push(event);
-        current.setDate(current.getDate() + 1);
+      if (diffDays > 7) {
+        // 장기 일정(7일 초과): 시작일과 종료일에만 표시
+        addToDate(start.toISOString().split('T')[0], event);
+        if (diffDays > 0) {
+          addToDate(end.toISOString().split('T')[0], event);
+        }
+      } else {
+        // 단기 일정(7일 이하): 모든 날짜에 표시
+        const current = new Date(start);
+        while (current <= end) {
+          addToDate(current.toISOString().split('T')[0], event);
+          current.setDate(current.getDate() + 1);
+        }
       }
     });
     return map;
@@ -432,10 +445,23 @@ export default function CalendarPage() {
                       </div>
                       <div className="space-y-0.5">
                         {dayEvents.slice(0, 3).map((event, i) => {
-                          const isMultiDay =
-                            event.endDate &&
-                            new Date(event.startDate).toDateString() !==
-                              new Date(event.endDate).toDateString();
+                          const start = new Date(event.startDate);
+                          const end = event.endDate ? new Date(event.endDate) : start;
+                          const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+                          const isLong = diffDays > 7;
+                          const isStartDay = date && isSameDay(date, start);
+                          const isEndDay = date && event.endDate && isSameDay(date, end);
+
+                          // 장기 일정 라벨: 시작일엔 "~MM.DD", 종료일엔 "MM.DD~"
+                          let label = event.title;
+                          if (isLong && event.endDate) {
+                            const endM = String(end.getMonth() + 1).padStart(2, '0');
+                            const endD = String(end.getDate()).padStart(2, '0');
+                            const startM = String(start.getMonth() + 1).padStart(2, '0');
+                            const startD = String(start.getDate()).padStart(2, '0');
+                            if (isStartDay) label = `${event.title} ~${endM}.${endD}`;
+                            else if (isEndDay) label = `${startM}.${startD}~ ${event.title}`;
+                          }
 
                           return (
                             <div
@@ -446,11 +472,11 @@ export default function CalendarPage() {
                               }}
                               className={`text-xs px-1 py-0.5 rounded truncate cursor-pointer ${
                                 categoryColors[event.category]
-                              } ${isMultiDay ? 'font-medium' : ''}`}
-                              title={event.title}
+                              } ${diffDays > 0 ? 'font-medium' : ''} ${isLong ? 'italic' : ''}`}
+                              title={`${event.title}${event.endDate ? ` (${formatDateRange(event.startDate, event.endDate)})` : ''}`}
                             >
                               {event.isHoliday && '🔴 '}
-                              {event.title}
+                              {label}
                             </div>
                           );
                         })}
