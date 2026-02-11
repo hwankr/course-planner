@@ -411,7 +411,7 @@ export default function CalendarPage() {
                   </div>
                 ))}
                 {Array.from({ length: 35 }).map((_, i) => (
-                  <div key={i} className="min-h-[80px] md:aspect-square bg-gray-100 animate-pulse border border-gray-200 md:rounded-lg" />
+                  <div key={i} className="min-h-[90px] md:aspect-square bg-gray-100 animate-pulse border border-gray-200 md:rounded-lg" />
                 ))}
               </div>
             ) : (
@@ -428,7 +428,7 @@ export default function CalendarPage() {
                 ))}
                 {calendarDays.map((date, index) => {
                   if (!date) {
-                    return <div key={`empty-${index}`} className="min-h-[80px] md:aspect-square border border-gray-100 md:border-0" />;
+                    return <div key={`empty-${index}`} className="min-h-[90px] md:aspect-square border border-gray-100 md:border-0" />;
                   }
 
                   const dateStr = toDateKey(date);
@@ -446,9 +446,9 @@ export default function CalendarPage() {
                         );
                         handleDateClick(date);
                       }}
-                      className={`min-h-[80px] md:aspect-square p-0.5 md:p-2 border border-gray-200 md:rounded-lg ${
+                      className={`min-h-[90px] md:aspect-square p-0.5 md:p-2 border border-gray-200 md:rounded-lg ${
                         isToday && isSelected
-                          ? 'bg-blue-100 md:bg-blue-50 border-blue-400 md:border-2 md:border-blue-500 ring-2 ring-amber-400 ring-offset-0'
+                          ? 'bg-blue-100 md:bg-blue-50 border-amber-400 md:border-2 md:border-blue-500 md:ring-2 md:ring-amber-400 md:ring-offset-0'
                           : isToday
                           ? 'bg-blue-50 border-blue-400 md:border-2 md:border-blue-500'
                           : isSelected
