@@ -187,6 +187,46 @@ async function deleteWithCascade(userId: string): Promise<void> {
   }
 }
 
+/**
+ * 전체 사용자 목록 조회 (관리자용)
+ */
+async function findAllUsers(filter?: { search?: string; role?: string }): Promise<IUserDocument[]> {
+  await connectDB();
+
+  const conditions: Record<string, unknown>[] = [];
+
+  if (filter?.search) {
+    const escaped = filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    conditions.push({
+      $or: [
+        { name: { $regex: escaped, $options: 'i' } },
+        { email: { $regex: escaped, $options: 'i' } },
+      ],
+    });
+  }
+
+  if (filter?.role) {
+    conditions.push({ role: filter.role });
+  }
+
+  const query = conditions.length > 0 ? { $and: conditions } : {};
+  return User.find(query)
+    .populate('department', 'code name')
+    .sort({ createdAt: -1 })
+    .limit(200)
+    .lean();
+}
+
+/**
+ * 사용자 역할 변경 (관리자용)
+ */
+async function updateRole(userId: string, role: 'student' | 'admin'): Promise<IUserDocument | null> {
+  await connectDB();
+  return User.findByIdAndUpdate(userId, { role }, { new: true })
+    .populate('department', 'code name')
+    .lean();
+}
+
 export const userService = {
   findByEmail,
   findByEmailWithPassword,
@@ -199,4 +239,6 @@ export const userService = {
   isAccountLocked,
   recordFailedLogin,
   resetFailedLogins,
+  findAllUsers,
+  updateRole,
 };

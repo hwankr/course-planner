@@ -125,6 +125,80 @@ async function getSecondaryRequirements(
   };
 }
 
+/**
+ * 졸업요건 생성
+ */
+async function create(input: {
+  college: string;
+  departmentName: string;
+  generalCredits: number | null;
+  single: { majorRequiredMin: number | null; majorCredits: number | null };
+  double: { majorRequiredMin: number | null; majorCredits: number | null };
+  minor: { majorRequiredMin: number | null; majorCredits: number | null; primaryMajorMin: number | null };
+  totalCredits: number;
+}): Promise<IDepartmentRequirementDocument> {
+  await connectDB();
+
+  // Compute availableMajorTypes
+  const availableMajorTypes: string[] = [];
+  if (input.single.majorCredits !== null) availableMajorTypes.push('single');
+  if (input.double.majorCredits !== null) availableMajorTypes.push('double');
+  if (input.minor.majorCredits !== null) availableMajorTypes.push('minor');
+
+  return DepartmentRequirement.create({
+    ...input,
+    availableMajorTypes,
+  });
+}
+
+/**
+ * 졸업요건 수정
+ */
+async function update(
+  id: string,
+  data: Partial<{
+    college: string;
+    departmentName: string;
+    generalCredits: number | null;
+    single: { majorRequiredMin: number | null; majorCredits: number | null };
+    double: { majorRequiredMin: number | null; majorCredits: number | null };
+    minor: { majorRequiredMin: number | null; majorCredits: number | null; primaryMajorMin: number | null };
+    totalCredits: number;
+  }>
+): Promise<IDepartmentRequirementDocument | null> {
+  await connectDB();
+
+  // Recompute availableMajorTypes if major configs are being updated
+  const updateData: Record<string, unknown> = { ...data };
+
+  if (data.single || data.double || data.minor) {
+    // Need to fetch current doc to merge with updates
+    const current = await DepartmentRequirement.findById(id).lean();
+    if (!current) return null;
+
+    const single = data.single || current.single;
+    const double = data.double || current.double;
+    const minor = data.minor || current.minor;
+
+    const availableMajorTypes: string[] = [];
+    if (single.majorCredits !== null) availableMajorTypes.push('single');
+    if (double.majorCredits !== null) availableMajorTypes.push('double');
+    if (minor.majorCredits !== null) availableMajorTypes.push('minor');
+
+    updateData.availableMajorTypes = availableMajorTypes;
+  }
+
+  return DepartmentRequirement.findByIdAndUpdate(id, updateData, { new: true }).lean();
+}
+
+/**
+ * 졸업요건 삭제
+ */
+async function remove(id: string): Promise<IDepartmentRequirementDocument | null> {
+  await connectDB();
+  return DepartmentRequirement.findByIdAndDelete(id).lean();
+}
+
 export const departmentRequirementService = {
   findByDepartmentName,
   findByCollege,
@@ -133,4 +207,7 @@ export const departmentRequirementService = {
   getAvailableMajorTypes,
   getPrimaryRequirements,
   getSecondaryRequirements,
+  create,
+  update,
+  remove,
 };
