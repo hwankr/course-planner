@@ -68,8 +68,25 @@ async function getDepartmentCourseStats(
     { $unwind: '$courseInfo' },
     // Filter out custom courses (createdBy !== null)
     { $match: { 'courseInfo.createdBy': null } },
-    // Filter out common courses (no department) to prevent them from dominating rankings
-    { $match: { 'courseInfo.department': { $ne: null } } },
+    // Check if course is in any department's curriculum (to distinguish real courses from common placeholders)
+    {
+      $lookup: {
+        from: 'departmentcurriculums',
+        localField: 'courseInfo._id',
+        foreignField: 'course',
+        pipeline: [{ $limit: 1 }],
+        as: '_currCheck',
+      },
+    },
+    // Filter out common placeholder courses: keep courses that have a department OR are in any curriculum
+    {
+      $match: {
+        $or: [
+          { 'courseInfo.department': { $ne: null } },
+          { '_currCheck.0': { $exists: true } },
+        ],
+      },
+    },
     // Lookup DepartmentCurriculum for authoritative category (covers old plans without PlannedCourse.category)
     {
       $lookup: {
@@ -140,8 +157,25 @@ async function getDepartmentCourseStats(
     },
     { $unwind: '$courseInfo' },
     { $match: { 'courseInfo.createdBy': null } },
-    // Filter out common courses (no department) to prevent them from dominating rankings
-    { $match: { 'courseInfo.department': { $ne: null } } },
+    // Check if course is in any department's curriculum (to distinguish real courses from common placeholders)
+    {
+      $lookup: {
+        from: 'departmentcurriculums',
+        localField: 'courseInfo._id',
+        foreignField: 'course',
+        pipeline: [{ $limit: 1 }],
+        as: '_currCheck',
+      },
+    },
+    // Filter out common placeholder courses: keep courses that have a department OR are in any curriculum
+    {
+      $match: {
+        $or: [
+          { 'courseInfo.department': { $ne: null } },
+          { '_currCheck.0': { $exists: true } },
+        ],
+      },
+    },
     {
       $group: {
         _id: {
