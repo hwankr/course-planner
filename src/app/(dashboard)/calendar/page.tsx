@@ -108,6 +108,7 @@ export default function CalendarPage() {
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<AcademicEventCategory | 'all'>('all');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -219,11 +220,13 @@ export default function CalendarPage() {
       return newDate;
     });
     setSelectedEvent(null);
+    setSelectedDate(null);
   };
 
   const goToToday = () => {
     setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
     setSelectedEvent(null);
+    setSelectedDate(null);
   };
 
   const handleDateClick = (date: Date) => {
@@ -368,16 +371,19 @@ export default function CalendarPage() {
 
         {/* Calendar Card */}
         <Card className="mb-6">
-          <CardContent className="p-4 md:p-6">
+          <CardContent className="px-1 py-4 md:p-6">
             {/* Calendar Navigation */}
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => navigateMonth('prev')}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
+                <h2 className="text-lg md:text-xl font-semibold min-w-[3rem] text-center">
+                  {month + 1}월
+                </h2>
                 <button
                   onClick={() => navigateMonth('next')}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -386,34 +392,34 @@ export default function CalendarPage() {
                 </button>
                 <button
                   onClick={goToToday}
-                  className="px-3 py-1 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors"
+                  className="px-3 py-1 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors ml-1"
                 >
                   오늘
                 </button>
               </div>
-              <h2 className="text-lg md:text-xl font-semibold">
-                {year}년 {month + 1}월
+              <h2 className="text-lg md:text-xl font-semibold text-gray-500 mr-2">
+                {year}년
               </h2>
             </div>
 
             {/* Calendar Grid */}
             {isLoading ? (
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0 md:gap-1">
                 {dayNames.map((day) => (
                   <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
                     {day}
                   </div>
                 ))}
                 {Array.from({ length: 35 }).map((_, i) => (
-                  <div key={i} className="aspect-square bg-gray-100 animate-pulse rounded-lg" />
+                  <div key={i} className="min-h-[80px] md:aspect-square bg-gray-100 animate-pulse border border-gray-200 md:rounded-lg" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0 md:gap-1">
                 {dayNames.map((day, i) => (
                   <div
                     key={day}
-                    className={`text-center text-xs md:text-sm font-medium py-2 ${
+                    className={`text-center text-xs md:text-sm font-medium py-2 border-b border-gray-200 md:border-b-0 ${
                       i === 0 ? 'text-red-600' : i === 6 ? 'text-blue-600' : 'text-gray-600'
                     }`}
                   >
@@ -422,26 +428,36 @@ export default function CalendarPage() {
                 ))}
                 {calendarDays.map((date, index) => {
                   if (!date) {
-                    return <div key={`empty-${index}`} className="aspect-square" />;
+                    return <div key={`empty-${index}`} className="min-h-[80px] md:aspect-square border border-gray-100 md:border-0" />;
                   }
 
                   const dateStr = toDateKey(date);
                   const dayEvents = eventsByDate.get(dateStr) || [];
                   const isToday = isSameDay(date, today);
                   const dayOfWeek = date.getDay();
+                  const isSelected = selectedDate && isSameDay(date, selectedDate);
 
                   return (
                     <div
                       key={dateStr}
-                      onClick={() => handleDateClick(date)}
-                      className={`aspect-square border rounded-lg p-1 md:p-2 ${
-                        isToday
-                          ? 'border-2 border-blue-500 bg-blue-50'
-                          : 'border-gray-200 bg-white hover:bg-gray-50'
-                      } ${isAdmin ? 'cursor-pointer' : ''} transition-colors overflow-hidden`}
+                      onClick={() => {
+                        setSelectedDate((prev) =>
+                          prev && isSameDay(prev, date) ? null : date
+                        );
+                        handleDateClick(date);
+                      }}
+                      className={`min-h-[80px] md:aspect-square p-0.5 md:p-2 border border-gray-200 md:rounded-lg ${
+                        isToday && isSelected
+                          ? 'bg-blue-100 md:bg-blue-50 border-blue-400 md:border-2 md:border-blue-500 ring-2 ring-amber-400 ring-offset-0'
+                          : isToday
+                          ? 'bg-blue-50 border-blue-400 md:border-2 md:border-blue-500'
+                          : isSelected
+                          ? 'bg-amber-50/50 border-amber-300 md:border-2 md:border-amber-400 md:bg-white md:hover:bg-gray-50'
+                          : 'bg-white hover:bg-gray-50'
+                      } cursor-pointer md:cursor-default ${isAdmin ? 'md:cursor-pointer' : ''} transition-colors overflow-hidden`}
                     >
                       <div
-                        className={`text-xs md:text-sm font-medium mb-1 ${
+                        className={`text-[10px] md:text-sm font-medium mb-0.5 md:mb-1 ${
                           dayOfWeek === 0
                             ? 'text-red-600'
                             : dayOfWeek === 6
@@ -451,7 +467,8 @@ export default function CalendarPage() {
                       >
                         {date.getDate()}
                       </div>
-                      <div className="space-y-0.5">
+                      {/* Desktop: existing event text (hidden on mobile) */}
+                      <div className="hidden md:block space-y-0.5">
                         {dayEvents.slice(0, 3).map((event, i) => {
                           const start = new Date(event.startDate);
                           const end = event.endDate ? new Date(event.endDate) : start;
@@ -494,6 +511,30 @@ export default function CalendarPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* Mobile: tiny text events */}
+                      <div className="md:hidden space-y-px pointer-events-none">
+                        {dayEvents.slice(0, 3).map((event, i) => (
+                          <div
+                            key={`m-${event._id}-${i}`}
+                            className={`text-[10px] leading-tight px-0.5 rounded truncate ${
+                              event.category === 'academic' ? 'text-blue-700 bg-blue-50' :
+                              event.category === 'registration' ? 'text-green-700 bg-green-50' :
+                              event.category === 'exam' ? 'text-red-700 bg-red-50' :
+                              event.category === 'holiday' ? 'text-rose-700 bg-rose-50' :
+                              'text-gray-600 bg-gray-50'
+                            }`}
+                            title={event.title}
+                          >
+                            {event.title}
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <div className="text-[9px] text-gray-400 px-0.5 leading-tight">
+                            +{dayEvents.length - 3}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -501,6 +542,69 @@ export default function CalendarPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Mobile: Selected Day Events */}
+        {selectedDate && (
+          <div className="md:hidden mb-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-base" style={{ color: '#153974' }}>
+                    {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일
+                    ({['일','월','화','수','목','금','토'][selectedDate.getDay()]})
+                  </h3>
+                  <button
+                    onClick={() => setSelectedDate(null)}
+                    className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-gray-500" />
+                  </button>
+                </div>
+                {(() => {
+                  const dateStr = toDateKey(selectedDate);
+                  const dayEvents = eventsByDate.get(dateStr) || [];
+                  if (dayEvents.length === 0) {
+                    return (
+                      <p className="text-sm text-gray-400 text-center py-4">
+                        이 날의 일정이 없습니다.
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {dayEvents.map((event, i) => (
+                        <div
+                          key={`mobile-${event._id}-${i}`}
+                          onClick={() => handleEventClick(event)}
+                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-100"
+                        >
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
+                            categoryColors[event.category]
+                          }`}>
+                            {categoryLabels[event.category]}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              {event.isHoliday && <span className="text-red-600 text-xs">🔴</span>}
+                              <span className="text-sm font-medium truncate">
+                                {event.title}
+                              </span>
+                            </div>
+                            {event.endDate && (
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {formatDateRange(event.startDate, event.endDate)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Selected Event Detail */}
         {selectedEvent && (
