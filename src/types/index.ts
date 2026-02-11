@@ -399,6 +399,27 @@ export interface AcademicEventFilter {
 }
 
 // ============================================
+// Feedback Types
+// ============================================
+
+export type FeedbackCategory = 'bug' | 'feature' | 'data-error' | 'other' | 'contact';
+export type FeedbackStatus = 'pending' | 'resolved';
+
+export interface IFeedbackResponse {
+  _id: string;
+  category: FeedbackCategory;
+  message: string;
+  email?: string;
+  userId?: { _id: string; email: string; name: string };
+  status: FeedbackStatus;
+  adminReply?: string;
+  adminReplyAt?: string;
+  isReadByUser: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
 // API Response Types
 // ============================================
 

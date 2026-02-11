@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useToastStore } from '@/stores/toastStore';
 import { Card, CardContent } from '@/components/ui';
-import { ArrowLeft, MessageSquare, CheckCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, MessageSquare, CheckCircle, Clock, ChevronDown, ChevronUp, Loader2, Reply, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 type FeedbackCategory = 'bug' | 'feature' | 'data-error' | 'other' | 'contact';
@@ -21,6 +21,10 @@ interface FeedbackItem {
   status: FeedbackStatus;
   createdAt: string;
   updatedAt: string;
+  adminReply?: string;
+  adminReplyAt?: string;
+  isReadByAdmin: boolean;
+  isReadByUser: boolean;
 }
 
 const CATEGORY_LABELS: Record<FeedbackCategory, string> = {
@@ -53,6 +57,8 @@ export default function AdminFeedbackPage() {
   const [statusFilter, setStatusFilter] = useState<FeedbackStatus | ''>('');
   const [categoryFilter, setCategoryFilter] = useState<FeedbackCategory | ''>('');
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const [replyingId, setReplyingId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
@@ -84,7 +90,46 @@ export default function AdminFeedbackPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['feedback-unread-count'] });
       addToast({ type: 'success', message: '피드백 상태가 업데이트되었습니다.' });
+    },
+    onError: (error: Error) => {
+      addToast({ type: 'warning', message: error.message });
+    },
+  });
+
+  const { mutate: submitReply, isPending: isReplying } = useMutation({
+    mutationFn: async ({ id, adminReply }: { id: string; adminReply: string }) => {
+      const res = await fetch(`/api/feedback/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminReply }),
+      });
+      if (!res.ok) throw new Error('답변 제출에 실패했습니다.');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['feedback-unread-count'] });
+      addToast({ type: 'success', message: '답변이 등록되었습니다.' });
+      setReplyingId(null);
+      setReplyContent('');
+    },
+    onError: (error: Error) => {
+      addToast({ type: 'warning', message: error.message });
+    },
+  });
+
+  const { mutate: deleteFeedback, isPending: isDeletingFeedback } = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/feedback/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제에 실패했습니다.');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-feedback'] });
+      queryClient.invalidateQueries({ queryKey: ['feedback-unread-count'] });
+      addToast({ type: 'success', message: '피드백이 삭제되었습니다.' });
     },
     onError: (error: Error) => {
       addToast({ type: 'warning', message: error.message });
@@ -219,21 +264,32 @@ export default function AdminFeedbackPage() {
                       </span>
                     </div>
 
-                    {/* Status toggle button */}
-                    <button
-                      type="button"
-                      onClick={() => updateStatus({
-                        id: fb._id,
-                        status: fb.status === 'pending' ? 'resolved' : 'pending',
-                      })}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                        fb.status === 'pending'
-                          ? 'bg-green-600 text-white hover:bg-green-700'
-                          : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                      }`}
-                    >
-                      {fb.status === 'pending' ? '해결 처리' : '대기로 변경'}
-                    </button>
+                    {/* Status toggle + Delete buttons */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateStatus({
+                          id: fb._id,
+                          status: fb.status === 'pending' ? 'resolved' : 'pending',
+                        })}
+                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
+                          fb.status === 'pending'
+                            ? 'bg-green-600 text-white hover:bg-green-700'
+                            : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                        }`}
+                      >
+                        {fb.status === 'pending' ? '답변 없이 해결' : '대기로 변경'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { if (window.confirm('이 피드백을 삭제하시겠습니까?')) deleteFeedback(fb._id); }}
+                        disabled={isDeletingFeedback}
+                        className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 cursor-pointer"
+                        title="피드백 삭제"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Message */}
@@ -257,6 +313,68 @@ export default function AdminFeedbackPage() {
                       </button>
                     )}
                   </div>
+
+                  {/* Admin Reply Display */}
+                  {fb.adminReply && (
+                    <div className="mt-3 rounded-lg bg-green-50 border border-green-200 p-3">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                          <Reply className="h-3 w-3" />
+                          관리자 답변
+                        </span>
+                        {fb.adminReplyAt && (
+                          <span className="text-xs text-slate-400">
+                            {formatDate(fb.adminReplyAt)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {fb.adminReply}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Reply Input */}
+                  {!fb.adminReply && (
+                    <div className="mt-3 space-y-2">
+                      <textarea
+                        value={replyingId === fb._id ? replyContent : ''}
+                        onChange={(e) => { setReplyingId(fb._id); setReplyContent(e.target.value.slice(0, 2000)); }}
+                        onFocus={() => { if (replyingId !== fb._id) { setReplyingId(fb._id); setReplyContent(''); } }}
+                        placeholder="답변을 입력하세요..."
+                        rows={2}
+                        className="w-full resize-none rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-[#00AACA] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+                        disabled={isReplying}
+                      />
+                      {replyingId === fb._id && replyContent.length > 0 && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-400">{replyContent.length}/2000</span>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => { setReplyingId(null); setReplyContent(''); }}
+                              className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                              disabled={isReplying}
+                            >
+                              취소
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => submitReply({ id: fb._id, adminReply: replyContent.trim() })}
+                              disabled={replyContent.trim().length < 1 || isReplying}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                            >
+                              {isReplying ? (
+                                <><Loader2 className="h-3 w-3 animate-spin" />전송 중...</>
+                              ) : (
+                                <><Reply className="h-3 w-3" />답변 및 해결 처리</>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   {/* Meta info */}
                   <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400">

@@ -2,7 +2,7 @@
  * @api-separable
  * @endpoint GET /api/feedback - 피드백 목록 조회 (관리자)
  * @endpoint POST /api/feedback - 피드백 제출
- * @service feedbackService.findAll, feedbackService.create
+ * @service feedbackService.findAllAndMarkRead, feedbackService.create
  * @migration-notes Express 변환 시: app.get('/api/feedback', ...) + app.post('/api/feedback', ...)
  */
 
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     if (category) filter.category = category;
     if (limit) filter.limit = limit;
 
-    const feedbacks = await feedbackService.findAll(filter);
+    const feedbacks = await feedbackService.findAllAndMarkRead(filter);
 
     return NextResponse.json({
       success: true,

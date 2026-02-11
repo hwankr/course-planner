@@ -12,6 +12,10 @@ export interface IFeedback {
   email?: string;
   userId?: mongoose.Types.ObjectId;
   status: 'pending' | 'resolved';
+  adminReply?: string;           // 관리자 답변 메시지
+  adminReplyAt?: Date;           // 관리자 답변 시각
+  isReadByAdmin: boolean;        // 관리자가 읽었는지 (default: false)
+  isReadByUser: boolean;         // 사용자가 관리자 답변을 읽었는지 (default: true, 답변 달리면 false로)
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +48,22 @@ const feedbackSchema = new Schema<IFeedbackDocument>(
       default: 'pending',
       enum: ['pending', 'resolved'],
     },
+    adminReply: {
+      type: String,
+      trim: true,
+      maxlength: 2000,
+    },
+    adminReplyAt: {
+      type: Date,
+    },
+    isReadByAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    isReadByUser: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
@@ -53,6 +73,9 @@ const feedbackSchema = new Schema<IFeedbackDocument>(
 // Index for efficient admin queries
 feedbackSchema.index({ status: 1, createdAt: -1 });
 feedbackSchema.index({ category: 1, status: 1, createdAt: -1 });
+feedbackSchema.index({ userId: 1, createdAt: -1 });
+feedbackSchema.index({ isReadByAdmin: 1, status: 1 });
+feedbackSchema.index({ userId: 1, isReadByUser: 1 });
 
 export const Feedback: Model<IFeedbackDocument> =
   mongoose.models.Feedback || mongoose.model<IFeedbackDocument>('Feedback', feedbackSchema);

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Toast } from '@/components/ui';
 import { cn } from '@/lib/utils';
 import OnboardingGuard from '@/components/providers/OnboardingGuard';
@@ -22,6 +23,9 @@ import {
   Calendar,
   ChevronDown,
   LogOut,
+  Bell,
+  MessageSquareText,
+  CheckCheck,
 } from 'lucide-react';
 
 const primaryNavigation = [
@@ -37,14 +41,76 @@ const secondaryNavigation = [
 
 const adminNavigation = [{ name: '관리자', href: '/admin', icon: Shield }];
 
+interface NotificationItem {
+  id: string;
+  type: string;
+  message: string;
+  href: string;
+  createdAt: string;
+}
+
+function getRelativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return '방금 전';
+  if (minutes < 60) return `${minutes}분 전`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}시간 전`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}일 전`;
+  return new Date(dateStr).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { user, logout, isAdmin, isGuest, loginWithGoogle } = useAuth();
+  const { user, logout, isAdmin, isGuest, isAuthenticated, loginWithGoogle } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const notificationMenuRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
+
+  const { data: unreadData } = useQuery<{ success: boolean; data: { count: number } }>({
+    queryKey: ['feedback-unread-count', user?.id],
+    queryFn: async () => {
+      const res = await fetch('/api/feedback/unread-count');
+      if (!res.ok) return { success: false, data: { count: 0 } };
+      return res.json();
+    },
+    enabled: isAuthenticated && !isGuest,
+    refetchInterval: 30000,
+    staleTime: 10000,
+  });
+
+  const unreadCount = unreadData?.data?.count ?? 0;
+
+  const { data: notificationsData } = useQuery<{ success: boolean; data: NotificationItem[] }>({
+    queryKey: ['notifications', user?.id],
+    queryFn: async () => {
+      const res = await fetch('/api/notifications');
+      if (!res.ok) return { success: false, data: [] };
+      return res.json();
+    },
+    enabled: isAuthenticated && !isGuest && notificationMenuOpen,
+    staleTime: 10000,
+  });
+
+  const notifications = notificationsData?.data ?? [];
+
+  const { mutate: markAllRead } = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/notifications/mark-read', { method: 'POST' });
+      if (!res.ok) throw new Error('Failed');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['feedback-unread-count'] });
+    },
+  });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -54,11 +120,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setUserMenuOpen(false);
       }
+      if (notificationMenuRef.current && !notificationMenuRef.current.contains(event.target as Node)) {
+        setNotificationMenuOpen(false);
+      }
     }
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setMoreMenuOpen(false);
         setUserMenuOpen(false);
+        setNotificationMenuOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -110,7 +180,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap',
+                          'relative px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap',
                           pathname.startsWith(item.href)
                             ? 'bg-purple-50 text-purple-600'
                             : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -123,9 +193,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   })}
                 <div ref={moreMenuRef} className="relative">
                   <button
-                    onClick={() => { setMoreMenuOpen(!moreMenuOpen); setUserMenuOpen(false); }}
+                    onClick={() => { setMoreMenuOpen(!moreMenuOpen); setUserMenuOpen(false); setNotificationMenuOpen(false); }}
                     className={cn(
-                      'px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap',
+                      'relative px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap',
                       secondaryNavigation.some(item => pathname === item.href)
                         ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
@@ -163,11 +233,83 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
               </nav>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              {!isGuest && isAuthenticated && (
+                <div ref={notificationMenuRef} className="relative">
+                  <button
+                    onClick={() => { setNotificationMenuOpen(!notificationMenuOpen); setMoreMenuOpen(false); setUserMenuOpen(false); }}
+                    className="relative p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                    title="알림"
+                    aria-expanded={notificationMenuOpen}
+                    aria-haspopup="true"
+                  >
+                    <Bell className={cn('w-5 h-5', unreadCount > 0 ? 'text-gray-700' : 'text-gray-400')} />
+                    {unreadCount > 0 && (
+                      <span className={cn(
+                        'absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1',
+                        isAdmin ? 'bg-yellow-400 text-yellow-900' : 'bg-red-500 text-white'
+                      )}>
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  {notificationMenuOpen && (
+                    <div className="fixed left-2 right-2 mt-1 sm:absolute sm:left-auto sm:right-0 sm:w-80 bg-white rounded-lg shadow-lg border py-1 z-50" role="menu">
+                      <div className="flex items-center justify-between px-4 py-2.5 border-b">
+                        <span className="text-sm font-semibold text-gray-900">알림</span>
+                        {unreadCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => markAllRead()}
+                            className="inline-flex items-center gap-1 text-xs text-[#00AACA] hover:text-[#153974] font-medium transition-colors cursor-pointer"
+                          >
+                            <CheckCheck className="w-3.5 h-3.5" />
+                            모두 읽음
+                          </button>
+                        )}
+                      </div>
+                      <div className="max-h-80 overflow-y-auto">
+                        {notifications.length === 0 ? (
+                          <div className="px-4 py-8 text-center">
+                            <Bell className="mx-auto h-8 w-8 text-gray-300" />
+                            <p className="mt-2 text-sm text-gray-500">알림이 없습니다.</p>
+                          </div>
+                        ) : (
+                          notifications.map((item) => (
+                            <Link
+                              key={item.id}
+                              href={item.href}
+                              onClick={() => setNotificationMenuOpen(false)}
+                              className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0"
+                              role="menuitem"
+                            >
+                              <div className="flex-shrink-0 mt-0.5">
+                                <div className={cn(
+                                  'w-8 h-8 rounded-full flex items-center justify-center',
+                                  item.type === 'feedback-new' ? 'bg-yellow-100' : 'bg-blue-100'
+                                )}>
+                                  <MessageSquareText className={cn(
+                                    'w-4 h-4',
+                                    item.type === 'feedback-new' ? 'text-yellow-600' : 'text-blue-600'
+                                  )} />
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700">{item.message}</p>
+                                <p className="text-xs text-gray-400 mt-0.5">{getRelativeTime(item.createdAt)}</p>
+                              </div>
+                            </Link>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               {!isGuest && user?.name ? (
                 <div ref={userMenuRef} className="relative">
                   <button
-                    onClick={() => { setUserMenuOpen(!userMenuOpen); setMoreMenuOpen(false); }}
+                    onClick={() => { setUserMenuOpen(!userMenuOpen); setMoreMenuOpen(false); setNotificationMenuOpen(false); }}
                     className="flex items-center gap-2 rounded-full hover:bg-gray-50 px-1 py-1 transition-colors"
                     aria-expanded={userMenuOpen}
                     aria-haspopup="true"
