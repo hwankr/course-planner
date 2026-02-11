@@ -151,7 +151,7 @@ export default function CalendarPage() {
       isSystemHoliday: true,
     }));
 
-    const combined = [...dbEvents, ...holidayEvents];
+    const combined = [...dbEvents];
     if (selectedCategory === 'all') return combined;
     return combined.filter((e) => e.category === selectedCategory);
   }, [data, selectedCategory]);
