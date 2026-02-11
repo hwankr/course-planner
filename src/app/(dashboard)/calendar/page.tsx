@@ -60,6 +60,14 @@ const formatDateRange = (startDate: string, endDate?: string) => {
   return `${formatDate(start)} ~ ${formatDate(end)}`;
 };
 
+/** 로컬 타임존 기준 YYYY-MM-DD 키 반환 (toISOString은 UTC라 KST에서 하루 밀림 방지) */
+const toDateKey = (d: Date) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 const isSameDay = (date1: Date, date2: Date) => {
   return (
     date1.getFullYear() === date2.getFullYear() &&
@@ -162,15 +170,15 @@ export default function CalendarPage() {
 
       if (diffDays > 7) {
         // 장기 일정(7일 초과): 시작일과 종료일에만 표시
-        addToDate(start.toISOString().split('T')[0], event);
+        addToDate(toDateKey(start), event);
         if (diffDays > 0) {
-          addToDate(end.toISOString().split('T')[0], event);
+          addToDate(toDateKey(end), event);
         }
       } else {
         // 단기 일정(7일 이하): 모든 날짜에 표시
         const current = new Date(start);
         while (current <= end) {
-          addToDate(current.toISOString().split('T')[0], event);
+          addToDate(toDateKey(current), event);
           current.setDate(current.getDate() + 1);
         }
       }
@@ -220,7 +228,7 @@ export default function CalendarPage() {
 
   const handleDateClick = (date: Date) => {
     if (!isAdmin) return;
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toDateKey(date);
     setFormData({
       title: '',
       description: '',
@@ -417,7 +425,7 @@ export default function CalendarPage() {
                     return <div key={`empty-${index}`} className="aspect-square" />;
                   }
 
-                  const dateStr = date.toISOString().split('T')[0];
+                  const dateStr = toDateKey(date);
                   const dayEvents = eventsByDate.get(dateStr) || [];
                   const isToday = isSameDay(date, today);
                   const dayOfWeek = date.getDay();
