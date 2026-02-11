@@ -18,3 +18,9 @@ export {
   useAnonymousPlanDetail,
 } from './useStatistics';
 export { usePlannerExport } from './usePlannerExport';
+export {
+  useAcademicEvents,
+  useCreateAcademicEvent,
+  useUpdateAcademicEvent,
+  useDeleteAcademicEvent,
+} from './useAcademicEvents';

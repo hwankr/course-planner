@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import OnboardingGuard from '@/components/providers/OnboardingGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
-  Calendar,
+  CalendarDays,
   User,
   Shield,
   Menu,
@@ -19,10 +19,12 @@ import {
   BarChart3,
   HelpCircle,
   Gift,
+  Calendar,
 } from 'lucide-react';
 
 const navigation = [
   { name: '수강 계획', href: '/planner', icon: Calendar },
+  { name: '학사 일정', href: '/calendar', icon: CalendarDays },
   { name: '학과 통계', href: '/statistics', icon: BarChart3 },
   { name: '프로필', href: '/profile', icon: User },
   { name: '이벤트', href: '/event', icon: Gift },

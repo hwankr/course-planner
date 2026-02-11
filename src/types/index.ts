@@ -358,6 +358,47 @@ export interface GraduationProgress {
 }
 
 // ============================================
+// Academic Event Types (학사 일정)
+// ============================================
+
+export type AcademicEventCategory =
+  | 'academic'       // 학사일정
+  | 'registration'   // 수강신청
+  | 'exam'           // 시험
+  | 'holiday'        // 공휴일
+  | 'other';         // 기타
+
+export interface IAcademicEvent {
+  _id: Types.ObjectId;
+  title: string;
+  description?: string;
+  startDate: Date;
+  endDate?: Date;           // 없으면 단일 일정
+  category: AcademicEventCategory;
+  color?: string;           // 커스텀 색상 (hex)
+  isHoliday: boolean;       // 공휴일 여부
+  createdBy?: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CreateAcademicEventInput {
+  title: string;
+  description?: string;
+  startDate: string;        // ISO date string
+  endDate?: string;
+  category: AcademicEventCategory;
+  color?: string;
+  isHoliday?: boolean;
+}
+
+export interface AcademicEventFilter {
+  year?: number;
+  month?: number;           // 1-12
+  category?: AcademicEventCategory;
+}
+
+// ============================================
 // API Response Types
 // ============================================
 

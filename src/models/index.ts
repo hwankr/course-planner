@@ -12,6 +12,7 @@ export { default as Requirement } from './Requirement';
 export { default as GraduationRequirement } from './GraduationRequirement';
 export { default as DepartmentRequirement } from './DepartmentRequirement';
 export { default as DepartmentCurriculum } from './DepartmentCurriculum';
+export { default as AcademicEvent } from './AcademicEvent';
 
 // Document 타입 export
 export type { IUserDocument } from './User';
@@ -22,3 +23,4 @@ export type { IRequirementDocument } from './Requirement';
 export type { IGraduationRequirementDocument } from './GraduationRequirement';
 export type { IDepartmentRequirementDocument } from './DepartmentRequirement';
 export type { IDepartmentCurriculumDocument } from './DepartmentCurriculum';
+export type { IAcademicEventDocument } from './AcademicEvent';
