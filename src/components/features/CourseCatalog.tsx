@@ -771,7 +771,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
       {/* Custom Course Form Modal */}
       {showCustomForm && (
-        <CustomCourseForm onClose={() => setShowCustomForm(false)} availableCategories={usedCategories} />
+        <CustomCourseForm onClose={() => setShowCustomForm(false)} focusedSemester={focusedSemester} onClickAdd={onClickAdd} />
       )}
     </div>
   );

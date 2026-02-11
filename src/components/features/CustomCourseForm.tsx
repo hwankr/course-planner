@@ -11,6 +11,8 @@ import type { RequirementCategory, Semester } from '@/types';
 interface CustomCourseFormProps {
   onClose: () => void;
   availableCategories?: RequirementCategory[];
+  focusedSemester?: { year: number; term: string } | null;
+  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
 }
 
 const categoryLabels: Record<RequirementCategory, string> = {
@@ -23,7 +25,7 @@ const categoryLabels: Record<RequirementCategory, string> = {
   free_elective: '자유선택',
 };
 
-export function CustomCourseForm({ onClose, availableCategories }: CustomCourseFormProps) {
+export function CustomCourseForm({ onClose, availableCategories, focusedSemester, onClickAdd }: CustomCourseFormProps) {
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
@@ -34,45 +36,53 @@ export function CustomCourseForm({ onClose, availableCategories }: CustomCourseF
     name: '',
     credits: 3,
     category: '' as RequirementCategory | '',
-    recommendedYear: '' as number | '',
-    recommendedSemester: '' as Semester | '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value } = e.target;
+    const numericFields = ['credits'];
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'number' ? (value ? parseInt(value, 10) : '') : value,
+      [name]: numericFields.includes(name)
+        ? (value ? parseInt(value, 10) : '')
+        : value,
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!userDepartment) return;
+    if (!userDepartment || !formData.category || !focusedSemester) return;
 
     // Auto-generate code from name + timestamp
     const autoCode = `CUS-${Date.now().toString(36).toUpperCase()}`;
+    const credits = formData.credits as number;
+    const category = formData.category as RequirementCategory;
 
-    createCourse.mutate(
-      {
+    try {
+      const course = await createCourse.mutateAsync({
         name: formData.name,
         code: autoCode,
-        credits: formData.credits as number,
+        credits,
         department: userDepartment!,
-        semesters: formData.recommendedSemester
-          ? [formData.recommendedSemester as Semester]
-          : ['spring', 'fall'],
-        category: formData.category || undefined,
-        recommendedYear: formData.recommendedYear || undefined,
-        recommendedSemester: formData.recommendedSemester || undefined,
-      },
-      {
-        onSuccess: () => {
-          onClose();
-        },
+        semesters: ['spring', 'fall'] as Semester[],
+        category,
+      });
+
+      // Auto-add to focused semester if available
+      if (focusedSemester && onClickAdd) {
+        onClickAdd(String(course._id), {
+          code: autoCode,
+          name: formData.name,
+          credits,
+          category,
+        });
       }
-    );
+
+      onClose();
+    } catch {
+      // Error is handled by mutation state (createCourse.isError)
+    }
   };
 
   return (
@@ -113,14 +123,17 @@ export function CustomCourseForm({ onClose, availableCategories }: CustomCourseF
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이수구분</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              이수구분 <span className="text-red-500">*</span>
+            </label>
             <select
               name="category"
               value={formData.category}
               onChange={handleChange}
+              required
               className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
             >
-              <option value="">선택 안함</option>
+              <option value="">선택하세요</option>
               {(availableCategories
                 ? availableCategories.map(cat => [cat, categoryLabels[cat]] as [RequirementCategory, string])
                 : (Object.entries(categoryLabels) as [RequirementCategory, string][])
@@ -132,37 +145,15 @@ export function CustomCourseForm({ onClose, availableCategories }: CustomCourseF
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">권장 학년</label>
-              <select
-                name="recommendedYear"
-                value={formData.recommendedYear}
-                onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="">선택 안함</option>
-                {[1, 2, 3, 4, 5, 6].map((y) => (
-                  <option key={y} value={y}>
-                    {y}학년
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">권장 학기</label>
-              <select
-                name="recommendedSemester"
-                value={formData.recommendedSemester}
-                onChange={handleChange}
-                className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-              >
-                <option value="">선택 안함</option>
-                <option value="spring">1학기</option>
-                <option value="fall">2학기</option>
-              </select>
-            </div>
-          </div>
+          {focusedSemester ? (
+            <p className="text-sm text-blue-600 bg-blue-50 rounded-md px-3 py-2">
+              <span className="font-medium">{focusedSemester.year}학년 {focusedSemester.term === 'spring' ? '1학기' : '2학기'}</span>에 바로 추가됩니다.
+            </p>
+          ) : (
+            <p className="text-sm text-amber-600 bg-amber-50 rounded-md px-3 py-2">
+              학기를 먼저 클릭하여 포커스하면 해당 학기에 바로 추가됩니다.
+            </p>
+          )}
 
           {!userDepartment && (
             <p className="text-sm text-amber-600">
@@ -190,7 +181,7 @@ export function CustomCourseForm({ onClose, availableCategories }: CustomCourseF
             </Button>
             <Button
               type="submit"
-              disabled={createCourse.isPending || !userDepartment}
+              disabled={createCourse.isPending || !userDepartment || !formData.category || !focusedSemester}
               className="flex-1"
             >
               {createCourse.isPending ? '추가 중...' : '추가'}
