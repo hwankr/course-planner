@@ -151,7 +151,7 @@ export default function CalendarPage() {
       isSystemHoliday: true,
     }));
 
-    const combined = [...dbEvents];
+    const combined = [...dbEvents, ...holidayEvents];
     if (selectedCategory === 'all') return combined;
     return combined.filter((e) => e.category === selectedCategory);
   }, [data, selectedCategory]);
@@ -203,9 +203,9 @@ export default function CalendarPage() {
   }, [year, month]);
 
   const sortedEvents = useMemo(() => {
-    return [...allEvents].sort((a, b) => {
-      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-    });
+    return [...allEvents]
+      .filter((e) => !e.isSystemHoliday)
+      .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }, [allEvents]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
