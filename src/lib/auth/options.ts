@@ -118,6 +118,12 @@ export const authOptions: NextAuthOptions = {
           token.majorType = user.majorType;
           token.secondaryDepartment = user.secondaryDepartment;
         }
+
+        // 마지막 접속 시간 기록 (fire-and-forget)
+        const userId = token.id as string;
+        if (userId) {
+          userService.updateLastLogin(userId).catch(() => {});
+        }
       } else if (trigger === 'update') {
         // Session refresh: re-fetch from DB to get updated department
         const dbUser = await userService.findByEmail(token.email as string);

@@ -37,6 +37,10 @@ const userSchema = new Schema<IUserDocument>(
     enrollmentYear: {
       type: Number,
     },
+    studentId: {
+      type: String,
+      trim: true,
+    },
     role: {
       type: String,
       enum: ['student', 'admin'] as UserRole[],
@@ -60,6 +64,9 @@ const userSchema = new Schema<IUserDocument>(
       type: Schema.Types.ObjectId,
       ref: 'Department',
     },
+    lastLoginAt: {
+      type: Date,
+    },
     failedLoginAttempts: {
       type: Number,
       default: 0,
@@ -76,6 +83,7 @@ const userSchema = new Schema<IUserDocument>(
 // 인덱스 (email은 unique: true로 자동 생성)
 userSchema.index({ department: 1 });
 userSchema.index({ secondaryDepartment: 1 });
+userSchema.index({ studentId: 1 }, { unique: true, sparse: true });
 
 // 비밀번호 포함 조회 메서드
 userSchema.statics.findByEmailWithPassword = function (email: string) {

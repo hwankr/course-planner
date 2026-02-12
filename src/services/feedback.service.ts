@@ -233,6 +233,15 @@ async function deleteByUser(id: string, userId: string): Promise<boolean> {
   return !!result;
 }
 
+/**
+ * 사용자의 모든 피드백 삭제 (회원 탈퇴 시 cascade용)
+ */
+async function deleteAllByUser(userId: string): Promise<number> {
+  await connectDB();
+  const result = await Feedback.deleteMany({ userId });
+  return result.deletedCount;
+}
+
 export const feedbackService = {
   create,
   findAll,
@@ -247,4 +256,5 @@ export const feedbackService = {
   markAsReadByUser,
   deleteById,
   deleteByUser,
+  deleteAllByUser,
 };

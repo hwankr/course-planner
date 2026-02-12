@@ -22,9 +22,11 @@ export interface IUser {
   majorType: MajorType;                  // NEW: 전공 유형 (기본값: 'single')
   secondaryDepartment?: Types.ObjectId;  // NEW: 복수전공/부전공 학과
   enrollmentYear?: number;
+  studentId?: string;                    // 학번 (학생 고유번호)
   role: UserRole;
   provider?: 'credentials' | 'google';
   onboardingCompleted: boolean;
+  lastLoginAt?: Date;                    // 마지막 접속 시간
   failedLoginAttempts?: number;
   lockUntil?: Date;
   createdAt: Date;

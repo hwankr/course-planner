@@ -12,6 +12,7 @@ import type { CreateUserInput, MajorType } from '@/types';
 import { planService } from './plan.service';
 import { courseService } from './course.service';
 import { graduationRequirementService } from './graduationRequirement.service';
+import { feedbackService } from './feedback.service';
 
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -180,7 +181,10 @@ async function deleteWithCascade(userId: string): Promise<void> {
   // 3. 사용자의 졸업요건 삭제
   await graduationRequirementService.remove(userId);
 
-  // 4. 사용자 문서 삭제
+  // 4. 사용자의 피드백/문의 삭제
+  await feedbackService.deleteAllByUser(userId);
+
+  // 5. 사용자 문서 삭제
   const user = await User.findByIdAndDelete(userId);
   if (!user) {
     throw new Error('사용자를 찾을 수 없습니다.');
@@ -227,6 +231,42 @@ async function updateRole(userId: string, role: 'student' | 'admin'): Promise<IU
     .lean();
 }
 
+/**
+ * 마지막 접속 시간 업데이트 (로그인 시 호출)
+ */
+async function updateLastLogin(userId: string): Promise<void> {
+  await connectDB();
+  await User.updateOne({ _id: userId }, { $set: { lastLoginAt: new Date() } });
+}
+
+/**
+ * 관리자용 사용자 삭제 (안전장치 포함)
+ */
+async function adminDeleteUser(targetUserId: string, adminUserId: string): Promise<void> {
+  await connectDB();
+
+  // 자기 자신 삭제 방지
+  if (targetUserId === adminUserId) {
+    throw new Error('자신의 계정은 삭제할 수 없습니다.');
+  }
+
+  // 대상 사용자 확인
+  const targetUser = await User.findById(targetUserId).lean();
+  if (!targetUser) {
+    throw new Error('사용자를 찾을 수 없습니다.');
+  }
+
+  // 마지막 관리자 삭제 방지
+  if (targetUser.role === 'admin') {
+    const adminCount = await User.countDocuments({ role: 'admin' });
+    if (adminCount <= 1) {
+      throw new Error('마지막 관리자는 삭제할 수 없습니다.');
+    }
+  }
+
+  await deleteWithCascade(targetUserId);
+}
+
 export const userService = {
   findByEmail,
   findByEmailWithPassword,
@@ -241,4 +281,6 @@ export const userService = {
   resetFailedLogins,
   findAllUsers,
   updateRole,
+  updateLastLogin,
+  adminDeleteUser,
 };
