@@ -57,17 +57,17 @@ interface DeptInfo {
 // ============================================
 
 const CATEGORY_MAP: Record<string, string> = {
-  '교양필수': 'general_required',
-  '전공핵심': 'major_required',
-  '전공선택': 'major_elective',
-  '전공필수': 'major_compulsory',
-  '교직': 'teaching',
+  교양필수: 'general_required',
+  전공핵심: 'major_required',
+  전공선택: 'major_elective',
+  전공필수: 'major_compulsory',
+  교직: 'teaching',
 };
 
 // Prefixes that are shared across departments (not department-specific)
 const SHARED_PREFIXES = new Set(['U', 'T']);
 
-const CURRICULUM_DIR = path.resolve(__dirname, '..', 'curriculum');
+const CURRICULUM_DIR = path.resolve(__dirname, 'data', 'curriculum');
 const BATCH_SIZE = 500;
 
 // ============================================
@@ -86,7 +86,9 @@ let rejectedRecords = 0;
 /**
  * Parse year/semester from string like "1학년/1학기"
  */
-function parseYearSemester(raw: string): { year: number; semester: SemesterType } | null {
+function parseYearSemester(
+  raw: string,
+): { year: number; semester: SemesterType } | null {
   const match = raw.match(/(\d+)학년\/(\d+)학기/);
   if (!match) return null;
 
@@ -112,7 +114,9 @@ function parseCredits(raw: string): number | null {
  * "공과대학_건축학부-건축공학전공.csv" -> { college: "공과대학", deptName: "건축학부 건축공학전공" }
  * "공과대학_화학공학부-고분자(바이오소재전공).csv" -> { college: "공과대학", deptName: "화학공학부 고분자(바이오소재전공)" }
  */
-function parseDeptFromFilename(filePath: string): { college: string; deptName: string } | null {
+function parseDeptFromFilename(
+  filePath: string,
+): { college: string; deptName: string } | null {
   const basename = path.basename(filePath, '.csv');
   const underscoreIdx = basename.indexOf('_');
   if (underscoreIdx === -1) return null;
@@ -162,17 +166,19 @@ function parseAllCSVs(): {
   const deptCoursePrefixes = new Map<string, Map<string, number>>();
 
   // Find all CSV files under curriculum/
-  const colleges = fs.readdirSync(CURRICULUM_DIR, { withFileTypes: true })
-    .filter(d => d.isDirectory())
-    .map(d => d.name);
+  const colleges = fs
+    .readdirSync(CURRICULUM_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => d.name);
 
   let totalFiles = 0;
   let totalRecords = 0;
 
   for (const collegeDirName of colleges) {
     const collegeDir = path.join(CURRICULUM_DIR, collegeDirName);
-    const csvFiles = fs.readdirSync(collegeDir)
-      .filter(f => f.endsWith('.csv'));
+    const csvFiles = fs
+      .readdirSync(collegeDir)
+      .filter((f) => f.endsWith('.csv'));
 
     for (const csvFile of csvFiles) {
       const filePath = path.join(collegeDir, csvFile);
@@ -193,7 +199,7 @@ function parseAllCSVs(): {
       // Read and parse CSV
       const rawContent = fs.readFileSync(filePath, 'utf-8');
       const content = stripBOM(rawContent);
-      const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+      const lines = content.split(/\r?\n/).filter((line) => line.trim() !== '');
 
       // Skip header
       for (let i = 1; i < lines.length; i++) {
@@ -219,7 +225,9 @@ function parseAllCSVs(): {
         // Parse year/semester
         const parsed = parseYearSemester(rawYearSemester);
         if (!parsed) {
-          errors.push(`학년/학기 파싱 실패 (${csvFile}:${i + 1}): "${rawYearSemester}"`);
+          errors.push(
+            `학년/학기 파싱 실패 (${csvFile}:${i + 1}): "${rawYearSemester}"`,
+          );
           rejectedRecords++;
           continue;
         }
@@ -236,7 +244,9 @@ function parseAllCSVs(): {
         // Map category
         const category = CATEGORY_MAP[rawCategory];
         if (!category) {
-          errors.push(`알 수 없는 이수구분 (${csvFile}:${i + 1}): "${rawCategory}"`);
+          errors.push(
+            `알 수 없는 이수구분 (${csvFile}:${i + 1}): "${rawCategory}"`,
+          );
           rejectedRecords++;
           continue;
         }
@@ -244,7 +254,9 @@ function parseAllCSVs(): {
         // Duplicate detection within same CSV: same code + same semester -> skip
         const dupeKey = `${courseCode}::${semester}`;
         if (seenInFile.has(dupeKey)) {
-          warnings.push(`중복 건너뜀 (${csvFile}): ${courseCode} in ${year}학년/${semester === 'spring' ? '1' : '2'}학기`);
+          warnings.push(
+            `중복 건너뜀 (${csvFile}): ${courseCode} in ${year}학년/${semester === 'spring' ? '1' : '2'}학기`,
+          );
           skippedDuplicates++;
           continue;
         }
@@ -292,7 +304,9 @@ function parseAllCSVs(): {
     }
   }
 
-  console.log(`\n  ✅ ${totalFiles}개 파일, ${totalRecords}개 레코드 파싱 완료`);
+  console.log(
+    `\n  ✅ ${totalFiles}개 파일, ${totalRecords}개 레코드 파싱 완료`,
+  );
   console.log(`  📊 고유 과목 수: ${courseMap.size}개`);
   console.log(`  📊 학과-과목 매핑: ${deptEntries.length}개`);
   if (skippedDuplicates > 0) {
@@ -374,7 +388,10 @@ async function createDepartments(
   for (const entry of deptEntries) {
     const key = `${entry.college}::${entry.deptName}`;
     if (!uniqueDepts.has(key)) {
-      uniqueDepts.set(key, { college: entry.college, deptName: entry.deptName });
+      uniqueDepts.set(key, {
+        college: entry.college,
+        deptName: entry.deptName,
+      });
     }
   }
 
@@ -389,7 +406,7 @@ async function createDepartments(
 
   // BulkWrite with upsert
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ops: any[] = deptInfos.map(dept => ({
+  const ops: any[] = deptInfos.map((dept) => ({
     updateOne: {
       filter: { code: dept.code },
       update: {
@@ -408,11 +425,15 @@ async function createDepartments(
 
   if (ops.length > 0) {
     const result = await Department.bulkWrite(ops);
-    console.log(`  ✅ Department bulkWrite: ${result.upsertedCount}개 생성, ${result.modifiedCount}개 업데이트`);
+    console.log(
+      `  ✅ Department bulkWrite: ${result.upsertedCount}개 생성, ${result.modifiedCount}개 업데이트`,
+    );
   }
 
   // Build name -> ObjectId map by re-fetching
-  const allDepts = await Department.find({ code: { $in: deptInfos.map(d => d.code) } }).lean();
+  const allDepts = await Department.find({
+    code: { $in: deptInfos.map((d) => d.code) },
+  }).lean();
   const deptMap = new Map<string, mongoose.Types.ObjectId>();
 
   for (const dept of allDepts) {
@@ -447,7 +468,7 @@ async function createCourses(
     const batch = entries.slice(i, i + BATCH_SIZE);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ops: any[] = batch.map(course => ({
+    const ops: any[] = batch.map((course) => ({
       updateOne: {
         filter: { code: course.code, createdBy: null },
         update: {
@@ -468,11 +489,13 @@ async function createCourses(
     }));
 
     const result = await Course.bulkWrite(ops);
-    console.log(`  배치 ${Math.floor(i / BATCH_SIZE) + 1}: ${result.upsertedCount}개 생성, ${result.modifiedCount}개 업데이트`);
+    console.log(
+      `  배치 ${Math.floor(i / BATCH_SIZE) + 1}: ${result.upsertedCount}개 생성, ${result.modifiedCount}개 업데이트`,
+    );
   }
 
   // Fetch all seed courses to build code -> id map
-  const allCodes = entries.map(c => c.code);
+  const allCodes = entries.map((c) => c.code);
   const allCourses = await Course.find({
     code: { $in: allCodes },
     createdBy: null,
@@ -482,7 +505,9 @@ async function createCourses(
     codeToId.set(course.code, course._id as mongoose.Types.ObjectId);
   }
 
-  console.log(`\n  ✅ 총 ${courseMap.size}개 고유 과목 처리 완료 (DB: ${allCourses.length}개)`);
+  console.log(
+    `\n  ✅ 총 ${courseMap.size}개 고유 과목 처리 완료 (DB: ${allCourses.length}개)`,
+  );
 
   return codeToId;
 }
@@ -559,7 +584,9 @@ async function createDepartmentCurriculum(
     console.log(`  배치 ${batchNum}/${totalBatches} 처리 완료`);
   }
 
-  console.log(`\n  ✅ DepartmentCurriculum: ${created}개 생성, ${updated}개 업데이트, ${skipped}개 건너뜀`);
+  console.log(
+    `\n  ✅ DepartmentCurriculum: ${created}개 생성, ${updated}개 업데이트, ${skipped}개 건너뜀`,
+  );
   return created + updated;
 }
 
@@ -571,25 +598,27 @@ async function softDeleteOldSeedData(): Promise<void> {
   console.log('\n🧹 Phase 5: 구 시드 데이터 비활성화 중...\n');
 
   // Soft-delete ALL departments that have no DepartmentCurriculum entries
-  const deptIdsWithCurriculum = await DepartmentCurriculum.distinct('department');
+  const deptIdsWithCurriculum =
+    await DepartmentCurriculum.distinct('department');
   const deptResult = await Department.updateMany(
     { _id: { $nin: deptIdsWithCurriculum }, isActive: true },
     { $set: { isActive: false } },
   );
-  console.log(`  📌 Department 비활성화: ${deptResult.modifiedCount}개 (커리큘럼 미연결)`);
+  console.log(
+    `  📌 Department 비활성화: ${deptResult.modifiedCount}개 (커리큘럼 미연결)`,
+  );
 
   // Soft-delete old seed courses (codes starting with GEN1 or SWE, with createdBy=null)
   const courseResult = await Course.updateMany(
     {
       createdBy: null,
-      $or: [
-        { code: { $regex: /^GEN1/ } },
-        { code: { $regex: /^SWE/ } },
-      ],
+      $or: [{ code: { $regex: /^GEN1/ } }, { code: { $regex: /^SWE/ } }],
     },
     { $set: { isActive: false } },
   );
-  console.log(`  📌 Course 비활성화: ${courseResult.modifiedCount}개 (GEN1*, SWE*)`);
+  console.log(
+    `  📌 Course 비활성화: ${courseResult.modifiedCount}개 (GEN1*, SWE*)`,
+  );
 }
 
 // ============================================
@@ -651,7 +680,9 @@ async function main() {
 
     // Verify curriculum directory exists
     if (!fs.existsSync(CURRICULUM_DIR)) {
-      throw new Error(`커리큘럼 디렉토리가 존재하지 않습니다: ${CURRICULUM_DIR}`);
+      throw new Error(
+        `커리큘럼 디렉토리가 존재하지 않습니다: ${CURRICULUM_DIR}`,
+      );
     }
 
     // Connect to database
@@ -672,14 +703,18 @@ async function main() {
     const courseIdMap = await createCourses(courseMap);
 
     // Phase 4: Create DepartmentCurriculum entries
-    const curriculumCount = await createDepartmentCurriculum(deptEntries, deptMap, courseIdMap);
+    const curriculumCount = await createDepartmentCurriculum(
+      deptEntries,
+      deptMap,
+      courseIdMap,
+    );
 
     // Phase 5: Soft-delete old seed data
     await softDeleteOldSeedData();
 
     // Phase 6: Validation Report
     const uniqueDeptCount = new Set(
-      deptEntries.map(e => `${e.college}::${e.deptName}`)
+      deptEntries.map((e) => `${e.college}::${e.deptName}`),
     ).size;
     printReport(courseMap, deptEntries, uniqueDeptCount, curriculumCount);
 

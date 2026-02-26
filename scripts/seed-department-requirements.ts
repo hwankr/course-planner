@@ -14,10 +14,10 @@ import DepartmentRequirement from '../src/models/DepartmentRequirement';
 async function seed() {
   await connectDB();
 
-  const csvPath = path.resolve(process.cwd(), 'min.csv');
+  const csvPath = path.resolve(__dirname, 'data', 'min-credits-2025.csv');
   let csvContent = fs.readFileSync(csvPath, 'utf-8');
   // BOM removal
-  if (csvContent.charCodeAt(0) === 0xFEFF) {
+  if (csvContent.charCodeAt(0) === 0xfeff) {
     csvContent = csvContent.slice(1);
   }
   const lines = csvContent.trim().split('\n');
@@ -73,7 +73,7 @@ async function seed() {
           totalCredits,
           availableMajorTypes,
         },
-        { upsert: true, new: true, setDefaultsOnInsert: true }
+        { upsert: true, new: true, setDefaultsOnInsert: true },
       );
       processed++;
       console.log(`  ✓ ${college} / ${departmentName}`);
