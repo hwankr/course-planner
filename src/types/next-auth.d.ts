@@ -13,6 +13,7 @@ declare module 'next-auth' {
     onboardingCompleted?: boolean;
     majorType?: MajorType;
     secondaryDepartment?: string;
+    curriculumYear?: number;
   }
 
   interface Session {
@@ -26,6 +27,7 @@ declare module 'next-auth' {
       onboardingCompleted?: boolean;
       majorType?: MajorType;
       secondaryDepartment?: string;
+      curriculumYear?: number;
     };
   }
 }
@@ -38,5 +40,6 @@ declare module 'next-auth/jwt' {
     onboardingCompleted?: boolean;
     majorType?: MajorType;
     secondaryDepartment?: string;
+    curriculumYear?: number;
   }
 }

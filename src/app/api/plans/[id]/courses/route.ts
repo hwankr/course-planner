@@ -57,6 +57,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       term,
       courseId,
       category,
+      curriculumYear: session.user.curriculumYear,
     });
 
     return NextResponse.json({

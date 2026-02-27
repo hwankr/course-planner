@@ -69,6 +69,7 @@ async function getDepartmentCourseStats(
     // Filter out custom courses (createdBy !== null)
     { $match: { 'courseInfo.createdBy': null } },
     // Check if course is in any department's curriculum (to distinguish real courses from common placeholders)
+    // NOTE: No year filter needed -- checks existence across ALL curriculum years (cross-year validity)
     {
       $lookup: {
         from: 'departmentcurriculums',
@@ -88,12 +89,14 @@ async function getDepartmentCourseStats(
       },
     },
     // Lookup DepartmentCurriculum for authoritative category (covers old plans without PlannedCourse.category)
+    // NOTE: No year filter needed -- department-wide stats aggregate across all users' curriculum years
     {
       $lookup: {
         from: 'departmentcurriculums',
         let: { courseId: '$courseInfo._id', deptId: { $toObjectId: departmentId } },
         pipeline: [
           { $match: { $expr: { $and: [{ $eq: ['$course', '$$courseId'] }, { $eq: ['$department', '$$deptId'] }] } } },
+          { $sort: { year: -1 } },
           { $limit: 1 },
         ],
         as: 'curriculumInfo',
@@ -158,6 +161,7 @@ async function getDepartmentCourseStats(
     { $unwind: '$courseInfo' },
     { $match: { 'courseInfo.createdBy': null } },
     // Check if course is in any department's curriculum (to distinguish real courses from common placeholders)
+    // NOTE: No year filter needed -- checks existence across ALL curriculum years (cross-year validity)
     {
       $lookup: {
         from: 'departmentcurriculums',
@@ -345,6 +349,7 @@ async function getAnonymousPlanDetail(
   if (!plan) return null;
 
   // Batch lookup DepartmentCurriculum for all courses in this plan (covers old plans without PlannedCourse.category)
+  // Sort by year descending so latest curriculum year takes priority when deduplicating
   const allCourseIds = plan.semesters.flatMap((sem) =>
     sem.courses.map((pc) => {
       const course = pc.course as unknown as { _id: string };
@@ -353,9 +358,17 @@ async function getAnonymousPlanDetail(
   ) as string[];
   const curriculumEntries = await (await import('@/models')).DepartmentCurriculum
     .find({ department: departmentId, course: { $in: allCourseIds } })
-    .select('course category')
-    .lean<Array<{ course: { toString(): string }; category: string }>>();
-  const curriculumMap = new Map(curriculumEntries.map((e) => [e.course.toString(), e.category]));
+    .sort({ year: -1 })
+    .select('course category year')
+    .lean<Array<{ course: { toString(): string }; category: string; year: number }>>();
+  // Deduplicate: keep only the latest year per course (first entry due to year:-1 sort)
+  const curriculumMap = new Map<string, string>();
+  for (const e of curriculumEntries) {
+    const key = e.course.toString();
+    if (!curriculumMap.has(key)) {
+      curriculumMap.set(key, e.category);
+    }
+  }
 
   // Build detail (filter out custom courses, strip all user info)
   const semesters = plan.semesters

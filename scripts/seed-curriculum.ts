@@ -10,7 +10,8 @@
  * - Phase 5: 구 시드 데이터 비활성화
  * - Phase 6: 검증 리포트
  *
- * Usage: npx tsx scripts/seed-curriculum.ts
+ * Usage: npx tsx scripts/seed-curriculum.ts [year]
+ * Example: npx tsx scripts/seed-curriculum.ts 2026
  */
 
 import './env';
@@ -67,7 +68,9 @@ const CATEGORY_MAP: Record<string, string> = {
 // Prefixes that are shared across departments (not department-specific)
 const SHARED_PREFIXES = new Set(['U', 'T']);
 
-const CURRICULUM_DIR = path.resolve(__dirname, 'data', 'curriculum');
+// Accept year as CLI argument: npx tsx scripts/seed-curriculum.ts 2026
+const SEED_YEAR = parseInt(process.argv[2], 10) || 2025;
+const CURRICULUM_DIR = path.resolve(__dirname, 'data', `curriculum-${SEED_YEAR}`);
 const BATCH_SIZE = 500;
 
 // ============================================
@@ -556,12 +559,14 @@ async function createDepartmentCurriculum(
             department: deptId,
             course: courseId,
             recommendedSemester: entry.semester,
+            year: SEED_YEAR,
           },
           update: {
             $set: {
               category: entry.category,
               recommendedYear: entry.year,
               recommendedSemester: entry.semester,
+              year: SEED_YEAR,
             },
             $setOnInsert: {
               department: deptId,
@@ -596,6 +601,10 @@ async function createDepartmentCurriculum(
 
 async function softDeleteOldSeedData(): Promise<void> {
   console.log('\n🧹 Phase 5: 구 시드 데이터 비활성화 중...\n');
+
+  // NOTE: No year-scoping needed here. This function soft-deletes departments
+  // with zero DepartmentCurriculum entries (across all years) and old seed courses
+  // by code pattern (GEN1*, SWE*). Both checks remain valid regardless of year.
 
   // Soft-delete ALL departments that have no DepartmentCurriculum entries
   const deptIdsWithCurriculum =
@@ -675,7 +684,7 @@ function printReport(
 
 async function main() {
   try {
-    console.log('🚀 커리큘럼 임포트 스크립트 시작');
+    console.log(`🚀 커리큘럼 임포트 스크립트 시작 (${SEED_YEAR}년)`);
     console.log(`📍 커리큘럼 디렉토리: ${CURRICULUM_DIR}`);
 
     // Verify curriculum directory exists
@@ -718,7 +727,7 @@ async function main() {
     ).size;
     printReport(courseMap, deptEntries, uniqueDeptCount, curriculumCount);
 
-    console.log('\n🎉 커리큘럼 임포트 완료!');
+    console.log(`\n🎉 ${SEED_YEAR}년 커리큘럼 임포트 완료!`);
   } catch (error) {
     console.error('\n❌ 임포트 중 오류 발생:', error);
     process.exit(1);

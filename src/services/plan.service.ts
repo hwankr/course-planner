@@ -135,7 +135,7 @@ async function addCourseToSemester(
 ): Promise<IPlanDocument | null> {
   await connectDB();
 
-  const { planId, year, term, courseId, category } = input;
+  const { planId, year, term, courseId, category, curriculumYear } = input;
 
   // 과목 존재 확인
   const course = await Course.findById(courseId);
@@ -178,7 +178,9 @@ async function addCourseToSemester(
     // Determine category: use provided value, fall back to DepartmentCurriculum lookup, then Course.category
     let resolvedCategory = category;
     if (!resolvedCategory) {
-      const currEntry = await DepartmentCurriculum.findOne({ course: courseId })
+      const currQuery: Record<string, unknown> = { course: courseId };
+      if (curriculumYear) currQuery.year = curriculumYear;
+      const currEntry = await DepartmentCurriculum.findOne(currQuery)
         .select('category')
         .lean<{ category: string }>();
       resolvedCategory = (currEntry?.category || course.category) as typeof category;

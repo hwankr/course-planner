@@ -40,6 +40,7 @@ export async function GET() {
         name: user.name,
         department: user.department,
         enrollmentYear: user.enrollmentYear,
+        curriculumYear: user.curriculumYear,
         role: user.role,
         image: user.image,
         majorType: user.majorType,
@@ -59,6 +60,7 @@ const updateUserSchema = z.object({
   name: z.string().min(1).optional(),
   department: z.string().min(1).optional(),
   enrollmentYear: z.number().min(2000).max(2030).optional(),
+  curriculumYear: z.number().min(2020).max(2100).optional(),
   majorType: z.enum(['single', 'double', 'minor']).optional(),
   secondaryDepartment: z.string().min(1).optional().nullable(),
 });
@@ -98,6 +100,7 @@ export async function PATCH(request: Request) {
         name: updatedUser.name,
         department: updatedUser.department,
         enrollmentYear: updatedUser.enrollmentYear,
+        curriculumYear: updatedUser.curriculumYear,
         role: updatedUser.role,
         image: updatedUser.image,
         majorType: updatedUser.majorType,

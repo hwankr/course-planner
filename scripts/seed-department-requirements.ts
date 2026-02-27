@@ -1,7 +1,8 @@
 /**
  * Seed script: Import department graduation requirements from CSV
  *
- * Run: npx tsx scripts/seed-department-requirements.ts
+ * Run: npx tsx scripts/seed-department-requirements.ts [year]
+ * Example: npx tsx scripts/seed-department-requirements.ts 2026
  */
 
 import './env';
@@ -14,7 +15,11 @@ import DepartmentRequirement from '../src/models/DepartmentRequirement';
 async function seed() {
   await connectDB();
 
-  const csvPath = path.resolve(__dirname, 'data', 'min-credits-2025.csv');
+  // Accept year as CLI argument, default to 2025
+  const year = parseInt(process.argv[2], 10) || 2025;
+  console.log(`🚀 졸업요건 임포트 시작 (${year}년)\n`);
+
+  const csvPath = path.resolve(__dirname, 'data', `min-credits-${year}.csv`);
   let csvContent = fs.readFileSync(csvPath, 'utf-8');
   // BOM removal
   if (csvContent.charCodeAt(0) === 0xfeff) {
@@ -83,7 +88,7 @@ async function seed() {
     }
   }
 
-  console.log(`\nSeed complete: ${processed} processed, ${errors} errors`);
+  console.log(`\n🎉 ${year}년 졸업요건 임포트 완료: ${processed} processed, ${errors} errors`);
   console.log(`Total records: ${await DepartmentRequirement.countDocuments()}`);
 
   await mongoose.disconnect();

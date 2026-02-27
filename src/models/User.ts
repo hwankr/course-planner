@@ -64,6 +64,11 @@ const userSchema = new Schema<IUserDocument>(
       type: Schema.Types.ObjectId,
       ref: 'Department',
     },
+    curriculumYear: {
+      type: Number,
+      min: 2020,
+      max: 2100,
+    },
     lastLoginAt: {
       type: Date,
     },

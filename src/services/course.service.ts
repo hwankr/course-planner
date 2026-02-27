@@ -35,6 +35,9 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     if (filter.recommendedSemester) {
       curriculumFilter.recommendedSemester = filter.recommendedSemester;
     }
+    if (filter.curriculumYear) {
+      curriculumFilter.year = filter.curriculumYear;
+    }
 
     // Fetch curriculum entries for this department
     interface CurriculumEntry {
@@ -42,6 +45,7 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
       category: string;
       recommendedYear: number;
       recommendedSemester: string;
+      year: number;
     }
 
     const curriculumEntries = await DepartmentCurriculum.find(curriculumFilter)
@@ -268,9 +272,11 @@ async function remove(id: string): Promise<ICourseDocument | null> {
  * 학과별 과목 수 조회
  * DepartmentCurriculum 조인테이블을 통해 조회
  */
-async function countByDepartment(departmentId: string): Promise<number> {
+async function countByDepartment(departmentId: string, year?: number): Promise<number> {
   await connectDB();
-  return DepartmentCurriculum.countDocuments({ department: departmentId });
+  const filter: Record<string, unknown> = { department: departmentId };
+  if (year) filter.year = year;
+  return DepartmentCurriculum.countDocuments(filter);
 }
 
 /**

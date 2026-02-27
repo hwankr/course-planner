@@ -5,6 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
 import type { ApiResponse, MajorType } from '@/types';
+import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
@@ -43,6 +44,7 @@ interface UserProfile {
   image?: string;
   majorType?: MajorType;
   secondaryDepartment?: Department | null;
+  curriculumYear?: number;
 }
 
 export default function ProfilePage() {
@@ -63,6 +65,7 @@ export default function ProfilePage() {
     department: '',
     majorType: 'single' as MajorType,
     secondaryDepartment: '',
+    curriculumYear: String(DEFAULT_CURRICULUM_YEAR),
   });
 
   const handleDeleteAccount = async () => {
@@ -145,6 +148,7 @@ export default function ProfilePage() {
         department: userProfile.department?._id || '',
         majorType: userProfile.majorType || 'single',
         secondaryDepartment: userProfile.secondaryDepartment?._id || '',
+        curriculumYear: userProfile.curriculumYear?.toString() || String(DEFAULT_CURRICULUM_YEAR),
       });
     }
   }, [userProfile]);
@@ -158,13 +162,14 @@ export default function ProfilePage() {
         department: guestProfile.departmentId || '',
         majorType: guestProfile.majorType || 'single',
         secondaryDepartment: guestProfile.secondaryDepartmentId || '',
+        curriculumYear: guestProfile.curriculumYear?.toString() || String(DEFAULT_CURRICULUM_YEAR),
       });
     }
-  }, [isGuest, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId, guestProfile.majorType, guestProfile.secondaryDepartmentId]);
+  }, [isGuest, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId, guestProfile.majorType, guestProfile.secondaryDepartmentId, guestProfile.curriculumYear]);
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: async (data: { name?: string; department?: string; enrollmentYear?: number; majorType?: MajorType; secondaryDepartment?: string | null }) => {
+    mutationFn: async (data: { name?: string; department?: string; enrollmentYear?: number; curriculumYear?: number; majorType?: MajorType; secondaryDepartment?: string | null }) => {
       const res = await fetch('/api/users/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -176,7 +181,8 @@ export default function ProfilePage() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
-      // Refresh NextAuth session to update JWT with new department
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      // Refresh NextAuth session to update JWT with new department/curriculumYear
       await updateSession();
       setIsEditing(false);
     },
@@ -188,11 +194,12 @@ export default function ProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updateData: { name?: string; department?: string; enrollmentYear?: number; majorType?: MajorType; secondaryDepartment?: string | null } = {};
+    const updateData: { name?: string; department?: string; enrollmentYear?: number; curriculumYear?: number; majorType?: MajorType; secondaryDepartment?: string | null } = {};
 
     if (formData.name) updateData.name = formData.name;
     if (formData.department) updateData.department = formData.department;
     if (formData.enrollmentYear) updateData.enrollmentYear = parseInt(formData.enrollmentYear, 10);
+    if (formData.curriculumYear) updateData.curriculumYear = parseInt(formData.curriculumYear, 10);
     updateData.majorType = formData.majorType;
     updateData.secondaryDepartment = formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : null;
 
@@ -225,9 +232,11 @@ export default function ProfilePage() {
                 guestProfile.setProfile({
                   name: formData.name || undefined,
                   enrollmentYear: formData.enrollmentYear ? parseInt(formData.enrollmentYear, 10) : undefined,
+                  curriculumYear: formData.curriculumYear ? parseInt(formData.curriculumYear, 10) : undefined,
                   departmentId: formData.department || undefined,
                   departmentName: departments.find((d) => d._id === formData.department)?.name || undefined,
                 });
+                queryClient.invalidateQueries({ queryKey: ['courses'] });
               }}
               className="space-y-4"
             >
@@ -257,6 +266,22 @@ export default function ProfilePage() {
                   min={2000}
                   max={2030}
                 />
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  커리큘럼 연도
+                </label>
+                <select
+                  name="curriculumYear"
+                  value={formData.curriculumYear}
+                  onChange={handleChange}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">과목 리스트에 표시될 커리큘럼 연도를 선택합니다</p>
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
@@ -519,6 +544,22 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  커리큘럼 연도
+                </label>
+                <select
+                  name="curriculumYear"
+                  value={formData.curriculumYear}
+                  onChange={handleChange}
+                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                >
+                  <option value="2025">2025</option>
+                  <option value="2026">2026</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">과목 리스트에 표시될 커리큘럼 연도를 선택합니다</p>
+              </div>
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
                   <Building2 className="w-4 h-4 text-gray-400" />
                   학과
                 </label>
@@ -561,6 +602,15 @@ export default function ProfilePage() {
                 </div>
                 <span className={enrollmentYear ? 'font-medium' : 'text-gray-400'}>
                   {enrollmentYear ? `${enrollmentYear}년` : '미설정'}
+                </span>
+              </div>
+              <div className="flex justify-between py-2 border-b">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">커리큘럼 연도</span>
+                </div>
+                <span className="font-medium">
+                  {userProfile?.curriculumYear || DEFAULT_CURRICULUM_YEAR}년
                 </span>
               </div>
               <div className="flex justify-between py-2 border-b">

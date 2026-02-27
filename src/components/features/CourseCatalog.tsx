@@ -13,6 +13,7 @@ import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { HelpCircle, LayoutGrid, List } from 'lucide-react';
 import type { Semester, ICourse, RequirementCategory } from '@/types';
+import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 
 // Quick-add category definitions for common courses tab
 const COMMON_QUICK_ADD_CATEGORIES = [
@@ -212,6 +213,8 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
   const guestSecondaryDepartmentId = useGuestProfileStore((s) => s.secondaryDepartmentId);
   const guestMajorType = useGuestProfileStore((s) => s.majorType);
+  const guestCurriculumYear = useGuestProfileStore((s) => s.curriculumYear);
+  const effectiveCurriculumYear = (isGuest ? guestCurriculumYear : session?.user?.curriculumYear) || DEFAULT_CURRICULUM_YEAR;
   const userDepartment = (isGuest ? guestDepartmentId : session?.user?.department) || undefined;
   const secondaryDepartment = (isGuest ? guestSecondaryDepartmentId : session?.user?.secondaryDepartment) || undefined;
   const majorType = (isGuest ? guestMajorType : session?.user?.majorType) || 'single';
@@ -258,13 +261,14 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
     isCommonTab
       ? undefined // Common tab uses quick-add UI, skip fetch
       : isGroupedView
-        ? { departmentId: activeDepartment }
+        ? { departmentId: activeDepartment, curriculumYear: effectiveCurriculumYear }
         : {
             departmentId: activeDepartment,
             search: debouncedSearch || undefined,
             recommendedYear: yearFilter,
             recommendedSemester: semesterFilter,
             category: categoryFilter,
+            curriculumYear: effectiveCurriculumYear,
           }
   );
 
@@ -404,6 +408,11 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
           <div className="min-w-0">
             <h2 className="text-base font-semibold text-gray-900">과목 리스트</h2>
             <div className="flex items-center gap-1">
+              {!isCommonTab && activeDepartment && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#00AACA]/10 text-[#00AACA] flex-shrink-0">
+                  {effectiveCurriculumYear}
+                </span>
+              )}
               <p className="text-xs text-gray-400 truncate">
                 {isCommonTab
                   ? '공통 교양/선택 과목'
@@ -425,7 +434,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
             </div>
             {showCurriculumInfo && (
               <p className="text-[11px] text-amber-600 bg-amber-50 rounded px-2 py-1 mt-1">
-                본 커리큘럼은 2025년 기준이며, 실제와 누락·차이가 있을 수 있습니다.
+                본 커리큘럼은 {effectiveCurriculumYear}년 기준이며, 실제와 누락·차이가 있을 수 있습니다.
               </p>
             )}
           </div>

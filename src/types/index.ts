@@ -22,6 +22,7 @@ export interface IUser {
   majorType: MajorType;                  // NEW: 전공 유형 (기본값: 'single')
   secondaryDepartment?: Types.ObjectId;  // NEW: 복수전공/부전공 학과
   enrollmentYear?: number;
+  curriculumYear?: number;               // 커리큘럼 연도 (과목 카탈로그 필터용)
   studentId?: string;                    // 학번 (학생 고유번호)
   role: UserRole;
   provider?: 'credentials' | 'google';
@@ -89,6 +90,7 @@ export interface CourseFilter {
   recommendedYear?: number;
   recommendedSemester?: Semester;
   userId?: string; // Include custom courses for this user
+  curriculumYear?: number;
   limit?: number;
 }
 
@@ -127,6 +129,7 @@ export interface AddCourseToSemesterInput {
   term: Term;
   courseId: string;
   category?: RequirementCategory;
+  curriculumYear?: number;
 }
 
 // ============================================
@@ -160,6 +163,7 @@ export interface IDepartmentCurriculum {
   category: RequirementCategory;
   recommendedYear: number;
   recommendedSemester: 'spring' | 'fall';
+  year: number;
   createdAt: Date;
   updatedAt: Date;
 }

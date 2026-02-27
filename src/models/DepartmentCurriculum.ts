@@ -46,6 +46,13 @@ const departmentCurriculumSchema = new Schema<IDepartmentCurriculumDocument>(
       enum: ['spring', 'fall'],
       required: [true, '권장 학기는 필수입니다.'],
     },
+    year: {
+      type: Number,
+      required: [true, '커리큘럼 연도는 필수입니다.'],
+      min: [2020, '연도는 2020 이상이어야 합니다.'],
+      max: [2100, '연도는 2100 이하여야 합니다.'],
+      default: 2025,
+    },
   },
   {
     timestamps: true,
@@ -54,7 +61,7 @@ const departmentCurriculumSchema = new Schema<IDepartmentCurriculumDocument>(
 
 // 인덱스
 departmentCurriculumSchema.index(
-  { department: 1, course: 1, recommendedSemester: 1 },
+  { department: 1, course: 1, recommendedSemester: 1, year: 1 },
   { unique: true }
 );
 departmentCurriculumSchema.index({ department: 1, category: 1 });

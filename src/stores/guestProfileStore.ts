@@ -12,6 +12,7 @@ interface GuestProfileState {
   secondaryDepartmentName: string | null;
   secondaryDepartmentCollege: string | null;
   enrollmentYear: number | null;
+  curriculumYear: number | null;
   _hasHydrated: boolean;
 
   // Actions
@@ -25,6 +26,7 @@ interface GuestProfileState {
     secondaryDepartmentName?: string;
     secondaryDepartmentCollege?: string;
     enrollmentYear?: number;
+    curriculumYear?: number;
   }) => void;
   reset: () => void;
   setHasHydrated: (state: boolean) => void;
@@ -40,6 +42,7 @@ const initialState = {
   secondaryDepartmentName: null,
   secondaryDepartmentCollege: null,
   enrollmentYear: null,
+  curriculumYear: null,
   _hasHydrated: false,
 };
 
@@ -66,6 +69,7 @@ export const useGuestProfileStore = create<GuestProfileState>()(
           secondaryDepartmentName: initialState.secondaryDepartmentName,
           secondaryDepartmentCollege: initialState.secondaryDepartmentCollege,
           enrollmentYear: initialState.enrollmentYear,
+          curriculumYear: initialState.curriculumYear,
         });
       },
 
@@ -89,6 +93,7 @@ export const useGuestProfileStore = create<GuestProfileState>()(
         secondaryDepartmentName: state.secondaryDepartmentName,
         secondaryDepartmentCollege: state.secondaryDepartmentCollege,
         enrollmentYear: state.enrollmentYear,
+        curriculumYear: state.curriculumYear,
       }),
     }
   )

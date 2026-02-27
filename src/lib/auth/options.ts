@@ -66,6 +66,7 @@ export const authOptions: NextAuthOptions = {
           onboardingCompleted: user.onboardingCompleted,
           majorType: user.majorType,
           secondaryDepartment: user.secondaryDepartment?.toString(),
+          curriculumYear: user.curriculumYear,
         };
       },
     }),
@@ -103,6 +104,7 @@ export const authOptions: NextAuthOptions = {
             token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
             token.majorType = dbUser.majorType;
             token.secondaryDepartment = dbUser.secondaryDepartment?.toString();
+            token.curriculumYear = dbUser.curriculumYear;
           }
         } else {
           token.id = user.id;
@@ -117,6 +119,7 @@ export const authOptions: NextAuthOptions = {
           }
           token.majorType = user.majorType;
           token.secondaryDepartment = user.secondaryDepartment;
+          token.curriculumYear = user.curriculumYear;
         }
 
         // 마지막 접속 시간 기록 (fire-and-forget)
@@ -139,6 +142,7 @@ export const authOptions: NextAuthOptions = {
           token.onboardingCompleted = dbUser.onboardingCompleted ?? false;
           token.majorType = dbUser.majorType;
           token.secondaryDepartment = dbUser.secondaryDepartment?.toString();
+          token.curriculumYear = dbUser.curriculumYear;
         }
       }
       return token;
@@ -151,6 +155,7 @@ export const authOptions: NextAuthOptions = {
         session.user.onboardingCompleted = token.onboardingCompleted as boolean;
         session.user.majorType = token.majorType as MajorType | undefined;
         session.user.secondaryDepartment = token.secondaryDepartment as string | undefined;
+        session.user.curriculumYear = token.curriculumYear as number | undefined;
       }
       return session;
     },

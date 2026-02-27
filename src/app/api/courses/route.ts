@@ -33,6 +33,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: true, data: courses });
     }
 
+    const curriculumYear = searchParams.get('curriculumYear');
+
     const filter: CourseFilter = {
       departmentId: searchParams.get('departmentId') || undefined,
       semester: searchParams.get('semester') as Semester | undefined,
@@ -40,6 +42,7 @@ export async function GET(request: Request) {
       search,
       recommendedYear: recommendedYear ? parseInt(recommendedYear, 10) : undefined,
       recommendedSemester: recommendedSemester as Semester | undefined,
+      curriculumYear: curriculumYear ? parseInt(curriculumYear, 10) : undefined,
       userId: session?.user?.id, // Include user's custom courses
     };
 

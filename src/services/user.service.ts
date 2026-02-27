@@ -132,6 +132,7 @@ async function update(
     onboardingCompleted: boolean;
     majorType: MajorType;
     secondaryDepartment?: string;
+    curriculumYear?: number;
   }>
 ): Promise<IUserDocument | null> {
   await connectDB();
