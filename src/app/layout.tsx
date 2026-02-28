@@ -4,6 +4,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Providers } from '@/components/providers/Providers';
 import { ClarityScript } from '@/components/providers/ClarityScript';
+import { GoogleAnalytics } from '@/components/providers/GoogleAnalytics';
 import { Footer } from '@/components/ui';
 import './globals.css';
 
@@ -51,6 +52,7 @@ export default function RootLayout({
         <Analytics />
         <SpeedInsights />
         <ClarityScript />
+        <GoogleAnalytics />
       </body>
     </html>
   );
