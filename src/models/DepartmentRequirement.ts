@@ -9,6 +9,7 @@ import mongoose, { Schema, Model } from 'mongoose';
 export interface IDepartmentRequirementDocument extends mongoose.Document {
   college: string;
   departmentName: string;
+  year: number;
   generalCredits: number | null;
   single: {
     majorRequiredMin: number | null;
@@ -33,6 +34,7 @@ const departmentRequirementSchema = new Schema<IDepartmentRequirementDocument>(
   {
     college: { type: String, required: [true, '대학명은 필수입니다.'] },
     departmentName: { type: String, required: [true, '학과명은 필수입니다.'] },
+    year: { type: Number, required: true, default: 2025 },
     generalCredits: { type: Number, default: null },
 
     single: {
@@ -55,9 +57,9 @@ const departmentRequirementSchema = new Schema<IDepartmentRequirementDocument>(
   { timestamps: true }
 );
 
-// Composite unique index
+// Composite unique index (year-versioned)
 departmentRequirementSchema.index(
-  { college: 1, departmentName: 1 },
+  { college: 1, departmentName: 1, year: 1 },
   { unique: true }
 );
 

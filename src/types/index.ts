@@ -220,6 +220,7 @@ export interface IDepartmentRequirement {
   _id: Types.ObjectId;
   college: string;                    // 대학 (예: "공과대학")
   departmentName: string;             // 학부(과)·전공 (예: "건축학부 건축학전공")
+  year: number;                       // 기준 연도 (예: 2025)
   generalCredits: number | null;      // 교양 학점 (null = 교양 없음, 의학과 등)
   single: DepartmentMajorTypeConfig;  // 단일전공 설정
   double: DepartmentMajorTypeConfig;  // 복수전공 설정
@@ -321,6 +322,8 @@ export interface GraduationRequirementInput {
   earnedSecondaryMajorRequiredCredits?: number;
   earnedMinorCredits?: number;
   earnedMinorRequiredCredits?: number;
+
+  requirementYear?: number;
 }
 
 export interface CourseInfo {

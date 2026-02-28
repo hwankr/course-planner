@@ -34,6 +34,7 @@ interface CompleteOnboardingInput {
     earnedSecondaryMajorRequiredCredits?: number;
     earnedMinorCredits?: number;
     earnedMinorRequiredCredits?: number;
+    requirementYear?: number;
   };
 }
 

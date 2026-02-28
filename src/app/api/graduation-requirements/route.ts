@@ -62,6 +62,8 @@ const upsertSchema = z.object({
   earnedSecondaryMajorRequiredCredits: z.number().min(0).optional(),
   earnedMinorCredits: z.number().min(0).optional(),
   earnedMinorRequiredCredits: z.number().min(0).optional(),
+
+  requirementYear: z.number().min(2020).max(2100).optional(),
 })
 .refine(data => {
   if (data.majorType === 'double') {

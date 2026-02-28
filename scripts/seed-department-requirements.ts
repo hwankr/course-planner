@@ -67,10 +67,11 @@ async function seed() {
 
     try {
       await DepartmentRequirement.findOneAndUpdate(
-        { college, departmentName },
+        { college, departmentName, year },
         {
           college,
           departmentName,
+          year,
           generalCredits,
           single,
           double,

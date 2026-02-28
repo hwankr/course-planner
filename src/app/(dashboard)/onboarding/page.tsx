@@ -21,6 +21,7 @@ import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import type { MajorType } from '@/types';
+import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
 
 const EMPTY_DEPARTMENTS: { _id: string; code: string; name: string; college?: string }[] = [];
 
@@ -53,6 +54,9 @@ export default function OnboardingPage() {
   const [secondaryDepartmentId, setSecondaryDepartmentId] = useState('');
   const [availableMajorTypes, setAvailableMajorTypes] = useState<MajorType[]>(['single', 'double', 'minor']);
   const [autoFillMessage, setAutoFillMessage] = useState('');
+
+  // Requirement year
+  const [requirementYear, setRequirementYear] = useState(DEFAULT_REQUIREMENT_YEAR);
 
   // Step 2 data - graduation requirements (primary / common)
   const [totalCredits, setTotalCredits] = useState(120);
@@ -88,7 +92,7 @@ export default function OnboardingPage() {
 
     const fetchAvailable = async () => {
       try {
-        const res = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}`);
+        const res = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}&year=${requirementYear}`);
         if (!res.ok) {
           setAvailableMajorTypes(['single', 'double', 'minor']);
           return;
@@ -110,15 +114,16 @@ export default function OnboardingPage() {
   }, [departmentId, departments]);
 
   // Auto-fill from department requirements when entering Step 2
-  const autoFillFromDeptReq = async () => {
+  const autoFillFromDeptReq = async (yearOverride?: number) => {
     const selectedDept = departments.find((d) => d._id === departmentId);
     if (!selectedDept?.college || !selectedDept?.name) return;
+    const year = yearOverride ?? requirementYear;
 
     setAutoFillMessage('');
 
     try {
       // Fetch primary (single track) requirements
-      const primaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}&majorType=single`);
+      const primaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}&majorType=single&year=${year}`);
       if (primaryRes.ok) {
         const primaryData = await primaryRes.json();
         if (primaryData.totalCredits) setTotalCredits(primaryData.totalCredits);
@@ -131,7 +136,7 @@ export default function OnboardingPage() {
       if (majorType !== 'single' && secondaryDepartmentId) {
         const secondaryDept = departments.find((d) => d._id === secondaryDepartmentId);
         if (secondaryDept?.college && secondaryDept?.name) {
-          const secondaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(secondaryDept.college!)}&departmentName=${encodeURIComponent(secondaryDept.name)}&majorType=${majorType}`);
+          const secondaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(secondaryDept.college!)}&departmentName=${encodeURIComponent(secondaryDept.name)}&majorType=${majorType}&year=${year}`);
           if (secondaryRes.ok) {
             const secData = await secondaryRes.json();
             if (majorType === 'double') {
@@ -210,6 +215,7 @@ export default function OnboardingPage() {
         earnedPrimaryMajorRequiredCredits,
         ...(majorType === 'double' ? { earnedSecondaryMajorCredits, earnedSecondaryMajorRequiredCredits } : {}),
         ...(majorType === 'minor' ? { earnedMinorCredits, earnedMinorRequiredCredits } : {}),
+        requirementYear,
       });
       router.push('/planner');
       return;
@@ -235,6 +241,7 @@ export default function OnboardingPage() {
           earnedPrimaryMajorRequiredCredits,
           ...(majorType === 'double' ? { earnedSecondaryMajorCredits, earnedSecondaryMajorRequiredCredits } : {}),
           ...(majorType === 'minor' ? { earnedMinorCredits, earnedMinorRequiredCredits } : {}),
+          requirementYear,
         },
       });
 
@@ -432,9 +439,26 @@ export default function OnboardingPage() {
         ) : (
           <Card className="border-t-4 border-emerald-500 animate-fade-in-up">
             <CardHeader>
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-emerald-600" />
-                <CardTitle>졸업 요건 설정</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-emerald-600" />
+                  <CardTitle>졸업 요건 설정</CardTitle>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <label className="text-xs text-gray-500 whitespace-nowrap">기준 연도</label>
+                  <select
+                    value={requirementYear}
+                    onChange={(e) => {
+                      const newYear = parseInt(e.target.value);
+                      setRequirementYear(newYear);
+                      autoFillFromDeptReq(newYear);
+                    }}
+                    className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#153974] focus:border-[#153974]"
+                  >
+                    <option value={2025}>2025</option>
+                    <option value={2026}>2026</option>
+                  </select>
+                </div>
               </div>
               <p className="text-xs text-gray-500 mt-1">
                 졸업 기준과 취득 학점을 잘 모르시나요?{' '}

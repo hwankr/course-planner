@@ -12,10 +12,12 @@ import { Card, CardContent, Button } from '@/components/ui';
 import { useSession } from 'next-auth/react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
 import * as Sentry from '@sentry/nextjs';
 
 export function RequirementsSummary() {
   const [isEditing, setIsEditing] = useState(false);
+  const [requirementYear, setRequirementYear] = useState<number>(DEFAULT_REQUIREMENT_YEAR);
 
   const { data: requirement, isLoading: loadingReq } = useGraduationRequirement();
   const { data: progress, isLoading: loadingProgress } = useGraduationProgress();
@@ -26,7 +28,50 @@ export function RequirementsSummary() {
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestProfileMajorType = useGuestProfileStore((s) => s.majorType);
+  const guestDepartmentCollege = useGuestProfileStore((s) => s.departmentCollege);
+  const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
   const userMajorType = isGuest ? guestProfileMajorType : (session?.user?.majorType || 'single');
+
+  // Sync requirementYear from saved requirement on load
+  const [yearInitialized, setYearInitialized] = useState(false);
+  if (requirement?.requirementYear && !yearInitialized) {
+    setRequirementYear(requirement.requirementYear);
+    setYearInitialized(true);
+  }
+
+  // Auto-fill callback: fetches DepartmentRequirement for user's department + selected year
+  const handleLoadFromDeptReq = async () => {
+    let college: string | undefined;
+    let departmentName: string | undefined;
+
+    if (isGuest) {
+      college = guestDepartmentCollege ?? undefined;
+      departmentName = guestDepartmentName ?? undefined;
+    } else if (session?.user?.department) {
+      // Fetch department info by ID to get college and name
+      const deptRes = await fetch(`/api/departments/${session.user.department}`);
+      if (deptRes.ok) {
+        const deptJson = await deptRes.json();
+        if (deptJson.success && deptJson.data) {
+          college = deptJson.data.college;
+          departmentName = deptJson.data.name;
+        }
+      }
+    }
+
+    if (!college || !departmentName) return null;
+
+    const params = new URLSearchParams({
+      college,
+      departmentName,
+      majorType: userMajorType || 'single',
+      year: String(requirementYear),
+    });
+    const res = await fetch(`/api/department-requirements?${params}`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.success ? json.data : null;
+  };
 
   const isLoading = loadingReq || loadingProgress;
 
@@ -62,7 +107,7 @@ export function RequirementsSummary() {
   }) => {
     setSaveError('');
     try {
-      await upsertMutation.mutateAsync(data);
+      await upsertMutation.mutateAsync({ ...data, requirementYear });
       setIsEditing(false);
     } catch (error) {
       Sentry.captureException(error);
@@ -95,6 +140,9 @@ export function RequirementsSummary() {
                 onCancel={() => { setIsEditing(false); setSaveError(''); }}
                 isLoading={upsertMutation.isPending}
                 userMajorType={userMajorType}
+                onLoadFromDeptReq={handleLoadFromDeptReq}
+                requirementYear={requirementYear}
+                onYearChange={setRequirementYear}
               />
             </div>
           ) : (
@@ -157,6 +205,9 @@ export function RequirementsSummary() {
             onCancel={() => { setIsEditing(false); setSaveError(''); }}
             isLoading={upsertMutation.isPending}
             userMajorType={userMajorType}
+            onLoadFromDeptReq={handleLoadFromDeptReq}
+            requirementYear={requirementYear}
+            onYearChange={setRequirementYear}
           />
         </CardContent>
       </Card>
@@ -203,6 +254,11 @@ export function RequirementsSummary() {
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 flex-wrap">
             <span className="text-sm font-medium text-gray-700 whitespace-nowrap">졸업 요건</span>
+            {requirement?.requirementYear && (
+              <span className="text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                {requirement.requirementYear}년 기준
+              </span>
+            )}
             <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[120px] sm:max-w-[200px] relative">
               {/* Planned segment (behind) */}
               {total.planned > 0 && (

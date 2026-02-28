@@ -37,9 +37,11 @@ interface RequirementFormProps {
   isLoading?: boolean;
   onLoadFromDeptReq?: () => Promise<Partial<RequirementFormData> | null>;
   userMajorType?: MajorType;
+  requirementYear?: number;
+  onYearChange?: (year: number) => void;
 }
 
-export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq, userMajorType }: RequirementFormProps) {
+export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq, userMajorType, requirementYear, onYearChange }: RequirementFormProps) {
   const [majorType, setMajorType] = useState<'single' | 'double' | 'minor'>(initialData?.majorType || 'single');
   const [totalCredits, setTotalCredits] = useState(initialData?.totalCredits?.toString() || '');
   const [primaryMajorCredits, setPrimaryMajorCredits] = useState(initialData?.primaryMajorCredits?.toString() || '');
@@ -278,9 +280,21 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
         )}
         {onLoadFromDeptReq && (
           <div className="space-y-1">
-            <Button type="button" variant="outline" size="sm" onClick={handleLoadFromDeptReq}>
-              학과 기준표에서 불러오기
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={handleLoadFromDeptReq}>
+                학과 기준표에서 불러오기
+              </Button>
+              {requirementYear !== undefined && onYearChange && (
+                <select
+                  value={requirementYear}
+                  onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
+                  className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                  <option value={2025}>2025년</option>
+                  <option value={2026}>2026년</option>
+                </select>
+              )}
+            </div>
             {loadMessage && <p className="text-xs text-blue-600">{loadMessage}</p>}
           </div>
         )}

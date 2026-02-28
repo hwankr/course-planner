@@ -32,6 +32,7 @@ interface GraduationRequirement {
   earnedSecondaryMajorRequiredCredits?: number;
   earnedMinorCredits?: number;
   earnedMinorRequiredCredits?: number;
+  requirementYear?: number;
   createdAt: string;
   updatedAt: string;
 }

@@ -35,6 +35,8 @@ export interface IGraduationRequirementDocument extends mongoose.Document {
   earnedMinorCredits?: number;          // 기이수 부전공 학점
   earnedMinorRequiredCredits?: number;  // 기이수 부전공 핵심학점
 
+  requirementYear?: number;             // 기준표 연도 (어떤 연도 기준으로 설정했는지)
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -131,6 +133,9 @@ const graduationRequirementSchema = new Schema<IGraduationRequirementDocument>(
       type: Number,
       default: 0,
       min: [0, '기이수 부전공 핵심학점은 0 이상이어야 합니다.'],
+    },
+    requirementYear: {
+      type: Number,
     },
   },
   {

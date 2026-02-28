@@ -39,6 +39,7 @@ const completeOnboardingSchema = z.object({
     earnedSecondaryMajorRequiredCredits: z.number().int().min(0).optional(),
     earnedMinorCredits: z.number().int().min(0).optional(),
     earnedMinorRequiredCredits: z.number().int().min(0).optional(),
+    requirementYear: z.number().int().min(2020).max(2100).optional(),
   }),
 })
 .refine(data => {
