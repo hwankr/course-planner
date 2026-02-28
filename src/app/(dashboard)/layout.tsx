@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   BarChart3,
   HelpCircle,
-  Gift,
   Calendar,
   ChevronDown,
   LogOut,
@@ -36,7 +35,6 @@ const primaryNavigation = [
 ];
 
 const secondaryNavigation = [
-  { name: '이벤트', href: '/event', icon: Gift },
   { name: '도움말', href: '/help', icon: HelpCircle },
   { name: '문의 및 건의', href: '/help/feedback', icon: MessageSquareText },
   { name: '업데이트 소식', href: '/patch-notes', icon: Megaphone },
