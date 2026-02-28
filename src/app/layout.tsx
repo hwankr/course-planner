@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Providers } from '@/components/providers/Providers';
+import { ClarityScript } from '@/components/providers/ClarityScript';
 import { Footer } from '@/components/ui';
 import './globals.css';
 
@@ -49,6 +50,7 @@ export default function RootLayout({
         <Footer />
         <Analytics />
         <SpeedInsights />
+        <ClarityScript />
       </body>
     </html>
   );
