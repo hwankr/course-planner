@@ -13,6 +13,7 @@ import { planService } from './plan.service';
 import { courseService } from './course.service';
 import { graduationRequirementService } from './graduationRequirement.service';
 import { feedbackService } from './feedback.service';
+import { patchNoteService } from './patchNote.service';
 
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 const MAX_LOGIN_ATTEMPTS = 5;
@@ -185,7 +186,10 @@ async function deleteWithCascade(userId: string): Promise<void> {
   // 4. 사용자의 피드백/문의 삭제
   await feedbackService.deleteAllByUser(userId);
 
-  // 5. 사용자 문서 삭제
+  // 5. 사용자의 업데이트 소식 읽음 기록 삭제
+  await patchNoteService.deleteAllReadsByUser(userId);
+
+  // 6. 사용자 문서 삭제
   const user = await User.findByIdAndDelete(userId);
   if (!user) {
     throw new Error('사용자를 찾을 수 없습니다.');

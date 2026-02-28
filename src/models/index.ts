@@ -13,6 +13,8 @@ export { default as GraduationRequirement } from './GraduationRequirement';
 export { default as DepartmentRequirement } from './DepartmentRequirement';
 export { default as DepartmentCurriculum } from './DepartmentCurriculum';
 export { default as AcademicEvent } from './AcademicEvent';
+export { PatchNote } from './PatchNote';
+export { PatchNoteRead } from './PatchNoteRead';
 
 // Document 타입 export
 export type { IUserDocument } from './User';
@@ -24,3 +26,5 @@ export type { IGraduationRequirementDocument } from './GraduationRequirement';
 export type { IDepartmentRequirementDocument } from './DepartmentRequirement';
 export type { IDepartmentCurriculumDocument } from './DepartmentCurriculum';
 export type { IAcademicEventDocument } from './AcademicEvent';
+export type { IPatchNoteDocument } from './PatchNote';
+export type { IPatchNoteReadDocument } from './PatchNoteRead';

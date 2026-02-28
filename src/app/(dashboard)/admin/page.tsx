@@ -32,6 +32,11 @@ const adminMenus = [
     description: '사용자 피드백과 문의를 관리합니다.',
     href: '/admin/feedback',
   },
+  {
+    title: '업데이트 소식 관리',
+    description: '앱 변경사항과 업데이트 내역을 관리합니다.',
+    href: '/admin/patch-notes',
+  },
 ];
 
 export default function AdminPage() {

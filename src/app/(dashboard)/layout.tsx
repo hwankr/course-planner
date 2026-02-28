@@ -26,6 +26,7 @@ import {
   Bell,
   MessageSquareText,
   CheckCheck,
+  Megaphone,
 } from 'lucide-react';
 
 const primaryNavigation = [
@@ -37,6 +38,8 @@ const primaryNavigation = [
 const secondaryNavigation = [
   { name: '이벤트', href: '/event', icon: Gift },
   { name: '도움말', href: '/help', icon: HelpCircle },
+  { name: '문의 및 건의', href: '/help/feedback', icon: MessageSquareText },
+  { name: '업데이트 소식', href: '/patch-notes', icon: Megaphone },
 ];
 
 const adminNavigation = [{ name: '관리자', href: '/admin', icon: Shield }];
@@ -68,15 +71,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notificationMenuOpen, setNotificationMenuOpen] = useState(false);
+  const [supportMenuOpen, setSupportMenuOpen] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
   const { data: unreadData } = useQuery<{ success: boolean; data: { count: number } }>({
-    queryKey: ['feedback-unread-count', user?.id],
+    queryKey: ['notifications-unread-count', user?.id],
     queryFn: async () => {
-      const res = await fetch('/api/feedback/unread-count');
+      const res = await fetch('/api/notifications/unread-count');
       if (!res.ok) return { success: false, data: { count: 0 } };
       return res.json();
     },
@@ -108,7 +112,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['feedback-unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications-unread-count'] });
     },
   });
 
@@ -196,7 +200,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     onClick={() => { setMoreMenuOpen(!moreMenuOpen); setUserMenuOpen(false); setNotificationMenuOpen(false); }}
                     className={cn(
                       'relative px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap',
-                      secondaryNavigation.some(item => pathname === item.href)
+                      secondaryNavigation.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))
                         ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     )}
@@ -217,7 +221,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             onClick={() => setMoreMenuOpen(false)}
                             className={cn(
                               'flex items-center gap-2 px-4 py-2.5 text-sm transition-colors',
-                              pathname === item.href
+                              pathname === item.href || pathname.startsWith(item.href + '/')
                                 ? 'bg-[#153974]/10 text-[#153974] font-semibold'
                                 : 'text-gray-600 hover:bg-gray-50'
                             )}
@@ -286,12 +290,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                               <div className="flex-shrink-0 mt-0.5">
                                 <div className={cn(
                                   'w-8 h-8 rounded-full flex items-center justify-center',
+                                  item.type === 'patch-note' ? 'bg-purple-100' :
                                   item.type === 'feedback-new' ? 'bg-yellow-100' : 'bg-blue-100'
                                 )}>
-                                  <MessageSquareText className={cn(
-                                    'w-4 h-4',
-                                    item.type === 'feedback-new' ? 'text-yellow-600' : 'text-blue-600'
-                                  )} />
+                                  {item.type === 'patch-note' ? (
+                                    <Megaphone className="w-4 h-4 text-purple-600" />
+                                  ) : (
+                                    <MessageSquareText className={cn(
+                                      'w-4 h-4',
+                                      item.type === 'feedback-new' ? 'text-yellow-600' : 'text-blue-600'
+                                    )} />
+                                  )}
                                 </div>
                               </div>
                               <div className="flex-1 min-w-0">
@@ -366,7 +375,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               )}
               <button
                 className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => { setMobileMenuOpen(!mobileMenuOpen); if (mobileMenuOpen) setSupportMenuOpen(false); }}
                 aria-label="Toggle menu"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -421,26 +430,46 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   );
                 })}
               <div className="border-t my-1" />
-              {/* Secondary */}
-              {secondaryNavigation.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={cn(
-                      'px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
-                      pathname === item.href
-                        ? 'bg-[#153974]/10 text-[#153974] font-semibold'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    )}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {item.name}
-                  </Link>
-                );
-              })}
+              {/* 지원 accordion group */}
+              <button
+                onClick={() => setSupportMenuOpen(!supportMenuOpen)}
+                className={cn(
+                  'w-full px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-between',
+                  secondaryNavigation.some(item => pathname === item.href || pathname.startsWith(item.href + '/'))
+                    ? 'bg-[#153974]/10 text-[#153974] font-semibold'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                )}
+                aria-expanded={supportMenuOpen}
+              >
+                <span className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4" />
+                  고객 지원
+                </span>
+                <ChevronDown className={cn('w-4 h-4 transition-transform', supportMenuOpen && 'rotate-180')} />
+              </button>
+              {supportMenuOpen && (
+                <div className="ml-4 flex flex-col gap-1">
+                  {secondaryNavigation.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          'px-3 py-2.5 rounded-md text-sm transition-colors flex items-center gap-2',
+                          pathname === item.href || pathname.startsWith(item.href + '/')
+                            ? 'bg-[#153974]/10 text-[#153974] font-semibold'
+                            : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                        )}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {item.name}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
               <div className="border-t my-1" />
               {/* 프로필 & 로그아웃 */}
               {!isGuest && (

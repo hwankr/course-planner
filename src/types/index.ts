@@ -429,6 +429,24 @@ export interface IFeedbackResponse {
 }
 
 // ============================================
+// PatchNote Types (업데이트 소식)
+// ============================================
+
+export type PatchNoteStatus = 'draft' | 'published';
+
+export interface IPatchNoteResponse {
+  _id: string;
+  title: string;
+  content: string;
+  version?: string;
+  status: PatchNoteStatus;
+  publishedAt?: string;
+  createdBy?: { _id: string; name: string; email: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ============================================
 // API Response Types
 // ============================================
 
