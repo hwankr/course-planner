@@ -5,7 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
-import { Course, Department, User, Plan } from '@/models';
+import { Course, Department, User, Plan, DepartmentCurriculum } from '@/models';
 
 interface AdminStats {
   courseCount: number;
@@ -14,11 +14,15 @@ interface AdminStats {
   planCount: number;
 }
 
-async function getStats(): Promise<AdminStats> {
+async function getStats(year?: number): Promise<AdminStats> {
   await connectDB();
 
+  const courseCountPromise = year
+    ? DepartmentCurriculum.distinct('course', { year }).then(ids => ids.length)
+    : Course.countDocuments({ isActive: true, createdBy: null });
+
   const [courseCount, departmentCount, userCount, planCount] = await Promise.all([
-    Course.countDocuments({ isActive: true, createdBy: null }),
+    courseCountPromise,
     Department.countDocuments({ isActive: true }),
     User.countDocuments(),
     Plan.countDocuments(),

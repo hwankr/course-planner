@@ -16,6 +16,7 @@ import * as Sentry from '@sentry/nextjs';
 const requirementSchema = z.object({
   college: z.string().min(1, '대학명은 필수입니다.'),
   departmentName: z.string().min(1, '학과명은 필수입니다.'),
+  year: z.number().int().min(2020).max(2030).default(2025),
   generalCredits: z.number().nullable(),
   single: z.object({
     majorRequiredMin: z.number().nullable(),

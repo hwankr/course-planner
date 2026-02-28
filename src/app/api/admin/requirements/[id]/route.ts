@@ -14,12 +14,11 @@ import { departmentRequirementService } from '@/services';
 import { z } from 'zod';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 import * as Sentry from '@sentry/nextjs';
-import { connectDB } from '@/lib/db/mongoose';
-import DepartmentRequirement from '@/models/DepartmentRequirement';
 
 const requirementSchema = z.object({
   college: z.string().min(1, '대학명은 필수입니다.'),
   departmentName: z.string().min(1, '학과명은 필수입니다.'),
+  year: z.number().int().min(2020).max(2030).default(2025),
   generalCredits: z.number().nullable(),
   single: z.object({
     majorRequiredMin: z.number().nullable(),
@@ -54,8 +53,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     const { id } = await params;
     if (!isValidObjectId(id)) return invalidIdResponse();
 
-    await connectDB();
-    const requirement = await DepartmentRequirement.findById(id).lean();
+    const requirement = await departmentRequirementService.findById(id);
     if (!requirement) {
       return NextResponse.json(
         { success: false, error: '졸업요건을 찾을 수 없습니다.' },

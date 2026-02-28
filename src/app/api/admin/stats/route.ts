@@ -11,7 +11,7 @@ import { authOptions } from '@/lib/auth/options';
 import { adminService } from '@/services/admin.service';
 import * as Sentry from '@sentry/nextjs';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'admin') {
@@ -21,7 +21,11 @@ export async function GET() {
       );
     }
 
-    const stats = await adminService.getStats();
+    const { searchParams } = new URL(request.url);
+    const yearParam = searchParams.get('year');
+    const year = yearParam ? parseInt(yearParam, 10) : undefined;
+
+    const stats = await adminService.getStats(year);
     return NextResponse.json({ success: true, data: stats });
   } catch (error) {
     Sentry.captureException(error);

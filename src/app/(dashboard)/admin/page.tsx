@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui';
 
@@ -42,6 +44,7 @@ const adminMenus = [
 export default function AdminPage() {
   const router = useRouter();
   const { isAdmin, isLoading: authLoading } = useAuth();
+  const [selectedYear, setSelectedYear] = useState(DEFAULT_CURRICULUM_YEAR);
 
   const { data, isLoading } = useQuery<{
     success: boolean;
@@ -52,9 +55,9 @@ export default function AdminPage() {
       planCount: number;
     };
   }>({
-    queryKey: ['admin-stats'],
+    queryKey: ['admin-stats', selectedYear],
     queryFn: async () => {
-      const res = await fetch('/api/admin/stats');
+      const res = await fetch(`/api/admin/stats?year=${selectedYear}`);
       if (!res.ok) throw new Error('통계를 불러오는데 실패했습니다.');
       return res.json();
     },
@@ -83,9 +86,19 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
-        <p className="text-gray-600 mt-1">시스템을 관리하세요.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
+          <p className="text-gray-600 mt-1">시스템을 관리하세요.</p>
+        </div>
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+        >
+          <option value={2025}>2025년</option>
+          <option value={2026}>2026년</option>
+        </select>
       </div>
 
       {/* Stats */}
@@ -99,7 +112,7 @@ export default function AdminPage() {
                 (stats?.courseCount ?? 0)
               )}
             </div>
-            <p className="text-sm text-gray-600">등록된 과목</p>
+            <p className="text-sm text-gray-600">공식 과목 ({selectedYear})</p>
           </CardContent>
         </Card>
         <Card>

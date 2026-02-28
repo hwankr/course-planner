@@ -199,7 +199,18 @@ async function deleteWithCascade(userId: string): Promise<void> {
 /**
  * 전체 사용자 목록 조회 (관리자용)
  */
-async function findAllUsers(filter?: { search?: string; role?: string }): Promise<IUserDocument[]> {
+const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
+  recent: { createdAt: -1 },
+  lastLogin: { lastLoginAt: -1 },
+  name: { name: 1 },
+};
+
+async function findAllUsers(filter?: {
+  search?: string;
+  role?: string;
+  department?: string;
+  sort?: string;
+}): Promise<IUserDocument[]> {
   await connectDB();
 
   const conditions: Record<string, unknown>[] = [];
@@ -218,10 +229,15 @@ async function findAllUsers(filter?: { search?: string; role?: string }): Promis
     conditions.push({ role: filter.role });
   }
 
+  if (filter?.department) {
+    conditions.push({ department: filter.department });
+  }
+
+  const sortObj = SORT_MAP[filter?.sort ?? ''] ?? { createdAt: -1 };
   const query = conditions.length > 0 ? { $and: conditions } : {};
   return User.find(query)
     .populate('department', 'code name')
-    .sort({ createdAt: -1 })
+    .sort(sortObj)
     .limit(200)
     .lean();
 }

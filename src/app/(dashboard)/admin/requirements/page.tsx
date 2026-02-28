@@ -8,6 +8,7 @@ import { useToastStore } from '@/stores/toastStore';
 import { Card, CardContent } from '@/components/ui';
 import { ArrowLeft, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
 import Link from 'next/link';
+import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
 
 interface MajorConfig {
   majorRequiredMin: number | null;
@@ -22,6 +23,7 @@ interface RequirementItem {
   _id: string;
   college: string;
   departmentName: string;
+  year: number;
   generalCredits: number | null;
   single: MajorConfig;
   double: MajorConfig;
@@ -33,6 +35,7 @@ interface RequirementItem {
 interface FormData {
   college: string;
   departmentName: string;
+  year: number;
   totalCredits: number | '';
   generalCredits: number | '' | null;
   noGeneral: boolean;
@@ -44,6 +47,7 @@ interface FormData {
 const initialForm: FormData = {
   college: '',
   departmentName: '',
+  year: 2025,
   totalCredits: '',
   generalCredits: '',
   noGeneral: false,
@@ -69,6 +73,7 @@ export default function AdminRequirementsPage() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
+  const [yearFilter, setYearFilter] = useState<number | ''>(DEFAULT_REQUIREMENT_YEAR);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>(initialForm);
@@ -159,6 +164,7 @@ export default function AdminRequirementsPage() {
 
   const filtered = useMemo(() => {
     return requirements.filter((r) => {
+      if (yearFilter && r.year !== yearFilter) return false;
       if (collegeFilter && r.college !== collegeFilter) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -168,7 +174,7 @@ export default function AdminRequirementsPage() {
       }
       return true;
     });
-  }, [requirements, collegeFilter, searchQuery]);
+  }, [requirements, yearFilter, collegeFilter, searchQuery]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, RequirementItem[]>();
@@ -196,6 +202,7 @@ export default function AdminRequirementsPage() {
     setForm({
       college: item.college,
       departmentName: item.departmentName,
+      year: item.year,
       totalCredits: item.totalCredits,
       generalCredits: item.generalCredits ?? '',
       noGeneral: item.generalCredits === null,
@@ -222,6 +229,7 @@ export default function AdminRequirementsPage() {
     const body = {
       college: form.college,
       departmentName: form.departmentName,
+      year: form.year,
       totalCredits: Number(form.totalCredits) || 0,
       generalCredits: form.noGeneral ? null : (Number(form.generalCredits) || null),
       single: {
@@ -323,6 +331,15 @@ export default function AdminRequirementsPage() {
             <option key={c} value={c}>{c}</option>
           ))}
         </select>
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(e.target.value ? Number(e.target.value) : '')}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+        >
+          <option value="">전체 연도</option>
+          <option value={2025}>2025년</option>
+          <option value={2026}>2026년</option>
+        </select>
       </div>
 
       {/* Form Modal */}
@@ -360,6 +377,18 @@ export default function AdminRequirementsPage() {
                     placeholder="건축학부 건축학전공"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-slate-600">적용 연도 *</label>
+                <select
+                  value={form.year}
+                  onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+                >
+                  <option value={2025}>2025</option>
+                  <option value={2026}>2026</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -579,7 +608,10 @@ export default function AdminRequirementsPage() {
                     <CardContent className="p-4 sm:p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900">{item.departmentName}</h3>
+                          <h3 className="font-semibold text-gray-900">
+                            {item.departmentName}
+                            <span className="ml-2 text-xs font-normal text-slate-400">{item.year}년</span>
+                          </h3>
                           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
                             <span>졸업학점: <strong>{item.totalCredits}</strong></span>
                             <span>교양: <strong>{displayNum(item.generalCredits)}</strong></span>

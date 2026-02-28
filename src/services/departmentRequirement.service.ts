@@ -10,6 +10,12 @@ import DepartmentRequirement from '@/models/DepartmentRequirement';
 import type { IDepartmentRequirementDocument } from '@/models/DepartmentRequirement';
 import type { MajorType } from '@/types';
 
+/** ID로 졸업요건 단건 조회 */
+async function findById(id: string): Promise<IDepartmentRequirementDocument | null> {
+  await connectDB();
+  return DepartmentRequirement.findById(id).lean();
+}
+
 /** 특정 학과의 졸업요건 기준표 조회 (fallback matching 지원) */
 async function findByDepartmentName(
   college: string,
@@ -144,6 +150,7 @@ async function getSecondaryRequirements(
 async function create(input: {
   college: string;
   departmentName: string;
+  year?: number;
   generalCredits: number | null;
   single: { majorRequiredMin: number | null; majorCredits: number | null };
   double: { majorRequiredMin: number | null; majorCredits: number | null };
@@ -172,6 +179,7 @@ async function update(
   data: Partial<{
     college: string;
     departmentName: string;
+    year: number;
     generalCredits: number | null;
     single: { majorRequiredMin: number | null; majorCredits: number | null };
     double: { majorRequiredMin: number | null; majorCredits: number | null };
@@ -181,25 +189,22 @@ async function update(
 ): Promise<IDepartmentRequirementDocument | null> {
   await connectDB();
 
-  // Recompute availableMajorTypes if major configs are being updated
+  // Always fetch current doc to merge and recompute availableMajorTypes
+  const current = await DepartmentRequirement.findById(id).lean();
+  if (!current) return null;
+
   const updateData: Record<string, unknown> = { ...data };
 
-  if (data.single || data.double || data.minor) {
-    // Need to fetch current doc to merge with updates
-    const current = await DepartmentRequirement.findById(id).lean();
-    if (!current) return null;
+  const single = data.single || current.single;
+  const double = data.double || current.double;
+  const minor = data.minor || current.minor;
 
-    const single = data.single || current.single;
-    const double = data.double || current.double;
-    const minor = data.minor || current.minor;
+  const availableMajorTypes: string[] = [];
+  if (single.majorCredits !== null) availableMajorTypes.push('single');
+  if (double.majorCredits !== null) availableMajorTypes.push('double');
+  if (minor.majorCredits !== null) availableMajorTypes.push('minor');
 
-    const availableMajorTypes: string[] = [];
-    if (single.majorCredits !== null) availableMajorTypes.push('single');
-    if (double.majorCredits !== null) availableMajorTypes.push('double');
-    if (minor.majorCredits !== null) availableMajorTypes.push('minor');
-
-    updateData.availableMajorTypes = availableMajorTypes;
-  }
+  updateData.availableMajorTypes = availableMajorTypes;
 
   return DepartmentRequirement.findByIdAndUpdate(id, updateData, { new: true }).lean();
 }
@@ -213,6 +218,7 @@ async function remove(id: string): Promise<IDepartmentRequirementDocument | null
 }
 
 export const departmentRequirementService = {
+  findById,
   findByDepartmentName,
   findByCollege,
   listColleges,

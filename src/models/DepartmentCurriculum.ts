@@ -66,6 +66,7 @@ departmentCurriculumSchema.index(
 );
 departmentCurriculumSchema.index({ department: 1, category: 1 });
 departmentCurriculumSchema.index({ course: 1 });
+departmentCurriculumSchema.index({ year: 1, course: 1 });
 
 const DepartmentCurriculum: Model<IDepartmentCurriculumDocument> =
   mongoose.models.DepartmentCurriculum ||

@@ -146,6 +146,53 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     return enrichedCourses as ICourseDocument[];
   }
 
+  // Curriculum-year filtering without department (e.g., admin courses page)
+  if (filter?.curriculumYear) {
+    const courseIds = await DepartmentCurriculum.distinct('course', { year: filter.curriculumYear });
+
+    const conditions: Record<string, unknown>[] = [
+      { isActive: true },
+      { _id: { $in: courseIds } },
+    ];
+
+    if (filter.userId) {
+      conditions.push({
+        $or: [{ createdBy: null }, { createdBy: filter.userId }],
+      });
+    } else {
+      conditions.push({ createdBy: null });
+    }
+
+    if (filter.search) {
+      const escapedSearch = escapeRegex(filter.search);
+      conditions.push({
+        $or: [
+          { name: { $regex: escapedSearch, $options: 'i' } },
+          { code: { $regex: escapedSearch, $options: 'i' } },
+        ],
+      });
+    }
+
+    if (filter.category) {
+      conditions.push({ category: filter.category });
+    }
+
+    if (filter.semester) {
+      conditions.push({ semesters: filter.semester });
+    }
+
+    if (filter.recommendedYear) {
+      conditions.push({ recommendedYear: filter.recommendedYear });
+    }
+
+    return Course.find({ $and: conditions })
+      .populate('department', 'code name')
+      .populate('prerequisites', 'code name')
+      .sort({ code: 1 })
+      .limit(filter.limit ?? 200)
+      .lean();
+  }
+
   // Original logic for non-department queries (unchanged)
   const conditions: Record<string, unknown>[] = [{ isActive: true }];
 

@@ -8,6 +8,7 @@ import { useToastStore } from '@/stores/toastStore';
 import { Card, CardContent } from '@/components/ui';
 import { ArrowLeft, Plus, Pencil, Trash2, Search, X, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 import type { RequirementCategory, Semester } from '@/types';
 
 // ============================================
@@ -107,6 +108,7 @@ export default function AdminCoursesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<RequirementCategory | ''>('');
+  const [yearFilter, setYearFilter] = useState(DEFAULT_CURRICULUM_YEAR);
 
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -121,11 +123,12 @@ export default function AdminCoursesPage() {
     if (searchTerm.trim()) params.set('search', searchTerm.trim());
     if (departmentFilter) params.set('departmentId', departmentFilter);
     if (categoryFilter) params.set('category', categoryFilter);
+    if (yearFilter) params.set('curriculumYear', String(yearFilter));
     return params.toString();
   };
 
   const { data: coursesData, isLoading, error } = useQuery<{ success: boolean; data: CourseItem[] }>({
-    queryKey: ['admin-courses', searchTerm, departmentFilter, categoryFilter],
+    queryKey: ['admin-courses', searchTerm, departmentFilter, categoryFilter, yearFilter],
     queryFn: async () => {
       const qs = buildQueryString();
       const res = await fetch(`/api/courses${qs ? `?${qs}` : ''}`);
@@ -376,6 +379,15 @@ export default function AdminCoursesPage() {
               {CATEGORY_LABELS[cat]}
             </option>
           ))}
+        </select>
+
+        <select
+          value={yearFilter}
+          onChange={(e) => setYearFilter(Number(e.target.value))}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+        >
+          <option value={2025}>2025년</option>
+          <option value={2026}>2026년</option>
         </select>
       </div>
 

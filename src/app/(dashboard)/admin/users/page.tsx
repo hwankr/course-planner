@@ -21,6 +21,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+interface DepartmentItem {
+  _id: string;
+  code: string;
+  name: string;
+}
+
 interface UserItem {
   _id: string;
   name: string;
@@ -69,6 +75,8 @@ export default function AdminUsersPage() {
 
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [sortOption, setSortOption] = useState('recent');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -76,15 +84,27 @@ export default function AdminUsersPage() {
     const params = new URLSearchParams();
     if (search.trim()) params.set('search', search.trim());
     if (roleFilter) params.set('role', roleFilter);
+    if (departmentFilter) params.set('department', departmentFilter);
+    if (sortOption) params.set('sort', sortOption);
     return params.toString();
   };
 
   const { data, isLoading, error } = useQuery<{ success: boolean; data: UserItem[] }>({
-    queryKey: ['admin-users', search, roleFilter],
+    queryKey: ['admin-users', search, roleFilter, departmentFilter, sortOption],
     queryFn: async () => {
       const qs = buildQueryString();
       const res = await fetch(`/api/admin/users${qs ? `?${qs}` : ''}`);
       if (!res.ok) throw new Error('사용자 목록을 불러오는데 실패했습니다.');
+      return res.json();
+    },
+    enabled: isAdmin && !authLoading,
+  });
+
+  const { data: departmentsData } = useQuery<{ success: boolean; data: DepartmentItem[] }>({
+    queryKey: ['departments'],
+    queryFn: async () => {
+      const res = await fetch('/api/departments');
+      if (!res.ok) throw new Error('학과 목록을 불러오는데 실패했습니다.');
       return res.json();
     },
     enabled: isAdmin && !authLoading,
@@ -233,13 +253,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const plan = planData?.data;
-  const totalCredits = plan?.semesters.reduce(
-    (sum, sem) => sum + sem.courses.reduce((s, c) => s + (c.course?.credits ?? 0), 0),
-    0
-  ) ?? 0;
-  const totalCourses = plan?.semesters.reduce((sum, sem) => sum + sem.courses.length, 0) ?? 0;
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -277,6 +290,27 @@ export default function AdminUsersPage() {
           <option value="">전체 역할</option>
           <option value="student">학생</option>
           <option value="admin">관리자</option>
+        </select>
+        <select
+          value={departmentFilter}
+          onChange={(e) => setDepartmentFilter(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+        >
+          <option value="">전체 학과</option>
+          {(departmentsData?.data ?? []).map((dept) => (
+            <option key={dept._id} value={dept._id}>
+              {dept.name}
+            </option>
+          ))}
+        </select>
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value)}
+          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+        >
+          <option value="recent">최근 가입순</option>
+          <option value="lastLogin">최근 접속순</option>
+          <option value="name">이름순</option>
         </select>
       </div>
 
@@ -430,90 +464,108 @@ export default function AdminUsersPage() {
                         <h3 className="mb-3 text-sm font-semibold text-slate-700">
                           수강 계획표
                         </h3>
-                        {planLoading && expandedUserId === user._id ? (
-                          <div className="space-y-2">
-                            <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
-                            <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
-                          </div>
-                        ) : !plan ? (
-                          <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-400">
-                            계획표를 생성하지 않았습니다.
-                          </div>
-                        ) : plan.semesters.length === 0 ? (
-                          <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-400">
-                            계획표에 등록된 학기가 없습니다.
-                          </div>
-                        ) : (
-                          <div>
-                            {/* Plan summary */}
-                            <div className="mb-3 flex flex-wrap gap-4 text-xs text-slate-500">
-                              <span>{plan.semesters.length}개 학기</span>
-                              <span>{totalCourses}개 과목</span>
-                              <span>{totalCredits}학점</span>
-                            </div>
+                        {(() => {
+                          const plan = expandedUserId === user._id ? planData?.data : null;
+                          const totalCredits = plan?.semesters.reduce(
+                            (sum, sem) => sum + sem.courses.reduce((s, c) => s + (c.course?.credits ?? 0), 0),
+                            0
+                          ) ?? 0;
+                          const totalCourses = plan?.semesters.reduce((sum, sem) => sum + sem.courses.length, 0) ?? 0;
 
-                            {/* Semesters */}
-                            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-                              {plan.semesters.map((semester) => {
-                                const semCredits = semester.courses.reduce(
-                                  (sum, c) => sum + (c.course?.credits ?? 0),
-                                  0
-                                );
-                                return (
-                                  <div
-                                    key={`${semester.year}-${semester.term}`}
-                                    className="rounded-lg border border-slate-100 bg-slate-50 p-3"
-                                  >
-                                    <div className="mb-2 flex items-center justify-between">
-                                      <span className="text-xs font-semibold text-slate-600">
-                                        {semester.year}년 {semester.term === 'spring' ? '1' : '2'}학기
-                                      </span>
-                                      <span className="text-xs text-slate-400">
-                                        {semester.courses.length}과목 / {semCredits}학점
-                                      </span>
-                                    </div>
-                                    {semester.courses.length === 0 ? (
-                                      <p className="text-xs text-slate-400">등록된 과목 없음</p>
-                                    ) : (
-                                      <div className="space-y-1">
-                                        {semester.courses.map((c) => (
-                                          <div
-                                            key={c.course?._id || Math.random()}
-                                            className="flex items-center justify-between rounded bg-white px-2.5 py-1.5 text-xs"
-                                          >
-                                            <div className="flex items-center gap-2 min-w-0">
-                                              <span className="font-mono text-slate-400 shrink-0">
-                                                {c.course?.code}
-                                              </span>
-                                              <span className="text-slate-700 truncate">
-                                                {c.course?.name}
-                                              </span>
-                                              {getCategoryLabel(c.category || c.course?.category) && (
-                                                <span className="shrink-0 text-slate-400">
-                                                  {getCategoryLabel(c.category || c.course?.category)}
-                                                </span>
-                                              )}
-                                            </div>
-                                            <div className="flex items-center gap-2 shrink-0 ml-2">
-                                              <span className="text-slate-400">
-                                                {c.course?.credits}학점
-                                              </span>
-                                              <span
-                                                className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getStatusColor(c.status)}`}
-                                              >
-                                                {getStatusLabel(c.status)}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        ))}
+                          if (planLoading && expandedUserId === user._id) {
+                            return (
+                              <div className="space-y-2">
+                                <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
+                                <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
+                              </div>
+                            );
+                          }
+                          if (!plan) {
+                            return (
+                              <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-400">
+                                계획표를 생성하지 않았습니다.
+                              </div>
+                            );
+                          }
+                          if (plan.semesters.length === 0) {
+                            return (
+                              <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-400">
+                                계획표에 등록된 학기가 없습니다.
+                              </div>
+                            );
+                          }
+                          return (
+                            <div>
+                              {/* Plan summary */}
+                              <div className="mb-3 flex flex-wrap gap-4 text-xs text-slate-500">
+                                <span>{plan.semesters.length}개 학기</span>
+                                <span>{totalCourses}개 과목</span>
+                                <span>{totalCredits}학점</span>
+                              </div>
+
+                              {/* Semesters */}
+                              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                                {plan.semesters.map((semester) => {
+                                  const semCredits = semester.courses.reduce(
+                                    (sum, c) => sum + (c.course?.credits ?? 0),
+                                    0
+                                  );
+                                  return (
+                                    <div
+                                      key={`${semester.year}-${semester.term}`}
+                                      className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                                    >
+                                      <div className="mb-2 flex items-center justify-between">
+                                        <span className="text-xs font-semibold text-slate-600">
+                                          {semester.year}년 {semester.term === 'spring' ? '1' : '2'}학기
+                                        </span>
+                                        <span className="text-xs text-slate-400">
+                                          {semester.courses.length}과목 / {semCredits}학점
+                                        </span>
                                       </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                                      {semester.courses.length === 0 ? (
+                                        <p className="text-xs text-slate-400">등록된 과목 없음</p>
+                                      ) : (
+                                        <div className="space-y-1">
+                                          {semester.courses.map((c) => (
+                                            <div
+                                              key={c.course?._id || Math.random()}
+                                              className="flex items-center justify-between rounded bg-white px-2.5 py-1.5 text-xs"
+                                            >
+                                              <div className="flex items-center gap-2 min-w-0">
+                                                <span className="font-mono text-slate-400 shrink-0">
+                                                  {c.course?.code}
+                                                </span>
+                                                <span className="text-slate-700 truncate">
+                                                  {c.course?.name}
+                                                </span>
+                                                {getCategoryLabel(c.category || c.course?.category) && (
+                                                  <span className="shrink-0 text-slate-400">
+                                                    {getCategoryLabel(c.category || c.course?.category)}
+                                                  </span>
+                                                )}
+                                              </div>
+                                              <div className="flex items-center gap-2 shrink-0 ml-2">
+                                                <span className="text-slate-400">
+                                                  {c.course?.credits}학점
+                                                </span>
+                                                <span
+                                                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getStatusColor(c.status)}`}
+                                                >
+                                                  {getStatusLabel(c.status)}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
 
                       {/* Delete section */}

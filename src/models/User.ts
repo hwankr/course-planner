@@ -89,6 +89,7 @@ const userSchema = new Schema<IUserDocument>(
 userSchema.index({ department: 1 });
 userSchema.index({ secondaryDepartment: 1 });
 userSchema.index({ studentId: 1 }, { unique: true, sparse: true });
+userSchema.index({ lastLoginAt: -1 });
 
 // 비밀번호 포함 조회 메서드
 userSchema.statics.findByEmailWithPassword = function (email: string) {

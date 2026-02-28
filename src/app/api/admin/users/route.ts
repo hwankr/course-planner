@@ -24,8 +24,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || undefined;
     const role = searchParams.get('role') || undefined;
+    const department = searchParams.get('department') || undefined;
+    const sort = searchParams.get('sort') || undefined;
 
-    const users = await userService.findAllUsers({ search, role });
+    const users = await userService.findAllUsers({ search, role, department, sort });
     return NextResponse.json({ success: true, data: users });
   } catch (error) {
     Sentry.captureException(error);
