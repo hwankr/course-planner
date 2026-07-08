@@ -75,7 +75,7 @@ function BreakdownLine({ earned, enrolled = 0, planned = 0, required, prior = 0,
       <span className="flex items-center gap-1">
         <span className={`w-2 h-2 rounded-[2px] inline-block ${met ? 'bg-emerald-500' : 'bg-blue-600'}`} />
         이수 {earned}
-        {prior > 0 && <>(기이수 {prior} 포함)</>}
+        {prior > 0 && <> (기이수 {prior} 포함)</>}
       </span>
       {enrolled > 0 && (
         <span className="flex items-center gap-1">
