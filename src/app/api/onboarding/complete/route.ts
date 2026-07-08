@@ -8,6 +8,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { onboardingService } from '@/services/onboarding.service';
+import { validatePriorCredits } from '@/lib/priorCredits';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 
@@ -40,6 +41,11 @@ const completeOnboardingSchema = z.object({
     earnedMinorCredits: z.number().int().min(0).optional(),
     earnedMinorRequiredCredits: z.number().int().min(0).optional(),
     requirementYear: z.number().int().min(2020).max(2100).optional(),
+  }).superRefine((data, ctx) => {
+    // 기이수 필드 간 정합성 (총 >= 트랙 합계, 핵심 <= 전공)
+    for (const message of Object.values(validatePriorCredits(data))) {
+      ctx.addIssue({ code: 'custom', message });
+    }
   }),
 })
 .refine(data => {

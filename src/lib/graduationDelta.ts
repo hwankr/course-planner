@@ -1,4 +1,5 @@
 import type { GraduationRequirementInput } from '@/types';
+import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 
 interface CourseForDelta {
   credits: number;
@@ -186,6 +187,8 @@ export function formatDeltaDescription(delta: GraduationDelta): string {
  */
 export function computeCurrentTotals(
   semesters: Array<{
+    year: number;
+    term: string;
     courses: Array<{
       credits: number;
       category?: string;
@@ -204,10 +207,19 @@ export function computeCurrentTotals(
     primaryMajorRequiredPlanned = 0;
 
   for (const sem of semesters) {
+    // 기이수 반영 기준 학기 이전의 '이수' 과목은 기이수와 중복 — 합산 제외
+    const coveredByPrior = isSemesterCoveredByPrior(
+      sem.year,
+      sem.term,
+      requirement?.priorCutoffYear,
+      requirement?.priorCutoffTerm
+    );
+
     for (const c of sem.courses) {
       const credits = c.credits;
       const cat = c.category || 'free_elective';
       if (c.status === 'completed') {
+        if (coveredByPrior) continue;
         totalEarned += credits;
         if (MAJOR_CATEGORIES.includes(cat)) primaryMajorEarned += credits;
         if (GENERAL_CATEGORIES.includes(cat)) generalEarned += credits;
@@ -221,9 +233,9 @@ export function computeCurrentTotals(
     }
   }
 
-  // Add prior earned credits from requirement
+  // Add prior earned credits from requirement (총은 트랙 합계 미만이면 보정)
   if (requirement) {
-    totalEarned += requirement.earnedTotalCredits || 0;
+    totalEarned += effectivePriorTotal(requirement);
     primaryMajorEarned += requirement.earnedPrimaryMajorCredits || 0;
     generalEarned += requirement.earnedGeneralCredits || 0;
     primaryMajorRequiredEarned += requirement.earnedPrimaryMajorRequiredCredits || 0;

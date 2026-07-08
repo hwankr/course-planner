@@ -9,6 +9,7 @@ import { GraduationRequirement, Plan, User } from '@/models';
 import type { IGraduationRequirementDocument } from '@/models';
 import type { IPlanDocument } from '@/models';
 import type { GraduationRequirementInput, GraduationProgress, CourseInfo } from '@/types';
+import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 
 /**
  * 사용자의 졸업요건 조회 (단일 문서)
@@ -73,8 +74,8 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
 
   const majorType = requirement.majorType || 'single';
 
-  // Prior earned credits
-  const priorTotal = requirement.earnedTotalCredits || 0;
+  // Prior earned credits (총은 트랙 합계 미만이면 트랙 합계로 보정 — 과거 불일치 데이터 방어)
+  const priorTotal = effectivePriorTotal(requirement);
   const priorPrimaryMajor = requirement.earnedPrimaryMajorCredits || 0;
   const priorGeneral = requirement.earnedGeneralCredits || 0;
   const priorPrimaryMajorRequired = requirement.earnedPrimaryMajorRequiredCredits || 0;
@@ -188,6 +189,14 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
   let totalPlanned = 0;
 
   for (const semester of plan.semesters) {
+    // 기이수 반영 기준 학기 이전(포함)의 '이수' 과목은 성적표(기이수)와 중복 — 합산 제외
+    const coveredByPrior = isSemesterCoveredByPrior(
+      semester.year,
+      semester.term,
+      requirement.priorCutoffYear,
+      requirement.priorCutoffTerm
+    );
+
     for (const entry of semester.courses) {
       const course = entry.course as unknown as {
         _id: { toString(): string };
@@ -215,6 +224,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
 
       // Skip failed courses for credit accumulation
       if (entry.status === 'failed') continue;
+      if (entry.status === 'completed' && coveredByPrior) continue;
 
       const credits = info.credits;
       const isMajorCategory = ['major_required', 'major_compulsory', 'major_elective'].includes(info.category);

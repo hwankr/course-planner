@@ -175,6 +175,8 @@ export default function PlannerPage() {
       earnedSecondaryMajorRequiredCredits?: number;
       earnedMinorCredits?: number;
       earnedMinorRequiredCredits?: number;
+      priorCutoffYear?: number | null;
+      priorCutoffTerm?: 'spring' | 'fall' | null;
     }>(graduationRequirementKeys.detail());
     if (!raw) return null;
     return {
@@ -196,6 +198,8 @@ export default function PlannerPage() {
       earnedSecondaryMajorRequiredCredits: raw.earnedSecondaryMajorRequiredCredits,
       earnedMinorCredits: raw.earnedMinorCredits,
       earnedMinorRequiredCredits: raw.earnedMinorRequiredCredits,
+      priorCutoffYear: raw.priorCutoffYear,
+      priorCutoffTerm: raw.priorCutoffTerm,
     };
   }, [isGuest, queryClient]);
 

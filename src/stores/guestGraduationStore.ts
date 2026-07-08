@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { GraduationRequirementInput, GraduationProgress, MajorType } from '@/types';
+import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 
 export interface GuestCourseForProgress {
   id: string;
@@ -72,7 +73,8 @@ export function calculateGuestProgress(
   const pct = (earned: number, required: number) =>
     required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;
 
-  const priorTotal = requirement.earnedTotalCredits || 0;
+  // 총 기이수는 트랙 합계 미만이면 트랙 합계로 보정 (과거 불일치 데이터 방어)
+  const priorTotal = effectivePriorTotal(requirement);
   const priorPrimaryMajor = requirement.earnedPrimaryMajorCredits || 0;
   const priorGeneral = requirement.earnedGeneralCredits || 0;
   const priorPrimaryMajorRequired = requirement.earnedPrimaryMajorRequiredCredits || 0;
@@ -107,7 +109,17 @@ export function calculateGuestProgress(
     departmentId?: string;
   }> = [];
 
+  // 학점 합산용 '이수' 과목 (기이수 반영 기준 학기 이전의 이수 과목은 중복이라 제외)
+  const creditableCompleted: typeof completed = [];
+
   for (const semester of semesters) {
+    const coveredByPrior = isSemesterCoveredByPrior(
+      semester.year,
+      semester.term,
+      requirement.priorCutoffYear,
+      requirement.priorCutoffTerm
+    );
+
     for (const course of semester.courses) {
       const info = {
         id: course.id,
@@ -117,7 +129,10 @@ export function calculateGuestProgress(
         category: course.category || 'free_elective',
         departmentId: course.departmentId,
       };
-      if (course.status === 'completed') completed.push(info);
+      if (course.status === 'completed') {
+        completed.push(info);
+        if (!coveredByPrior) creditableCompleted.push(info);
+      }
       else if (course.status === 'enrolled') enrolled.push(info);
       else if (course.status === 'planned') planned.push(info);
       // 'failed' ignored
@@ -136,11 +151,11 @@ export function calculateGuestProgress(
   const generalCategories = ['general_required', 'general_elective'];
   const allCategories = [...majorCategories, ...generalCategories, 'free_elective', 'teaching'];
 
-  const totalEarned = sumCredits(completed, allCategories);
+  const totalEarned = sumCredits(creditableCompleted, allCategories);
   const totalEnrolled = sumCredits(enrolled, allCategories);
   const totalPlanned = sumCredits(planned, allCategories);
 
-  const generalEarned = sumCredits(completed, generalCategories);
+  const generalEarned = sumCredits(creditableCompleted, generalCategories);
   const generalEnrolled = sumCredits(enrolled, generalCategories);
   const generalPlanned = sumCredits(planned, generalCategories);
 
@@ -179,18 +194,18 @@ export function calculateGuestProgress(
       courses.reduce((sum, c) => sum + c.credits, 0);
 
     // Primary major
-    const primaryCompleted = sumCr(filterByDept(completed, userDepartmentId));
+    const primaryCompleted = sumCr(filterByDept(creditableCompleted, userDepartmentId));
     const primaryEnrolled = sumCr(filterByDept(enrolled, userDepartmentId));
     const primaryPlanned = sumCr(filterByDept(planned, userDepartmentId));
-    const primaryReqCompleted = sumCr(filterByDeptRequired(completed, userDepartmentId));
+    const primaryReqCompleted = sumCr(filterByDeptRequired(creditableCompleted, userDepartmentId));
     const primaryReqEnrolled = sumCr(filterByDeptRequired(enrolled, userDepartmentId));
     const primaryReqPlanned = sumCr(filterByDeptRequired(planned, userDepartmentId));
 
     // Secondary (double major or minor)
-    const secondaryCompleted = sumCr(filterByDept(completed, secondaryDepartmentId));
+    const secondaryCompleted = sumCr(filterByDept(creditableCompleted, secondaryDepartmentId));
     const secondaryEnrolled = sumCr(filterByDept(enrolled, secondaryDepartmentId));
     const secondaryPlanned = sumCr(filterByDept(planned, secondaryDepartmentId));
-    const secondaryReqCompleted = sumCr(filterByDeptRequired(completed, secondaryDepartmentId));
+    const secondaryReqCompleted = sumCr(filterByDeptRequired(creditableCompleted, secondaryDepartmentId));
     const secondaryReqEnrolled = sumCr(filterByDeptRequired(enrolled, secondaryDepartmentId));
     const secondaryReqPlanned = sumCr(filterByDeptRequired(planned, secondaryDepartmentId));
 
@@ -291,11 +306,11 @@ export function calculateGuestProgress(
   }
 
   // Single major (or no department info) - category-based classification (original logic)
-  const majorEarned = sumCredits(completed, majorCategories);
+  const majorEarned = sumCredits(creditableCompleted, majorCategories);
   const majorEnrolled = sumCredits(enrolled, majorCategories);
   const majorPlanned = sumCredits(planned, majorCategories);
 
-  const majorReqEarned = sumCredits(completed, ['major_required']);
+  const majorReqEarned = sumCredits(creditableCompleted, ['major_required']);
   const majorReqEnrolled = sumCredits(enrolled, ['major_required']);
   const majorReqPlanned = sumCredits(planned, ['major_required']);
 

@@ -32,6 +32,8 @@ interface GraduationRequirement {
   earnedSecondaryMajorRequiredCredits?: number;
   earnedMinorCredits?: number;
   earnedMinorRequiredCredits?: number;
+  priorCutoffYear?: number | null;
+  priorCutoffTerm?: 'spring' | 'fall' | null;
   requirementYear?: number;
   createdAt: string;
   updatedAt: string;

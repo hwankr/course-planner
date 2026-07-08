@@ -12,7 +12,10 @@ import { Card, CardContent, Button } from '@/components/ui';
 import { useSession } from 'next-auth/react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
+import { usePlanStore } from '@/stores/planStore';
+import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
+import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 import * as Sentry from '@sentry/nextjs';
 
 // ============================================
@@ -143,6 +146,27 @@ export function RequirementsSummary() {
   const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
   const userMajorType = isGuest ? guestProfileMajorType : (session?.user?.majorType || 'single');
 
+  // 기이수 반영 기준 학기 선택지: 현재 계획에 존재하는 학기 목록
+  const activePlanSemesters = usePlanStore((s) => s.activePlan?.semesters);
+  const guestPlanSemesters = useGuestPlanStore((s) => s.plan?.semesters);
+  const planSemesters = isGuest ? guestPlanSemesters : activePlanSemesters;
+  const semesterOptions = (planSemesters ?? [])
+    .map((s) => ({ year: s.year, term: s.term }))
+    .sort((a, b) => (a.year !== b.year ? a.year - b.year : (a.term === 'spring' ? 1 : 2) - (b.term === 'spring' ? 1 : 2)))
+    .map(({ year, term }) => ({
+      year,
+      term,
+      label: `${year}년 ${term === 'spring' ? '1' : '2'}학기`,
+    }));
+
+  // 기준 학기 자동 제안: '이수' 과목이 있는 가장 마지막 학기 (성적표에 반영됐을 가능성이 높은 기준점)
+  const suggestedCutoff = (planSemesters ?? [])
+    .filter((s) => s.courses.some((c) => c.status === 'completed'))
+    .reduce<{ year: number; term: 'spring' | 'fall'; label: string } | null>((acc, s) => {
+      if (acc && isSemesterCoveredByPrior(s.year, s.term, acc.year, acc.term)) return acc;
+      return { year: s.year, term: s.term, label: `${s.year}년 ${s.term === 'spring' ? '1' : '2'}학기` };
+    }, null);
+
   // Sync requirementYear from saved requirement on load
   const [yearInitialized, setYearInitialized] = useState(false);
   if (requirement?.requirementYear && !yearInitialized) {
@@ -215,6 +239,8 @@ export function RequirementsSummary() {
     earnedSecondaryMajorRequiredCredits?: number;
     earnedMinorCredits?: number;
     earnedMinorRequiredCredits?: number;
+    priorCutoffYear?: number | null;
+    priorCutoffTerm?: 'spring' | 'fall' | null;
   }) => {
     setSaveError('');
     try {
@@ -254,6 +280,8 @@ export function RequirementsSummary() {
                 onLoadFromDeptReq={handleLoadFromDeptReq}
                 requirementYear={requirementYear}
                 onYearChange={setRequirementYear}
+                semesterOptions={semesterOptions}
+                suggestedCutoff={suggestedCutoff}
               />
             </div>
           ) : (
@@ -311,6 +339,8 @@ export function RequirementsSummary() {
               earnedSecondaryMajorRequiredCredits: requirement.earnedSecondaryMajorRequiredCredits,
               earnedMinorCredits: requirement.earnedMinorCredits,
               earnedMinorRequiredCredits: requirement.earnedMinorRequiredCredits,
+              priorCutoffYear: requirement.priorCutoffYear,
+              priorCutoffTerm: requirement.priorCutoffTerm,
             }}
             onSubmit={handleUpsert}
             onCancel={() => { setIsEditing(false); setSaveError(''); }}
@@ -319,6 +349,8 @@ export function RequirementsSummary() {
             onLoadFromDeptReq={handleLoadFromDeptReq}
             requirementYear={requirementYear}
             onYearChange={setRequirementYear}
+            semesterOptions={semesterOptions}
+            suggestedCutoff={suggestedCutoff}
           />
         </CardContent>
       </Card>
@@ -339,8 +371,8 @@ export function RequirementsSummary() {
   const minor = progress?.minor;
   const minorPrimaryMajorMin = progress?.minorPrimaryMajorMin;
 
-  // Prior earned credits (기이수)
-  const priorTotal = requirement.earnedTotalCredits || 0;
+  // Prior earned credits (기이수) — 총은 계산부와 동일하게 트랙 합계로 보정된 값 사용
+  const priorTotal = effectivePriorTotal(requirement);
   const priorMajor = requirement.earnedPrimaryMajorCredits || 0;
   const priorGeneral = requirement.earnedGeneralCredits || 0;
   const priorMajorRequired = requirement.earnedPrimaryMajorRequiredCredits || 0;

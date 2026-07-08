@@ -23,7 +23,7 @@ export interface IGraduationRequirementDocument extends mongoose.Document {
   minorRequiredMin?: number;            // 부전공 핵심 최소
   minorPrimaryMajorMin?: number;        // 부전공 시 주전공 최소
 
-  earnedTotalCredits: number;    // 기이수 졸업학점 (기타)
+  earnedTotalCredits: number;    // 기이수 졸업학점 (전공+교양+기타 포함 총 이수학점)
   earnedGeneralCredits: number;  // 기이수 교양학점
 
   earnedPrimaryMajorCredits: number;    // 기이수 주전공 학점
@@ -34,6 +34,9 @@ export interface IGraduationRequirementDocument extends mongoose.Document {
 
   earnedMinorCredits?: number;          // 기이수 부전공 학점
   earnedMinorRequiredCredits?: number;  // 기이수 부전공 핵심학점
+
+  priorCutoffYear?: number | null;      // 기이수에 반영된 마지막 학기(연도)
+  priorCutoffTerm?: string | null;      // 기이수에 반영된 마지막 학기(학기)
 
   requirementYear?: number;             // 기준표 연도 (어떤 연도 기준으로 설정했는지)
 
@@ -133,6 +136,18 @@ const graduationRequirementSchema = new Schema<IGraduationRequirementDocument>(
       type: Number,
       default: 0,
       min: [0, '기이수 부전공 핵심학점은 0 이상이어야 합니다.'],
+    },
+    priorCutoffYear: {
+      type: Number,
+      default: null,
+    },
+    priorCutoffTerm: {
+      type: String,
+      enum: {
+        values: ['spring', 'fall', null],
+        message: '기이수 반영 학기는 spring 또는 fall이어야 합니다.',
+      },
+      default: null,
     },
     requirementYear: {
       type: Number,

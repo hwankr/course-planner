@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { graduationRequirementService } from '@/services';
+import { validatePriorCredits } from '@/lib/priorCredits';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 
@@ -63,8 +64,15 @@ const upsertSchema = z.object({
   earnedMinorCredits: z.number().min(0).optional(),
   earnedMinorRequiredCredits: z.number().min(0).optional(),
 
+  priorCutoffYear: z.number().int().min(2000).max(2100).nullable().optional(),
+  priorCutoffTerm: z.enum(['spring', 'fall']).nullable().optional(),
+
   requirementYear: z.number().min(2020).max(2100).optional(),
 })
+.refine(data => {
+  // 기이수 반영 기준 학기는 연도/학기 둘 다 있거나 둘 다 없어야 함
+  return (data.priorCutoffYear == null) === (data.priorCutoffTerm == null);
+}, { message: '기이수 반영 기준 학기의 연도와 학기를 모두 지정해야 합니다.' })
 .refine(data => {
   if (data.majorType === 'double') {
     return data.secondaryMajorCredits !== undefined && data.secondaryMajorRequiredMin !== undefined;
@@ -81,7 +89,13 @@ const upsertSchema = z.object({
   const secondary = data.majorType === 'double' ? (data.secondaryMajorCredits ?? 0) : 0;
   const minor = data.majorType === 'minor' ? (data.minorCredits ?? 0) : 0;
   return data.primaryMajorCredits + secondary + minor + data.generalCredits <= data.totalCredits;
-}, { message: '전공+교양 학점 합이 졸업학점을 초과합니다.' });
+}, { message: '전공+교양 학점 합이 졸업학점을 초과합니다.' })
+.superRefine((data, ctx) => {
+  // 기이수 필드 간 정합성 (총 >= 트랙 합계, 핵심 <= 전공)
+  for (const message of Object.values(validatePriorCredits(data))) {
+    ctx.addIssue({ code: 'custom', message });
+  }
+});
 
 export async function PUT(request: Request) {
   try {

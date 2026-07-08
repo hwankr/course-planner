@@ -294,6 +294,10 @@ export interface IGraduationRequirement {
   earnedMinorCredits?: number;
   earnedMinorRequiredCredits?: number;
 
+  // 기이수에 이미 반영된 마지막 학기 (이 학기까지의 '이수' 과목은 중복 합산 제외)
+  priorCutoffYear?: number | null;
+  priorCutoffTerm?: Term | null;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -322,6 +326,11 @@ export interface GraduationRequirementInput {
   earnedSecondaryMajorRequiredCredits?: number;
   earnedMinorCredits?: number;
   earnedMinorRequiredCredits?: number;
+
+  // 기이수(성적표)에 이미 반영된 마지막 학기.
+  // 이 학기까지의 계획 내 '이수' 과목은 기이수와 중복이므로 합산에서 제외한다.
+  priorCutoffYear?: number | null;
+  priorCutoffTerm?: Term | null;
 
   requirementYear?: number;
 }

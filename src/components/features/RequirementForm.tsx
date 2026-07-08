@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { HelpCircle } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
+import { validatePriorCredits, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 import type { MajorType } from '@/types';
 
 interface RequirementFormData {
@@ -28,6 +29,9 @@ interface RequirementFormData {
   earnedSecondaryMajorRequiredCredits?: number;
   earnedMinorCredits?: number;
   earnedMinorRequiredCredits?: number;
+  // 기이수에 이미 반영된 마지막 학기 (해당 학기까지의 '이수' 과목은 중복 합산 제외)
+  priorCutoffYear?: number | null;
+  priorCutoffTerm?: 'spring' | 'fall' | null;
 }
 
 interface RequirementFormProps {
@@ -39,9 +43,13 @@ interface RequirementFormProps {
   userMajorType?: MajorType;
   requirementYear?: number;
   onYearChange?: (year: number) => void;
+  /** 계획에 존재하는 학기 목록 (기이수 반영 기준 학기 선택지) */
+  semesterOptions?: Array<{ year: number; term: 'spring' | 'fall'; label: string }>;
+  /** 기준 학기 자동 제안: 계획에서 '이수' 과목이 있는 가장 마지막 학기 */
+  suggestedCutoff?: { year: number; term: 'spring' | 'fall'; label: string } | null;
 }
 
-export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq, userMajorType, requirementYear, onYearChange }: RequirementFormProps) {
+export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq, userMajorType, requirementYear, onYearChange, semesterOptions, suggestedCutoff }: RequirementFormProps) {
   const [majorType, setMajorType] = useState<'single' | 'double' | 'minor'>(initialData?.majorType || 'single');
   const [totalCredits, setTotalCredits] = useState(initialData?.totalCredits?.toString() || '');
   const [primaryMajorCredits, setPrimaryMajorCredits] = useState(initialData?.primaryMajorCredits?.toString() || '');
@@ -67,8 +75,44 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
   const [earnedMinorCredits, setEarnedMinorCredits] = useState(initialData?.earnedMinorCredits?.toString() || '0');
   const [earnedMinorRequiredCredits, setEarnedMinorRequiredCredits] = useState(initialData?.earnedMinorRequiredCredits?.toString() || '0');
 
+  // 기이수 반영 기준 학기 ("YYYY-term" 형식, 빈 문자열 = 미사용)
+  const [priorCutoff, setPriorCutoff] = useState(
+    initialData?.priorCutoffYear && initialData?.priorCutoffTerm
+      ? `${initialData.priorCutoffYear}-${initialData.priorCutoffTerm}`
+      : ''
+  );
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loadMessage, setLoadMessage] = useState<string>('');
+
+  // ── 기준 학기 자동 제안 ──
+  // 기이수 학점 입력값이 초기값에서 변경되었는지 (성적표 갱신 시나리오 감지)
+  const earnedEdited =
+    earnedTotalCredits !== (initialData?.earnedTotalCredits?.toString() || '0') ||
+    earnedGeneralCredits !== (initialData?.earnedGeneralCredits?.toString() || '0') ||
+    earnedPrimaryMajorCredits !== (initialData?.earnedPrimaryMajorCredits?.toString() || '0') ||
+    earnedPrimaryMajorRequiredCredits !== (initialData?.earnedPrimaryMajorRequiredCredits?.toString() || '0') ||
+    earnedSecondaryMajorCredits !== (initialData?.earnedSecondaryMajorCredits?.toString() || '0') ||
+    earnedSecondaryMajorRequiredCredits !== (initialData?.earnedSecondaryMajorRequiredCredits?.toString() || '0') ||
+    earnedMinorCredits !== (initialData?.earnedMinorCredits?.toString() || '0') ||
+    earnedMinorRequiredCredits !== (initialData?.earnedMinorRequiredCredits?.toString() || '0');
+
+  // 기이수가 입력되어 있는지 (0뿐이면 중복 합산 위험 없음)
+  const hasPriorCredits =
+    (parseInt(earnedTotalCredits, 10) || 0) > 0 ||
+    (parseInt(earnedGeneralCredits, 10) || 0) > 0 ||
+    (parseInt(earnedPrimaryMajorCredits, 10) || 0) > 0;
+
+  // 제안 학기가 현재 선택된 기준보다 뒤인가 (미설정이면 항상 뒤)
+  const suggestionAhead = !!suggestedCutoff && (() => {
+    if (!priorCutoff) return true;
+    const [cy, ct] = priorCutoff.split('-');
+    return !isSemesterCoveredByPrior(suggestedCutoff.year, suggestedCutoff.term, parseInt(cy, 10), ct);
+  })();
+
+  // 미설정 상태면 항상 안내(중복 합산 위험), 설정 상태면 기이수를 수정했을 때만 제안
+  const showCutoffSuggestion =
+    !!suggestedCutoff && suggestionAhead && hasPriorCredits && (priorCutoff === '' || earnedEdited);
 
   // Determine which major type radio options to show
   // When userMajorType is undefined (prop not passed), show all options (backward compat)
@@ -152,6 +196,22 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
       }
     }
 
+    // 기이수 필드 간 정합성 (총 >= 트랙 합계, 핵심 <= 전공)
+    const priorErrors = validatePriorCredits({
+      majorType,
+      earnedTotalCredits: eTotal,
+      earnedGeneralCredits: eGeneral,
+      earnedPrimaryMajorCredits: eMajor,
+      earnedPrimaryMajorRequiredCredits: eMajorReq,
+      earnedSecondaryMajorCredits: parseInt(earnedSecondaryMajorCredits, 10) || 0,
+      earnedSecondaryMajorRequiredCredits: parseInt(earnedSecondaryMajorRequiredCredits, 10) || 0,
+      earnedMinorCredits: parseInt(earnedMinorCredits, 10) || 0,
+      earnedMinorRequiredCredits: parseInt(earnedMinorRequiredCredits, 10) || 0,
+    });
+    for (const [field, message] of Object.entries(priorErrors)) {
+      if (!newErrors[field]) newErrors[field] = message;
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -208,6 +268,8 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
         earnedMinorCredits: parseInt(earnedMinorCredits, 10),
         earnedMinorRequiredCredits: parseInt(earnedMinorRequiredCredits, 10),
       } : {}),
+      priorCutoffYear: priorCutoff ? parseInt(priorCutoff.split('-')[0], 10) : null,
+      priorCutoffTerm: priorCutoff ? (priorCutoff.split('-')[1] as 'spring' | 'fall') : null,
     });
   };
 
@@ -437,8 +499,44 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
       <div className="border-t pt-4">
         <div>
           <p className="text-sm font-semibold text-gray-800">기이수 학점</p>
-          <p className="text-xs text-gray-400 mt-0.5 mb-3">계획에 포함되지 않은 이미 이수한 학점</p>
+          <p className="text-xs text-gray-400 mt-0.5 mb-3">성적표 기준으로 이미 이수한 학점</p>
         </div>
+        {showCutoffSuggestion && suggestedCutoff && (
+          <div className="mb-3 text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+            <p className="text-amber-800">
+              {priorCutoff === ''
+                ? <>계획에 &lsquo;이수&rsquo; 과목이 있습니다. 해당 학기가 기이수(성적표)에 이미 반영되어 있다면, 기준 학기를 설정해야 중복 합산되지 않습니다.</>
+                : <>기이수 학점을 수정했습니다. 성적표에 새로 반영된 학기가 있다면 기준 학기도 함께 올려주세요.</>}
+            </p>
+            <button
+              type="button"
+              onClick={() => setPriorCutoff(`${suggestedCutoff.year}-${suggestedCutoff.term}`)}
+              className="mt-1.5 inline-flex items-center px-2 py-1 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded transition-colors"
+            >
+              {suggestedCutoff.label}까지로 설정
+            </button>
+          </div>
+        )}
+        {semesterOptions && semesterOptions.length > 0 && (
+          <div className="mb-3">
+            <label className="block text-xs font-medium text-gray-600 mb-1">기이수에 반영된 마지막 학기</label>
+            <select
+              value={priorCutoff}
+              onChange={(e) => setPriorCutoff(e.target.value)}
+              className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="">선택 안 함 — 계획의 이수 과목을 모두 합산</option>
+              {semesterOptions.map((o) => (
+                <option key={`${o.year}-${o.term}`} value={`${o.year}-${o.term}`}>
+                  {o.label}까지 기이수에 반영됨
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-0.5">
+              선택한 학기까지 계획에 &lsquo;이수&rsquo;로 표시한 과목은 기이수 학점에 이미 포함된 것으로 보고 중복 합산하지 않습니다.
+            </p>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-x-3 gap-y-2">
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>

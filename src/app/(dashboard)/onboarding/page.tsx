@@ -22,6 +22,7 @@ import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import type { MajorType } from '@/types';
 import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
+import { validatePriorCredits } from '@/lib/priorCredits';
 
 const EMPTY_DEPARTMENTS: { _id: string; code: string; name: string; college?: string }[] = [];
 
@@ -184,6 +185,24 @@ export default function OnboardingPage() {
     setError('');
     if (totalCredits < 1) {
       setError('졸업학점은 1 이상이어야 합니다.');
+      return;
+    }
+
+    // 기이수 필드 간 정합성 (총 >= 트랙 합계, 핵심 <= 전공)
+    const priorErrors = validatePriorCredits({
+      majorType,
+      earnedTotalCredits,
+      earnedGeneralCredits,
+      earnedPrimaryMajorCredits,
+      earnedPrimaryMajorRequiredCredits,
+      earnedSecondaryMajorCredits,
+      earnedSecondaryMajorRequiredCredits,
+      earnedMinorCredits,
+      earnedMinorRequiredCredits,
+    });
+    const firstPriorError = Object.values(priorErrors)[0];
+    if (firstPriorError) {
+      setError(firstPriorError);
       return;
     }
 
