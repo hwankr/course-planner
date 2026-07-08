@@ -183,6 +183,7 @@ export function calculateGuestProgress(
     const primaryEnrolled = sumCr(filterByDept(enrolled, userDepartmentId));
     const primaryPlanned = sumCr(filterByDept(planned, userDepartmentId));
     const primaryReqCompleted = sumCr(filterByDeptRequired(completed, userDepartmentId));
+    const primaryReqEnrolled = sumCr(filterByDeptRequired(enrolled, userDepartmentId));
     const primaryReqPlanned = sumCr(filterByDeptRequired(planned, userDepartmentId));
 
     // Secondary (double major or minor)
@@ -190,6 +191,7 @@ export function calculateGuestProgress(
     const secondaryEnrolled = sumCr(filterByDept(enrolled, secondaryDepartmentId));
     const secondaryPlanned = sumCr(filterByDept(planned, secondaryDepartmentId));
     const secondaryReqCompleted = sumCr(filterByDeptRequired(completed, secondaryDepartmentId));
+    const secondaryReqEnrolled = sumCr(filterByDeptRequired(enrolled, secondaryDepartmentId));
     const secondaryReqPlanned = sumCr(filterByDeptRequired(planned, secondaryDepartmentId));
 
     const result: GraduationProgress = {
@@ -209,6 +211,7 @@ export function calculateGuestProgress(
         requiredMin: {
           required: requirement.primaryMajorRequiredMin,
           earned: primaryReqCompleted + priorPrimaryMajorRequired,
+          enrolled: primaryReqEnrolled,
           planned: primaryReqPlanned,
           percentage: pct(
             primaryReqCompleted + priorPrimaryMajorRequired,
@@ -243,6 +246,7 @@ export function calculateGuestProgress(
         requiredMin: {
           required: requirement.secondaryMajorRequiredMin || 0,
           earned: secondaryReqCompleted + priorSecondaryMajorRequired,
+          enrolled: secondaryReqEnrolled,
           planned: secondaryReqPlanned,
           percentage: pct(
             secondaryReqCompleted + priorSecondaryMajorRequired,
@@ -262,6 +266,7 @@ export function calculateGuestProgress(
         requiredMin: {
           required: requirement.minorRequiredMin || 0,
           earned: secondaryReqCompleted + priorMinorRequired,
+          enrolled: secondaryReqEnrolled,
           planned: secondaryReqPlanned,
           percentage: pct(
             secondaryReqCompleted + priorMinorRequired,
@@ -291,6 +296,7 @@ export function calculateGuestProgress(
   const majorPlanned = sumCredits(planned, majorCategories);
 
   const majorReqEarned = sumCredits(completed, ['major_required']);
+  const majorReqEnrolled = sumCredits(enrolled, ['major_required']);
   const majorReqPlanned = sumCredits(planned, ['major_required']);
 
   return {
@@ -310,6 +316,7 @@ export function calculateGuestProgress(
       requiredMin: {
         required: requirement.primaryMajorRequiredMin,
         earned: majorReqEarned + priorPrimaryMajorRequired,
+        enrolled: majorReqEnrolled,
         planned: majorReqPlanned,
         percentage: pct(majorReqEarned + priorPrimaryMajorRequired, requirement.primaryMajorRequiredMin),
       },

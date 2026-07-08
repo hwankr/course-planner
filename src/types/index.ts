@@ -344,6 +344,7 @@ export interface GroupProgress {
 export interface SubRequirement {
   required: number;
   earned: number;
+  enrolled?: number;
   planned?: number;
   percentage: number;
 }

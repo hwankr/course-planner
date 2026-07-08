@@ -172,9 +172,9 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
 
   // Track accumulators
   const tracks = {
-    primaryMajor: { earned: 0, enrolled: 0, planned: 0, reqEarned: 0, reqPlanned: 0 },
-    secondaryMajor: { earned: 0, enrolled: 0, planned: 0, reqEarned: 0, reqPlanned: 0 },
-    minor: { earned: 0, enrolled: 0, planned: 0, reqEarned: 0, reqPlanned: 0 },
+    primaryMajor: { earned: 0, enrolled: 0, planned: 0, reqEarned: 0, reqEnrolled: 0, reqPlanned: 0 },
+    secondaryMajor: { earned: 0, enrolled: 0, planned: 0, reqEarned: 0, reqEnrolled: 0, reqPlanned: 0 },
+    minor: { earned: 0, enrolled: 0, planned: 0, reqEarned: 0, reqEnrolled: 0, reqPlanned: 0 },
     general: { earned: 0, enrolled: 0, planned: 0 },
   };
 
@@ -260,6 +260,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
           if (isMajorRequired) track.reqEarned += credits;
         } else if (entry.status === 'enrolled') {
           track.enrolled += credits;
+          if (isMajorRequired) track.reqEnrolled += credits;
         } else if (entry.status === 'planned') {
           track.planned += credits;
           if (isMajorRequired) track.reqPlanned += credits;
@@ -291,6 +292,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       requiredMin: {
         required: requirement.primaryMajorRequiredMin,
         earned: tracks.primaryMajor.reqEarned + priorPrimaryMajorRequired,
+        enrolled: tracks.primaryMajor.reqEnrolled,
         planned: tracks.primaryMajor.reqPlanned,
         percentage: pct(tracks.primaryMajor.reqEarned + priorPrimaryMajorRequired, requirement.primaryMajorRequiredMin),
       },
@@ -320,6 +322,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       requiredMin: {
         required: requirement.secondaryMajorRequiredMin || 0,
         earned: tracks.secondaryMajor.reqEarned + priorSecondaryMajorRequired,
+        enrolled: tracks.secondaryMajor.reqEnrolled,
         planned: tracks.secondaryMajor.reqPlanned,
         percentage: pct(tracks.secondaryMajor.reqEarned + priorSecondaryMajorRequired, requirement.secondaryMajorRequiredMin || 0),
       },
@@ -337,6 +340,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       requiredMin: {
         required: requirement.minorRequiredMin || 0,
         earned: tracks.minor.reqEarned + priorMinorRequired,
+        enrolled: tracks.minor.reqEnrolled,
         planned: tracks.minor.reqPlanned,
         percentage: pct(tracks.minor.reqEarned + priorMinorRequired, requirement.minorRequiredMin || 0),
       },
