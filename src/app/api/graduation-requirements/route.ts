@@ -64,7 +64,8 @@ const upsertSchema = z.object({
   earnedMinorCredits: z.number().min(0).optional(),
   earnedMinorRequiredCredits: z.number().min(0).optional(),
 
-  priorCutoffYear: z.number().int().min(2000).max(2100).nullable().optional(),
+  // 학기 year는 학년(1~5) 표기가 기본이지만 과거 데이터의 달력 연도도 허용
+  priorCutoffYear: z.number().int().min(1).max(2100).nullable().optional(),
   priorCutoffTerm: z.enum(['spring', 'fall']).nullable().optional(),
 
   requirementYear: z.number().min(2020).max(2100).optional(),

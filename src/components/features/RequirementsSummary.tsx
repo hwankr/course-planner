@@ -156,7 +156,7 @@ export function RequirementsSummary() {
     .map(({ year, term }) => ({
       year,
       term,
-      label: `${year}년 ${term === 'spring' ? '1' : '2'}학기`,
+      label: `${year}학년 ${term === 'spring' ? '1' : '2'}학기`,
     }));
 
   // 기준 학기 자동 제안: '이수' 과목이 있는 가장 마지막 학기 (성적표에 반영됐을 가능성이 높은 기준점)
@@ -164,7 +164,7 @@ export function RequirementsSummary() {
     .filter((s) => s.courses.some((c) => c.status === 'completed'))
     .reduce<{ year: number; term: 'spring' | 'fall'; label: string } | null>((acc, s) => {
       if (acc && isSemesterCoveredByPrior(s.year, s.term, acc.year, acc.term)) return acc;
-      return { year: s.year, term: s.term, label: `${s.year}년 ${s.term === 'spring' ? '1' : '2'}학기` };
+      return { year: s.year, term: s.term, label: `${s.year}학년 ${s.term === 'spring' ? '1' : '2'}학기` };
     }, null);
 
   // Sync requirementYear from saved requirement on load
