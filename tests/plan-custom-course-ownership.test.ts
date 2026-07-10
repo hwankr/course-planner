@@ -29,6 +29,7 @@ type CourseCleanupFilter = {
 type FakeQuery<T> = PromiseLike<T> & {
   lean(): Promise<T>;
   populate(): FakeQuery<T>;
+  select(): FakeQuery<T>;
 };
 
 type FakePlan = {
@@ -85,6 +86,9 @@ function createQuery<T>(value: T): FakeQuery<T> {
       return value;
     },
     populate() {
+      return query;
+    },
+    select() {
       return query;
     },
     then<TResult1 = T, TResult2 = never>(
@@ -147,7 +151,6 @@ test('rejects adding another user\'s custom course', async (t) => {
       year: 1,
       term: 'spring',
       courseId,
-      category: 'major_elective',
       actorId,
     }),
     (error: unknown) => {
@@ -161,10 +164,11 @@ test('rejects adding another user\'s custom course', async (t) => {
 });
 
 test('allows adding an official course', async (t) => {
-  const [{ default: Course }, { default: Plan }, { planService }] =
+  const [{ default: Course }, { default: Plan }, { default: DepartmentCurriculum }, { planService }] =
     await Promise.all([
       import('../src/models/Course'),
       import('../src/models/Plan'),
+      import('../src/models/DepartmentCurriculum'),
       import('../src/services/plan.service'),
     ]);
   const courseModel = Course as unknown as {
@@ -173,6 +177,9 @@ test('allows adding an official course', async (t) => {
   };
   const planModel = Plan as unknown as {
     findById(id: string): Promise<FakePlan | null>;
+  };
+  const curriculumModel = DepartmentCurriculum as unknown as {
+    findOne(filter: unknown): FakeQuery<null>;
   };
   const plan = createPlan();
   const officialCourse: FakeCourse = {
@@ -186,13 +193,13 @@ test('allows adding an official course', async (t) => {
     matchesCourseAccessFilter(officialCourse, filter) ? officialCourse : null
   );
   t.mock.method(planModel, 'findById', async () => plan);
+  t.mock.method(curriculumModel, 'findOne', () => createQuery(null));
 
   await planService.addCourseToSemester({
     planId,
     year: 1,
     term: 'spring',
     courseId: officialCourseId,
-    category: 'major_elective',
     actorId,
   });
 
@@ -234,7 +241,6 @@ test('allows adding a custom course created by the actor', async (t) => {
     year: 1,
     term: 'spring',
     courseId: ownCourseId,
-    category: 'major_elective',
     actorId,
   });
 

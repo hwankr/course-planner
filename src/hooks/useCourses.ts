@@ -123,9 +123,16 @@ export function useCourses(filter?: ExtendedCourseFilter) {
   // 게스트 커스텀 과목을 API 결과에 병합
   if (isGuest && guestCustomCourses.length > 0) {
     const apiCourses = apiResult.data ?? [];
+    const visibleGuestCustomCourses = guestCustomCourses.filter((course) => {
+      if (effectiveFilter?.common) return !course.department;
+      if (effectiveFilter?.departmentId) {
+        return course.department === effectiveFilter.departmentId;
+      }
+      return true;
+    });
     const mergedData = [
       ...apiCourses,
-      ...guestCustomCourses.map((c) => ({
+      ...visibleGuestCustomCourses.map((c) => ({
         ...c,
         _id: c._id as unknown as ICourse['_id'],
         department: c.department as unknown as ICourse['department'],

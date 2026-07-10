@@ -128,8 +128,7 @@ export interface AddCourseToSemesterInput {
   year: number;
   term: Term;
   courseId: string;
-  category?: RequirementCategory;
-  curriculumYear?: number;
+  departmentId?: string;
 }
 
 // ============================================

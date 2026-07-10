@@ -22,7 +22,7 @@ const addCourseSchema = z.object({
   year: z.number().min(1, '학년은 1 이상이어야 합니다.').max(6, '학년은 6 이하여야 합니다.'),
   term: z.enum(['spring', 'fall']),
   courseId: z.string().min(1),
-  category: z.enum(['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'free_elective', 'teaching']).optional(),
+  departmentId: z.string().min(1).optional(),
 });
 
 export async function POST(request: Request, { params }: RouteParams) {
@@ -39,8 +39,11 @@ export async function POST(request: Request, { params }: RouteParams) {
     if (!isValidObjectId(planId)) return invalidIdResponse('계획 ID');
 
     const body = await request.json();
-    const { year, term, courseId, category } = addCourseSchema.parse(body);
+    const { year, term, courseId, departmentId } = addCourseSchema.parse(body);
     if (!isValidObjectId(courseId)) return invalidIdResponse('과목 ID');
+    if (departmentId && !isValidObjectId(departmentId)) {
+      return invalidIdResponse('학과 ID');
+    }
 
     // 본인 계획인지 확인
     const existingPlan = await planService.findById(planId);
@@ -57,8 +60,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       year,
       term,
       courseId,
-      category,
-      curriculumYear: session.user.curriculumYear,
+      departmentId,
     });
 
     return NextResponse.json({

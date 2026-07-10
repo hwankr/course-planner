@@ -5,9 +5,10 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
-import { Plan, Course, DepartmentCurriculum } from '@/models';
+import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
+import { Plan, Course, DepartmentCurriculum, User } from '@/models';
 import type { IPlanDocument } from '@/models';
-import type { AddCourseToSemesterInput, Term } from '@/types';
+import type { AddCourseToSemesterInput, RequirementCategory, Term } from '@/types';
 
 /**
  * Version error retry wrapper for Mongoose optimistic concurrency control.
@@ -45,6 +46,82 @@ const POPULATE_COURSES = {
   path: 'semesters.courses.course',
   select: 'code name credits category',
 };
+
+interface CategoryActor {
+  department?: { toString(): string };
+  secondaryDepartment?: { toString(): string };
+  majorType?: 'single' | 'double' | 'minor';
+  curriculumYear?: number;
+}
+
+function requireStoredCategory(category: unknown): RequirementCategory {
+  if (typeof category !== 'string') {
+    throw new Error('과목의 이수구분을 확인할 수 없습니다.');
+  }
+  return category as RequirementCategory;
+}
+
+async function resolveCourseCategory(
+  course: {
+    _id: { toString(): string };
+    category?: unknown;
+    createdBy?: { toString(): string } | null;
+    department?: { toString(): string } | null;
+  },
+  actorId: string,
+  departmentId?: string
+): Promise<RequirementCategory> {
+  if (!departmentId) {
+    if (!course.createdBy) {
+      const curriculumEntry = await DepartmentCurriculum.findOne({
+        course: course._id.toString(),
+      })
+        .select('_id')
+        .lean<{ _id: unknown } | null>();
+
+      if (curriculumEntry) {
+        throw new Error('교육과정 과목을 추가하려면 학과 정보가 필요합니다.');
+      }
+    }
+    return requireStoredCategory(course.category);
+  }
+
+  const actor = await User.findById(actorId)
+    .select('department secondaryDepartment majorType curriculumYear')
+    .lean<CategoryActor | null>();
+  if (!actor) {
+    throw new Error('사용자를 찾을 수 없습니다.');
+  }
+
+  const allowedDepartmentIds = [actor.department?.toString()];
+  if (actor.majorType === 'double' || actor.majorType === 'minor') {
+    allowedDepartmentIds.push(actor.secondaryDepartment?.toString());
+  }
+  if (!allowedDepartmentIds.includes(departmentId)) {
+    throw new Error('선택할 수 없는 학과입니다.');
+  }
+
+  if (course.createdBy) {
+    if (course.department && course.department.toString() !== departmentId) {
+      throw new Error('커스텀 과목의 학과 정보가 일치하지 않습니다.');
+    }
+    return requireStoredCategory(course.category);
+  }
+
+  const curriculumEntry = await DepartmentCurriculum.findOne({
+    course: course._id.toString(),
+    department: departmentId,
+    year: actor.curriculumYear ?? DEFAULT_CURRICULUM_YEAR,
+  })
+    .select('category')
+    .lean<{ category: RequirementCategory } | null>();
+
+  if (!curriculumEntry) {
+    throw new Error('선택한 학과의 교육과정에서 과목을 찾을 수 없습니다.');
+  }
+
+  return curriculumEntry.category;
+}
 
 const POPULATE_COURSES_DETAIL = {
   path: 'semesters.courses.course',
@@ -135,7 +212,7 @@ async function addCourseToSemester(
 ): Promise<IPlanDocument | null> {
   await connectDB();
 
-  const { planId, actorId, year, term, courseId, category, curriculumYear } = input;
+  const { planId, actorId, year, term, courseId, departmentId } = input;
 
   // 공식 과목은 공유하고, 커스텀 과목은 생성자에게만 노출한다.
   const course = await Course.findOne({
@@ -178,16 +255,11 @@ async function addCourseToSemester(
       throw new Error('한 학기에 최대 10개 과목까지 추가할 수 있습니다.');
     }
 
-    // Determine category: use provided value, fall back to DepartmentCurriculum lookup, then Course.category
-    let resolvedCategory = category;
-    if (!resolvedCategory) {
-      const currQuery: Record<string, unknown> = { course: courseId };
-      if (curriculumYear) currQuery.year = curriculumYear;
-      const currEntry = await DepartmentCurriculum.findOne(currQuery)
-        .select('category')
-        .lean<{ category: string }>();
-      resolvedCategory = (currEntry?.category || course.category) as typeof category;
-    }
+    const resolvedCategory = await resolveCourseCategory(
+      course,
+      actorId,
+      departmentId
+    );
 
     semester.courses.push({
       course: course._id,

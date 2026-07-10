@@ -92,6 +92,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
         name: c.name,
         credits: c.credits,
         category: c.category,
+        departmentId: c.departmentId,
         status: c.status,
       })),
     }));
@@ -116,6 +117,7 @@ export function useGraduationPreview(): GraduationPreviewResult {
           name: previewCourse.name,
           credits: previewCourse.credits,
           category: previewCourse.category,
+          departmentId: previewCourse.departmentId,
           status: 'planned',
         });
       } else {

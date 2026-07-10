@@ -12,6 +12,7 @@ interface PlannedCourse {
   name: string;
   credits: number;
   category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
+  departmentId?: string;
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
 }
 

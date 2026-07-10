@@ -64,12 +64,12 @@ async function resetPlan(id: string): Promise<IPlan> {
 }
 
 async function addCourseToPlan(params: AddCourseToSemesterInput): Promise<IPlan> {
-  const { planId, year, term, courseId, category } = params;
+  const { planId, year, term, courseId, departmentId } = params;
 
   const response = await fetch(`/api/plans/${planId}/courses`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ year, term, courseId, category }),
+    body: JSON.stringify({ year, term, courseId, departmentId }),
   });
 
   const result: ApiResponse<IPlan> = await response.json();
@@ -283,6 +283,7 @@ export function useAddCourse() {
           code: '',
           name: '',
           credits: 0,
+          departmentId: params.departmentId,
           status: 'planned',
         });
         return { _id: { toString: () => params.planId } } as unknown as IPlan;

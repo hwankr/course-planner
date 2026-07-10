@@ -18,7 +18,7 @@ import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
 import { Button } from '@/components/ui';
-import type { Term, ICourse, RequirementCategory, AddCourseToSemesterInput } from '@/types';
+import type { Term, ICourse, RequirementCategory } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { graduationRequirementKeys } from '@/hooks/useGraduationRequirements';
@@ -326,15 +326,16 @@ export default function PlannerPage() {
       const guestPlan = JSON.parse(guestActivePlanJson);
       setActivePlan({
         id: guestPlan.id,
-        semesters: guestPlan.semesters.map((sem: { year: number; term: string; courses: Array<{ id: string; code: string; name: string; credits: number; category?: string; status: string }> }) => ({
+        semesters: guestPlan.semesters.map((sem: { year: number; term: string; courses: Array<{ id: string; code: string; name: string; credits: number; category?: string; departmentId?: string; status: string }> }) => ({
           year: sem.year,
           term: sem.term,
-          courses: sem.courses.map((c: { id: string; code: string; name: string; credits: number; category?: string; status: string }) => ({
+          courses: sem.courses.map((c: { id: string; code: string; name: string; credits: number; category?: string; departmentId?: string; status: string }) => ({
             id: c.id,
             code: c.code,
             name: c.name,
             credits: c.credits,
             category: c.category,
+            departmentId: c.departmentId,
             status: c.status,
           })),
         })),
@@ -486,6 +487,7 @@ export default function PlannerPage() {
             name: course.name,
             credits: course.credits,
             category: course.category ?? 'free_elective',
+            departmentId: course.departmentId,
           },
           'remove',
           null
@@ -528,7 +530,13 @@ export default function PlannerPage() {
       // Dropped outside a droppable
       if (!over) return;
 
-      const sourceContainerId = (active.data.current as { containerId?: string })?.containerId ?? '';
+      const dragData = active.data.current as {
+        containerId?: string;
+        course?: ICourse;
+        departmentId?: string;
+        type?: string;
+      } | undefined;
+      const sourceContainerId = dragData?.containerId ?? '';
       const destContainerId = String(over.id);
 
       // Same container drop - ignore
@@ -552,11 +560,13 @@ export default function PlannerPage() {
 
         // Look up real course data from query cache
         const allCourseQueries = queryClient.getQueriesData<ICourse[]>({ queryKey: ['courses'] });
-        let catalogCourse: ICourse | undefined;
-        for (const [, courses] of allCourseQueries) {
-          if (courses) {
-            catalogCourse = courses.find(c => c._id.toString() === draggableId);
-            if (catalogCourse) break;
+        let catalogCourse = dragData?.course;
+        if (!catalogCourse) {
+          for (const [, courses] of allCourseQueries) {
+            if (courses) {
+              catalogCourse = courses.find(c => c._id.toString() === draggableId);
+              if (catalogCourse) break;
+            }
           }
         }
 
@@ -567,6 +577,7 @@ export default function PlannerPage() {
           name: catalogCourse?.name ?? 'Loading...',
           credits: catalogCourse?.credits ?? 0,
           category: catalogCourse?.category as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
+          departmentId: dragData?.departmentId,
           status: 'planned' as const,
         };
 
@@ -596,7 +607,7 @@ export default function PlannerPage() {
                 year: destInfo.year,
                 term: destInfo.term,
                 courseId: draggableId,
-                category: catalogCourse?.category as AddCourseToSemesterInput['category'],
+                departmentId: dragData?.departmentId,
               });
             }
           } catch (error) {
@@ -794,7 +805,7 @@ export default function PlannerPage() {
 
   // Handle click-to-add course to focused semester
   const handleClickAdd = useCallback(
-    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => {
+    async (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory; departmentId?: string }) => {
       if (!activePlan || !focusedSemester) return;
 
       const { year, term } = focusedSemester;
@@ -814,6 +825,7 @@ export default function PlannerPage() {
         name: courseData.name,
         credits: courseData.credits,
         category: courseData.category as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
+        departmentId: courseData.departmentId,
         status: 'planned' as const,
       };
       addCourseToSemester(year, term, optimisticCourse);
@@ -838,7 +850,7 @@ export default function PlannerPage() {
             year,
             term,
             courseId,
-            category: courseData.category,
+            departmentId: courseData.departmentId,
           });
         }
       } catch (error) {

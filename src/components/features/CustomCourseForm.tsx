@@ -1,18 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { useCreateCourse } from '@/hooks/useCourses';
 import { Button, Input } from '@/components/ui';
-import { useGuestStore } from '@/stores/guestStore';
-import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import type { RequirementCategory, Semester } from '@/types';
 
 interface CustomCourseFormProps {
   onClose: () => void;
+  departmentId?: string;
   availableCategories?: RequirementCategory[];
   focusedSemester?: { year: number; term: string } | null;
-  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
+  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory; departmentId?: string }) => void;
 }
 
 const categoryLabels: Record<RequirementCategory, string> = {
@@ -25,11 +23,7 @@ const categoryLabels: Record<RequirementCategory, string> = {
   free_elective: '자유선택',
 };
 
-export function CustomCourseForm({ onClose, availableCategories, focusedSemester, onClickAdd }: CustomCourseFormProps) {
-  const { data: session } = useSession();
-  const isGuest = useGuestStore((s) => s.isGuest);
-  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
-  const userDepartment = isGuest ? guestDepartmentId : session?.user?.department;
+export function CustomCourseForm({ onClose, departmentId, availableCategories, focusedSemester, onClickAdd }: CustomCourseFormProps) {
   const createCourse = useCreateCourse();
 
   const [formData, setFormData] = useState({
@@ -52,7 +46,7 @@ export function CustomCourseForm({ onClose, availableCategories, focusedSemester
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!userDepartment || !formData.category || !focusedSemester) return;
+    if (!departmentId || !formData.category || !focusedSemester) return;
 
     // Auto-generate code from name + timestamp
     const autoCode = `CUS-${Date.now().toString(36).toUpperCase()}`;
@@ -64,7 +58,7 @@ export function CustomCourseForm({ onClose, availableCategories, focusedSemester
         name: formData.name,
         code: autoCode,
         credits,
-        department: userDepartment!,
+        department: departmentId,
         semesters: ['spring', 'fall'] as Semester[],
         category,
       });
@@ -76,6 +70,7 @@ export function CustomCourseForm({ onClose, availableCategories, focusedSemester
           name: formData.name,
           credits,
           category,
+          departmentId,
         });
       }
 
@@ -155,7 +150,7 @@ export function CustomCourseForm({ onClose, availableCategories, focusedSemester
             </p>
           )}
 
-          {!userDepartment && (
+          {!departmentId && (
             <p className="text-sm text-amber-600">
               학과를 먼저 설정해주세요.{' '}
               <a href="/profile" className="underline font-medium">
@@ -181,7 +176,7 @@ export function CustomCourseForm({ onClose, availableCategories, focusedSemester
             </Button>
             <Button
               type="submit"
-              disabled={createCourse.isPending || !userDepartment || !formData.category || !focusedSemester}
+              disabled={createCourse.isPending || !departmentId || !formData.category || !focusedSemester}
               className="flex-1"
             >
               {createCourse.isPending ? '추가 중...' : '추가'}

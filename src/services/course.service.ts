@@ -106,6 +106,7 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
       const customConditions: Record<string, unknown>[] = [
         { isActive: true },
         { createdBy: filter.userId },
+        { department: filter.departmentId },
       ];
 
       if (filter.search) {

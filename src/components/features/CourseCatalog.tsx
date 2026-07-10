@@ -25,7 +25,7 @@ const COMMON_QUICK_ADD_CATEGORIES = [
 
 interface CourseCatalogProps {
   planCourseIds: string[];  // IDs of courses already in the plan (to disable dragging)
-  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
+  onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory; departmentId?: string }) => void;
   focusedSemester?: { year: number; term: string } | null;
   isAddingCourse?: boolean;
 }
@@ -67,6 +67,7 @@ function CatalogCourseItem({
   focusedSemester,
   isAddingCourse,
   onClickAdd,
+  departmentId,
   deptFilter,
   majorType,
   className: extraClassName,
@@ -76,7 +77,8 @@ function CatalogCourseItem({
   viewMode: 'card' | 'list';
   focusedSemester: { year: number; term: string } | null | undefined;
   isAddingCourse: boolean;
-  onClickAdd?: (courseId: string, data: { code: string; name: string; credits: number; category?: RequirementCategory }) => void;
+  onClickAdd?: (courseId: string, data: { code: string; name: string; credits: number; category?: RequirementCategory; departmentId?: string }) => void;
+  departmentId?: string;
   deptFilter: 'primary' | 'secondary' | 'common';
   majorType: string;
   className?: string;
@@ -85,7 +87,7 @@ function CatalogCourseItem({
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `catalog-${courseId}`,
     disabled: isInPlan,
-    data: { containerId: 'catalog', course, type: 'catalog' },
+    data: { containerId: 'catalog', course, departmentId, type: 'catalog' },
   });
 
   const handleAdd = (e: React.MouseEvent) => {
@@ -96,6 +98,7 @@ function CatalogCourseItem({
       name: course.name,
       credits: course.credits,
       category: course.category,
+      departmentId,
     });
   };
 
@@ -221,6 +224,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
   const [deptFilter, setDeptFilter] = useState<'primary' | 'secondary' | 'common'>(userDepartment ? 'primary' : 'common');
   const isCommonTab = deptFilter === 'common';
   const activeDepartment = isCommonTab ? undefined : (deptFilter === 'secondary' && secondaryDepartment) ? secondaryDepartment : userDepartment;
+  const customCourseDepartment = activeDepartment ?? userDepartment;
   // Resolve department names for display
   const { data: departments = [] } = useDepartments();
   const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
@@ -391,6 +395,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
         name,
         credits,
         category: categoryKey,
+        departmentId: undefined,
       });
     } finally {
       setCreatingCommon(null);
@@ -740,6 +745,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                           focusedSemester={focusedSemester}
                           isAddingCourse={isAddingCourse}
                           onClickAdd={onClickAdd}
+                          departmentId={activeDepartment}
                           deptFilter={deptFilter}
                           majorType={majorType}
                         />
@@ -767,6 +773,7 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
                     focusedSemester={focusedSemester}
                     isAddingCourse={isAddingCourse}
                     onClickAdd={onClickAdd}
+                    departmentId={activeDepartment}
                     deptFilter={deptFilter}
                     majorType={majorType}
                     className={viewMode === 'card' ? 'w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)]' : undefined}
@@ -780,7 +787,12 @@ export function CourseCatalog({ planCourseIds, onClickAdd, focusedSemester, isAd
 
       {/* Custom Course Form Modal */}
       {showCustomForm && (
-        <CustomCourseForm onClose={() => setShowCustomForm(false)} focusedSemester={focusedSemester} onClickAdd={onClickAdd} />
+        <CustomCourseForm
+          onClose={() => setShowCustomForm(false)}
+          departmentId={customCourseDepartment}
+          focusedSemester={focusedSemester}
+          onClickAdd={onClickAdd}
+        />
       )}
     </div>
   );
