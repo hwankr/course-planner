@@ -18,3 +18,11 @@ export { academicEventService } from './academicEvent.service';
 export { notificationService } from './notification.service';
 export { patchNoteService } from './patchNote.service';
 export { adminAuthService } from './admin-auth.service';
+export {
+  createLoginThrottleKeys,
+  loginThrottleService,
+} from './login-throttle.service';
+export type {
+  LoginThrottleInput,
+  LoginThrottleKeys,
+} from './login-throttle.service';
