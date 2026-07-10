@@ -299,7 +299,6 @@ function installStatefulMembershipDouble(
 
   t.mock.method(mongoose, 'startSession', async () => {
     const sessionId = ++nextSessionId;
-    let clientSession!: ClientSession;
     const session: SessionDouble = {
       async withTransaction<T>(
         operation: () => Promise<T>,
@@ -348,7 +347,7 @@ function installStatefulMembershipDouble(
         events.push(`session:end:${sessionId}`);
       },
     };
-    clientSession = session as unknown as ClientSession;
+    const clientSession = session as unknown as ClientSession;
     return clientSession;
   });
 
