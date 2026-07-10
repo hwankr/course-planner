@@ -3,7 +3,10 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from "@sentry/nextjs";
-import { scrubCredentialAuthenticationEvent } from "./src/lib/auth/credential-sentry-scrubber";
+import {
+  buildCredentialSafeSentryIntegrations,
+  scrubCredentialAuthenticationEvent,
+} from "./src/lib/auth/credential-sentry-scrubber";
 
 Sentry.init({
   dsn: "https://755f185c9007880fef82ab02448fa94a@o4510855707033600.ingest.us.sentry.io/4510855730102272",
@@ -13,6 +16,12 @@ Sentry.init({
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
+
+  integrations: (defaultIntegrations) =>
+    buildCredentialSafeSentryIntegrations(
+      defaultIntegrations,
+      (options) => Sentry.httpIntegration(options)
+    ),
 
   beforeSend: scrubCredentialAuthenticationEvent,
 });

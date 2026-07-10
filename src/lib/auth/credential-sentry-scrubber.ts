@@ -11,12 +11,43 @@ function getRequestPath(url: string): string {
   }
 }
 
+export function isCredentialAuthenticationCallbackUrl(url: unknown): boolean {
+  return (
+    typeof url === 'string' &&
+    getRequestPath(url) === CREDENTIAL_AUTH_CALLBACK_PATH
+  );
+}
+
+export interface CredentialSafeHttpIntegrationOptions {
+  disableIncomingRequestSpans: true;
+  ignoreIncomingRequestBody: typeof isCredentialAuthenticationCallbackUrl;
+}
+
+interface NamedSentryIntegration {
+  name: string;
+}
+
+export function buildCredentialSafeSentryIntegrations<
+  T extends NamedSentryIntegration,
+>(
+  defaultIntegrations: readonly T[],
+  createHttpIntegration: (
+    options: CredentialSafeHttpIntegrationOptions
+  ) => T
+): T[] {
+  return [
+    ...defaultIntegrations.filter(({ name }) => name !== 'Http'),
+    createHttpIntegration({
+      // Preserve @sentry/nextjs 10.65's default: Next.js creates incoming spans.
+      disableIncomingRequestSpans: true,
+      ignoreIncomingRequestBody: isCredentialAuthenticationCallbackUrl,
+    }),
+  ];
+}
+
 export function scrubCredentialAuthenticationEvent<T extends Event>(event: T): T {
   const requestUrl = event.request?.url;
-  if (
-    typeof requestUrl !== 'string' ||
-    getRequestPath(requestUrl) !== CREDENTIAL_AUTH_CALLBACK_PATH
-  ) {
+  if (!isCredentialAuthenticationCallbackUrl(requestUrl)) {
     return event;
   }
 

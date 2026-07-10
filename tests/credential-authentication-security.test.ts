@@ -69,7 +69,21 @@ interface CredentialSentryEvent {
   [key: string]: unknown;
 }
 
+interface CredentialSentryHttpOptions {
+  disableIncomingRequestSpans: true;
+  ignoreIncomingRequestBody(url: string, request?: unknown): boolean;
+}
+
+interface NamedSentryIntegration {
+  name: string;
+}
+
 interface CredentialSentryScrubberModuleDouble {
+  isCredentialAuthenticationCallbackUrl(url: unknown): boolean;
+  buildCredentialSafeSentryIntegrations<T extends NamedSentryIntegration>(
+    defaultIntegrations: readonly T[],
+    createHttpIntegration: (options: CredentialSentryHttpOptions) => T
+  ): T[];
   scrubCredentialAuthenticationEvent<T extends CredentialSentryEvent>(
     event: T
   ): T;
@@ -168,6 +182,33 @@ function getCredentialsProvider(
   );
   assert.ok(provider && provider.type === 'credentials');
   return provider;
+}
+
+interface TestSentryIntegration extends NamedSentryIntegration {
+  id: string;
+  httpOptions?: CredentialSentryHttpOptions;
+}
+
+function simulateSampledIncomingTrace(
+  integrations: readonly TestSentryIntegration[],
+  url: string,
+  body: Record<string, unknown>
+) {
+  const httpIntegration = integrations.find(
+    (integration) => integration.name === 'Http'
+  );
+  const ignoresBody =
+    httpIntegration?.httpOptions?.ignoreIncomingRequestBody(url, {}) ?? false;
+  const data: Record<string, unknown> = {
+    'http.request.method': 'POST',
+    'http.url': url,
+  };
+
+  if (!ignoresBody) {
+    data['http.request.body.data'] = body;
+  }
+
+  return { spans: [{ data }] };
 }
 
 test('the fixed dummy hash is the specified cost-12 bcrypt hash', async () => {
@@ -583,6 +624,133 @@ test('Sentry scrubbing leaves unrelated request events unchanged', async () => {
   assert.equal(scrubCredentialAuthenticationEvent(event), event);
 });
 
+test('credential callback URL policy handles absolute, relative, query, and fragment variants', async () => {
+  const { isCredentialAuthenticationCallbackUrl } =
+    await loadCredentialSentryScrubber();
+
+  for (const url of [
+    '/api/auth/callback/credentials',
+    '/api/auth/callback/credentials?csrf=true',
+    'api/auth/callback/credentials?csrf=true',
+    'https://course.example/api/auth/callback/credentials?csrf=true#result',
+    '//course.example/api/auth/callback/credentials?csrf=true',
+  ]) {
+    assert.equal(isCredentialAuthenticationCallbackUrl(url), true, url);
+  }
+
+  for (const url of [
+    undefined,
+    null,
+    42,
+    '/api/auth/callback/google',
+    '/api/auth/callback/credentials-extra',
+    '/prefix/api/auth/callback/credentials',
+  ]) {
+    assert.equal(
+      isCredentialAuthenticationCallbackUrl(url),
+      false,
+      String(url)
+    );
+  }
+});
+
+test('credential-safe Sentry integrations replace every default Http with one customized Http', async () => {
+  const { buildCredentialSafeSentryIntegrations } =
+    await loadCredentialSentryScrubber();
+  const defaults: TestSentryIntegration[] = [
+    { name: 'Http', id: 'default-http' },
+    { name: 'Console', id: 'console' },
+    { name: 'Http', id: 'duplicate-http' },
+  ];
+  const createdOptions: CredentialSentryHttpOptions[] = [];
+
+  const integrations = buildCredentialSafeSentryIntegrations(
+    defaults,
+    (options) => {
+      createdOptions.push(options);
+      return { name: 'Http', id: 'credential-safe-http', httpOptions: options };
+    }
+  );
+
+  assert.equal(createdOptions.length, 1);
+  assert.equal(
+    integrations.filter((integration) => integration.name === 'Http').length,
+    1
+  );
+  assert.deepEqual(
+    integrations.map(({ id }) => id),
+    ['console', 'credential-safe-http']
+  );
+  assert.equal(createdOptions[0].disableIncomingRequestSpans, true);
+  assert.equal(
+    createdOptions[0].ignoreIncomingRequestBody(
+      'https://course.example/api/auth/callback/credentials?csrf=true'
+    ),
+    true
+  );
+  assert.equal(
+    createdOptions[0].ignoreIncomingRequestBody(
+      'https://course.example/api/courses'
+    ),
+    false
+  );
+});
+
+test('credential-safe HTTP instrumentation prevents sensitive sampled trace body data', async () => {
+  const { buildCredentialSafeSentryIntegrations } =
+    await loadCredentialSentryScrubber();
+  const url = '/api/auth/callback/credentials?csrf=true';
+  const secrets = [
+    'trace-student@example.com',
+    'Trace-Plaintext-Password-123!',
+    '198.51.100.90',
+    'next-auth.session-token=trace-cookie',
+    'Bearer trace-access-token',
+    '$2b$12$trace-password-hash',
+    'trace-nextauth-secret',
+  ];
+  const body = {
+    email: secrets[0],
+    password: secrets[1],
+    source: secrets[2],
+    cookie: secrets[3],
+    token: secrets[4],
+    hash: secrets[5],
+    secret: secrets[6],
+  };
+  const defaultIntegrations: TestSentryIntegration[] = [
+    { name: 'Http', id: 'default-http' },
+  ];
+  const unsafeTrace = simulateSampledIncomingTrace(
+    defaultIntegrations,
+    url,
+    body
+  );
+  const unsafeSerialized = JSON.stringify(unsafeTrace);
+
+  assert.match(unsafeSerialized, /http\.request\.body\.data/);
+  for (const secret of secrets) {
+    assert.equal(unsafeSerialized.includes(secret), true, `${secret} baseline`);
+  }
+
+  const safeIntegrations = buildCredentialSafeSentryIntegrations(
+    defaultIntegrations,
+    (options) => ({
+      name: 'Http',
+      id: 'credential-safe-http',
+      httpOptions: options,
+    })
+  );
+  const safeSerialized = JSON.stringify(
+    simulateSampledIncomingTrace(safeIntegrations, url, body)
+  );
+
+  assert.doesNotMatch(safeSerialized, /http\.request\.body\.data/);
+  for (const secret of secrets) {
+    assert.equal(safeSerialized.includes(secret), false, `${secret} leaked`);
+  }
+});
+
 test('server Sentry config installs the credential event scrubber as beforeSend', async () => {
   const config = await readFile(
     new URL('../sentry.server.config.ts', import.meta.url),
@@ -591,6 +759,9 @@ test('server Sentry config installs the credential event scrubber as beforeSend'
 
   assert.match(config, /scrubCredentialAuthenticationEvent/);
   assert.match(config, /beforeSend:\s*scrubCredentialAuthenticationEvent/);
+  assert.match(config, /buildCredentialSafeSentryIntegrations/);
+  assert.match(config, /Sentry\.httpIntegration/);
+  assert.match(config, /integrations:\s*\(defaultIntegrations\)/);
 });
 
 test('Google sign-in plus JWT and session population remain intact', async (t) => {
