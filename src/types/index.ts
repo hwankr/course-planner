@@ -28,8 +28,6 @@ export interface IUser {
   provider?: 'credentials' | 'google';
   onboardingCompleted: boolean;
   lastLoginAt?: Date;                    // 마지막 접속 시간
-  failedLoginAttempts?: number;
-  lockUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -7,6 +7,7 @@ import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useGuestStore } from '@/stores/guestStore';
 import { Button, Input } from '@/components/ui';
+import { LOGIN_FAILURE_MESSAGE } from '@/lib/auth/login-message';
 import { detectInAppBrowser, openInExternalBrowser } from '@/lib/inapp-browser';
 
 export default function LoginPage() {
@@ -41,8 +42,8 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
+    } catch {
+      setError(LOGIN_FAILURE_MESSAGE);
     } finally {
       setIsSubmitting(false);
     }

@@ -6,11 +6,56 @@
 
 import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import type { CredentialsConfig } from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import type { MajorType } from '@/types';
 import { userService } from '@/services';
+import { authenticationService } from '@/services/authentication.service';
 import { env } from '@/lib/env';
+import { getCredentialClientSource } from '@/lib/auth/client-source';
 import * as Sentry from '@sentry/nextjs';
+
+type CredentialsAuthorize = CredentialsConfig<{
+  email: { label: string; type: string };
+  password: { label: string; type: string };
+}>['authorize'];
+
+interface CredentialsAuthorizeDependencies {
+  authenticateCredentials: typeof authenticationService.authenticateCredentials;
+  getClientSource: typeof getCredentialClientSource;
+  captureException(error: unknown): unknown;
+}
+
+export function createCredentialsAuthorize(
+  dependencies: CredentialsAuthorizeDependencies
+): CredentialsAuthorize {
+  return async (credentials, request) => {
+    try {
+      const user = await dependencies.authenticateCredentials({
+        email: credentials?.email ?? '',
+        password: credentials?.password ?? '',
+        source: dependencies.getClientSource(request.headers),
+      });
+      if (!user) return null;
+
+      return {
+        id: user._id.toString(),
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        department: user.department?.toString(),
+        role: user.role,
+        onboardingCompleted: user.onboardingCompleted,
+        majorType: user.majorType,
+        secondaryDepartment: user.secondaryDepartment?.toString(),
+        curriculumYear: user.curriculumYear,
+      };
+    } catch (error) {
+      dependencies.captureException(error);
+      return null;
+    }
+  };
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -24,51 +69,12 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          throw new Error('이메일과 비밀번호를 입력해주세요.');
-        }
-
-        // Check account lockout
-        const isLocked = await userService.isAccountLocked(credentials.email);
-        if (isLocked) {
-          throw new Error('로그인 시도가 너무 많습니다. 15분 후에 다시 시도해주세요.');
-        }
-
-        const user = await userService.findByEmailWithPassword(credentials.email);
-        if (!user) {
-          throw new Error('등록되지 않은 이메일입니다.');
-        }
-
-        if (!user.password) {
-          throw new Error('Google 계정으로 가입된 사용자입니다. Google 로그인을 이용해주세요.');
-        }
-
-        const isValid = await userService.verifyPassword(
-          credentials.password,
-          user.password
-        );
-        if (!isValid) {
-          await userService.recordFailedLogin(credentials.email);
-          throw new Error('비밀번호가 일치하지 않습니다.');
-        }
-
-        // Reset failed login attempts on success
-        await userService.resetFailedLogins(credentials.email);
-
-        return {
-          id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          department: user.department?.toString(),
-          role: user.role,
-          onboardingCompleted: user.onboardingCompleted,
-          majorType: user.majorType,
-          secondaryDepartment: user.secondaryDepartment?.toString(),
-          curriculumYear: user.curriculumYear,
-        };
-      },
+      authorize: createCredentialsAuthorize({
+        authenticateCredentials: (input) =>
+          authenticationService.authenticateCredentials(input),
+        getClientSource: getCredentialClientSource,
+        captureException: (error) => Sentry.captureException(error),
+      }),
     }),
   ],
   callbacks: {

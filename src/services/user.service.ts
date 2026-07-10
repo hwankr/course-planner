@@ -17,8 +17,6 @@ import { feedbackService } from './feedback.service';
 import { patchNoteService } from './patchNote.service';
 import { UserSecurityError } from './user-security.error';
 
-const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
-const MAX_LOGIN_ATTEMPTS = 5;
 const ADMIN_MEMBERSHIP_GUARD_ID = 'admin-membership';
 
 async function ensureAdminMembershipGuard(): Promise<void> {
@@ -76,53 +74,6 @@ async function requireAnotherAdministrator(
 }
 
 /**
- * Check if account is locked
- */
-async function isAccountLocked(email: string): Promise<boolean> {
-  await connectDB();
-  const user = await User.findOne({ email: email.toLowerCase() }).select('lockUntil').lean();
-  if (!user?.lockUntil) return false;
-  if (new Date() > user.lockUntil) {
-    // Lock expired, reset
-    await User.updateOne(
-      { email: email.toLowerCase() },
-      { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } }
-    );
-    return false;
-  }
-  return true;
-}
-
-/**
- * Record failed login attempt
- */
-async function recordFailedLogin(email: string): Promise<void> {
-  await connectDB();
-  const user = await User.findOneAndUpdate(
-    { email: email.toLowerCase() },
-    { $inc: { failedLoginAttempts: 1 } },
-    { new: true, select: 'failedLoginAttempts' }
-  );
-  if (user && (user.failedLoginAttempts ?? 0) >= MAX_LOGIN_ATTEMPTS) {
-    await User.updateOne(
-      { email: email.toLowerCase() },
-      { $set: { lockUntil: new Date(Date.now() + LOCK_TIME) } }
-    );
-  }
-}
-
-/**
- * Reset failed login attempts on successful login
- */
-async function resetFailedLogins(email: string): Promise<void> {
-  await connectDB();
-  await User.updateOne(
-    { email: email.toLowerCase() },
-    { $set: { failedLoginAttempts: 0 }, $unset: { lockUntil: 1 } }
-  );
-}
-
-/**
  * 이메일로 사용자 조회
  */
 async function findByEmail(email: string): Promise<IUserDocument | null> {
@@ -169,16 +120,6 @@ async function create(input: CreateUserInput): Promise<IUserDocument> {
   });
 
   return user;
-}
-
-/**
- * 비밀번호 검증
- */
-async function verifyPassword(
-  plainPassword: string,
-  hashedPassword: string
-): Promise<boolean> {
-  return bcrypt.compare(plainPassword, hashedPassword);
 }
 
 /**
@@ -371,13 +312,9 @@ export const userService = {
   findByEmailWithPassword,
   findById,
   create,
-  verifyPassword,
   update,
   findOrCreateOAuthUser,
   deleteOwnAccount,
-  isAccountLocked,
-  recordFailedLogin,
-  resetFailedLogins,
   findAllUsers,
   updateRole,
   updateLastLogin,

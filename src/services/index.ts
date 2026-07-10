@@ -26,3 +26,12 @@ export type {
   LoginThrottleInput,
   LoginThrottleKeys,
 } from './login-throttle.service';
+export {
+  authenticationService,
+  createAuthenticationService,
+  DUMMY_PASSWORD_HASH,
+} from './authentication.service';
+export type {
+  AuthenticationDependencies,
+  CredentialAuthenticationInput,
+} from './authentication.service';

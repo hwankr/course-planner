@@ -72,13 +72,6 @@ const userSchema = new Schema<IUserDocument>(
     lastLoginAt: {
       type: Date,
     },
-    failedLoginAttempts: {
-      type: Number,
-      default: 0,
-    },
-    lockUntil: {
-      type: Date,
-    },
   },
   {
     timestamps: true,
