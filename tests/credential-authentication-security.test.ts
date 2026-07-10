@@ -631,8 +631,14 @@ test('credential callback URL policy handles absolute, relative, query, and frag
   for (const url of [
     '/api/auth/callback/credentials',
     '/api/auth/callback/credentials?csrf=true',
+    '/api/auth/callback/credentials/?csrf=true',
+    '/api/auth/callback/%63redentials?csrf=true',
+    '/api/auth/callback/%2563redentials?csrf=true',
     'api/auth/callback/credentials?csrf=true',
+    'api/auth/callback/%63redentials?csrf=true',
     'https://course.example/api/auth/callback/credentials?csrf=true#result',
+    'https://course.example/api/auth/callback/credentials/?csrf=true#result',
+    'https://course.example/api/auth/callback/%63redentials?csrf=true#result',
     '//course.example/api/auth/callback/credentials?csrf=true',
   ]) {
     assert.equal(isCredentialAuthenticationCallbackUrl(url), true, url);
@@ -651,6 +657,77 @@ test('credential callback URL policy handles absolute, relative, query, and frag
       false,
       String(url)
     );
+  }
+
+  for (const malformedUrl of [
+    '/api/auth/callback/%',
+    '/api/auth/callback/%E0%A4%A',
+    'https://course.example/api/auth/callback/%ZZcredentials',
+  ]) {
+    assert.doesNotThrow(() =>
+      isCredentialAuthenticationCallbackUrl(malformedUrl)
+    );
+    assert.equal(isCredentialAuthenticationCallbackUrl(malformedUrl), false);
+  }
+});
+
+test('encoded and trailing-slash callback events still receive complete secret scrubbing', async () => {
+  const { scrubCredentialAuthenticationEvent } =
+    await loadCredentialSentryScrubber();
+  const secrets = [
+    'variant-student@example.com',
+    'Variant-Plaintext-Password-123!',
+    '203.0.113.99',
+    'next-auth.session-token=variant-cookie',
+    'Bearer variant-access-token',
+    '$2b$12$variant-password-hash',
+    'variant-nextauth-secret',
+    'variant-query-secret',
+  ];
+  const urls = [
+    `https://course.example/api/auth/callback/%63redentials?token=${secrets[7]}`,
+    `/api/auth/callback/credentials/?token=${secrets[7]}`,
+  ];
+
+  for (const url of urls) {
+    const event: CredentialSentryEvent = {
+      message: 'Credential authentication failed',
+      request: {
+        url,
+        method: 'POST',
+        data: {
+          email: secrets[0],
+          password: secrets[1],
+          passwordHash: secrets[5],
+        },
+        body: JSON.stringify({ email: secrets[0], password: secrets[1] }),
+        headers: {
+          authorization: secrets[4],
+          cookie: secrets[3],
+          'x-forwarded-for': secrets[2],
+        },
+        cookies: { session: secrets[3] },
+        env: { NEXTAUTH_SECRET: secrets[6] },
+        query: { token: secrets[7] },
+        query_string: `token=${secrets[7]}`,
+      },
+      user: {
+        email: secrets[0],
+        ip_address: secrets[2],
+      },
+    };
+
+    const sanitized = scrubCredentialAuthenticationEvent(event);
+    const serialized = JSON.stringify(sanitized);
+
+    assert.deepEqual(sanitized.request, {
+      url: '/api/auth/callback/credentials',
+      method: 'POST',
+    });
+    assert.equal(Object.hasOwn(sanitized, 'user'), false);
+    for (const secret of secrets) {
+      assert.equal(serialized.includes(secret), false, `${url}: ${secret}`);
+    }
   }
 });
 
@@ -748,6 +825,51 @@ test('credential-safe HTTP instrumentation prevents sensitive sampled trace body
   assert.doesNotMatch(safeSerialized, /http\.request\.body\.data/);
   for (const secret of secrets) {
     assert.equal(safeSerialized.includes(secret), false, `${secret} leaked`);
+  }
+});
+
+test('encoded and trailing-slash callbacks cannot retain secret-bearing sampled trace bodies', async () => {
+  const { buildCredentialSafeSentryIntegrations } =
+    await loadCredentialSentryScrubber();
+  const secrets = [
+    'variant-trace-student@example.com',
+    'Variant-Trace-Plaintext-Password-123!',
+    '198.51.100.99',
+    'next-auth.session-token=variant-trace-cookie',
+    'Bearer variant-trace-access-token',
+    '$2b$12$variant-trace-password-hash',
+    'variant-trace-nextauth-secret',
+  ];
+  const body = {
+    email: secrets[0],
+    password: secrets[1],
+    source: secrets[2],
+    cookie: secrets[3],
+    token: secrets[4],
+    hash: secrets[5],
+    secret: secrets[6],
+  };
+  const integrations = buildCredentialSafeSentryIntegrations(
+    [{ name: 'Http', id: 'default-http' }] as TestSentryIntegration[],
+    (options) => ({
+      name: 'Http',
+      id: 'credential-safe-http',
+      httpOptions: options,
+    })
+  );
+
+  for (const url of [
+    'https://course.example/api/auth/callback/%63redentials?csrf=true',
+    '/api/auth/callback/credentials/?csrf=true',
+  ]) {
+    const serialized = JSON.stringify(
+      simulateSampledIncomingTrace(integrations, url, body)
+    );
+
+    assert.doesNotMatch(serialized, /http\.request\.body\.data/);
+    for (const secret of secrets) {
+      assert.equal(serialized.includes(secret), false, `${url}: ${secret}`);
+    }
   }
 });
 

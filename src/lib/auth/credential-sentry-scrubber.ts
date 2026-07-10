@@ -11,10 +11,28 @@ function getRequestPath(url: string): string {
   }
 }
 
+function normalizeRequestPath(path: string): string | undefined {
+  let decoded = path;
+
+  // Next routing decodes path segments. Repeat to cover nested encodings.
+  while (decoded.includes('%')) {
+    let next: string;
+    try {
+      next = decodeURIComponent(decoded);
+    } catch {
+      return undefined;
+    }
+    if (next === decoded) break;
+    decoded = next;
+  }
+
+  return decoded.length > 1 ? decoded.replace(/\/+$/, '') : decoded;
+}
+
 export function isCredentialAuthenticationCallbackUrl(url: unknown): boolean {
   return (
     typeof url === 'string' &&
-    getRequestPath(url) === CREDENTIAL_AUTH_CALLBACK_PATH
+    normalizeRequestPath(getRequestPath(url)) === CREDENTIAL_AUTH_CALLBACK_PATH
   );
 }
 
