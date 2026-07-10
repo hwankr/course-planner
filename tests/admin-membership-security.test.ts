@@ -58,6 +58,32 @@ interface PatchNoteServiceDouble {
   deleteAllReadsByUser(userId: string, session?: ClientSession): Promise<number>;
 }
 
+interface MembershipUserState {
+  _id: string;
+  role: 'student' | 'admin';
+}
+
+interface StatefulMembershipDouble {
+  events: string[];
+  adminIds(): string[];
+  retryCount(): number;
+}
+
+interface MembershipTransactionContext {
+  attempt: number;
+  guardWritten: boolean;
+  releaseGuard?: () => void;
+  sessionId: number;
+  snapshotRevision: number;
+  users: Map<string, MembershipUserState>;
+}
+
+interface StatefulMembershipDoubleOptions {
+  synchronizeFirstAttempts?: number;
+}
+
+class TransientMembershipWriteConflict extends Error {}
+
 async function loadSecurityModules() {
   try {
     const [
@@ -178,6 +204,295 @@ function sessionResultQuery<T>(
       onSession?.();
       return Promise.resolve(value);
     },
+  };
+}
+
+function installStatefulMembershipDouble(
+  t: TestContext,
+  modules: NonNullable<Awaited<ReturnType<typeof loadSecurityModules>>>,
+  initialUsers: MembershipUserState[],
+  options: StatefulMembershipDoubleOptions = {}
+): StatefulMembershipDouble {
+  const events: string[] = [];
+  const transactions = new Map<ClientSession, MembershipTransactionContext>();
+  let committedUsers = new Map(
+    initialUsers.map((user) => [user._id, { ...user }])
+  );
+  let committedRevision = 0;
+  let guardLocked = false;
+  const guardWaiters: Array<() => void> = [];
+  let retries = 0;
+  let nextSessionId = 0;
+  let synchronizedAttemptArrivals = 0;
+  let releaseSynchronizedAttempts!: () => void;
+  const synchronizedAttempts = new Promise<void>((resolveReady) => {
+    releaseSynchronizedAttempts = resolveReady;
+  });
+  let releaseFirstGuardAcquired!: () => void;
+  const firstGuardAcquired = new Promise<void>((resolveAcquired) => {
+    releaseFirstGuardAcquired = resolveAcquired;
+  });
+
+  function cloneUsers(users: Map<string, MembershipUserState>) {
+    return new Map(
+      [...users].map(([id, user]) => [id, { ...user }])
+    );
+  }
+
+  function requireTransaction(
+    session: ClientSession | undefined,
+    requireGuard = true
+  ): MembershipTransactionContext {
+    assert.ok(session, 'a transaction session is required');
+    const transaction = transactions.get(session);
+    assert.ok(transaction, 'the session must have an active transaction');
+    if (requireGuard) {
+      assert.equal(
+        transaction.guardWritten,
+        true,
+        'the shared guard must be written before user state is read or changed'
+      );
+    }
+    return transaction;
+  }
+
+  async function synchronizeFirstAttempt(
+    transaction: MembershipTransactionContext
+  ): Promise<void> {
+    const participantCount = options.synchronizeFirstAttempts ?? 0;
+    if (participantCount === 0 || transaction.attempt !== 1) return;
+
+    synchronizedAttemptArrivals += 1;
+    if (synchronizedAttemptArrivals === participantCount) {
+      releaseSynchronizedAttempts();
+    }
+    await synchronizedAttempts;
+
+    if (transaction.sessionId !== 1) {
+      await firstGuardAcquired;
+    }
+  }
+
+  async function acquireGuard(): Promise<() => void> {
+    if (guardLocked) {
+      await new Promise<void>((resolveGuard) => {
+        guardWaiters.push(resolveGuard);
+      });
+    } else {
+      guardLocked = true;
+    }
+
+    return () => {
+      const next = guardWaiters.shift();
+      if (next) {
+        next();
+      } else {
+        guardLocked = false;
+      }
+    };
+  }
+
+  function releaseTransactionGuard(transaction: MembershipTransactionContext): void {
+    transaction.releaseGuard?.();
+    transaction.releaseGuard = undefined;
+  }
+
+  t.mock.method(mongoose, 'startSession', async () => {
+    const sessionId = ++nextSessionId;
+    let clientSession!: ClientSession;
+    const session: SessionDouble = {
+      async withTransaction<T>(
+        operation: () => Promise<T>,
+        options?: Record<string, unknown>
+      ): Promise<T> {
+        assert.deepEqual(options, {
+          readConcern: { level: 'snapshot' },
+          writeConcern: { w: 'majority' },
+        });
+        let attempt = 0;
+        while (true) {
+          attempt += 1;
+          events.push(`transaction:start:${sessionId}:attempt:${attempt}`);
+          const transaction: MembershipTransactionContext = {
+            attempt,
+            guardWritten: false,
+            sessionId,
+            snapshotRevision: committedRevision,
+            users: cloneUsers(committedUsers),
+          };
+          transactions.set(clientSession, transaction);
+
+          try {
+            const value = await operation();
+            assert.equal(transaction.guardWritten, true, 'a transaction cannot commit without the guard');
+            committedUsers = cloneUsers(transaction.users);
+            committedRevision += 1;
+            events.push(`transaction:commit:${sessionId}:attempt:${attempt}`);
+            releaseTransactionGuard(transaction);
+            return value;
+          } catch (error) {
+            releaseTransactionGuard(transaction);
+            if (error instanceof TransientMembershipWriteConflict) {
+              retries += 1;
+              events.push(`transaction:retry:${sessionId}:attempt:${attempt + 1}`);
+              continue;
+            }
+            events.push(`transaction:abort:${sessionId}:attempt:${attempt}`);
+            throw error;
+          } finally {
+            transactions.delete(clientSession);
+          }
+        }
+      },
+      async endSession(): Promise<void> {
+        events.push(`session:end:${sessionId}`);
+      },
+    };
+    clientSession = session as unknown as ClientSession;
+    return clientSession;
+  });
+
+  t.mock.method(
+    modules.AdminSecurityState,
+    'updateOne',
+    async (
+      filter: Record<string, unknown>,
+      update: Record<string, unknown>,
+      options?: Record<string, unknown>
+    ) => {
+      assert.deepEqual(filter, { _id: 'admin-membership' });
+      const session = options?.session as ClientSession | undefined;
+      if (!session) {
+        assert.deepEqual(update, { $setOnInsert: { revision: 0 } });
+        assert.equal(options?.upsert, true);
+        events.push('guard:ensure');
+        return { acknowledged: true };
+      }
+
+      const transaction = requireTransaction(session, false);
+      assert.deepEqual(update, { $inc: { revision: 1 } });
+      assert.equal(transaction.guardWritten, false, 'the guard is written once per attempt');
+      await synchronizeFirstAttempt(transaction);
+      const releaseGuard = await acquireGuard();
+      if (transaction.sessionId === 1 && transaction.attempt === 1) {
+        releaseFirstGuardAcquired();
+      }
+      if (transaction.snapshotRevision !== committedRevision) {
+        events.push(
+          `transaction:write-conflict:${transaction.sessionId}:attempt:${transaction.attempt}`
+        );
+        releaseGuard();
+        throw new TransientMembershipWriteConflict();
+      }
+      transaction.releaseGuard = releaseGuard;
+      transaction.guardWritten = true;
+      events.push('transaction:guard');
+      events.push(
+        `transaction:guard:${transaction.sessionId}:attempt:${transaction.attempt}`
+      );
+      return { acknowledged: true };
+    }
+  );
+
+  t.mock.method(modules.User, 'findById', (id: string) => ({
+    session(session: ClientSession) {
+      const transaction = requireTransaction(session);
+      events.push(`transaction:target-read:${id}`);
+      events.push(
+        `transaction:target-read:${transaction.sessionId}:attempt:${transaction.attempt}:${id}`
+      );
+      return {
+        async lean(): Promise<MembershipUserState | null> {
+          const user = transaction.users.get(id);
+          return user ? { ...user } : null;
+        },
+      };
+    },
+  }));
+
+  t.mock.method(modules.User, 'exists', (filter: Record<string, unknown>) => ({
+    session(session: ClientSession): Promise<{ _id: string } | null> {
+      const transaction = requireTransaction(session);
+      const excludedId = (filter._id as { $ne: string }).$ne;
+      assert.equal(filter.role, 'admin');
+      events.push(`transaction:admin-check:${excludedId}`);
+      events.push(
+        `transaction:admin-check:${transaction.sessionId}:attempt:${transaction.attempt}:${excludedId}`
+      );
+      const anotherAdmin = [...transaction.users.values()].find(
+        (user) => user._id !== excludedId && user.role === 'admin'
+      );
+      return Promise.resolve(anotherAdmin ? { _id: anotherAdmin._id } : null);
+    },
+  }));
+
+  t.mock.method(
+    modules.User,
+    'findByIdAndUpdate',
+    (
+      id: string,
+      update: { role: MembershipUserState['role'] },
+      options?: Record<string, unknown>
+    ) => {
+      const transaction = requireTransaction(options?.session as ClientSession | undefined);
+      const user = transaction.users.get(id);
+      const updatedUser = user ? { ...user, role: update.role } : null;
+      if (updatedUser) transaction.users.set(id, updatedUser);
+      events.push(`transaction:role-update:${id}:${update.role}`);
+      return {
+        populate() {
+          return {
+            async lean(): Promise<MembershipUserState | null> {
+              return updatedUser ? { ...updatedUser } : null;
+            },
+          };
+        },
+      };
+    }
+  );
+
+  t.mock.method(
+    modules.User,
+    'findByIdAndDelete',
+    async (id: string, options?: Record<string, unknown>) => {
+      const transaction = requireTransaction(options?.session as ClientSession | undefined);
+      const user = transaction.users.get(id);
+      if (user) transaction.users.delete(id);
+      events.push(`transaction:user-delete:${id}`);
+      return user ? { ...user } : null;
+    }
+  );
+
+  function cascade(label: string) {
+    return async (userId: string, session?: ClientSession): Promise<number> => {
+      requireTransaction(session);
+      events.push(`transaction:cascade:${label}:${userId}`);
+      return 1;
+    };
+  }
+
+  t.mock.method(modules.planService, 'deleteAllByUser', cascade('plans'));
+  t.mock.method(modules.courseService, 'deleteCustomByUser', cascade('courses'));
+  t.mock.method(
+    modules.graduationRequirementService,
+    'remove',
+    cascade('graduation-requirement')
+  );
+  t.mock.method(modules.feedbackService, 'deleteAllByUser', cascade('feedback'));
+  t.mock.method(
+    modules.patchNoteService,
+    'deleteAllReadsByUser',
+    cascade('patch-note-reads')
+  );
+
+  return {
+    events,
+    adminIds: () =>
+      [...committedUsers.values()]
+        .filter((user) => user.role === 'admin')
+        .map((user) => user._id)
+        .sort(),
+    retryCount: () => retries,
   };
 }
 
@@ -351,6 +666,76 @@ test('deleting the final administrator rejects with LAST_ADMIN before cascading'
   );
   assert.ok(events.indexOf('guard:transaction') < events.indexOf('another-admin:read'));
   assert.equal(events.at(-1), 'session:end');
+});
+
+test('self-service deletion rejects the final administrator with LAST_ADMIN', async (t) => {
+  const modules = await loadSecurityModules();
+  const state = installStatefulMembershipDouble(t, modules, [
+    { _id: targetAdminId, role: 'admin' },
+  ]);
+
+  await assert.rejects(
+    modules.userService.deleteOwnAccount(targetAdminId),
+    (error: unknown) =>
+      error instanceof modules.UserSecurityError && error.code === 'LAST_ADMIN'
+  );
+
+  assert.deepEqual(state.adminIds(), [targetAdminId]);
+  assert.equal(state.retryCount(), 0);
+  assert.ok(
+    state.events.indexOf('transaction:guard') <
+      state.events.indexOf(`transaction:target-read:${targetAdminId}`),
+    'the guard write must precede the self-delete target read'
+  );
+  assert.ok(
+    state.events.indexOf('transaction:guard') <
+      state.events.indexOf(`transaction:admin-check:${targetAdminId}`),
+    'the guard write must precede the final-administrator predicate'
+  );
+  assert.doesNotMatch(state.events.join('\n'), /cascade|user-delete/);
+});
+
+test('simultaneous self-delete and demotion serialize, retry, and preserve one administrator', async (t) => {
+  const modules = await loadSecurityModules();
+  const state = installStatefulMembershipDouble(t, modules, [
+    { _id: targetAdminId, role: 'admin' },
+    { _id: otherAdminId, role: 'admin' },
+  ], { synchronizeFirstAttempts: 2 });
+
+  const [selfDelete, demotion] = await Promise.allSettled([
+    modules.userService.deleteOwnAccount(targetAdminId),
+    modules.userService.updateRole(otherAdminId, 'student'),
+  ]);
+
+  assert.equal(selfDelete.status, 'fulfilled');
+  assert.equal(demotion.status, 'rejected');
+  assert.ok(
+    demotion.reason instanceof modules.UserSecurityError &&
+      demotion.reason.code === 'LAST_ADMIN'
+  );
+  assert.deepEqual(state.adminIds(), [otherAdminId]);
+  assert.equal(state.retryCount(), 1, 'the guard write conflict must retry the losing operation');
+  assert.equal(
+    state.events.filter((event) => event.startsWith('transaction:commit:')).length,
+    1,
+    'only one administrator-decreasing transaction may commit'
+  );
+
+  const retry = state.events.indexOf('transaction:retry:2:attempt:2');
+  const retriedGuard = state.events.indexOf('transaction:guard:2:attempt:2');
+  const retriedTargetRead = state.events.indexOf(
+    `transaction:target-read:2:attempt:2:${otherAdminId}`
+  );
+  const retriedAdminCheck = state.events.indexOf(
+    `transaction:admin-check:2:attempt:2:${otherAdminId}`
+  );
+  assert.ok(retry >= 0, 'the losing transaction must record a retry');
+  assert.ok(
+    retry < retriedGuard &&
+      retriedGuard < retriedTargetRead &&
+      retriedTargetRead < retriedAdminCheck,
+    'the retried operation must take the guard before re-reading committed administrator state'
+  );
 });
 
 test('self-service deletion runs every cascade sequentially with the transaction session', async (t) => {
