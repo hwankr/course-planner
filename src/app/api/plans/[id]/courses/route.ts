@@ -53,6 +53,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
     const plan = await planService.addCourseToSemester({
       planId,
+      actorId: session.user.id,
       year,
       term,
       courseId,
@@ -136,7 +137,8 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       planId,
       year,
       term,
-      courseId
+      courseId,
+      session.user.id
     );
 
     return NextResponse.json({

@@ -131,14 +131,17 @@ async function addSemester(
  * 학기에 과목 추가
  */
 async function addCourseToSemester(
-  input: AddCourseToSemesterInput
+  input: AddCourseToSemesterInput & { actorId: string }
 ): Promise<IPlanDocument | null> {
   await connectDB();
 
-  const { planId, year, term, courseId, category, curriculumYear } = input;
+  const { planId, actorId, year, term, courseId, category, curriculumYear } = input;
 
-  // 과목 존재 확인
-  const course = await Course.findById(courseId);
+  // 공식 과목은 공유하고, 커스텀 과목은 생성자에게만 노출한다.
+  const course = await Course.findOne({
+    _id: courseId,
+    $or: [{ createdBy: null }, { createdBy: actorId }],
+  });
   if (!course) {
     throw new Error('존재하지 않는 과목입니다.');
   }
@@ -205,7 +208,8 @@ async function removeCourseFromSemester(
   planId: string,
   year: number,
   term: Term,
-  courseId: string
+  courseId: string,
+  actorId: string
 ): Promise<IPlanDocument | null> {
   await connectDB();
 
@@ -232,10 +236,7 @@ async function removeCourseFromSemester(
   // 커스텀 과목이면 DB에서도 삭제 (해당 유저만 사용하므로)
   // withVersionRetry 밖에서 실행하여 plan 저장과 독립적으로 처리
   try {
-    const course = await Course.findById(courseId).lean();
-    if (course?.createdBy) {
-      await Course.deleteOne({ _id: courseId });
-    }
+    await Course.deleteOne({ _id: courseId, createdBy: actorId });
   } catch {
     // 과목 삭제 실패해도 학기에서 제거는 유지
   }
@@ -285,7 +286,8 @@ async function updateCourseStatus(
 async function removeSemester(
   planId: string,
   year: number,
-  term: Term
+  term: Term,
+  actorId: string
 ): Promise<IPlanDocument> {
   await connectDB();
 
@@ -320,7 +322,7 @@ async function removeSemester(
     if (courseIds.length > 0) {
       await Course.deleteMany({
         _id: { $in: courseIds },
-        createdBy: { $ne: null },
+        createdBy: actorId,
       });
     }
   } catch {
@@ -336,7 +338,8 @@ async function removeSemester(
 async function clearSemester(
   planId: string,
   year: number,
-  term: Term
+  term: Term,
+  actorId: string
 ): Promise<IPlanDocument> {
   await connectDB();
 
@@ -371,7 +374,7 @@ async function clearSemester(
     if (courseIds.length > 0) {
       await Course.deleteMany({
         _id: { $in: courseIds },
-        createdBy: { $ne: null },
+        createdBy: actorId,
       });
     }
   } catch {
@@ -442,7 +445,7 @@ async function moveCourse(
 /**
  * 계획 초기화 (모든 학기/과목 삭제, 계획 자체는 유지)
  */
-async function resetPlan(planId: string): Promise<IPlanDocument> {
+async function resetPlan(planId: string, actorId: string): Promise<IPlanDocument> {
   await connectDB();
 
   // 커스텀 과목 삭제를 위해 모든 학기의 과목 ID를 미리 수집
@@ -467,7 +470,7 @@ async function resetPlan(planId: string): Promise<IPlanDocument> {
     if (courseIds.length > 0) {
       await Course.deleteMany({
         _id: { $in: courseIds },
-        createdBy: { $ne: null },
+        createdBy: actorId,
       });
     }
   } catch {

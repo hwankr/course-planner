@@ -6,6 +6,7 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
+import { syncAcademicEvents } from './seed-operations';
 
 // Load env
 dotenv.config({ path: path.resolve(__dirname, '../.env.local') });
@@ -121,13 +122,6 @@ async function main() {
   await mongoose.connect(MONGODB_URI!);
   console.log('연결 완료.');
 
-  // 기존 데이터 확인
-  const existingCount = await AcademicEvent.countDocuments();
-  if (existingCount > 0) {
-    console.log(`기존 학사 일정 ${existingCount}건이 있습니다. 중복 방지를 위해 삭제 후 재삽입합니다.`);
-    await AcademicEvent.deleteMany({});
-  }
-
   console.log(`${EVENTS.length}개 일정 삽입 중...`);
 
   const docs = EVENTS.map((e) => ({
@@ -138,7 +132,11 @@ async function main() {
     isHoliday: false,
   }));
 
-  await AcademicEvent.insertMany(docs);
+  await syncAcademicEvents(
+    docs,
+    (filter, update, options) =>
+      AcademicEvent.findOneAndUpdate(filter, update, options).exec()
+  );
 
   console.log(`완료! ${EVENTS.length}개 학사 일정이 삽입되었습니다.`);
 

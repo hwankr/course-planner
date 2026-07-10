@@ -14,6 +14,11 @@ import { connectDB } from '../src/lib/db/mongoose';
 import Department from '../src/models/Department';
 import Course from '../src/models/Course';
 import Requirement from '../src/models/Requirement';
+import {
+  syncDepartments,
+  syncOfficialCourses,
+  syncRequirements,
+} from './seed-operations';
 
 // Type helpers
 type CourseRef = mongoose.Types.ObjectId;
@@ -724,34 +729,22 @@ const requirements: RequirementData[] = [
 // Seed Functions
 // ============================================
 
-async function clearDatabase() {
-  console.log('\n⚠️  경고: 시드 대상 데이터를 삭제합니다...');
-  const db = mongoose.connection.db!;
-  // users, plans 등 사용자 데이터는 유지하고 시드 대상만 삭제
-  const seedCollections = ['departments', 'courses', 'requirements'];
-  for (const name of seedCollections) {
-    try {
-      await db.dropCollection(name);
-      console.log(`  ✓ ${name} 컬렉션 삭제`);
-    } catch {
-      // 컬렉션이 없으면 무시
-      console.log(`  - ${name} 컬렉션 없음 (건너뜀)`);
-    }
-  }
-  console.log('✅ 시드 대상 데이터 삭제 완료\n');
-}
-
 async function seedDepartments(): Promise<Map<string, DeptRef>> {
-  console.log('📚 학과 데이터 생성 중...');
+  console.log('📚 학과 데이터 동기화 중...');
   const deptMap = new Map<string, DeptRef>();
 
-  for (const dept of departments) {
-    const created = await Department.create(dept);
-    deptMap.set(dept.code, created._id);
-    console.log(`  ✓ ${dept.code} - ${dept.name}`);
+  const synchronized = await syncDepartments(
+    departments,
+    (filter, update, options) =>
+      Department.findOneAndUpdate(filter, update, options).exec()
+  );
+
+  for (const department of synchronized) {
+    deptMap.set(department.code, department._id);
+    console.log(`  ✓ ${department.code} - ${department.name}`);
   }
 
-  console.log(`✅ 총 ${departments.length}개 학과 생성 완료\n`);
+  console.log(`✅ 총 ${departments.length}개 학과 동기화 완료\n`);
   return deptMap;
 }
 
@@ -790,21 +783,27 @@ async function seedCourses(
       }
     }
 
-    const created = await Course.create({
-      code: course.code,
-      name: course.name,
-      credits: course.credits,
-      department: deptId,
-      prerequisites: prerequisiteIds,
-      description: course.description,
-      semesters: course.semesters,
-      category: course.category,
-      recommendedYear: course.recommendedYear,
-      recommendedSemester: course.recommendedSemester,
-      isActive: true,
-    });
+    const [synchronized] = await syncOfficialCourses(
+      [
+        {
+          code: course.code,
+          name: course.name,
+          credits: course.credits,
+          department: deptId,
+          prerequisites: prerequisiteIds,
+          description: course.description,
+          semesters: course.semesters,
+          category: course.category,
+          recommendedYear: course.recommendedYear,
+          recommendedSemester: course.recommendedSemester,
+          isActive: true,
+        },
+      ],
+      (filter, update, options) =>
+        Course.findOneAndUpdate(filter, update, options).exec()
+    );
 
-    courseMap.set(course.code, created._id);
+    courseMap.set(course.code, synchronized._id);
     console.log(`  ✓ ${course.code} - ${course.name} (${course.category})`);
   }
 
@@ -838,14 +837,20 @@ async function seedRequirements(
         .filter((id): id is CourseRef => id !== undefined);
     }
 
-    await Requirement.create({
-      department: sweDeptId,
-      name: req.name,
-      category: req.category,
-      requiredCredits: req.requiredCredits,
-      description: req.description,
-      allowedCourses: allowedCourseIds,
-    });
+    await syncRequirements(
+      [
+        {
+          department: sweDeptId,
+          name: req.name,
+          category: req.category,
+          requiredCredits: req.requiredCredits,
+          description: req.description,
+          allowedCourses: allowedCourseIds,
+        },
+      ],
+      (filter, update, options) =>
+        Requirement.findOneAndUpdate(filter, update, options).exec()
+    );
 
     console.log(`  ✓ ${req.name} (${req.category}) - ${req.requiredCredits}학점`);
   }
@@ -864,9 +869,6 @@ async function main() {
 
     // Connect to database
     await connectDB();
-
-    // Clear existing data
-    await clearDatabase();
 
     // Seed data in order
     const deptMap = await seedDepartments();

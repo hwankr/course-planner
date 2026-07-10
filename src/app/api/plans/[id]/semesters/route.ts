@@ -98,7 +98,12 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    const plan = await planService.removeSemester(planId, year, term);
+    const plan = await planService.removeSemester(
+      planId,
+      year,
+      term,
+      session.user.id
+    );
 
     return NextResponse.json({
       success: true,
@@ -144,7 +149,12 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       );
     }
 
-    const plan = await planService.clearSemester(planId, year, term);
+    const plan = await planService.clearSemester(
+      planId,
+      year,
+      term,
+      session.user.id
+    );
 
     return NextResponse.json({
       success: true,

@@ -87,7 +87,7 @@ export async function DELETE(request: Request, { params }: RouteParams) {
       );
     }
 
-    const resetted = await planService.resetPlan(id);
+    const resetted = await planService.resetPlan(id, session.user.id);
 
     return NextResponse.json({
       success: true,
