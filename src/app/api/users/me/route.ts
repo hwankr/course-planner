@@ -3,7 +3,7 @@
  * @endpoint GET /api/users/me - 현재 사용자 정보 조회
  * @endpoint PATCH /api/users/me - 사용자 정보 업데이트
  * @endpoint DELETE /api/users/me - 회원 탈퇴 (계정 및 관련 데이터 삭제)
- * @service userService.findById, userService.update, userService.deleteWithCascade
+ * @service userService.findById, userService.update, userService.deleteOwnAccount
  * @migration-notes Express 변환 시: app.get('/api/users/me', ...), app.patch('/api/users/me', ...), app.delete('/api/users/me', ...)
  */
 
@@ -11,8 +11,15 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { userService } from '@/services';
+import { UserSecurityError } from '@/services/user-security.error';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
+
+function userSecurityStatus(error: UserSecurityError): number {
+  if (error.code === 'LAST_ADMIN') return 409;
+  if (error.code === 'USER_NOT_FOUND') return 404;
+  return 400;
+}
 
 export async function GET() {
   try {
@@ -134,13 +141,20 @@ export async function DELETE() {
       );
     }
 
-    await userService.deleteWithCascade(session.user.id);
+    await userService.deleteOwnAccount(session.user.id);
 
     return NextResponse.json({
       success: true,
       message: '계정이 삭제되었습니다.',
     });
   } catch (error) {
+    if (error instanceof UserSecurityError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: userSecurityStatus(error) }
+      );
+    }
+
     Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '계정 삭제에 실패했습니다.' },

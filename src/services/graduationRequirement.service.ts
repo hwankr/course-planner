@@ -5,6 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
+import type { ClientSession } from 'mongoose';
 import { GraduationRequirement, Plan, User } from '@/models';
 import type { IGraduationRequirementDocument } from '@/models';
 import type { IPlanDocument } from '@/models';
@@ -38,9 +39,12 @@ async function upsert(
 /**
  * 졸업요건 삭제
  */
-async function remove(userId: string): Promise<IGraduationRequirementDocument | null> {
+async function remove(
+  userId: string,
+  session?: ClientSession
+): Promise<IGraduationRequirementDocument | null> {
   await connectDB();
-  return GraduationRequirement.findOneAndDelete({ user: userId });
+  return GraduationRequirement.findOneAndDelete({ user: userId }, { session });
 }
 
 /**

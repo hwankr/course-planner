@@ -4,7 +4,7 @@
  * @migration-notes 분리 시 백엔드로 이동. HTTP 의존성 없음.
  */
 
-import mongoose from 'mongoose';
+import mongoose, { type ClientSession } from 'mongoose';
 import { connectDB } from '@/lib/db/mongoose';
 import { escapeRegex } from '@/lib/validation';
 import { Course, DepartmentCurriculum } from '@/models';
@@ -332,9 +332,9 @@ async function countByDepartment(departmentId: string, year?: number): Promise<n
  * NOTE: 의도적으로 hard delete (deleteMany) 사용. 기존 remove()는 soft delete (isActive: false)이지만,
  * 회원 탈퇴 시에는 사용자 데이터 완전 삭제가 목적이므로 hard delete가 적절함.
  */
-async function deleteCustomByUser(userId: string): Promise<number> {
+async function deleteCustomByUser(userId: string, session?: ClientSession): Promise<number> {
   await connectDB();
-  const result = await Course.deleteMany({ createdBy: userId });
+  const result = await Course.deleteMany({ createdBy: userId }, { session });
   return result.deletedCount;
 }
 

@@ -5,6 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
+import type { ClientSession } from 'mongoose';
 import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 import { Plan, Course, DepartmentCurriculum, User } from '@/models';
 import type { IPlanDocument } from '@/models';
@@ -555,9 +556,9 @@ async function resetPlan(planId: string, actorId: string): Promise<IPlanDocument
 /**
  * 사용자의 모든 계획 삭제 (회원 탈퇴 시 사용)
  */
-async function deleteAllByUser(userId: string): Promise<number> {
+async function deleteAllByUser(userId: string, session?: ClientSession): Promise<number> {
   await connectDB();
-  const result = await Plan.deleteMany({ user: userId });
+  const result = await Plan.deleteMany({ user: userId }, { session });
   return result.deletedCount;
 }
 

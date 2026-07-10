@@ -11,6 +11,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { userService } from '@/services/user.service';
+import { UserSecurityError } from '@/services/user-security.error';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
@@ -18,6 +19,12 @@ import * as Sentry from '@sentry/nextjs';
 const updateRoleSchema = z.object({
   role: z.enum(['student', 'admin']),
 });
+
+function userSecurityStatus(error: UserSecurityError): number {
+  if (error.code === 'LAST_ADMIN') return 409;
+  if (error.code === 'USER_NOT_FOUND') return 404;
+  return 400;
+}
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -58,6 +65,13 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, data: user });
   } catch (error) {
+    if (error instanceof UserSecurityError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: userSecurityStatus(error) }
+      );
+    }
+
     Sentry.captureException(error);
     return NextResponse.json(
       { success: false, error: '역할 변경에 실패했습니다.' },
@@ -86,16 +100,17 @@ export async function DELETE(_request: Request, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, message: '사용자가 삭제되었습니다.' });
   } catch (error) {
-    const message = error instanceof Error ? error.message : '사용자 삭제에 실패했습니다.';
-    const isClientError = message.includes('자신의 계정') || message.includes('마지막 관리자') || message.includes('찾을 수 없습니다');
-
-    if (!isClientError) {
-      Sentry.captureException(error);
+    if (error instanceof UserSecurityError) {
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: userSecurityStatus(error) }
+      );
     }
 
+    Sentry.captureException(error);
     return NextResponse.json(
-      { success: false, error: message },
-      { status: isClientError ? 400 : 500 }
+      { success: false, error: '사용자 삭제에 실패했습니다.' },
+      { status: 500 }
     );
   }
 }

@@ -5,8 +5,9 @@
  */
 
 import bcrypt from 'bcryptjs';
+import type { ClientSession } from 'mongoose';
 import { connectDB } from '@/lib/db/mongoose';
-import { User } from '@/models';
+import { AdminSecurityState, User } from '@/models';
 import type { IUserDocument } from '@/models';
 import type { CreateUserInput, MajorType } from '@/types';
 import { planService } from './plan.service';
@@ -14,9 +15,65 @@ import { courseService } from './course.service';
 import { graduationRequirementService } from './graduationRequirement.service';
 import { feedbackService } from './feedback.service';
 import { patchNoteService } from './patchNote.service';
+import { UserSecurityError } from './user-security.error';
 
 const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
 const MAX_LOGIN_ATTEMPTS = 5;
+const ADMIN_MEMBERSHIP_GUARD_ID = 'admin-membership';
+
+async function ensureAdminMembershipGuard(): Promise<void> {
+  await AdminSecurityState.updateOne(
+    { _id: ADMIN_MEMBERSHIP_GUARD_ID },
+    { $setOnInsert: { revision: 0 } },
+    { upsert: true }
+  );
+}
+
+async function withAdminMembershipTransaction<T>(
+  operation: (session: ClientSession) => Promise<T>
+): Promise<T> {
+  const db = await connectDB();
+  await ensureAdminMembershipGuard();
+  const session = await db.startSession();
+
+  try {
+    let value!: T;
+    await session.withTransaction(
+      async () => {
+        await AdminSecurityState.updateOne(
+          { _id: ADMIN_MEMBERSHIP_GUARD_ID },
+          { $inc: { revision: 1 } },
+          { session }
+        );
+        value = await operation(session);
+      },
+      {
+        readConcern: { level: 'snapshot' },
+        writeConcern: { w: 'majority' },
+      }
+    );
+    return value;
+  } finally {
+    await session.endSession();
+  }
+}
+
+async function requireAnotherAdministrator(
+  targetUserId: string,
+  session: ClientSession
+): Promise<void> {
+  const anotherAdmin = await User.exists({
+    _id: { $ne: targetUserId },
+    role: 'admin',
+  }).session(session);
+
+  if (!anotherAdmin) {
+    throw new UserSecurityError(
+      'LAST_ADMIN',
+      '마지막 관리자는 강등하거나 삭제할 수 없습니다.'
+    );
+  }
+}
 
 /**
  * Check if account is locked
@@ -171,29 +228,45 @@ async function findOrCreateOAuthUser(
 /**
  * 사용자 및 관련 데이터 모두 삭제 (회원 탈퇴)
  */
-async function deleteWithCascade(userId: string): Promise<void> {
-  await connectDB();
-
+async function deleteWithCascade(userId: string, session: ClientSession): Promise<void> {
   // 1. 사용자의 모든 수강계획 삭제
-  await planService.deleteAllByUser(userId);
+  await planService.deleteAllByUser(userId, session);
 
   // 2. 사용자가 생성한 커스텀 과목 삭제
-  await courseService.deleteCustomByUser(userId);
+  await courseService.deleteCustomByUser(userId, session);
 
   // 3. 사용자의 졸업요건 삭제
-  await graduationRequirementService.remove(userId);
+  await graduationRequirementService.remove(userId, session);
 
   // 4. 사용자의 피드백/문의 삭제
-  await feedbackService.deleteAllByUser(userId);
+  await feedbackService.deleteAllByUser(userId, session);
 
   // 5. 사용자의 업데이트 소식 읽음 기록 삭제
-  await patchNoteService.deleteAllReadsByUser(userId);
+  await patchNoteService.deleteAllReadsByUser(userId, session);
 
   // 6. 사용자 문서 삭제
-  const user = await User.findByIdAndDelete(userId);
+  const user = await User.findByIdAndDelete(userId, { session });
   if (!user) {
-    throw new Error('사용자를 찾을 수 없습니다.');
+    throw new UserSecurityError('USER_NOT_FOUND', '사용자를 찾을 수 없습니다.');
   }
+}
+
+/**
+ * 본인 계정 및 관련 데이터 모두 삭제
+ */
+async function deleteOwnAccount(userId: string): Promise<void> {
+  await withAdminMembershipTransaction(async (session) => {
+    const targetUser = await User.findById(userId).session(session).lean();
+    if (!targetUser) {
+      throw new UserSecurityError('USER_NOT_FOUND', '사용자를 찾을 수 없습니다.');
+    }
+
+    if (targetUser.role === 'admin') {
+      await requireAnotherAdministrator(userId, session);
+    }
+
+    await deleteWithCascade(userId, session);
+  });
 }
 
 /**
@@ -246,10 +319,20 @@ async function findAllUsers(filter?: {
  * 사용자 역할 변경 (관리자용)
  */
 async function updateRole(userId: string, role: 'student' | 'admin'): Promise<IUserDocument | null> {
-  await connectDB();
-  return User.findByIdAndUpdate(userId, { role }, { new: true })
-    .populate('department', 'code name')
-    .lean();
+  return withAdminMembershipTransaction(async (session) => {
+    const targetUser = await User.findById(userId).session(session).lean();
+    if (!targetUser) {
+      throw new UserSecurityError('USER_NOT_FOUND', '사용자를 찾을 수 없습니다.');
+    }
+
+    if (targetUser.role === 'admin' && role !== 'admin') {
+      await requireAnotherAdministrator(userId, session);
+    }
+
+    return User.findByIdAndUpdate(userId, { role }, { new: true, session })
+      .populate('department', 'code name')
+      .lean();
+  });
 }
 
 /**
@@ -264,28 +347,23 @@ async function updateLastLogin(userId: string): Promise<void> {
  * 관리자용 사용자 삭제 (안전장치 포함)
  */
 async function adminDeleteUser(targetUserId: string, adminUserId: string): Promise<void> {
-  await connectDB();
-
   // 자기 자신 삭제 방지
   if (targetUserId === adminUserId) {
-    throw new Error('자신의 계정은 삭제할 수 없습니다.');
+    throw new UserSecurityError('SELF_DELETE', '자신의 계정은 삭제할 수 없습니다.');
   }
 
-  // 대상 사용자 확인
-  const targetUser = await User.findById(targetUserId).lean();
-  if (!targetUser) {
-    throw new Error('사용자를 찾을 수 없습니다.');
-  }
-
-  // 마지막 관리자 삭제 방지
-  if (targetUser.role === 'admin') {
-    const adminCount = await User.countDocuments({ role: 'admin' });
-    if (adminCount <= 1) {
-      throw new Error('마지막 관리자는 삭제할 수 없습니다.');
+  await withAdminMembershipTransaction(async (session) => {
+    const targetUser = await User.findById(targetUserId).session(session).lean();
+    if (!targetUser) {
+      throw new UserSecurityError('USER_NOT_FOUND', '사용자를 찾을 수 없습니다.');
     }
-  }
 
-  await deleteWithCascade(targetUserId);
+    if (targetUser.role === 'admin') {
+      await requireAnotherAdministrator(targetUserId, session);
+    }
+
+    await deleteWithCascade(targetUserId, session);
+  });
 }
 
 export const userService = {
@@ -296,7 +374,7 @@ export const userService = {
   verifyPassword,
   update,
   findOrCreateOAuthUser,
-  deleteWithCascade,
+  deleteOwnAccount,
   isAccountLocked,
   recordFailedLogin,
   resetFailedLogins,

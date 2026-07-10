@@ -15,6 +15,7 @@ export { default as DepartmentCurriculum } from './DepartmentCurriculum';
 export { default as AcademicEvent } from './AcademicEvent';
 export { PatchNote } from './PatchNote';
 export { PatchNoteRead } from './PatchNoteRead';
+export { default as AdminSecurityState } from './AdminSecurityState';
 
 // Document 타입 export
 export type { IUserDocument } from './User';
@@ -28,3 +29,4 @@ export type { IDepartmentCurriculumDocument } from './DepartmentCurriculum';
 export type { IAcademicEventDocument } from './AcademicEvent';
 export type { IPatchNoteDocument } from './PatchNote';
 export type { IPatchNoteReadDocument } from './PatchNoteRead';
+export type { IAdminSecurityStateDocument } from './AdminSecurityState';

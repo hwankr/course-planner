@@ -5,6 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
+import type { ClientSession } from 'mongoose';
 import { Feedback } from '@/models/Feedback';
 import type { IFeedbackDocument } from '@/models/Feedback';
 
@@ -236,9 +237,9 @@ async function deleteByUser(id: string, userId: string): Promise<boolean> {
 /**
  * 사용자의 모든 피드백 삭제 (회원 탈퇴 시 cascade용)
  */
-async function deleteAllByUser(userId: string): Promise<number> {
+async function deleteAllByUser(userId: string, session?: ClientSession): Promise<number> {
   await connectDB();
-  const result = await Feedback.deleteMany({ userId });
+  const result = await Feedback.deleteMany({ userId }, { session });
   return result.deletedCount;
 }
 

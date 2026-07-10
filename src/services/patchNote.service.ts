@@ -5,6 +5,7 @@
  */
 
 import { connectDB } from '@/lib/db/mongoose';
+import type { ClientSession } from 'mongoose';
 import { PatchNote } from '@/models/PatchNote';
 import { PatchNoteRead } from '@/models/PatchNoteRead';
 import type { IPatchNoteDocument } from '@/models/PatchNote';
@@ -204,9 +205,9 @@ async function markAllAsRead(userId: string): Promise<void> {
 /**
  * 사용자의 모든 읽음 기록 삭제 (회원 탈퇴 시 cascade용)
  */
-async function deleteAllReadsByUser(userId: string): Promise<number> {
+async function deleteAllReadsByUser(userId: string, session?: ClientSession): Promise<number> {
   await connectDB();
-  const result = await PatchNoteRead.deleteMany({ userId });
+  const result = await PatchNoteRead.deleteMany({ userId }, { session });
   return result.deletedCount;
 }
 
