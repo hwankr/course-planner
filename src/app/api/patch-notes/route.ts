@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { patchNoteService } from '@/services/patchNote.service';
 import * as Sentry from '@sentry/nextjs';
 import { z } from 'zod';
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
     let patchNotes;
-    if (session.user.role === 'admin') {
+    if (await isActiveAdminSession(session)) {
       const status = searchParams.get('status') as 'draft' | 'published' | undefined ?? undefined;
       patchNotes = await patchNoteService.findAll(status ? { status } : undefined);
     } else {
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
-    if (session.user.role !== 'admin') {
+    if (!(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }

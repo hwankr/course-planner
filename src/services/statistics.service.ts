@@ -4,10 +4,14 @@
  * @migration-notes 분리 시 백엔드로 이동. HTTP 의존성 없음.
  */
 
-import crypto from 'crypto';
 import { connectDB } from '@/lib/db/mongoose';
 import { User, Plan, Department } from '@/models';
 import { statsCache } from '@/lib/cache';
+import { env } from '@/lib/env';
+import {
+  createAnonymousPlanId,
+  resolveAnonymousPlanId,
+} from '@/lib/security/anonymous-plan-id';
 import type {
   DepartmentCourseStats,
   AnonymousPlanSummary,
@@ -22,7 +26,6 @@ const DETAIL_TTL = 30 * 60 * 1000; // 30 minutes
 
 interface PlansCache {
   plans: AnonymousPlanSummary[];
-  idMapping: Map<string, string>;  // anonymousId -> planObjectId
   total: number;
 }
 
@@ -253,13 +256,15 @@ async function getAnonymousPlans(
       })
       .lean();
 
-    // Build anonymous ID mapping and summaries
-    const idMapping = new Map<string, string>();
+    // Build deterministic anonymous IDs and summaries
     const summaries: AnonymousPlanSummary[] = [];
 
     for (const plan of plans) {
-      const anonymousId = crypto.randomUUID();
-      idMapping.set(anonymousId, String(plan._id));
+      const anonymousId = createAnonymousPlanId(
+        String(plan._id),
+        departmentId,
+        env.NEXTAUTH_SECRET
+      );
 
       // Calculate totals (only official courses)
       let totalCredits = 0;
@@ -291,7 +296,6 @@ async function getAnonymousPlans(
 
     cached = {
       plans: summaries,
-      idMapping,
       total: summaries.length,
     };
 
@@ -319,25 +323,30 @@ async function getAnonymousPlanDetail(
   departmentId: string
 ): Promise<AnonymousPlanDetail | null> {
   // Check detail cache first
-  const detailCacheKey = `anon-plan-detail:${anonymousId}`;
+  const detailCacheKey = `anon-plan-detail:${departmentId}:${anonymousId}`;
   const cachedDetail = statsCache.get<AnonymousPlanDetail>(detailCacheKey);
   if (cachedDetail) return cachedDetail;
 
-  // Resolve anonymousId -> planObjectId via plans cache
-  const plansCacheKey = `dept-plans:${departmentId}`;
-  const plansCache = statsCache.get<PlansCache>(plansCacheKey);
-
-  // If plans cache expired, we can't resolve the ID
-  if (!plansCache) {
-    return null;
-  }
-
-  const planObjectId = plansCache.idMapping.get(anonymousId);
-  if (!planObjectId) {
-    return null;
-  }
-
   await connectDB();
+
+  // Resolve only against plans currently belonging to the requested department.
+  // This remains valid across cache expiry, process restarts, and server instances.
+  const departmentUsers = await User.find(
+    { department: departmentId },
+    { _id: 1 }
+  ).lean();
+  const departmentUserIds = departmentUsers.map((user) => user._id);
+  const planCandidates = await Plan.find(
+    { user: { $in: departmentUserIds } },
+    { _id: 1 }
+  ).lean();
+  const planObjectId = resolveAnonymousPlanId(
+    planCandidates.map((candidate) => String(candidate._id)),
+    anonymousId,
+    departmentId,
+    env.NEXTAUTH_SECRET
+  );
+  if (!planObjectId) return null;
 
   const plan = await Plan.findById(planObjectId)
     .populate({

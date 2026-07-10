@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,7 +11,6 @@ import type { IPatchNoteResponse } from '@/types';
 
 export default function PatchNoteDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const { isAuthenticated, isGuest, isLoading: authLoading } = useAuth();
   const queryClient = useQueryClient();
   const id = params.id as string;

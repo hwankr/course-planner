@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { academicEventService } from '@/services';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
@@ -29,7 +30,7 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }
@@ -76,7 +77,7 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }

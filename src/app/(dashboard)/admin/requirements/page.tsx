@@ -155,7 +155,7 @@ export default function AdminRequirementsPage() {
     },
   });
 
-  const requirements = data?.data ?? [];
+  const requirements = useMemo(() => data?.data ?? [], [data?.data]);
 
   const colleges = useMemo(() => {
     const set = new Set(requirements.map((r) => r.college));

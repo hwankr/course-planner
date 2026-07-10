@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { connectDB } from '@/lib/db/mongoose';
 import { Course } from '@/models';
 import type { RequirementCategory, Semester } from '@/types';
@@ -42,7 +43,7 @@ const COMMON_COURSES: CommonCourseDefinition[] = [
 export async function POST() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }

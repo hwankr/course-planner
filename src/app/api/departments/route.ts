@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { departmentService } from '@/services';
 import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
@@ -39,7 +40,7 @@ const createDepartmentSchema = z.object({
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }

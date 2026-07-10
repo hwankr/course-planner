@@ -282,7 +282,7 @@ export default function CalendarPage() {
       await deleteMutation.mutateAsync(id);
       addToast({ type: 'success', message: '일정이 삭제되었습니다.' });
       setSelectedEvent(null);
-    } catch (error) {
+    } catch {
       addToast({ type: 'warning', message: '일정 삭제에 실패했습니다.' });
     }
   };
@@ -312,7 +312,7 @@ export default function CalendarPage() {
         addToast({ type: 'success', message: '일정이 추가되었습니다.' });
       }
       setShowEventForm(false);
-    } catch (error) {
+    } catch {
       addToast({ type: 'warning', message: '일정 저장에 실패했습니다.' });
     }
   };

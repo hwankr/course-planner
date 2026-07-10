@@ -1,6 +1,6 @@
 'use client';
 
-import { Megaphone, Eye, MessageSquareText } from 'lucide-react';
+import { Megaphone, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PatchNotePreviewProps {

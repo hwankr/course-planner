@@ -17,3 +17,4 @@ export { feedbackService } from './feedback.service';
 export { academicEventService } from './academicEvent.service';
 export { notificationService } from './notification.service';
 export { patchNoteService } from './patchNote.service';
+export { adminAuthService } from './admin-auth.service';

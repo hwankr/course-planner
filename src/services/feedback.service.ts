@@ -203,8 +203,8 @@ async function findAllAndMarkRead(filter?: FeedbackFilter): Promise<IFeedbackDoc
     .lean();
 
   const unreadIds = feedbacks
-    .filter((fb: any) => !fb.isReadByAdmin)
-    .map((fb: any) => fb._id.toString());
+    .filter((fb) => !fb.isReadByAdmin)
+    .map((fb) => fb._id.toString());
   if (unreadIds.length > 0) {
     await Feedback.updateMany(
       { _id: { $in: unreadIds } },

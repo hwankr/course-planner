@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { userService } from '@/services/user.service';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 import { z } from 'zod';
@@ -25,7 +26,7 @@ interface RouteParams {
 export async function PATCH(request: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }
@@ -68,7 +69,7 @@ export async function PATCH(request: Request, { params }: RouteParams) {
 export async function DELETE(_request: Request, { params }: RouteParams) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }

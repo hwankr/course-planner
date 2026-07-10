@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { academicEventService } from '@/services';
 import type { AcademicEventCategory } from '@/types';
 import * as Sentry from '@sentry/nextjs';
@@ -98,10 +99,10 @@ const ACADEMIC_EVENTS_2026: SeedEvent[] = [
   { title: '학위수여식', startDate: '2027-02-22', category: 'academic' },
 ];
 
-export async function POST(request: Request) {
+export async function POST() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== 'admin') {
+    if (!session || !(await isActiveAdminSession(session))) {
       return NextResponse.json(
         { success: false, error: '관리자 권한이 필요합니다.' },
         { status: 403 }

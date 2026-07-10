@@ -29,7 +29,7 @@ async function getFeedbackNotifications(userId: string, role: string): Promise<N
       .select('message createdAt category')
       .lean();
 
-    return feedbacks.map((fb: any) => ({
+    return feedbacks.map((fb) => ({
       id: fb._id.toString(),
       type: 'feedback-new',
       message: `새로운 ${fb.category === 'contact' ? '문의' : '피드백'}이 등록되었습니다.`,
@@ -43,7 +43,7 @@ async function getFeedbackNotifications(userId: string, role: string): Promise<N
       .select('updatedAt')
       .lean();
 
-    return feedbacks.map((fb: any) => ({
+    return feedbacks.map((fb) => ({
       id: fb._id.toString(),
       type: 'feedback-reply',
       message: '문의에 답변이 달렸습니다.',
@@ -72,7 +72,7 @@ async function getPatchNoteNotifications(userId: string): Promise<NotificationIt
     .select('title publishedAt')
     .lean();
 
-  return unreadNotes.map((note: any) => ({
+  return unreadNotes.map((note) => ({
     id: note._id.toString(),
     type: 'patch-note',
     message: `새로운 업데이트: ${note.title}`,

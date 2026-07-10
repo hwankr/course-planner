@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { notificationService } from '@/services/notification.service';
 import * as Sentry from '@sentry/nextjs';
 
@@ -23,7 +24,7 @@ export async function GET() {
 
     const count = await notificationService.getUnreadCount(
       session.user.id,
-      session.user.role || 'student'
+      (await isActiveAdminSession(session)) ? 'admin' : 'student'
     );
 
     return NextResponse.json({
