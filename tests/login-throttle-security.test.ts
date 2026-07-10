@@ -135,9 +135,10 @@ function installThrottleHarness(
       assert.equal(pipeline.length, 1, 'one aggregation stage must update each key');
       assert.deepEqual(options, {
         upsert: true,
-        new: true,
         updatePipeline: true,
       });
+      assert.equal(Object.hasOwn(options, 'new'), false);
+      assert.equal(Object.hasOwn(options, 'returnOriginal'), false);
 
       const set = asRecord(pipeline[0].$set, 'pipeline must contain one $set stage');
       const failures = asRecord(set.failures, 'failures must use $cond');
@@ -355,9 +356,10 @@ test('recordFailure uses atomic upserts to reset expired and increment active wi
   for (const write of harness.writes) {
     assert.deepEqual(write.options, {
       upsert: true,
-      new: true,
       updatePipeline: true,
     });
+    assert.equal(Object.hasOwn(write.options, 'new'), false);
+    assert.equal(Object.hasOwn(write.options, 'returnOriginal'), false);
     const set = asRecord(write.pipeline[0].$set, 'counter update needs $set');
     const failures = asArray(
       asRecord(set.failures, 'counter update needs failure $cond').$cond,

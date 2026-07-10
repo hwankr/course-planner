@@ -103,7 +103,7 @@ async function incrementKey(key: string, now: Date): Promise<void> {
         },
       },
     ],
-    { upsert: true, new: true, updatePipeline: true }
+    { upsert: true, updatePipeline: true }
   );
 }
 
