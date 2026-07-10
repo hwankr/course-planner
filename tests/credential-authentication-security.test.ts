@@ -13,8 +13,8 @@ const EXPECTED_LOGIN_FAILURE_MESSAGE =
   '이메일 또는 비밀번호가 올바르지 않습니다. 잠시 후 다시 시도해주세요.';
 
 interface CredentialInput {
-  email: string;
-  password: string;
+  email: unknown;
+  password: unknown;
   source: string;
 }
 
@@ -63,6 +63,18 @@ interface AuthenticationHarnessOptions {
   findByEmail?: (email: string) => CredentialUser | null;
 }
 
+interface CredentialSentryEvent {
+  request?: Record<string, unknown>;
+  user?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+interface CredentialSentryScrubberModuleDouble {
+  scrubCredentialAuthenticationEvent<T extends CredentialSentryEvent>(
+    event: T
+  ): T;
+}
+
 function createUser(
   overrides: Partial<CredentialUser> = {}
 ): CredentialUser {
@@ -85,6 +97,16 @@ async function loadAuthenticationModule(): Promise<AuthenticationModuleDouble> {
     )) as unknown as AuthenticationModuleDouble;
   } catch (error) {
     assert.fail(`authentication service is unavailable: ${String(error)}`);
+  }
+}
+
+async function loadCredentialSentryScrubber(): Promise<CredentialSentryScrubberModuleDouble> {
+  try {
+    return (await import(
+      '../src/lib/auth/credential-sentry-scrubber'
+    )) as unknown as CredentialSentryScrubberModuleDouble;
+  } catch (error) {
+    assert.fail(`credential Sentry scrubber is unavailable: ${String(error)}`);
   }
 }
 
@@ -132,6 +154,7 @@ async function loadAuthOptionsModules() {
   return {
     authOptions: optionsModule.authOptions,
     createCredentialsAuthorize: optionsModule.createCredentialsAuthorize,
+    credentialsAuthorize: optionsModule.credentialsAuthorize,
     getCredentialClientSource: sourceModule.getCredentialClientSource,
     userService: servicesModule.userService,
   };
@@ -189,6 +212,45 @@ test('missing email and missing password each perform exactly one comparison', a
     { email: '', source: 'source-a' },
     { email: 'student@example.com', source: 'source-b' },
   ]);
+  assert.deepEqual(calls.clear, []);
+});
+
+test('non-string credentials normalize to empty values before lookup and bcrypt', async () => {
+  const malformedValues: unknown[] = [
+    { injected: 'student@example.com' },
+    ['student@example.com'],
+    42,
+    null,
+  ];
+  const { calls, service } = await createHarness();
+
+  for (const [index, malformed] of malformedValues.entries()) {
+    assert.equal(
+      await service.authenticateCredentials({
+        email: malformed,
+        password: malformed,
+        source: `malformed-source-${index}`,
+      }),
+      null
+    );
+  }
+
+  assert.equal(calls.compared.length, malformedValues.length);
+  assert.deepEqual(
+    calls.compared,
+    malformedValues.map(() => ({
+      plainPassword: '',
+      passwordHash: EXPECTED_DUMMY_PASSWORD_HASH,
+    }))
+  );
+  assert.deepEqual(calls.lookups, malformedValues.map(() => ''));
+  assert.deepEqual(
+    calls.failures,
+    malformedValues.map((_, index) => ({
+      email: '',
+      source: `malformed-source-${index}`,
+    }))
+  );
   assert.deepEqual(calls.clear, []);
 });
 
@@ -347,15 +409,15 @@ test('Credentials authorize delegates source and returns null for every expected
     await loadAuthOptionsModules();
   getCredentialsProvider(authOptions);
   const inputs: CredentialInput[] = [];
-  const captured: unknown[] = [];
+  const reports: unknown[][] = [];
   const authorize = createCredentialsAuthorize({
     authenticateCredentials: async (input) => {
       inputs.push(input);
       return null;
     },
     getClientSource: getCredentialClientSource,
-    captureException: (error) => {
-      captured.push(error);
+    reportUnexpectedFailure: (...args: unknown[]) => {
+      reports.push(args);
     },
   });
 
@@ -377,7 +439,14 @@ test('Credentials authorize delegates source and returns null for every expected
       source: '203.0.113.40',
     },
   ]);
-  assert.deepEqual(captured, []);
+  assert.deepEqual(reports, []);
+});
+
+test('the Credentials provider uses the exported production authorize function', async () => {
+  const { authOptions, credentialsAuthorize } = await loadAuthOptionsModules();
+  const provider = getCredentialsProvider(authOptions);
+
+  assert.equal(provider.options.authorize, credentialsAuthorize);
 });
 
 test('Credentials authorize maps a successful database user without exposing its hash', async () => {
@@ -392,7 +461,7 @@ test('Credentials authorize maps a successful database user without exposing its
   const authorize = createCredentialsAuthorize({
     authenticateCredentials: async () => user as never,
     getClientSource: getCredentialClientSource,
-    captureException: () => undefined,
+    reportUnexpectedFailure: () => undefined,
   });
 
   const result = await authorize(
@@ -418,15 +487,17 @@ test('Credentials authorize maps a successful database user without exposing its
 test('Credentials authorize captures unexpected failures and fails closed', async () => {
   const { createCredentialsAuthorize, getCredentialClientSource } =
     await loadAuthOptionsModules();
-  const failure = new Error('database unavailable');
-  const captured: unknown[] = [];
+  const failure = new Error(
+    'database unavailable for student@example.com with secret-password'
+  );
+  const reports: unknown[][] = [];
   const authorize = createCredentialsAuthorize({
     authenticateCredentials: async () => {
       throw failure;
     },
     getClientSource: getCredentialClientSource,
-    captureException: (error) => {
-      captured.push(error);
+    reportUnexpectedFailure: (...args: unknown[]) => {
+      reports.push(args);
     },
   });
 
@@ -441,7 +512,85 @@ test('Credentials authorize captures unexpected failures and fails closed', asyn
   );
 
   assert.equal(result, null);
-  assert.deepEqual(captured, [failure]);
+  assert.deepEqual(reports, [[]]);
+});
+
+test('credential callback Sentry events remove all request and user secrets', async () => {
+  const { scrubCredentialAuthenticationEvent } =
+    await loadCredentialSentryScrubber();
+  const secrets = [
+    'leak-student@example.com',
+    'Plaintext-Password-123!',
+    '203.0.113.88',
+    'next-auth.session-token=leaking-cookie',
+    'Bearer leaking-access-token',
+    '$2b$12$leaking-password-hash',
+    'leaking-nextauth-secret',
+    'leaking-query-secret',
+  ];
+  const event: CredentialSentryEvent = {
+    message: 'Credential authentication failed',
+    request: {
+      url: `https://course.example/api/auth/callback/credentials?token=${secrets[7]}`,
+      method: 'POST',
+      data: {
+        email: secrets[0],
+        password: secrets[1],
+        passwordHash: secrets[5],
+      },
+      body: JSON.stringify({ email: secrets[0], password: secrets[1] }),
+      headers: {
+        authorization: secrets[4],
+        cookie: secrets[3],
+        'x-forwarded-for': secrets[2],
+      },
+      cookies: { session: secrets[3] },
+      env: { NEXTAUTH_SECRET: secrets[6] },
+      query: { token: secrets[7] },
+      query_string: `token=${secrets[7]}`,
+    },
+    user: {
+      email: secrets[0],
+      ip_address: secrets[2],
+    },
+  };
+
+  const sanitized = scrubCredentialAuthenticationEvent(event);
+  const serialized = JSON.stringify(sanitized);
+
+  assert.deepEqual(sanitized.request, {
+    url: '/api/auth/callback/credentials',
+    method: 'POST',
+  });
+  assert.equal(Object.hasOwn(sanitized, 'user'), false);
+  for (const secret of secrets) {
+    assert.equal(serialized.includes(secret), false, `${secret} leaked`);
+  }
+});
+
+test('Sentry scrubbing leaves unrelated request events unchanged', async () => {
+  const { scrubCredentialAuthenticationEvent } =
+    await loadCredentialSentryScrubber();
+  const event: CredentialSentryEvent = {
+    request: {
+      url: 'https://course.example/api/courses?department=computer-science',
+      method: 'GET',
+      query_string: 'department=computer-science',
+    },
+    user: { id: 'user-1' },
+  };
+
+  assert.equal(scrubCredentialAuthenticationEvent(event), event);
+});
+
+test('server Sentry config installs the credential event scrubber as beforeSend', async () => {
+  const config = await readFile(
+    new URL('../sentry.server.config.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(config, /scrubCredentialAuthenticationEvent/);
+  assert.match(config, /beforeSend:\s*scrubCredentialAuthenticationEvent/);
 });
 
 test('Google sign-in plus JWT and session population remain intact', async (t) => {
@@ -539,6 +688,51 @@ test('Google sign-in plus JWT and session population remain intact', async (t) =
   assert.equal(sessionUser?.onboardingCompleted, true);
 });
 
+test('credential sign-in predicate accepts only an error-free OK result', async () => {
+  const { isCredentialSignInSuccessful } = await import(
+    '../src/lib/auth/login-message'
+  );
+
+  assert.equal(
+    isCredentialSignInSuccessful({ error: 'CredentialsSignin' }),
+    false
+  );
+  assert.equal(isCredentialSignInSuccessful({ ok: false }), false);
+  assert.equal(isCredentialSignInSuccessful(undefined), false);
+  assert.equal(
+    isCredentialSignInSuccessful({ ok: true, error: null }),
+    true
+  );
+});
+
+test('credential sign-in handler maps every failure to the fixed public message', async () => {
+  const { handleCredentialSignIn } = await import(
+    '../src/lib/auth/login-message'
+  );
+  const assertFixedFailure = async (
+    attempt: () => Promise<{ ok?: boolean; error?: string | null } | undefined>
+  ) => {
+    await assert.rejects(
+      handleCredentialSignIn(attempt),
+      (error: unknown) =>
+        error instanceof Error &&
+        error.message === EXPECTED_LOGIN_FAILURE_MESSAGE
+    );
+  };
+
+  await assertFixedFailure(async () => ({ error: 'CredentialsSignin' }));
+  await assertFixedFailure(async () => ({ ok: false }));
+  await assertFixedFailure(async () => undefined);
+  await assertFixedFailure(async () => {
+    throw new Error(
+      'transport leaked student@example.com and Plaintext-Password-123!'
+    );
+  });
+  await assert.doesNotReject(
+    handleCredentialSignIn(async () => ({ ok: true, error: null }))
+  );
+});
+
 test('client credential failures always use one fixed public message', async () => {
   const [messageSource, hook, page] = await Promise.all([
     readFile(
@@ -554,11 +748,28 @@ test('client credential failures always use one fixed public message', async () 
 
   assert.match(messageSource, /export const LOGIN_FAILURE_MESSAGE/);
   assert.match(messageSource, new RegExp(EXPECTED_LOGIN_FAILURE_MESSAGE));
-  assert.match(hook, /LOGIN_FAILURE_MESSAGE/);
-  assert.match(hook, /!result\?\.ok\s*\|\|\s*result\.error/);
-  assert.doesNotMatch(hook, /throw new Error\(result\.error\)/);
+  assert.match(hook, /handleCredentialSignIn/);
+  assert.match(
+    hook,
+    /handleCredentialSignIn\(\(\) =>\s*signIn\('credentials'/
+  );
+  assert.doesNotMatch(hook, /\bresult\.error|err\.message/);
   assert.match(page, /LOGIN_FAILURE_MESSAGE/);
   assert.doesNotMatch(page, /err instanceof Error|err\.message/);
+});
+
+test('registration preserves its distinct server-provided failure message', async () => {
+  const hook = await readFile(
+    new URL('../src/hooks/useAuth.ts', import.meta.url),
+    'utf8'
+  );
+
+  assert.match(hook, /const registrationResult = await response\.json\(\)/);
+  assert.match(hook, /if \(!registrationResult\.success\)/);
+  assert.match(
+    hook,
+    /throw new Error\(registrationResult\.error\)/
+  );
 });
 
 test('old User lock state and credential-specific errors are absent', async () => {
@@ -607,8 +818,12 @@ test('authentication code logs no credential material and exports the service', 
   assert.match(authenticationSource, /bcrypt\.compare/);
   assert.match(authenticationSource, /loginThrottleService\.recordFailure/);
   assert.match(authenticationSource, /loginThrottleService\.clearPair/);
-  assert.match(optionsSource, /authorize:\s*createCredentialsAuthorize/);
-  assert.match(optionsSource, /Sentry\.captureException\(error\)/);
+  assert.match(optionsSource, /authorize:\s*credentialsAuthorize/);
+  assert.match(
+    optionsSource,
+    /catch\s*\{\s*dependencies\.reportUnexpectedFailure\(\)/
+  );
+  assert.doesNotMatch(optionsSource, /dependencies\.captureException/);
   assert.doesNotMatch(serverAuthentication, /console\.(?:debug|error|info|log|warn)/);
   assert.doesNotMatch(
     serverAuthentication,

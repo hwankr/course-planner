@@ -3,7 +3,7 @@
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { LOGIN_FAILURE_MESSAGE } from '@/lib/auth/login-message';
+import { handleCredentialSignIn } from '@/lib/auth/login-message';
 import { useGuestStore } from '@/stores/guestStore';
 
 export function useAuth() {
@@ -17,19 +17,13 @@ export function useAuth() {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      try {
-        const result = await signIn('credentials', {
+      await handleCredentialSignIn(() =>
+        signIn('credentials', {
           email,
           password,
           redirect: false,
-        });
-
-        if (!result?.ok || result.error) {
-          throw new Error(LOGIN_FAILURE_MESSAGE);
-        }
-      } catch {
-        throw new Error(LOGIN_FAILURE_MESSAGE);
-      }
+        })
+      );
 
       // 비회원 모드였을 경우 해제 (멱등 - 비회원 아니어도 안전)
       exitGuestMode();
@@ -66,10 +60,10 @@ export function useAuth() {
         body: JSON.stringify(data),
       });
 
-      const result = await response.json();
+      const registrationResult = await response.json();
 
-      if (!result.success) {
-        throw new Error('회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      if (!registrationResult.success) {
+        throw new Error(registrationResult.error);
       }
 
       // 회원가입 후 자동 로그인

@@ -13,8 +13,8 @@ export const DUMMY_PASSWORD_HASH =
   '$2b$12$Pi89zBOq/7QIWXDuIlN/QeyU3dGf6rPhLmPCusA09xZ7QgcKQkA6q';
 
 export interface CredentialAuthenticationInput {
-  email: string;
-  password: string;
+  email: unknown;
+  password: unknown;
   source: string;
 }
 
@@ -36,18 +36,22 @@ export function createAuthenticationService(
     async authenticateCredentials(
       input: CredentialAuthenticationInput
     ): Promise<IUserDocument | null> {
-      const email = input.email.trim().toLowerCase();
+      const email =
+        typeof input.email === 'string'
+          ? input.email.trim().toLowerCase()
+          : '';
+      const password = typeof input.password === 'string' ? input.password : '';
       const throttleInput = { source: input.source, email };
 
       if (await dependencies.isBlocked(throttleInput)) return null;
 
       const user = await dependencies.findByEmailWithPassword(email);
       const passwordMatches = await dependencies.comparePassword(
-        input.password,
+        password,
         user?.password ?? DUMMY_PASSWORD_HASH
       );
 
-      if (!email || !input.password || !user?.password || !passwordMatches) {
+      if (!email || !password || !user?.password || !passwordMatches) {
         await dependencies.recordFailure(throttleInput);
         return null;
       }

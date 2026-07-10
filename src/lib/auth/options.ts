@@ -23,7 +23,7 @@ type CredentialsAuthorize = CredentialsConfig<{
 interface CredentialsAuthorizeDependencies {
   authenticateCredentials: typeof authenticationService.authenticateCredentials;
   getClientSource: typeof getCredentialClientSource;
-  captureException(error: unknown): unknown;
+  reportUnexpectedFailure(): void;
 }
 
 export function createCredentialsAuthorize(
@@ -50,12 +50,26 @@ export function createCredentialsAuthorize(
         secondaryDepartment: user.secondaryDepartment?.toString(),
         curriculumYear: user.curriculumYear,
       };
-    } catch (error) {
-      dependencies.captureException(error);
+    } catch {
+      dependencies.reportUnexpectedFailure();
       return null;
     }
   };
 }
+
+const CREDENTIAL_AUTH_FAILURE_EVENT_MESSAGE =
+  'Credential authentication failed';
+
+export const credentialsAuthorize = createCredentialsAuthorize({
+  authenticateCredentials: (input) =>
+    authenticationService.authenticateCredentials(input),
+  getClientSource: getCredentialClientSource,
+  reportUnexpectedFailure: () => {
+    Sentry.captureException(
+      new Error(CREDENTIAL_AUTH_FAILURE_EVENT_MESSAGE)
+    );
+  },
+});
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -69,12 +83,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      authorize: createCredentialsAuthorize({
-        authenticateCredentials: (input) =>
-          authenticationService.authenticateCredentials(input),
-        getClientSource: getCredentialClientSource,
-        captureException: (error) => Sentry.captureException(error),
-      }),
+      authorize: credentialsAuthorize,
     }),
   ],
   callbacks: {
