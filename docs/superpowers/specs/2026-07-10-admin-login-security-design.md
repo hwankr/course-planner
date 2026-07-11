@@ -43,7 +43,7 @@ The source-wide bucket limits password spraying from one origin. The source/emai
 - The raw cascade helper becomes private. API routes cannot bypass the invariant by calling it directly.
 - Each protected operation ensures the guard exists, starts a MongoDB transaction, increments the guard revision as its first transactional write, then reads the target and checks `User.exists({ _id: { $ne: targetId }, role: 'admin' })` before an administrator is demoted or deleted.
 - Cascade deletion methods accept an optional `ClientSession`; plans, custom courses, graduation requirements, feedback, patch-note reads, and the user document are deleted in one transaction.
-- A typed `UserSecurityError` carries `LAST_ADMIN`, `SELF_DELETE`, `USER_NOT_FOUND`, and `TRANSACTIONS_UNAVAILABLE` codes. Routes map these codes to stable 409, 400, 404, and 503 responses without parsing error-message text. Only MongoDB code 20/`IllegalOperation` and the exact canonical replica-set transaction message are reclassified; arbitrary database errors remain ordinary 500 failures.
+- A typed `UserSecurityError` carries `LAST_ADMIN`, `SELF_DELETE`, `USER_NOT_FOUND`, and `TRANSACTIONS_UNAVAILABLE` codes. Routes map these codes to stable 409, 400, 404, and 503 responses without parsing error-message text. The exact canonical replica-set/mongos transaction message is always required; a plain `Error` with that message is accepted, while errors carrying MongoDB code metadata must also have code 20 and `IllegalOperation`. Arbitrary database errors remain ordinary 500 failures.
 
 MongoDB transactions require a replica set or sharded cluster. Production must use Atlas or another transaction-capable deployment; local development can use a single-node replica set. Unsupported topology returns typed `TRANSACTIONS_UNAVAILABLE` and HTTP 503 for protected mutations. Tests must not mutate the configured database; transaction structure and serialization behavior are verified with controlled model/session doubles. Live Atlas topology remains an operational verification item rather than a completed claim.
 
@@ -53,16 +53,16 @@ MongoDB transactions require a replica set or sharded cluster. Production must u
 - It normalizes and bounds email/password input before HMAC, database, or bcrypt work, reserves shared throttle capacity, fetches the user with the password field, and performs exactly one `bcrypt.compare` call for every admitted request.
 - Missing users and users without a credential password use a precomputed bcrypt cost-12 dummy hash. The dummy value is not a secret and must never be accepted as an account credential.
 - Any missing input, over-limit input, absent user, Google-only user, password mismatch, or throttle state returns `null`.
-- A successful credential clears its source/email reservation and refunds one source reservation only when the original source window timestamp still matches. A failed credential leaves both reservations in place.
+- A successful credential clears its source/email reservation and refunds one source reservation only when the matching pair window was actually deleted and the original source window timestamp still matches. Replaying completion cannot refund twice; concurrent duplicate completions may conservatively skip a refund. A failed credential leaves both reservations in place.
 - Unexpected database or hashing errors are captured internally without passwords and are exposed to the caller as the same generic login failure.
 
 `authOptions.authorize` remains an adapter: it extracts the trusted Vercel client address, delegates once to the service, and maps a successful service result to the NextAuth user shape. It contains no account lookup, password comparison, lock mutation, or user-specific error text.
 
 ### Distributed login throttle
 
-- `LoginThrottle` stores an opaque HMAC-derived `_id`, failure count, rolling-window start, and TTL expiry. Raw email addresses and IP addresses are not stored in throttle documents.
+- `LoginThrottle` stores an opaque HMAC-derived `_id`, failure count, anchored first-attempt window start, and TTL expiry. Raw email addresses and IP addresses are not stored in throttle documents.
 - Keys are derived with `NEXTAUTH_SECRET` for two independent scopes: source-wide and source/email.
-- The source/email threshold is 5 failures per 15-minute rolling window. The source-wide threshold is 20 failures per 15-minute rolling window.
+- The source/email threshold is 5 failures per 15-minute fixed window anchored to its first attempt. The source-wide threshold is 20 failures per independently anchored 15-minute fixed window.
 - Atomic aggregation-pipeline updates reset an expired window or increment the current counter in one database operation and return the post-update document. Source admission allows counts 1-20; pair admission allows counts 1-5. This bounds concurrent bcrypt work to 20 per source and 5 per source/email pair.
 - Counters cap at limit plus one. Active-window increments, including rejected requests, retain the original `windowStartedAt` and `expiresAt`, so a blocked request cannot extend the window.
 - `expiresAt` has a TTL index so stale buckets are removed automatically.
@@ -108,6 +108,6 @@ The old `failedLoginAttempts` and `lockUntil` fields are removed from applicatio
 - RED tests prove the current service can demote the final administrator, self-service deletion bypasses protection, and the raw cascade helper is route-callable.
 - GREEN tests cover final-admin demotion, administrator deletion, self-deletion, normal promotion/demotion/deletion, typed errors, shared-guard ordering, and serialized concurrent administrator reductions.
 - Credential tests cover missing input, absent account, Google-only account, wrong password, throttled source, and successful credentials. Each invalid non-throttled category must call bcrypt exactly once and expose the same public result.
-- Throttle tests cover opaque deterministic keys, independent source and pair buckets, atomic rolling-window admission/reset, limit-plus-one caps, anchored expiry, safe success completion, and victim access from another source. Concurrent tests assert that 100 same-pair requests perform at most 5 bcrypt comparisons and 100 distinct-email requests from one source perform at most 20.
+- Throttle tests cover opaque deterministic keys, independent source and pair buckets, atomic anchored fixed-window admission/reset, limit-plus-one caps, anchored expiry, replay-safe success completion, and victim access from another source. Concurrent tests assert that 100 same-pair requests perform at most 5 bcrypt comparisons and 100 distinct-email requests from one source perform at most 20.
 - Source-contract tests require the NextAuth adapter to delegate to the authentication service, require the fixed client error mapping, and reject old account-lock reads/writes and raw cascade route calls.
 - Full completion requires focused RED/GREEN evidence, `npm test`, `npx tsc --noEmit --pretty false --incremental false`, `npm run lint`, `npm run build`, `npm audit --omit=dev`, `git -c core.whitespace=cr-at-eol diff --check`, a security re-review, and a final scope/status/divergence inspection.

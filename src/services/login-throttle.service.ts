@@ -141,10 +141,12 @@ async function completeSuccessfulAttempt(
   reservation: LoginThrottleReservation
 ): Promise<void> {
   await connectDB();
-  await LoginThrottle.deleteOne({
+  const pairDeletion = await LoginThrottle.deleteOne({
     _id: reservation.pairKey,
     windowStartedAt: reservation.pairWindowStartedAt,
   });
+  if (pairDeletion.deletedCount !== 1) return;
+
   await LoginThrottle.updateOne(
     {
       _id: reservation.sourceKey,

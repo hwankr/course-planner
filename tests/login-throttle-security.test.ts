@@ -460,7 +460,7 @@ test('pair and source rejections cap at limit plus one without extending the win
   );
 });
 
-test('the exact observation-window boundary starts a new admitted reservation', async (t) => {
+test('the exact anchored fixed-window boundary starts a new admitted reservation', async (t) => {
   const fixedNow = new Date('2026-07-10T03:30:00.000Z');
   t.mock.method(Date, 'now', () => fixedNow.getTime());
   const {
@@ -523,6 +523,40 @@ test('successful completion clears and refunds only its original windows', async
       failures: { $gt: 0 },
     },
   ]);
+});
+
+test('successful completion is replay-safe and refunds its source only once', async (t) => {
+  const fixedNow = new Date('2026-07-10T03:50:00.000Z');
+  t.mock.method(Date, 'now', () => fixedNow.getTime());
+  const {
+    LoginThrottle,
+    loginThrottleService,
+  } = await loadThrottleModules();
+  const harness = installThrottleHarness(t, LoginThrottle);
+  const first = await loginThrottleService.reserveAttempt({
+    source: '203.0.113.40',
+    email: 'first@example.com',
+  });
+  const second = await loginThrottleService.reserveAttempt({
+    source: '203.0.113.40',
+    email: 'second@example.com',
+  });
+  assert.equal(first.allowed, true);
+  assert.equal(second.allowed, true);
+  if (!first.allowed || !second.allowed) return;
+
+  assert.equal(harness.get(first.reservation.sourceKey)?.failures, 2);
+  await loginThrottleService.completeSuccessfulAttempt(first.reservation);
+  assert.equal(harness.get(first.reservation.sourceKey)?.failures, 1);
+
+  await loginThrottleService.completeSuccessfulAttempt(first.reservation);
+  assert.equal(
+    harness.get(first.reservation.sourceKey)?.failures,
+    1,
+    'replaying a completed reservation must not refund another source attempt'
+  );
+  assert.equal(harness.deletes.length, 2);
+  assert.equal(harness.refunds.length, 1);
 });
 
 test('another source remains available for the same submitted email', async (t) => {

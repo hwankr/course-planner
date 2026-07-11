@@ -31,12 +31,16 @@ export function isTransactionsUnavailableError(error: unknown): boolean {
     codeName?: unknown;
     message?: unknown;
   };
-  if (candidate.code === 20 && candidate.codeName === 'IllegalOperation') {
-    return true;
+  if (
+    typeof candidate.message !== 'string' ||
+    !TRANSACTION_UNAVAILABLE_MESSAGE.test(candidate.message.trim())
+  ) {
+    return false;
   }
 
-  return (
-    typeof candidate.message === 'string' &&
-    TRANSACTION_UNAVAILABLE_MESSAGE.test(candidate.message.trim())
-  );
+  const hasMongoCode = Object.hasOwn(candidate, 'code');
+  const hasMongoCodeName = Object.hasOwn(candidate, 'codeName');
+  if (!hasMongoCode && !hasMongoCodeName) return true;
+
+  return candidate.code === 20 && candidate.codeName === 'IllegalOperation';
 }

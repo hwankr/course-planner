@@ -13,7 +13,7 @@
 - Preserve the existing untracked `AGENTS.md` and all unrelated user files.
 - Keep API routes limited to HTTP/session parsing, service calls, and response mapping.
 - Never store or log raw passwords, password hashes, raw client addresses, or raw email addresses in throttle documents.
-- Keep source/email at 5 failures per 15-minute observation window and source-wide at 20 failures per 15-minute observation window.
+- Keep source/email at 5 failures per 15-minute fixed window anchored to its first attempt and source-wide at 20 failures per independently anchored fixed window.
 - Reserve source capacity before pair capacity and decide admission from each returned post-update count, bounding concurrent bcrypt work to 20 and 5 respectively.
 - Cap counters at limit plus one and never extend an active throttle window or TTL expiry.
 - In production/Vercel trust only a validated, canonical first IP from `x-vercel-forwarded-for`; missing or invalid source data fails closed.
@@ -142,7 +142,7 @@ async function withAdminMembershipTransaction<T>(
 }
 ```
 
-Catch only MongoDB code 20/`IllegalOperation` or the exact canonical `Transaction numbers are only allowed on a replica set member or mongos` message around session/transaction execution and convert it to `UserSecurityError('TRANSACTIONS_UNAVAILABLE', ...)`. Preserve every unrelated database error unchanged. PATCH/DELETE admin-user routes and self-delete map that typed code to HTTP 503.
+Require the exact canonical `Transaction numbers are only allowed on a replica set member or mongos` message around session/transaction execution. Accept a plain `Error` with that exact message; when `code` or `codeName` metadata is present, require the complete code 20/`IllegalOperation` pair before converting to `UserSecurityError('TRANSACTIONS_UNAVAILABLE', ...)`. Preserve every unrelated database error unchanged. PATCH/DELETE admin-user routes and self-delete map that typed code to HTTP 503.
 
 Within the callback, fetch the target using the session. Before reducing an administrator, require an existing different administrator:
 
@@ -246,7 +246,7 @@ const digest = (scope: string, value: string, secret: string) =>
     .digest('base64url')}`;
 ```
 
-- [ ] **Step 4: Implement atomic pre-auth observation-window reservations**
+- [ ] **Step 4: Implement atomic pre-auth anchored fixed-window reservations**
 
 Set `LOGIN_THROTTLE_WINDOW_MS = 15 * 60 * 1000`, pair maximum 5, and source maximum 20. Use one aggregation-pipeline update per key:
 
@@ -277,7 +277,7 @@ await LoginThrottle.findOneAndUpdate(
 );
 ```
 
-`reserveAttempt` reserves the source first and rejects when its returned count exceeds 20. Only an allowed source reserves the pair, which rejects when its returned count exceeds 5. Pair rejection may retain the source reservation. `completeSuccessfulAttempt` deletes the pair and decrements the source only when each stored `windowStartedAt` matches the reservation, preventing cleanup from touching a new window.
+`reserveAttempt` reserves the source first and rejects when its returned count exceeds 20. Only an allowed source reserves the pair, which rejects when its returned count exceeds 5. Pair rejection may retain the source reservation. `completeSuccessfulAttempt` decrements the source only when deletion actually removed the matching pair window and the source `windowStartedAt` still matches, preventing cleanup from touching a new window or refunding twice on replay.
 
 - [ ] **Step 5: Implement trusted-header source extraction**
 

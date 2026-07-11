@@ -505,6 +505,14 @@ test('unsupported transaction errors are classified narrowly and mapped to 503',
     }),
     false
   );
+  assert.equal(
+    errorModule.isTransactionsUnavailableError({
+      code: 20,
+      codeName: 'IllegalOperation',
+      message: 'unrelated illegal operation',
+    }),
+    false
+  );
 
   const root = new URL('../', import.meta.url);
   const [service, adminRoute, selfRoute] = await Promise.all([
