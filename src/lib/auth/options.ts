@@ -12,7 +12,10 @@ import type { MajorType } from '@/types';
 import { userService } from '@/services';
 import { authenticationService } from '@/services/authentication.service';
 import { env } from '@/lib/env';
-import { getCredentialClientSource } from '@/lib/auth/client-source';
+import {
+  CredentialSourceUnavailableError,
+  getCredentialClientSource,
+} from '@/lib/auth/client-source';
 import * as Sentry from '@sentry/nextjs';
 
 type CredentialsAuthorize = CredentialsConfig<{
@@ -23,7 +26,26 @@ type CredentialsAuthorize = CredentialsConfig<{
 interface CredentialsAuthorizeDependencies {
   authenticateCredentials: typeof authenticationService.authenticateCredentials;
   getClientSource: typeof getCredentialClientSource;
-  reportUnexpectedFailure(): void;
+  reportUnexpectedFailure(diagnostic: CredentialAuthenticationDiagnostic): void;
+}
+
+export interface CredentialAuthenticationDiagnostic {
+  category:
+    | 'source_unavailable'
+    | 'authentication_service_failure'
+    | 'unknown_failure';
+}
+
+function credentialAuthenticationDiagnostic(
+  error: unknown
+): CredentialAuthenticationDiagnostic {
+  if (error instanceof CredentialSourceUnavailableError) {
+    return { category: 'source_unavailable' };
+  }
+  if (error instanceof Error) {
+    return { category: 'authentication_service_failure' };
+  }
+  return { category: 'unknown_failure' };
 }
 
 export function createCredentialsAuthorize(
@@ -50,8 +72,10 @@ export function createCredentialsAuthorize(
         secondaryDepartment: user.secondaryDepartment?.toString(),
         curriculumYear: user.curriculumYear,
       };
-    } catch {
-      dependencies.reportUnexpectedFailure();
+    } catch (error) {
+      dependencies.reportUnexpectedFailure(
+        credentialAuthenticationDiagnostic(error)
+      );
       return null;
     }
   };
@@ -64,10 +88,15 @@ export const credentialsAuthorize = createCredentialsAuthorize({
   authenticateCredentials: (input) =>
     authenticationService.authenticateCredentials(input),
   getClientSource: getCredentialClientSource,
-  reportUnexpectedFailure: () => {
-    Sentry.captureException(
-      new Error(CREDENTIAL_AUTH_FAILURE_EVENT_MESSAGE)
-    );
+  reportUnexpectedFailure: (diagnostic) => {
+    Sentry.captureMessage(CREDENTIAL_AUTH_FAILURE_EVENT_MESSAGE, {
+      level: 'error',
+      tags: { credential_failure_category: diagnostic.category },
+      fingerprint: [
+        'credential-authentication-failure',
+        diagnostic.category,
+      ],
+    });
   },
 });
 

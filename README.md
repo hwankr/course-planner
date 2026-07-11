@@ -16,6 +16,27 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## MongoDB transaction requirement
+
+Administrator role changes, administrator-driven account deletion, and self-service account deletion use MongoDB transactions to preserve the last-administrator invariant. Production must therefore use MongoDB Atlas or another replica set/sharded deployment with transactions enabled. A standalone `mongod` is not sufficient.
+
+For local development, a single-node replica set is enough. One example is:
+
+```powershell
+mongod --dbpath C:\data\course-planner --replSet rs0 --bind_ip localhost
+mongosh --eval "rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]})"
+```
+
+Then configure:
+
+```env
+MONGODB_URI=mongodb://localhost:27017/course-planner?replicaSet=rs0
+```
+
+If the deployment does not support transactions, the protected role/account-deletion endpoints return HTTP `503` instead of reporting an undifferentiated server error. This repository has not verified a live Atlas topology; confirm transaction support in the target environment before release.
+
+Production credential login also requires Vercel's trusted `x-vercel-forwarded-for` header. Missing or invalid production source data fails closed; generic forwarded headers are development-only fallbacks.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

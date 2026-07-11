@@ -15,7 +15,10 @@ import { courseService } from './course.service';
 import { graduationRequirementService } from './graduationRequirement.service';
 import { feedbackService } from './feedback.service';
 import { patchNoteService } from './patchNote.service';
-import { UserSecurityError } from './user-security.error';
+import {
+  isTransactionsUnavailableError,
+  UserSecurityError,
+} from './user-security.error';
 
 const ADMIN_MEMBERSHIP_GUARD_ID = 'admin-membership';
 
@@ -32,18 +35,20 @@ async function withAdminMembershipTransaction<T>(
 ): Promise<T> {
   const db = await connectDB();
   await ensureAdminMembershipGuard();
-  const session = await db.startSession();
+  let session: ClientSession | undefined;
 
   try {
+    const activeSession = await db.startSession();
+    session = activeSession;
     let value!: T;
-    await session.withTransaction(
+    await activeSession.withTransaction(
       async () => {
         await AdminSecurityState.updateOne(
           { _id: ADMIN_MEMBERSHIP_GUARD_ID },
           { $inc: { revision: 1 } },
-          { session }
+          { session: activeSession }
         );
-        value = await operation(session);
+        value = await operation(activeSession);
       },
       {
         readConcern: { level: 'snapshot' },
@@ -51,8 +56,16 @@ async function withAdminMembershipTransaction<T>(
       }
     );
     return value;
+  } catch (error) {
+    if (isTransactionsUnavailableError(error)) {
+      throw new UserSecurityError(
+        'TRANSACTIONS_UNAVAILABLE',
+        '이 작업에는 트랜잭션을 지원하는 MongoDB 구성이 필요합니다.'
+      );
+    }
+    throw error;
   } finally {
-    await session.endSession();
+    await session?.endSession();
   }
 }
 
@@ -219,12 +232,53 @@ const SORT_MAP: Record<string, Record<string, 1 | -1>> = {
   name: { name: 1 },
 };
 
+const ADMIN_USER_LIST_PROJECTION = {
+  _id: 1,
+  email: 1,
+  name: 1,
+  department: 1,
+  enrollmentYear: 1,
+  studentId: 1,
+  role: 1,
+  provider: 1,
+  lastLoginAt: 1,
+  createdAt: 1,
+} as const;
+
+interface AdminUserListItem {
+  _id: unknown;
+  email: string;
+  name: string;
+  department?: unknown;
+  enrollmentYear?: number;
+  studentId?: string;
+  role: 'student' | 'admin';
+  provider?: 'credentials' | 'google';
+  lastLoginAt?: Date;
+  createdAt?: Date;
+}
+
+function toAdminUserListItem(user: AdminUserListItem): AdminUserListItem {
+  return {
+    _id: user._id,
+    email: user.email,
+    name: user.name,
+    department: user.department,
+    enrollmentYear: user.enrollmentYear,
+    studentId: user.studentId,
+    role: user.role,
+    provider: user.provider,
+    lastLoginAt: user.lastLoginAt,
+    createdAt: user.createdAt,
+  };
+}
+
 async function findAllUsers(filter?: {
   search?: string;
   role?: string;
   department?: string;
   sort?: string;
-}): Promise<IUserDocument[]> {
+}): Promise<AdminUserListItem[]> {
   await connectDB();
 
   const conditions: Record<string, unknown>[] = [];
@@ -249,11 +303,14 @@ async function findAllUsers(filter?: {
 
   const sortObj = SORT_MAP[filter?.sort ?? ''] ?? { createdAt: -1 };
   const query = conditions.length > 0 ? { $and: conditions } : {};
-  return User.find(query)
+  const users = await User.find(query)
+    .select(ADMIN_USER_LIST_PROJECTION)
     .populate('department', 'code name')
     .sort(sortObj)
     .limit(200)
-    .lean();
+    .lean<AdminUserListItem[]>();
+
+  return users.map(toAdminUserListItem);
 }
 
 /**

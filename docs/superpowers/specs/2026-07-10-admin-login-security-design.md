@@ -5,7 +5,7 @@
 This change closes three related authentication and authorization gaps:
 
 1. The application must always retain at least one administrator. The invariant applies to role demotion, administrator-driven deletion, and self-service account deletion.
-2. Credential-login failures must not disclose whether an email is unregistered, belongs to a Google-only account, has a wrong password, or is currently throttled. The major timing difference caused by skipping bcrypt must also be removed.
+2. Non-throttled credential-login failures must not disclose whether an email is unregistered, belongs to a Google-only account, or has a wrong password. Those categories perform one real-or-dummy cost-12 bcrypt comparison. A throttled request keeps the same public response but intentionally skips lookup and bcrypt because the decision describes source activity, not account existence, and continuing cost-12 work would defeat the abuse control.
 3. An unauthenticated attacker must not be able to lock another user's account by sending five bad passwords. Login abuse controls must work across Vercel function instances and process restarts.
 
 The existing untracked `AGENTS.md` file remains outside the change. Registration currently discloses duplicate emails; that separate registration flow is not changed because this scope is specifically credential-login disclosure.
@@ -24,13 +24,13 @@ A transaction without the shared write is insufficient because two transactions 
 
 - Change only the visible Korean strings: insufficient because NextAuth exposes thrown messages and missing/OAuth accounts skip the expensive bcrypt comparison.
 - Return one public failure while retaining early exits internally: removes the obvious text oracle but leaves a timing oracle.
-- Centralize credential authentication, perform exactly one bcrypt comparison using a real or dummy cost-12 hash, and return `null` for every expected failure: recommended. NextAuth then emits the same `CredentialsSignin` response while the client maps every failure to one fixed Korean message.
+- Centralize credential authentication, atomically reserve throttle capacity before password work, perform exactly one bcrypt comparison using a real or dummy cost-12 hash for every admitted request, and return `null` for every expected failure: recommended. NextAuth then emits the same `CredentialsSignin` response while the client maps every failure to one fixed Korean message.
 
 ### Login abuse control
 
 - Keep the current per-account hard lock and raise the threshold: a remote attacker can still deny service to a known account.
 - Use the existing in-memory IP limiter: it avoids modifying the user account, but state is not shared across Vercel instances or restarts.
-- Replace account fields with MongoDB TTL-backed source buckets: recommended. One bucket limits all failures from a client source and a second bucket limits failures for a source/email pair. Unknown, OAuth-only, and password-mismatch failures update the same buckets, so throttle behavior does not reveal account existence.
+- Replace account fields with MongoDB TTL-backed source buckets and atomic pre-auth reservations: recommended. The source bucket is incremented first and admission is decided from its returned post-update count; an allowed source then reserves the source/email bucket the same way. Missing, OAuth-only, and password-mismatch accounts consume identical reservations, so throttle behavior does not reveal account existence.
 
 The source-wide bucket limits password spraying from one origin. The source/email bucket limits repeated guessing of one account from that origin. This design intentionally does not globally block an email, so a distributed botnet remains a residual risk best addressed later with MFA, risk scoring, or CAPTCHA rather than a weaponizable account lock.
 
@@ -43,17 +43,17 @@ The source-wide bucket limits password spraying from one origin. The source/emai
 - The raw cascade helper becomes private. API routes cannot bypass the invariant by calling it directly.
 - Each protected operation ensures the guard exists, starts a MongoDB transaction, increments the guard revision as its first transactional write, then reads the target and checks `User.exists({ _id: { $ne: targetId }, role: 'admin' })` before an administrator is demoted or deleted.
 - Cascade deletion methods accept an optional `ClientSession`; plans, custom courses, graduation requirements, feedback, patch-note reads, and the user document are deleted in one transaction.
-- A typed `UserSecurityError` carries `LAST_ADMIN`, `SELF_DELETE`, and `USER_NOT_FOUND` codes. Routes map these codes to stable 409, 400, and 404 responses without parsing error-message text.
+- A typed `UserSecurityError` carries `LAST_ADMIN`, `SELF_DELETE`, `USER_NOT_FOUND`, and `TRANSACTIONS_UNAVAILABLE` codes. Routes map these codes to stable 409, 400, 404, and 503 responses without parsing error-message text. Only MongoDB code 20/`IllegalOperation` and the exact canonical replica-set transaction message are reclassified; arbitrary database errors remain ordinary 500 failures.
 
-MongoDB transactions require a replica set or sharded cluster. The project connection module targets MongoDB Atlas, and the deployed database must retain replica-set or sharded-cluster transaction support. Tests must not mutate the configured database; transaction structure and serialization behavior are verified with controlled model/session doubles.
+MongoDB transactions require a replica set or sharded cluster. Production must use Atlas or another transaction-capable deployment; local development can use a single-node replica set. Unsupported topology returns typed `TRANSACTIONS_UNAVAILABLE` and HTTP 503 for protected mutations. Tests must not mutate the configured database; transaction structure and serialization behavior are verified with controlled model/session doubles. Live Atlas topology remains an operational verification item rather than a completed claim.
 
 ### Credential authentication service
 
 - `authenticationService.authenticateCredentials({ email, password, source })` owns all credential-login business logic and is HTTP-independent.
-- It normalizes the email, checks the shared throttle service, fetches the user with the password field, and performs exactly one `bcrypt.compare` call.
+- It normalizes and bounds email/password input before HMAC, database, or bcrypt work, reserves shared throttle capacity, fetches the user with the password field, and performs exactly one `bcrypt.compare` call for every admitted request.
 - Missing users and users without a credential password use a precomputed bcrypt cost-12 dummy hash. The dummy value is not a secret and must never be accepted as an account credential.
-- Any missing input, absent user, Google-only user, password mismatch, or throttle state returns `null`.
-- A successful credential clears only that source/email bucket. It does not clear the source-wide spray bucket.
+- Any missing input, over-limit input, absent user, Google-only user, password mismatch, or throttle state returns `null`.
+- A successful credential clears its source/email reservation and refunds one source reservation only when the original source window timestamp still matches. A failed credential leaves both reservations in place.
 - Unexpected database or hashing errors are captured internally without passwords and are exposed to the caller as the same generic login failure.
 
 `authOptions.authorize` remains an adapter: it extracts the trusted Vercel client address, delegates once to the service, and maps a successful service result to the NextAuth user shape. It contains no account lookup, password comparison, lock mutation, or user-specific error text.
@@ -63,12 +63,12 @@ MongoDB transactions require a replica set or sharded cluster. The project conne
 - `LoginThrottle` stores an opaque HMAC-derived `_id`, failure count, rolling-window start, and TTL expiry. Raw email addresses and IP addresses are not stored in throttle documents.
 - Keys are derived with `NEXTAUTH_SECRET` for two independent scopes: source-wide and source/email.
 - The source/email threshold is 5 failures per 15-minute rolling window. The source-wide threshold is 20 failures per 15-minute rolling window.
-- Atomic aggregation-pipeline updates reset an expired window or increment the current counter in one database operation.
-- Reaching a threshold blocks later attempts only until the original window ends. Rejected attempts do not extend the window.
+- Atomic aggregation-pipeline updates reset an expired window or increment the current counter in one database operation and return the post-update document. Source admission allows counts 1-20; pair admission allows counts 1-5. This bounds concurrent bcrypt work to 20 per source and 5 per source/email pair.
+- Counters cap at limit plus one. Active-window increments, including rejected requests, retain the original `windowStartedAt` and `expiresAt`, so a blocked request cannot extend the window.
 - `expiresAt` has a TTL index so stale buckets are removed automatically.
-- In production the adapter prefers `x-vercel-forwarded-for`, then `x-forwarded-for` and `x-real-ip`. Missing headers use a stable `unknown` source, which is acceptable for local development but must not occur in the Vercel deployment.
+- In production or on Vercel the adapter accepts only the first IP in `x-vercel-forwarded-for`, validates it with `node:net` `isIP`, and canonicalizes it. Missing or invalid trusted source data throws typed `CredentialSourceUnavailableError` and fails authentication closed. Development/tests may use validated `x-forwarded-for` or `x-real-ip` fallbacks and use `local-development` only when all allowed headers are absent.
 
-The old `failedLoginAttempts` and `lockUntil` fields are removed from application schema/types and are no longer read or written. Existing stored fields can remain until MongoDB rewrites those user documents; they are inert under Mongoose strict schemas.
+The old `failedLoginAttempts` and `lockUntil` fields are removed from application schema/types and are no longer read or written. `findAllUsers` uses a positive projection and explicit DTO, so those legacy fields and `password` cannot be serialized even when old documents still contain them.
 
 ## Data flow
 
@@ -86,9 +86,9 @@ The old `failedLoginAttempts` and `lockUntil` fields are removed from applicatio
 
 1. NextAuth passes credentials and request headers to `authorize`.
 2. The adapter derives a plain client-source string and calls the authentication service.
-3. The service checks source and source/email throttle records.
-4. If allowed, it performs one user lookup and one bcrypt comparison, selecting the real hash only for a credential account.
-5. Every non-throttled invalid outcome records both failure buckets and returns `null`; a throttled outcome returns `null` without extending its window. A valid credential clears only its pair bucket and returns a sanitized user.
+3. The service atomically reserves the source counter and decides from the returned post-increment count. If allowed, it reserves the source/email counter and decides from that post-increment count.
+4. If both reservations are allowed, it performs one user lookup and one bcrypt comparison, selecting the real hash only for a credential account.
+5. Every admitted invalid outcome leaves both reservations and returns `null`; a rejected outcome returns `null` before lookup/bcrypt without extending its window. A valid credential clears the matching pair window, refunds the matching source window, and returns a sanitized user.
 6. NextAuth returns its standard success or `CredentialsSignin` response.
 7. The client converts every unsuccessful result or transport exception to `이메일 또는 비밀번호가 올바르지 않습니다. 잠시 후 다시 시도해주세요.` and never renders `result.error` directly.
 
@@ -96,7 +96,7 @@ The old `failedLoginAttempts` and `lockUntil` fields are removed from applicatio
 
 - At least one user with `role: 'admin'` remains after every service-mediated role change or account deletion, including concurrent requests.
 - A route cannot directly invoke an unguarded cascade deletion helper.
-- Missing, absent-account, Google-only, and wrong-password failures have the same NextAuth error code, HTTP status behavior, client message, user lookup shape, bcrypt cost, and throttle writes. A previously throttled request keeps the same public response while intentionally skipping further work so its window is not extended.
+- Missing, over-limit, absent-account, Google-only, and wrong-password failures have the same NextAuth error code, HTTP status behavior, client message, user lookup shape, bcrypt cost, and admitted throttle reservations. A previously throttled request keeps the same public response while intentionally skipping lookup/bcrypt because throttle state is source activity rather than account state.
 - Throttle decisions depend on attacker-controlled source activity, not on whether the submitted email exists.
 - A failed login never writes lock state to a `User` document.
 - A correct login from a different client source remains available after an attacker exhausts their own source/email bucket.
@@ -108,6 +108,6 @@ The old `failedLoginAttempts` and `lockUntil` fields are removed from applicatio
 - RED tests prove the current service can demote the final administrator, self-service deletion bypasses protection, and the raw cascade helper is route-callable.
 - GREEN tests cover final-admin demotion, administrator deletion, self-deletion, normal promotion/demotion/deletion, typed errors, shared-guard ordering, and serialized concurrent administrator reductions.
 - Credential tests cover missing input, absent account, Google-only account, wrong password, throttled source, and successful credentials. Each invalid non-throttled category must call bcrypt exactly once and expose the same public result.
-- Throttle tests cover opaque deterministic keys, independent source and pair buckets, atomic rolling-window increment/reset, threshold behavior, non-extension, pair-only success reset, and victim access from another source.
+- Throttle tests cover opaque deterministic keys, independent source and pair buckets, atomic rolling-window admission/reset, limit-plus-one caps, anchored expiry, safe success completion, and victim access from another source. Concurrent tests assert that 100 same-pair requests perform at most 5 bcrypt comparisons and 100 distinct-email requests from one source perform at most 20.
 - Source-contract tests require the NextAuth adapter to delegate to the authentication service, require the fixed client error mapping, and reject old account-lock reads/writes and raw cascade route calls.
-- Full completion requires focused RED/GREEN evidence, `npm test`, `npx tsc --noEmit --pretty false`, `npm run lint`, `npm run build`, `npm audit --omit=dev`, `git diff --check`, a security re-review, and a final scope/status/divergence inspection.
+- Full completion requires focused RED/GREEN evidence, `npm test`, `npx tsc --noEmit --pretty false --incremental false`, `npm run lint`, `npm run build`, `npm audit --omit=dev`, `git -c core.whitespace=cr-at-eol diff --check`, a security re-review, and a final scope/status/divergence inspection.

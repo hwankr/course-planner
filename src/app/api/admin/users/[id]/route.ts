@@ -21,6 +21,7 @@ const updateRoleSchema = z.object({
 });
 
 function userSecurityStatus(error: UserSecurityError): number {
+  if (error.code === 'TRANSACTIONS_UNAVAILABLE') return 503;
   if (error.code === 'LAST_ADMIN') return 409;
   if (error.code === 'USER_NOT_FOUND') return 404;
   return 400;
@@ -46,7 +47,15 @@ export async function PATCH(request: Request, { params }: RouteParams) {
       return invalidIdResponse('사용자 ID');
     }
 
-    const body = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, error: '유효한 JSON 요청 본문이 필요합니다.' },
+        { status: 400 }
+      );
+    }
     const parsed = updateRoleSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

@@ -27,51 +27,68 @@ interface StoredThrottle {
   expiresAt: Date;
 }
 
+interface ThrottleReservation {
+  sourceKey: string;
+  pairKey: string;
+  sourceWindowStartedAt: Date;
+  pairWindowStartedAt: Date;
+}
+
+type ThrottleAdmission =
+  | { allowed: false }
+  | { allowed: true; reservation: ThrottleReservation };
+
 interface LoginThrottleModelDouble {
   schema: {
     indexes(): Array<[Record<string, number>, Record<string, unknown>]>;
     options: Record<string, unknown>;
     paths: Record<string, unknown>;
   };
-  find(filter: Record<string, unknown>): unknown;
   findOneAndUpdate(
     filter: Record<string, unknown>,
     update: Array<Record<string, unknown>>,
     options: Record<string, unknown>
-  ): Promise<StoredThrottle>;
+  ): Promise<StoredThrottle | null>;
   deleteOne(filter: Record<string, unknown>): Promise<{ deletedCount: number }>;
+  updateOne(
+    filter: Record<string, unknown>,
+    update: Record<string, unknown>
+  ): Promise<{ modifiedCount: number }>;
 }
 
 interface LoginThrottleServiceDouble {
-  isBlocked(input: ThrottleInput): Promise<boolean>;
-  recordFailure(input: ThrottleInput): Promise<void>;
-  clearPair(input: ThrottleInput): Promise<void>;
+  reserveAttempt(input: ThrottleInput): Promise<ThrottleAdmission>;
+  completeSuccessfulAttempt(reservation: ThrottleReservation): Promise<void>;
+  isBlocked?: unknown;
+  recordFailure?: unknown;
+  clearPair?: unknown;
 }
 
 interface AtomicWrite {
-  filter: Record<string, unknown>;
-  pipeline: Array<Record<string, unknown>>;
+  key: string;
+  cap: number;
+  cutoff: Date;
+  now: Date;
+  newExpiry: Date;
   options: Record<string, unknown>;
 }
 
 async function loadThrottleModules() {
-  try {
-    const [modelModule, serviceModule, sourceModule] = await Promise.all([
-      import('../src/models/LoginThrottle'),
-      import('../src/services/login-throttle.service'),
-      import('../src/lib/auth/client-source'),
-    ]);
+  const [modelModule, serviceModule, sourceModule] = await Promise.all([
+    import('../src/models/LoginThrottle'),
+    import('../src/services/login-throttle.service'),
+    import('../src/lib/auth/client-source'),
+  ]);
 
-    return {
-      LoginThrottle: modelModule.default as unknown as LoginThrottleModelDouble,
-      createLoginThrottleKeys: serviceModule.createLoginThrottleKeys,
-      loginThrottleService:
-        serviceModule.loginThrottleService as LoginThrottleServiceDouble,
-      getCredentialClientSource: sourceModule.getCredentialClientSource,
-    };
-  } catch (error) {
-    assert.fail(`login throttle modules are unavailable: ${String(error)}`);
-  }
+  return {
+    LoginThrottle: modelModule.default as unknown as LoginThrottleModelDouble,
+    createLoginThrottleKeys: serviceModule.createLoginThrottleKeys,
+    loginThrottleService:
+      serviceModule.loginThrottleService as unknown as LoginThrottleServiceDouble,
+    getCredentialClientSource: sourceModule.getCredentialClientSource,
+    CredentialSourceUnavailableError:
+      sourceModule.CredentialSourceUnavailableError,
+  };
 }
 
 function asRecord(value: unknown, message: string): Record<string, unknown> {
@@ -97,6 +114,10 @@ function cloneThrottle(document: StoredThrottle): StoredThrottle {
   };
 }
 
+function dateMatches(value: unknown, expected: Date): boolean {
+  return value instanceof Date && value.getTime() === expected.getTime();
+}
+
 function installThrottleHarness(
   t: TestContext,
   model: LoginThrottleModelDouble,
@@ -107,21 +128,7 @@ function installThrottleHarness(
   );
   const writes: AtomicWrite[] = [];
   const deletes: Record<string, unknown>[] = [];
-
-  t.mock.method(model, 'find', (filter: Record<string, unknown>) => {
-    const idFilter = asRecord(filter._id, 'find must filter by opaque IDs');
-    const ids = asArray(idFilter.$in, 'find must read both opaque IDs');
-
-    return {
-      async lean(): Promise<StoredThrottle[]> {
-        return ids.flatMap((id) => {
-          assert.ok(typeof id === 'string');
-          const document = documents.get(id);
-          return document ? [cloneThrottle(document)] : [];
-        });
-      },
-    };
-  });
+  const refunds: Record<string, unknown>[] = [];
 
   t.mock.method(
     model,
@@ -131,55 +138,55 @@ function installThrottleHarness(
       pipeline: Array<Record<string, unknown>>,
       options: Record<string, unknown>
     ) => {
-      assert.equal(typeof filter._id, 'string', 'counter key must be opaque text');
-      assert.equal(pipeline.length, 1, 'one aggregation stage must update each key');
       assert.deepEqual(options, {
         upsert: true,
+        returnDocument: 'after',
         updatePipeline: true,
       });
-      assert.equal(Object.hasOwn(options, 'new'), false);
-      assert.equal(Object.hasOwn(options, 'returnOriginal'), false);
-
-      const set = asRecord(pipeline[0].$set, 'pipeline must contain one $set stage');
-      const failures = asRecord(set.failures, 'failures must use $cond');
-      const failuresCondition = asArray(
-        failures.$cond,
-        'failures must atomically reset or increment'
+      assert.equal(typeof filter._id, 'string');
+      assert.equal(pipeline.length, 1);
+      const set = asRecord(pipeline[0].$set, 'reservation must use $set');
+      const failureCondition = asArray(
+        asRecord(set.failures, 'failures must use $cond').$cond,
+        'failures must use $cond'
       );
-      assert.equal(failuresCondition.length, 3);
-
-      const expired = asRecord(
-        failuresCondition[0],
-        'the first $cond argument must detect expiry'
+      const expired = asRecord(failureCondition[0], 'expiry condition is required');
+      const expiryBranches = asArray(expired.$or, 'expiry must use $or');
+      assert.deepEqual(
+        asRecord(expiryBranches[0], 'missing window check must use $eq').$eq,
+        [{ $type: '$windowStartedAt' }, 'missing']
       );
-      const expiryBranches = asArray(expired.$or, 'expiry must handle missing and old windows');
-      const missingCheck = asRecord(expiryBranches[0], 'first expiry branch must use $eq');
-      assert.deepEqual(missingCheck.$eq, [
-        { $type: '$windowStartedAt' },
-        'missing',
-      ]);
-      const cutoffCheck = asRecord(expiryBranches[1], 'second expiry branch must use $lte');
-      const cutoffOperands = asArray(cutoffCheck.$lte, 'expiry boundary must use $lte');
+      const cutoffOperands = asArray(
+        asRecord(expiryBranches[1], 'boundary check must use $lte').$lte,
+        'boundary check must use $lte'
+      );
       assert.equal(cutoffOperands[0], '$windowStartedAt');
-      const cutoff = asDate(cutoffOperands[1], 'expiry cutoff must be a Date');
-
-      assert.equal(failuresCondition[1], 1, 'expired and missing counters reset to one');
-      assert.deepEqual(failuresCondition[2], {
+      const cutoff = asDate(cutoffOperands[1], 'cutoff must be a Date');
+      assert.equal(failureCondition[1], 1);
+      const minimum = asArray(
+        asRecord(failureCondition[2], 'active increments must be capped').$min,
+        'active increments must be capped'
+      );
+      assert.deepEqual(minimum[0], {
         $add: [{ $ifNull: ['$failures', 0] }, 1],
       });
+      assert.equal(typeof minimum[1], 'number');
+      const cap = minimum[1] as number;
 
-      const windowStartedAt = asRecord(
-        set.windowStartedAt,
-        'windowStartedAt must use the same expiry condition'
-      );
       const windowCondition = asArray(
-        windowStartedAt.$cond,
-        'windowStartedAt must reset or remain unchanged'
+        asRecord(set.windowStartedAt, 'window start must use $cond').$cond,
+        'window start must use $cond'
       );
       assert.deepEqual(windowCondition[0], expired);
-      const now = asDate(windowCondition[1], 'reset time must be a Date');
+      const now = asDate(windowCondition[1], 'window reset must use current time');
       assert.equal(windowCondition[2], '$windowStartedAt');
-      const expiresAt = asDate(set.expiresAt, 'TTL expiry must be a Date');
+      const expiryCondition = asArray(
+        asRecord(set.expiresAt, 'TTL expiry must use $cond').$cond,
+        'TTL expiry must use $cond'
+      );
+      assert.deepEqual(expiryCondition[0], expired);
+      const newExpiry = asDate(expiryCondition[1], 'new TTL expiry must be a Date');
+      assert.equal(expiryCondition[2], '$expiresAt');
 
       const key = filter._id as string;
       const current = documents.get(key);
@@ -188,29 +195,62 @@ function installThrottleHarness(
         current.windowStartedAt.getTime() <= cutoff.getTime();
       const updated: StoredThrottle = {
         _id: key,
-        failures: isExpired ? 1 : current.failures + 1,
-        windowStartedAt: isExpired ? new Date(now) : new Date(current.windowStartedAt),
-        expiresAt: new Date(expiresAt),
+        failures: isExpired
+          ? 1
+          : Math.min(current.failures + 1, cap),
+        windowStartedAt: isExpired
+          ? new Date(now)
+          : new Date(current.windowStartedAt),
+        expiresAt: isExpired
+          ? new Date(newExpiry)
+          : new Date(current.expiresAt),
       };
-
       documents.set(key, updated);
-      writes.push({ filter, pipeline, options });
+      writes.push({ key, cap, cutoff, now, newExpiry, options });
       return cloneThrottle(updated);
     }
   );
 
   t.mock.method(model, 'deleteOne', async (filter: Record<string, unknown>) => {
-    assert.equal(typeof filter._id, 'string');
-    const deleted = documents.delete(filter._id as string);
+    const key = filter._id;
+    assert.equal(typeof key, 'string');
+    const current = documents.get(key as string);
+    const matches =
+      current !== undefined &&
+      dateMatches(filter.windowStartedAt, current.windowStartedAt);
+    if (matches) documents.delete(key as string);
     deletes.push(filter);
-    return { deletedCount: deleted ? 1 : 0 };
+    return { deletedCount: matches ? 1 : 0 };
   });
+
+  t.mock.method(
+    model,
+    'updateOne',
+    async (
+      filter: Record<string, unknown>,
+      update: Record<string, unknown>
+    ) => {
+      const key = filter._id;
+      assert.equal(typeof key, 'string');
+      assert.deepEqual(filter.failures, { $gt: 0 });
+      assert.deepEqual(update, { $inc: { failures: -1 } });
+      const current = documents.get(key as string);
+      const matches =
+        current !== undefined &&
+        current.failures > 0 &&
+        dateMatches(filter.windowStartedAt, current.windowStartedAt);
+      if (matches) current.failures -= 1;
+      refunds.push(filter);
+      return { modifiedCount: matches ? 1 : 0 };
+    }
+  );
 
   return {
     deletes,
     documents,
+    refunds,
     writes,
-    get(key: string) {
+    get(key: string): StoredThrottle | undefined {
       const document = documents.get(key);
       return document ? cloneThrottle(document) : undefined;
     },
@@ -227,8 +267,7 @@ test('TTL model stores only opaque counters and expires them through MongoDB', a
     LoginThrottle.schema.indexes().some(
       ([fields, options]) =>
         fields.expiresAt === 1 && options.expireAfterSeconds === 0
-    ),
-    'expiresAt must have an absolute TTL index'
+    )
   );
 });
 
@@ -236,7 +275,7 @@ test('throttle keys are deterministic, scoped, and contain no raw identifiers', 
   const { createLoginThrottleKeys } = await loadThrottleModules();
   const input = { source: '203.0.113.10', email: 'Student@Example.com' };
   const keys = createLoginThrottleKeys(input, 'test-secret');
-  const normalizedKeys = createLoginThrottleKeys(
+  const normalized = createLoginThrottleKeys(
     { source: input.source, email: '  student@example.com  ' },
     'test-secret'
   );
@@ -249,67 +288,64 @@ test('throttle keys are deterministic, scoped, and contain no raw identifiers', 
     'test-secret'
   );
 
-  assert.deepEqual(keys, normalizedKeys);
+  assert.deepEqual(keys, normalized);
   assert.notEqual(keys.sourceKey, keys.pairKey);
   assert.equal(keys.sourceKey, anotherEmail.sourceKey);
   assert.notEqual(keys.pairKey, anotherEmail.pairKey);
   assert.notEqual(keys.sourceKey, anotherSource.sourceKey);
-  assert.notEqual(keys.pairKey, anotherSource.pairKey);
   assert.notDeepEqual(keys, createLoginThrottleKeys(input, 'rotated-secret'));
-  assert.doesNotMatch(
-    JSON.stringify(keys),
-    /203\.0\.113\.10|student@example\.com/i
-  );
+  assert.doesNotMatch(JSON.stringify(keys), /203\.0\.113\.10|student@example\.com/i);
 });
 
-test('credential client source honors bounded Vercel header precedence', async () => {
-  const { getCredentialClientSource } = await loadThrottleModules();
+test('credential source uses trusted production input and validated development fallbacks', async () => {
+  const {
+    CredentialSourceUnavailableError,
+    getCredentialClientSource,
+  } = await loadThrottleModules();
 
   assert.equal(
     getCredentialClientSource(
       new Headers({
-        'x-vercel-forwarded-for': ' 203.0.113.20, 198.51.100.1 ',
-        'x-forwarded-for': '203.0.113.21',
-        'x-real-ip': '203.0.113.22',
-      })
+        'x-vercel-forwarded-for': '203.0.113.20, 198.51.100.1',
+        'x-forwarded-for': '203.0.113.200',
+      }),
+      { production: true, vercel: false }
     ),
     '203.0.113.20'
   );
-  assert.equal(
-    getCredentialClientSource(
-      new Headers({
-        'x-forwarded-for': '203.0.113.21, 198.51.100.2',
-        'x-real-ip': '203.0.113.22',
-      })
-    ),
-    '203.0.113.21'
+  assert.throws(
+    () =>
+      getCredentialClientSource(
+        new Headers({ 'x-forwarded-for': '203.0.113.200' }),
+        { production: true, vercel: false }
+      ),
+    CredentialSourceUnavailableError
   );
   assert.equal(
-    getCredentialClientSource(new Headers({ 'x-real-ip': '203.0.113.22' })),
+    getCredentialClientSource(
+      new Headers({ 'x-real-ip': '203.0.113.22' }),
+      { production: false, vercel: false }
+    ),
     '203.0.113.22'
   );
   assert.equal(
-    getCredentialClientSource({
-      'X-VERCEL-FORWARDED-FOR': ['203.0.113.23', '198.51.100.3'],
-      'x-forwarded-for': '203.0.113.24',
+    getCredentialClientSource(undefined, {
+      production: false,
+      vercel: false,
     }),
-    '203.0.113.23'
+    'local-development'
   );
-  assert.equal(
-    getCredentialClientSource(
-      new Headers({ 'x-vercel-forwarded-for': 'x'.repeat(256) })
-    ).length,
-    128
-  );
-  assert.equal(getCredentialClientSource(new Headers()), 'unknown');
-  assert.equal(getCredentialClientSource(undefined), 'unknown');
-  assert.equal(
-    getCredentialClientSource(new Headers({ 'x-forwarded-for': ' ,ignored' })),
-    'unknown'
+  assert.throws(
+    () =>
+      getCredentialClientSource(
+        new Headers({ 'x-vercel-forwarded-for': 'invalid' }),
+        { production: false, vercel: false }
+      ),
+    CredentialSourceUnavailableError
   );
 });
 
-test('recordFailure uses atomic upserts to reset expired and increment active windows', async (t) => {
+test('reservations reset expired windows, increment active windows, and anchor expiry', async (t) => {
   const fixedNow = new Date('2026-07-10T03:00:00.000Z');
   t.mock.method(Date, 'now', () => fixedNow.getTime());
   const {
@@ -320,26 +356,25 @@ test('recordFailure uses atomic upserts to reset expired and increment active wi
   const input = { source: '203.0.113.30', email: 'student@example.com' };
   const keys = createLoginThrottleKeys(input, process.env.NEXTAUTH_SECRET!);
   const activeStartedAt = new Date(fixedNow.getTime() - 60_000);
-  const staleStartedAt = new Date(fixedNow.getTime() - 15 * 60_000);
+  const boundary = new Date(fixedNow.getTime() - 15 * 60_000);
   const originalExpiry = new Date(fixedNow.getTime() + 60_000);
   const harness = installThrottleHarness(t, LoginThrottle, [
     {
       _id: keys.sourceKey,
-      failures: 8,
-      windowStartedAt: staleStartedAt,
+      failures: 20,
+      windowStartedAt: boundary,
       expiresAt: originalExpiry,
     },
     {
       _id: keys.pairKey,
-      failures: 3,
+      failures: 4,
       windowStartedAt: activeStartedAt,
       expiresAt: originalExpiry,
     },
   ]);
 
-  await loginThrottleService.recordFailure(input);
-
-  assert.equal(harness.writes.length, 2);
+  const admission = await loginThrottleService.reserveAttempt(input);
+  assert.equal(admission.allowed, true);
   assert.deepEqual(harness.get(keys.sourceKey), {
     _id: keys.sourceKey,
     failures: 1,
@@ -348,40 +383,14 @@ test('recordFailure uses atomic upserts to reset expired and increment active wi
   });
   assert.deepEqual(harness.get(keys.pairKey), {
     _id: keys.pairKey,
-    failures: 4,
+    failures: 5,
     windowStartedAt: activeStartedAt,
-    expiresAt: new Date(fixedNow.getTime() + 30 * 60_000),
+    expiresAt: originalExpiry,
   });
-
-  for (const write of harness.writes) {
-    assert.deepEqual(write.options, {
-      upsert: true,
-      updatePipeline: true,
-    });
-    assert.equal(Object.hasOwn(write.options, 'new'), false);
-    assert.equal(Object.hasOwn(write.options, 'returnOriginal'), false);
-    const set = asRecord(write.pipeline[0].$set, 'counter update needs $set');
-    const failures = asArray(
-      asRecord(set.failures, 'counter update needs failure $cond').$cond,
-      'counter update needs failure $cond'
-    );
-    const expiry = asArray(
-      asRecord(failures[0], 'counter update needs expiry $or').$or,
-      'counter update needs expiry $or'
-    );
-    assert.deepEqual(expiry, [
-      { $eq: [{ $type: '$windowStartedAt' }, 'missing'] },
-      {
-        $lte: [
-          '$windowStartedAt',
-          new Date(fixedNow.getTime() - 15 * 60_000),
-        ],
-      },
-    ]);
-  }
+  assert.deepEqual(harness.writes.map(({ cap }) => cap), [21, 6]);
 });
 
-test('concurrent failures increment both counters without lost updates', async (t) => {
+test('pair and source rejections cap at limit plus one without extending the window', async (t) => {
   const fixedNow = new Date('2026-07-10T03:15:00.000Z');
   t.mock.method(Date, 'now', () => fixedNow.getTime());
   const {
@@ -389,69 +398,70 @@ test('concurrent failures increment both counters without lost updates', async (
     createLoginThrottleKeys,
     loginThrottleService,
   } = await loadThrottleModules();
-  const input = { source: '203.0.113.31', email: 'student@example.com' };
-  const keys = createLoginThrottleKeys(input, process.env.NEXTAUTH_SECRET!);
-  const harness = installThrottleHarness(t, LoginThrottle);
-
-  await Promise.all(
-    Array.from({ length: 4 }, () => loginThrottleService.recordFailure(input))
-  );
-
-  assert.equal(harness.get(keys.pairKey)?.failures, 4);
-  assert.equal(harness.get(keys.sourceKey)?.failures, 4);
-  assert.equal(harness.writes.length, 8);
-});
-
-test('pair and source thresholds map to exactly five and twenty failures', async (t) => {
-  const fixedNow = new Date('2026-07-10T03:30:00.000Z');
-  t.mock.method(Date, 'now', () => fixedNow.getTime());
-  const {
-    LoginThrottle,
-    createLoginThrottleKeys,
-    loginThrottleService,
-  } = await loadThrottleModules();
-  const input = { source: '203.0.113.32', email: 'student@example.com' };
-  const keys = createLoginThrottleKeys(input, process.env.NEXTAUTH_SECRET!);
   const startedAt = new Date(fixedNow.getTime() - 1);
-  const expiresAt = new Date(fixedNow.getTime() + 30 * 60_000);
+  const originalExpiry = new Date(fixedNow.getTime() + 10_000);
+  const pairInput = { source: '203.0.113.31', email: 'pair@example.com' };
+  const pairKeys = createLoginThrottleKeys(
+    pairInput,
+    process.env.NEXTAUTH_SECRET!
+  );
+  const sourceInput = { source: '203.0.113.32', email: 'source@example.com' };
+  const sourceKeys = createLoginThrottleKeys(
+    sourceInput,
+    process.env.NEXTAUTH_SECRET!
+  );
   const harness = installThrottleHarness(t, LoginThrottle, [
-    { _id: keys.pairKey, failures: 4, windowStartedAt: startedAt, expiresAt },
-    { _id: keys.sourceKey, failures: 19, windowStartedAt: startedAt, expiresAt },
+    {
+      _id: pairKeys.sourceKey,
+      failures: 0,
+      windowStartedAt: startedAt,
+      expiresAt: originalExpiry,
+    },
+    {
+      _id: pairKeys.pairKey,
+      failures: 5,
+      windowStartedAt: startedAt,
+      expiresAt: originalExpiry,
+    },
+    {
+      _id: sourceKeys.sourceKey,
+      failures: 20,
+      windowStartedAt: startedAt,
+      expiresAt: originalExpiry,
+    },
   ]);
 
-  assert.equal(await loginThrottleService.isBlocked(input), false);
-  harness.documents.set(keys.pairKey, {
-    _id: keys.pairKey,
-    failures: 5,
-    windowStartedAt: startedAt,
-    expiresAt,
+  assert.deepEqual(await loginThrottleService.reserveAttempt(pairInput), {
+    allowed: false,
   });
-  harness.documents.set(keys.sourceKey, {
-    _id: keys.sourceKey,
-    failures: 5,
-    windowStartedAt: startedAt,
-    expiresAt,
+  assert.equal(harness.get(pairKeys.sourceKey)?.failures, 1);
+  assert.equal(harness.get(pairKeys.pairKey)?.failures, 6);
+  assert.deepEqual(await loginThrottleService.reserveAttempt(pairInput), {
+    allowed: false,
   });
-  assert.equal(await loginThrottleService.isBlocked(input), true);
+  assert.equal(harness.get(pairKeys.pairKey)?.failures, 6);
+  assert.equal(
+    harness.get(pairKeys.pairKey)?.expiresAt.getTime(),
+    originalExpiry.getTime()
+  );
 
-  harness.documents.set(keys.pairKey, {
-    _id: keys.pairKey,
-    failures: 0,
-    windowStartedAt: startedAt,
-    expiresAt,
+  assert.deepEqual(await loginThrottleService.reserveAttempt(sourceInput), {
+    allowed: false,
   });
-  assert.equal(await loginThrottleService.isBlocked(input), false);
-  harness.documents.set(keys.sourceKey, {
-    _id: keys.sourceKey,
-    failures: 20,
-    windowStartedAt: startedAt,
-    expiresAt,
+  assert.equal(harness.get(sourceKeys.sourceKey)?.failures, 21);
+  assert.deepEqual(await loginThrottleService.reserveAttempt(sourceInput), {
+    allowed: false,
   });
-  assert.equal(await loginThrottleService.isBlocked(input), true);
+  assert.equal(harness.get(sourceKeys.sourceKey)?.failures, 21);
+  assert.equal(harness.get(sourceKeys.pairKey), undefined);
+  assert.equal(
+    harness.get(sourceKeys.sourceKey)?.expiresAt.getTime(),
+    originalExpiry.getTime()
+  );
 });
 
-test('an already-blocked request performs no write and cannot extend expiry', async (t) => {
-  const fixedNow = new Date('2026-07-10T03:45:00.000Z');
+test('the exact observation-window boundary starts a new admitted reservation', async (t) => {
+  const fixedNow = new Date('2026-07-10T03:30:00.000Z');
   t.mock.method(Date, 'now', () => fixedNow.getTime());
   const {
     LoginThrottle,
@@ -460,24 +470,62 @@ test('an already-blocked request performs no write and cannot extend expiry', as
   } = await loadThrottleModules();
   const input = { source: '203.0.113.33', email: 'student@example.com' };
   const keys = createLoginThrottleKeys(input, process.env.NEXTAUTH_SECRET!);
-  const originalExpiry = new Date(fixedNow.getTime() + 10_000);
+  const boundary = new Date(fixedNow.getTime() - 15 * 60_000);
   const harness = installThrottleHarness(t, LoginThrottle, [
     {
+      _id: keys.sourceKey,
+      failures: 21,
+      windowStartedAt: boundary,
+      expiresAt: fixedNow,
+    },
+    {
       _id: keys.pairKey,
-      failures: 5,
-      windowStartedAt: new Date(fixedNow.getTime() - 1),
-      expiresAt: originalExpiry,
+      failures: 6,
+      windowStartedAt: boundary,
+      expiresAt: fixedNow,
     },
   ]);
 
-  await loginThrottleService.recordFailure(input);
-
-  assert.equal(harness.writes.length, 0);
-  assert.equal(harness.get(keys.pairKey)?.expiresAt.getTime(), originalExpiry.getTime());
-  assert.equal(harness.get(keys.pairKey)?.failures, 5);
+  const admission = await loginThrottleService.reserveAttempt(input);
+  assert.equal(admission.allowed, true);
+  assert.equal(harness.get(keys.sourceKey)?.failures, 1);
+  assert.equal(harness.get(keys.pairKey)?.failures, 1);
+  assert.equal(harness.get(keys.sourceKey)?.windowStartedAt.getTime(), fixedNow.getTime());
+  assert.equal(harness.get(keys.pairKey)?.windowStartedAt.getTime(), fixedNow.getTime());
 });
 
-test('the exact observation-window boundary is expired and resets on failure', async (t) => {
+test('successful completion clears and refunds only its original windows', async (t) => {
+  const fixedNow = new Date('2026-07-10T03:45:00.000Z');
+  t.mock.method(Date, 'now', () => fixedNow.getTime());
+  const {
+    LoginThrottle,
+    loginThrottleService,
+  } = await loadThrottleModules();
+  const harness = installThrottleHarness(t, LoginThrottle);
+  const input = { source: '203.0.113.34', email: 'student@example.com' };
+  const admission = await loginThrottleService.reserveAttempt(input);
+  assert.equal(admission.allowed, true);
+  if (!admission.allowed) return;
+
+  await loginThrottleService.completeSuccessfulAttempt(admission.reservation);
+  assert.equal(harness.get(admission.reservation.pairKey), undefined);
+  assert.equal(harness.get(admission.reservation.sourceKey)?.failures, 0);
+  assert.deepEqual(harness.deletes, [
+    {
+      _id: admission.reservation.pairKey,
+      windowStartedAt: admission.reservation.pairWindowStartedAt,
+    },
+  ]);
+  assert.deepEqual(harness.refunds, [
+    {
+      _id: admission.reservation.sourceKey,
+      windowStartedAt: admission.reservation.sourceWindowStartedAt,
+      failures: { $gt: 0 },
+    },
+  ]);
+});
+
+test('another source remains available for the same submitted email', async (t) => {
   const fixedNow = new Date('2026-07-10T04:00:00.000Z');
   t.mock.method(Date, 'now', () => fixedNow.getTime());
   const {
@@ -485,94 +533,50 @@ test('the exact observation-window boundary is expired and resets on failure', a
     createLoginThrottleKeys,
     loginThrottleService,
   } = await loadThrottleModules();
-  const input = { source: '203.0.113.34', email: 'student@example.com' };
-  const keys = createLoginThrottleKeys(input, process.env.NEXTAUTH_SECRET!);
-  const boundary = new Date(fixedNow.getTime() - 15 * 60_000);
-  const expiresAt = new Date(fixedNow.getTime() + 60_000);
-  const harness = installThrottleHarness(t, LoginThrottle, [
-    { _id: keys.pairKey, failures: 50, windowStartedAt: boundary, expiresAt },
-    { _id: keys.sourceKey, failures: 50, windowStartedAt: boundary, expiresAt },
-  ]);
-
-  assert.equal(await loginThrottleService.isBlocked(input), false);
-  await loginThrottleService.recordFailure(input);
-
-  assert.equal(harness.get(keys.pairKey)?.failures, 1);
-  assert.equal(harness.get(keys.sourceKey)?.failures, 1);
-  assert.equal(harness.get(keys.pairKey)?.windowStartedAt.getTime(), fixedNow.getTime());
-  assert.equal(harness.get(keys.sourceKey)?.windowStartedAt.getTime(), fixedNow.getTime());
-});
-
-test('a blocked attacker source does not block another source for the same email', async (t) => {
-  const fixedNow = new Date('2026-07-10T04:15:00.000Z');
-  t.mock.method(Date, 'now', () => fixedNow.getTime());
-  const {
-    LoginThrottle,
-    createLoginThrottleKeys,
-    loginThrottleService,
-  } = await loadThrottleModules();
   const email = 'student@example.com';
-  const attacker = { source: 'attacker', email };
-  const victim = { source: 'victim', email };
+  const attacker = { source: '203.0.113.35', email };
+  const victim = { source: '203.0.113.36', email };
   const attackerKeys = createLoginThrottleKeys(
     attacker,
     process.env.NEXTAUTH_SECRET!
   );
   const startedAt = new Date(fixedNow.getTime() - 1);
-  const expiresAt = new Date(fixedNow.getTime() + 30 * 60_000);
   installThrottleHarness(t, LoginThrottle, [
     {
-      _id: attackerKeys.pairKey,
-      failures: 5,
-      windowStartedAt: startedAt,
-      expiresAt,
-    },
-    {
       _id: attackerKeys.sourceKey,
-      failures: 20,
+      failures: 21,
       windowStartedAt: startedAt,
-      expiresAt,
+      expiresAt: new Date(fixedNow.getTime() + 60_000),
     },
   ]);
 
-  assert.equal(await loginThrottleService.isBlocked(attacker), true);
-  assert.equal(await loginThrottleService.isBlocked(victim), false);
+  assert.deepEqual(await loginThrottleService.reserveAttempt(attacker), {
+    allowed: false,
+  });
+  assert.equal(
+    (await loginThrottleService.reserveAttempt(victim)).allowed,
+    true
+  );
 });
 
-test('clearPair deletes only the pair key and preserves source-wide state', async (t) => {
-  const fixedNow = new Date('2026-07-10T04:30:00.000Z');
-  t.mock.method(Date, 'now', () => fixedNow.getTime());
-  const {
-    LoginThrottle,
-    createLoginThrottleKeys,
-    loginThrottleService,
-  } = await loadThrottleModules();
-  const input = { source: '203.0.113.35', email: 'student@example.com' };
-  const keys = createLoginThrottleKeys(input, process.env.NEXTAUTH_SECRET!);
-  const document = {
-    failures: 2,
-    windowStartedAt: fixedNow,
-    expiresAt: new Date(fixedNow.getTime() + 30 * 60_000),
-  };
-  const harness = installThrottleHarness(t, LoginThrottle, [
-    { _id: keys.sourceKey, ...document },
-    { _id: keys.pairKey, ...document },
-  ]);
-
-  await loginThrottleService.clearPair(input);
-
-  assert.deepEqual(harness.deletes, [{ _id: keys.pairKey }]);
-  assert.equal(harness.get(keys.pairKey), undefined);
-  assert.equal(harness.get(keys.sourceKey)?.failures, 2);
-});
-
-test('model and service barrels expose the shared throttle components', async () => {
-  const [modelsIndex, servicesIndex] = await Promise.all([
+test('service barrels expose reservation APIs and remove check-then-record methods', async () => {
+  const [modelsIndex, servicesIndex, serviceSource] = await Promise.all([
     readFile(new URL('../src/models/index.ts', import.meta.url), 'utf8'),
     readFile(new URL('../src/services/index.ts', import.meta.url), 'utf8'),
+    readFile(
+      new URL('../src/services/login-throttle.service.ts', import.meta.url),
+      'utf8'
+    ),
   ]);
+  const { loginThrottleService } = await loadThrottleModules();
 
   assert.match(modelsIndex, /LoginThrottle/);
   assert.match(servicesIndex, /loginThrottleService/);
   assert.match(servicesIndex, /createLoginThrottleKeys/);
+  assert.match(servicesIndex, /LoginThrottleAdmission/);
+  assert.match(servicesIndex, /LoginThrottleReservation/);
+  assert.equal(loginThrottleService.isBlocked, undefined);
+  assert.equal(loginThrottleService.recordFailure, undefined);
+  assert.equal(loginThrottleService.clearPair, undefined);
+  assert.doesNotMatch(serviceSource, /\bisBlocked\b|\brecordFailure\b|\bclearPair\b/);
 });

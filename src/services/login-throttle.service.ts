@@ -23,6 +23,15 @@ export interface LoginThrottleKeys {
   pairKey: string;
 }
 
+export interface LoginThrottleReservation extends LoginThrottleKeys {
+  sourceWindowStartedAt: Date;
+  pairWindowStartedAt: Date;
+}
+
+export type LoginThrottleAdmission =
+  | { allowed: false }
+  | { allowed: true; reservation: LoginThrottleReservation };
+
 function digest(scope: 'source' | 'pair', value: string, secret: string): string {
   return `${scope}:${createHmac('sha256', secret)
     .update(`v1:${scope}:${value}`)
@@ -42,39 +51,15 @@ export function createLoginThrottleKeys(
   };
 }
 
-function isActive(
-  record: Pick<ILoginThrottle, 'windowStartedAt'>,
-  cutoff: Date
-): boolean {
-  return record.windowStartedAt.getTime() > cutoff.getTime();
-}
-
-async function areKeysBlocked(
-  keys: LoginThrottleKeys,
+async function reserveKey(
+  key: string,
+  limit: number,
   now: Date
-): Promise<boolean> {
-  const records = await LoginThrottle.find({
-    _id: { $in: [keys.sourceKey, keys.pairKey] },
-  }).lean();
-  const byId = new Map(records.map((record) => [record._id, record]));
+): Promise<ILoginThrottle> {
   const cutoff = new Date(now.getTime() - LOGIN_THROTTLE_WINDOW_MS);
-  const sourceRecord = byId.get(keys.sourceKey);
-  const pairRecord = byId.get(keys.pairKey);
-
-  const sourceBlocked =
-    sourceRecord !== undefined &&
-    isActive(sourceRecord, cutoff) &&
-    sourceRecord.failures >= LOGIN_THROTTLE_SOURCE_LIMIT;
-  const pairBlocked =
-    pairRecord !== undefined &&
-    isActive(pairRecord, cutoff) &&
-    pairRecord.failures >= LOGIN_THROTTLE_PAIR_LIMIT;
-
-  return sourceBlocked || pairBlocked;
-}
-
-async function incrementKey(key: string, now: Date): Promise<void> {
-  const cutoff = new Date(now.getTime() - LOGIN_THROTTLE_WINDOW_MS);
+  const newExpiry = new Date(
+    now.getTime() + LOGIN_THROTTLE_WINDOW_MS * 2
+  );
   const expired = {
     $or: [
       { $eq: [{ $type: '$windowStartedAt' }, 'missing'] },
@@ -82,7 +67,7 @@ async function incrementKey(key: string, now: Date): Promise<void> {
     ],
   };
 
-  await LoginThrottle.findOneAndUpdate(
+  const record = await LoginThrottle.findOneAndUpdate(
     { _id: key },
     [
       {
@@ -91,49 +76,86 @@ async function incrementKey(key: string, now: Date): Promise<void> {
             $cond: [
               expired,
               1,
-              { $add: [{ $ifNull: ['$failures', 0] }, 1] },
+              {
+                $min: [
+                  { $add: [{ $ifNull: ['$failures', 0] }, 1] },
+                  limit + 1,
+                ],
+              },
             ],
           },
           windowStartedAt: {
             $cond: [expired, now, '$windowStartedAt'],
           },
-          expiresAt: new Date(
-            now.getTime() + LOGIN_THROTTLE_WINDOW_MS * 2
-          ),
+          expiresAt: {
+            $cond: [expired, newExpiry, '$expiresAt'],
+          },
         },
       },
     ],
-    { upsert: true, updatePipeline: true }
+    { upsert: true, returnDocument: 'after', updatePipeline: true }
   );
+
+  if (!record) {
+    throw new Error('Login throttle reservation failed');
+  }
+
+  return record;
 }
 
-async function isBlocked(input: LoginThrottleInput): Promise<boolean> {
-  await connectDB();
-  const keys = createLoginThrottleKeys(input, env.NEXTAUTH_SECRET);
-  return areKeysBlocked(keys, new Date(Date.now()));
-}
-
-async function recordFailure(input: LoginThrottleInput): Promise<void> {
+async function reserveAttempt(
+  input: LoginThrottleInput
+): Promise<LoginThrottleAdmission> {
   await connectDB();
   const now = new Date(Date.now());
   const keys = createLoginThrottleKeys(input, env.NEXTAUTH_SECRET);
+  const sourceRecord = await reserveKey(
+    keys.sourceKey,
+    LOGIN_THROTTLE_SOURCE_LIMIT,
+    now
+  );
+  if (sourceRecord.failures > LOGIN_THROTTLE_SOURCE_LIMIT) {
+    return { allowed: false };
+  }
 
-  if (await areKeysBlocked(keys, now)) return;
+  const pairRecord = await reserveKey(
+    keys.pairKey,
+    LOGIN_THROTTLE_PAIR_LIMIT,
+    now
+  );
+  if (pairRecord.failures > LOGIN_THROTTLE_PAIR_LIMIT) {
+    return { allowed: false };
+  }
 
-  await Promise.all([
-    incrementKey(keys.sourceKey, now),
-    incrementKey(keys.pairKey, now),
-  ]);
+  return {
+    allowed: true,
+    reservation: {
+      ...keys,
+      sourceWindowStartedAt: sourceRecord.windowStartedAt,
+      pairWindowStartedAt: pairRecord.windowStartedAt,
+    },
+  };
 }
 
-async function clearPair(input: LoginThrottleInput): Promise<void> {
+async function completeSuccessfulAttempt(
+  reservation: LoginThrottleReservation
+): Promise<void> {
   await connectDB();
-  const { pairKey } = createLoginThrottleKeys(input, env.NEXTAUTH_SECRET);
-  await LoginThrottle.deleteOne({ _id: pairKey });
+  await LoginThrottle.deleteOne({
+    _id: reservation.pairKey,
+    windowStartedAt: reservation.pairWindowStartedAt,
+  });
+  await LoginThrottle.updateOne(
+    {
+      _id: reservation.sourceKey,
+      windowStartedAt: reservation.sourceWindowStartedAt,
+      failures: { $gt: 0 },
+    },
+    { $inc: { failures: -1 } }
+  );
 }
 
 export const loginThrottleService = {
-  isBlocked,
-  recordFailure,
-  clearPair,
+  reserveAttempt,
+  completeSuccessfulAttempt,
 };

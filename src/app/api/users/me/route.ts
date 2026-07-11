@@ -16,6 +16,7 @@ import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 
 function userSecurityStatus(error: UserSecurityError): number {
+  if (error.code === 'TRANSACTIONS_UNAVAILABLE') return 503;
   if (error.code === 'LAST_ADMIN') return 409;
   if (error.code === 'USER_NOT_FOUND') return 404;
   return 400;

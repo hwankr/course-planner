@@ -4,7 +4,7 @@
 
 **Goal:** Preserve at least one administrator under concurrent mutations, make all credential-login failures non-enumerating, and replace weaponizable account locks with shared source-scoped throttling.
 
-**Architecture:** Administrator-decreasing operations run in MongoDB transactions that first write one shared guard document, forcing concurrent demotions and deletions to serialize. Credential authentication moves into an HTTP-independent service that performs one real-or-dummy bcrypt comparison and uses MongoDB TTL throttle buckets keyed by HMAC(source) and HMAC(source plus email). NextAuth and React remain thin adapters that expose one fixed failure.
+**Architecture:** Administrator-decreasing operations run in MongoDB transactions that first write one shared guard document, forcing concurrent demotions and deletions to serialize; unsupported transaction topology becomes a typed 503. Credential authentication atomically reserves source and source/email capacity before one admitted real-or-dummy bcrypt comparison, using MongoDB TTL buckets keyed by HMAC(source) and HMAC(source plus email). NextAuth and React remain thin adapters that expose one fixed failure.
 
 **Tech Stack:** TypeScript, Node `node:test` through `tsx`, Next.js App Router, NextAuth 4, Mongoose 9, MongoDB transactions and TTL indexes, bcryptjs, Node `crypto`.
 
@@ -14,7 +14,10 @@
 - Keep API routes limited to HTTP/session parsing, service calls, and response mapping.
 - Never store or log raw passwords, password hashes, raw client addresses, or raw email addresses in throttle documents.
 - Keep source/email at 5 failures per 15-minute observation window and source-wide at 20 failures per 15-minute observation window.
-- Do not extend a throttle window when a request is already blocked.
+- Reserve source capacity before pair capacity and decide admission from each returned post-update count, bounding concurrent bcrypt work to 20 and 5 respectively.
+- Cap counters at limit plus one and never extend an active throttle window or TTL expiry.
+- In production/Vercel trust only a validated, canonical first IP from `x-vercel-forwarded-for`; missing or invalid source data fails closed.
+- Already-throttled requests intentionally skip lookup and bcrypt because throttle state represents source activity, not account existence, and cost-12 work would defeat abuse control.
 - Use `NEXTAUTH_SECRET` to HMAC throttle identifiers; secret rotation may clear active throttles.
 - Do not mutate the configured real database from tests.
 - Do not change registration duplicate-email behavior in this change.
@@ -39,7 +42,7 @@
 - Test: `tests/admin-membership-security.test.ts`
 
 **Interfaces:**
-- Produces: `UserSecurityError` with code `LAST_ADMIN | SELF_DELETE | USER_NOT_FOUND`.
+- Produces: `UserSecurityError` with code `LAST_ADMIN | SELF_DELETE | USER_NOT_FOUND | TRANSACTIONS_UNAVAILABLE`.
 - Produces: `userService.deleteOwnAccount(userId: string): Promise<void>`.
 - Preserves: `userService.updateRole(userId, role)` and `userService.adminDeleteUser(targetUserId, adminUserId)` call signatures.
 - Extends cascade service deletion functions with `session?: ClientSession`.
@@ -139,6 +142,8 @@ async function withAdminMembershipTransaction<T>(
 }
 ```
 
+Catch only MongoDB code 20/`IllegalOperation` or the exact canonical `Transaction numbers are only allowed on a replica set member or mongos` message around session/transaction execution and convert it to `UserSecurityError('TRANSACTIONS_UNAVAILABLE', ...)`. Preserve every unrelated database error unchanged. PATCH/DELETE admin-user routes and self-delete map that typed code to HTTP 503.
+
 Within the callback, fetch the target using the session. Before reducing an administrator, require an existing different administrator:
 
 ```typescript
@@ -157,6 +162,7 @@ Keep the raw cascade helper private and call each session-aware deletion sequent
 
 ```typescript
 function userSecurityStatus(error: UserSecurityError): number {
+  if (error.code === 'TRANSACTIONS_UNAVAILABLE') return 503;
   if (error.code === 'LAST_ADMIN') return 409;
   if (error.code === 'USER_NOT_FOUND') return 404;
   return 400;
@@ -190,8 +196,9 @@ git commit -m "fix: 마지막 관리자 불변식 보장"
 
 **Interfaces:**
 - Produces: `createLoginThrottleKeys({ source, email }, secret)` returning opaque `sourceKey` and `pairKey`.
-- Produces: `loginThrottleService.isBlocked(input)`, `recordFailure(input)`, and `clearPair(input)`.
-- Produces: `getCredentialClientSource(headers)` returning a bounded plain source string for the service.
+- Produces: `loginThrottleService.reserveAttempt(input): Promise<LoginThrottleAdmission>` and `completeSuccessfulAttempt(reservation)`.
+- Produces: `LoginThrottleReservation` carrying opaque keys plus source/pair window timestamps for safe success cleanup.
+- Produces: `getCredentialClientSource(headers)` returning a validated/canonical source or throwing typed `CredentialSourceUnavailableError` in production.
 
 - [ ] **Step 1: Write failing throttle tests**
 
@@ -206,12 +213,12 @@ test('throttle keys are deterministic, scoped, and contain no raw identifiers', 
 });
 
 test('a blocked attacker source does not block another source for the same email', async () => {
-  assert.equal(await harness.isBlocked({ source: 'attacker', email }), true);
-  assert.equal(await harness.isBlocked({ source: 'victim', email }), false);
+  assert.equal((await harness.reserveAttempt({ source: 'attacker', email })).allowed, false);
+  assert.equal((await harness.reserveAttempt({ source: 'victim', email })).allowed, true);
 });
 ```
 
-Also capture the `findOneAndUpdate` aggregation pipeline and assert it atomically resets an expired window or increments the current count, and verify `clearPair` deletes only the pair key.
+Also capture the `findOneAndUpdate` aggregation pipeline and assert it returns the post-update record, atomically resets or increments, caps at limit plus one, and preserves active-window timestamps/expiry. Verify success deletes/refunds only matching window timestamps.
 
 - [ ] **Step 2: Run the focused test and confirm RED**
 
@@ -239,7 +246,7 @@ const digest = (scope: string, value: string, secret: string) =>
     .digest('base64url')}`;
 ```
 
-- [ ] **Step 4: Implement atomic observation-window counters**
+- [ ] **Step 4: Implement atomic pre-auth observation-window reservations**
 
 Set `LOGIN_THROTTLE_WINDOW_MS = 15 * 60 * 1000`, pair maximum 5, and source maximum 20. Use one aggregation-pipeline update per key:
 
@@ -255,26 +262,36 @@ await LoginThrottle.findOneAndUpdate(
   { _id: key },
   [{
     $set: {
-      failures: { $cond: [expired, 1, { $add: [{ $ifNull: ['$failures', 0] }, 1] }] },
+      failures: {
+        $cond: [
+          expired,
+          1,
+          { $min: [{ $add: [{ $ifNull: ['$failures', 0] }, 1] }, limit + 1] },
+        ],
+      },
       windowStartedAt: { $cond: [expired, now, '$windowStartedAt'] },
-      expiresAt: new Date(now.getTime() + LOGIN_THROTTLE_WINDOW_MS * 2),
+      expiresAt: { $cond: [expired, newExpiry, '$expiresAt'] },
     },
   }],
-  { upsert: true, new: true }
+  { upsert: true, returnDocument: 'after', updatePipeline: true }
 );
 ```
 
-`isBlocked` reads both opaque records and compares pair failures against 5 and source failures against 20 only while the window is active. It does not write blocked requests, so the window cannot be extended.
+`reserveAttempt` reserves the source first and rejects when its returned count exceeds 20. Only an allowed source reserves the pair, which rejects when its returned count exceeds 5. Pair rejection may retain the source reservation. `completeSuccessfulAttempt` deletes the pair and decrements the source only when each stored `windowStartedAt` matches the reservation, preventing cleanup from touching a new window.
 
 - [ ] **Step 5: Implement trusted-header source extraction**
 
 ```typescript
 const value = readHeader(headers, 'x-vercel-forwarded-for')
-  ?? readHeader(headers, 'x-forwarded-for')
-  ?? readHeader(headers, 'x-real-ip')
-  ?? 'unknown';
-return value.split(',')[0].trim().slice(0, 128) || 'unknown';
+if (productionOrVercel && value === undefined) {
+  throw new CredentialSourceUnavailableError();
+}
+const candidate = firstIp(value);
+if (!isIP(candidate)) throw new CredentialSourceUnavailableError();
+return canonicalizeIp(candidate);
 ```
+
+Only non-production development/tests may fall back to validated `x-forwarded-for`/`x-real-ip`, with `local-development` used only when no allowed header is present.
 
 - [ ] **Step 6: Run the focused throttle tests**
 
@@ -307,26 +324,34 @@ git commit -m "feat: 로그인 시도 분산 제한 추가"
 - Produces: `createAuthenticationService(dependencies)` for deterministic unit tests without a database.
 - Produces: `authenticationService.authenticateCredentials({ email, password, source }): Promise<IUserDocument | null>`.
 - Produces: `LOGIN_FAILURE_MESSAGE` with one fixed Korean client message.
-- Consumes: `loginThrottleService` and `getCredentialClientSource` from Task 2.
+- Consumes: `loginThrottleService.reserveAttempt`, `completeSuccessfulAttempt`, and `getCredentialClientSource` from Task 2.
 
 - [ ] **Step 1: Write failing credential and public-error tests**
 
-Test missing input, absent user, Google-only user, wrong password, blocked source, and valid password. For every non-throttled invalid category, assert one bcrypt call, the dummy hash when no real credential exists, two throttle failure writes through one service call, and a `null` result.
+Test missing input, bounded over-limit input, absent user, Google-only user, wrong password, blocked source, and valid password. For every admitted invalid category, assert one bcrypt call, the dummy hash when no real credential exists, one pre-auth reservation, and a `null` result. Add 100-request concurrency tests proving at most 5 same-pair and 20 distinct-email same-source comparisons.
 
 ```typescript
 test('absent and OAuth-only accounts take the same public failure path', async (t) => {
   const comparedHashes: string[] = [];
-  const recordedEmails: string[] = [];
+  const reservedEmails: string[] = [];
+  const reservation = {
+    sourceKey: 'source-key',
+    pairKey: 'pair-key',
+    sourceWindowStartedAt: new Date(0),
+    pairWindowStartedAt: new Date(0),
+  };
   let lookupResult: { password?: string } | null = null;
   const service = createAuthenticationService({
-    isBlocked: async () => false,
+    reserveAttempt: async ({ email }) => {
+      reservedEmails.push(email);
+      return { allowed: true, reservation };
+    },
     findByEmailWithPassword: async () => lookupResult,
     comparePassword: async (_plain, hash) => {
       comparedHashes.push(hash);
       return false;
     },
-    recordFailure: async ({ email }) => { recordedEmails.push(email); },
-    clearPair: async () => undefined,
+    completeSuccessfulAttempt: async () => undefined,
   });
 
   assert.equal(await service.authenticateCredentials({
@@ -338,7 +363,7 @@ test('absent and OAuth-only accounts take the same public failure path', async (
   }), null);
 
   assert.deepEqual(comparedHashes, [DUMMY_PASSWORD_HASH, DUMMY_PASSWORD_HASH]);
-  assert.deepEqual(recordedEmails, ['missing@example.com', 'oauth@example.com']);
+  assert.deepEqual(reservedEmails, ['missing@example.com', 'oauth@example.com']);
 });
 
 test('client code never exposes NextAuth result.error', async () => {
@@ -367,31 +392,34 @@ const DUMMY_PASSWORD_HASH = '$2b$12$Pi89zBOq/7QIWXDuIlN/QeyU3dGf6rPhLmPCusA09xZ7
 
 export function createAuthenticationService(deps: AuthenticationDependencies) {
   return { async authenticateCredentials(input: CredentialAuthenticationInput) {
-  const email = input.email.trim().toLowerCase();
-  if (await deps.isBlocked({ source: input.source, email })) return null;
+  const emailInput = normalizeBoundedCredential(input.email, 320, normalizeEmail);
+  const passwordInput = normalizeBoundedCredential(input.password, 1024);
+  const email = emailInput.value;
+  const admission = await deps.reserveAttempt({ source: input.source, email });
+  if (!admission.allowed) return null;
 
   const user = await deps.findByEmailWithPassword(email);
   const passwordMatches = await deps.comparePassword(
-    input.password,
+    passwordInput.value,
     user?.password ?? DUMMY_PASSWORD_HASH
   );
 
-  if (!email || !input.password || !user?.password || !passwordMatches) {
-    await deps.recordFailure({ source: input.source, email });
+  if (!email || !passwordInput.value || !emailInput.withinLimit ||
+      !passwordInput.withinLimit || !user?.password || !passwordMatches) {
     return null;
   }
 
-  await deps.clearPair({ source: input.source, email });
+  await deps.completeSuccessfulAttempt(admission.reservation);
   return user;
   }};
 }
 ```
 
-Instantiate the exported production singleton with `userService.findByEmailWithPassword`, `bcrypt.compare`, and the three `loginThrottleService` methods.
+Instantiate the exported production singleton with `userService.findByEmailWithPassword`, `bcrypt.compare`, and the two reservation lifecycle methods from `loginThrottleService`.
 
 - [ ] **Step 4: Reduce NextAuth and client code to adapters**
 
-`authorize(credentials, request)` derives the source, delegates, catches unexpected exceptions with Sentry, and returns `null` for every failure. It throws no user-specific error.
+`authorize(credentials, request)` derives the trusted source, delegates, catches unexpected exceptions, reports only a sanitized category/fingerprint to Sentry, and returns `null` for every failure. It never passes the original error, message, cause, request, user, email, password, or source address to diagnostics.
 
 ```typescript
 const user = await authenticationService.authenticateCredentials({
@@ -412,7 +440,7 @@ Remove `failedLoginAttempts` and `lockUntil` from `IUser`, the Mongoose schema, 
 
 Run: `npx tsx --test tests/credential-authentication-security.test.ts tests/login-throttle-security.test.ts tests/admin-membership-security.test.ts tests/admin-authorization.test.ts`
 
-Expected: all tests pass with identical public credential failures and no user-level lock state.
+Expected: all tests pass with identical public credential failures, bounded concurrent bcrypt work, trusted production source handling, and no user-level lock state.
 
 - [ ] **Step 7: Commit non-enumerating authentication**
 
@@ -421,7 +449,56 @@ git add -- 'src/services/authentication.service.ts' 'src/services/index.ts' 'src
 git commit -m "fix: 로그인 계정 노출과 잠금 공격 차단"
 ```
 
-### Task 4: Full verification and security re-review
+### Task 4: Final whole-branch security review fixes
+
+**Files:**
+- Modify: `src/services/login-throttle.service.ts`
+- Modify: `src/services/authentication.service.ts`
+- Modify: `src/lib/auth/client-source.ts`
+- Modify: `src/lib/auth/options.ts`
+- Modify: `src/services/user-security.error.ts`
+- Modify: `src/services/user.service.ts`
+- Modify: `src/app/api/admin/users/[id]/route.ts`
+- Modify: `src/app/api/users/me/route.ts`
+- Modify: `README.md`
+- Modify: `CLAUDE.md`
+- Test: `tests/final-security-hardening.test.ts`
+- Test: `tests/login-throttle-security.test.ts`
+- Test: `tests/credential-authentication-security.test.ts`
+- Test: `tests/admin-membership-security.test.ts`
+
+**Interfaces:**
+- Replaces check-then-record throttle methods with atomic `reserveAttempt` and window-bound `completeSuccessfulAttempt`.
+- Adds `CredentialSourceUnavailableError` and `UserSecurityError('TRANSACTIONS_UNAVAILABLE')`.
+- Makes `findAllUsers` return an allowlisted DTO selected with a positive projection.
+
+- [ ] **Step 1: Write and run focused RED tests**
+
+Cover 100-request same-pair and distinct-email bursts, counter caps/anchored windows, safe success refund, trusted production source behavior, bounded credentials, narrow transaction classification, HTTP 503 contracts, malformed JSON, safe user DTOs, sanitized Sentry categories, and consistent CRLF adapters.
+
+Run: `npx tsx --test tests/final-security-hardening.test.ts`
+
+Expected: each newly required behavior fails against the pre-review implementation.
+
+- [ ] **Step 2: Implement the reservation and adapter contracts**
+
+Reserve source then pair using returned post-update counts, keep rejected activity capped at limit plus one without changing the active timestamps, and complete success only against matching window timestamps. Bound normalized credentials at 320/1024 characters before dependencies. In production/Vercel accept only canonical validated `x-vercel-forwarded-for`; use typed fail-closed behavior when unavailable.
+
+- [ ] **Step 3: Implement topology, route, DTO, and diagnostic cleanup**
+
+Convert only recognized unsupported-transaction failures to `TRANSACTIONS_UNAVAILABLE`, map them to 503 in all protected routes, handle malformed role-PATCH JSON as 400, use a positive user-list projection plus explicit DTO, and report only a safe Sentry category/tag/fingerprint.
+
+- [ ] **Step 4: Update operational documentation and formatting**
+
+Document Atlas/replica-set requirements, a local single-node replica-set URI/setup, explicit 503 behavior, trusted Vercel source requirements, and the fact that live Atlas topology remains unverified. Normalize `src/hooks/useAuth.ts` and `src/lib/auth/options.ts` to tracked CRLF without broad repository churn.
+
+- [ ] **Step 5: Run focused GREEN tests**
+
+Run: `npx tsx --test tests/admin-membership-security.test.ts tests/admin-authorization.test.ts tests/login-throttle-security.test.ts tests/credential-authentication-security.test.ts tests/final-security-hardening.test.ts`
+
+Expected: all security tests pass, including exact 5/20 comparison bounds and narrow topology error behavior.
+
+### Task 5: Full verification and security re-review
 
 **Files:**
 - Modify only task files whose verification failures are directly caused by Tasks 1-3.
@@ -438,7 +515,7 @@ Expected: zero failed, cancelled, skipped, or todo tests.
 
 - [ ] **Step 2: Run static verification**
 
-Run: `npx tsc --noEmit --pretty false`
+Run: `npx tsc --noEmit --pretty false --incremental false`
 
 Expected: exit code 0.
 
@@ -464,6 +541,6 @@ Review the final diff for OWASP authentication failures, authorization bypasses,
 
 - [ ] **Step 6: Prove Git scope and push readiness**
 
-Run: `git diff --check HEAD^..HEAD`, `git status --short --branch`, `git diff origin/main...HEAD --stat`, `git log --oneline origin/main..HEAD`, and `git rev-list --left-right --count main...origin/main`.
+Run: `git -c core.whitespace=cr-at-eol diff --check origin/main...HEAD`, `git status --short --branch`, `git diff origin/main...HEAD --stat`, `git log --oneline origin/main..HEAD`, and `git rev-list --left-right --count main...origin/main`.
 
-Expected: only the pre-existing untracked `AGENTS.md` remains, every task file is committed, `main` is ahead of `origin/main` only by the reviewed task commits, and no push has occurred.
+Expected: the feature worktree is clean, the original checkout's untracked `AGENTS.md` remains untouched, every task file is committed, and no push has occurred.

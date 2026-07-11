@@ -520,6 +520,77 @@ test('guard model and typed security errors define the shared invariant contract
   assert.match(modelsIndex, /AdminSecurityState/);
   assert.match(errorSource, /export class UserSecurityError extends Error/);
   assert.match(errorSource, /'LAST_ADMIN'\s*\|\s*'SELF_DELETE'\s*\|\s*'USER_NOT_FOUND'/);
+  assert.match(errorSource, /'TRANSACTIONS_UNAVAILABLE'/);
+});
+
+test('unsupported MongoDB transactions become a typed service error', async (t) => {
+  const { User, AdminSecurityState, userService, UserSecurityError } =
+    await loadSecurityModules();
+  const events: string[] = [];
+  const session = {
+    async withTransaction(operation: () => Promise<void>): Promise<void> {
+      events.push('transaction:start');
+      await operation();
+    },
+    async endSession(): Promise<void> {
+      events.push('session:end');
+    },
+  } as unknown as ClientSession;
+
+  t.mock.method(mongoose, 'startSession', async () => session);
+  t.mock.method(
+    AdminSecurityState,
+    'updateOne',
+    async (
+      _filter: Record<string, unknown>,
+      _update: Record<string, unknown>,
+      options?: Record<string, unknown>
+    ) => {
+      if (options?.session === session) {
+        throw Object.assign(
+          new Error(
+            'Transaction numbers are only allowed on a replica set member or mongos'
+          ),
+          { code: 20, codeName: 'IllegalOperation' }
+        );
+      }
+      return { acknowledged: true };
+    }
+  );
+  t.mock.method(User, 'findById', () => {
+    assert.fail('the membership read must not run when transactions are unavailable');
+  });
+
+  await assert.rejects(
+    userService.updateRole(targetAdminId, 'student'),
+    (error: unknown) =>
+      error instanceof UserSecurityError &&
+      error.code === 'TRANSACTIONS_UNAVAILABLE'
+  );
+  assert.deepEqual(events, ['transaction:start', 'session:end']);
+});
+
+test('arbitrary database errors are not reclassified as topology failures', async (t) => {
+  const { AdminSecurityState, userService, UserSecurityError } =
+    await loadSecurityModules();
+  const original = new Error('database timeout');
+  const session = {
+    async withTransaction(): Promise<void> {
+      throw original;
+    },
+    async endSession(): Promise<void> {},
+  } as unknown as ClientSession;
+
+  t.mock.method(mongoose, 'startSession', async () => session);
+  t.mock.method(AdminSecurityState, 'updateOne', async () => ({
+    acknowledged: true,
+  }));
+
+  await assert.rejects(
+    userService.updateRole(targetAdminId, 'student'),
+    (error: unknown) =>
+      error === original && !(error instanceof UserSecurityError)
+  );
 });
 
 test('all administrator-decreasing mutations serialize on one guard write', async () => {
@@ -530,7 +601,9 @@ test('all administrator-decreasing mutations serialize on one guard write', asyn
   assert.match(source, /\$ne:\s*targetUserId/);
   assert.doesNotMatch(source, /countDocuments\(\{\s*role:\s*'admin'/);
 
-  const transactionBodyStart = source.indexOf('await session.withTransaction');
+  const transactionBodyStart = source.indexOf(
+    'await activeSession.withTransaction'
+  );
   const guardWrite = source.indexOf('await AdminSecurityState.updateOne', transactionBodyStart);
   const anotherAdminPredicate = source.indexOf('await User.exists', guardWrite);
   assert.ok(transactionBodyStart >= 0, 'transaction callback must exist');
@@ -837,9 +910,15 @@ test('API routes cannot call the private raw cascade helper', async () => {
 });
 
 test('administrator route maps typed security errors without message parsing', async () => {
-  const route = await readFile(resolve('src/app/api/admin/users/[id]/route.ts'), 'utf8');
-  assert.match(route, /error instanceof UserSecurityError/);
-  assert.match(route, /error\.code === 'LAST_ADMIN'[\s\S]*409/);
-  assert.match(route, /error\.code === 'USER_NOT_FOUND'[\s\S]*404/);
-  assert.doesNotMatch(route, /message\.includes\(/);
+  const [route, selfRoute] = await Promise.all([
+    readFile(resolve('src/app/api/admin/users/[id]/route.ts'), 'utf8'),
+    readFile(resolve('src/app/api/users/me/route.ts'), 'utf8'),
+  ]);
+  for (const source of [route, selfRoute]) {
+    assert.match(source, /error instanceof UserSecurityError/);
+    assert.match(source, /error\.code === 'TRANSACTIONS_UNAVAILABLE'[\s\S]*503/);
+    assert.match(source, /error\.code === 'LAST_ADMIN'[\s\S]*409/);
+    assert.match(source, /error\.code === 'USER_NOT_FOUND'[\s\S]*404/);
+    assert.doesNotMatch(source, /message\.includes\(/);
+  }
 });

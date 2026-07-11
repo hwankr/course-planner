@@ -1,3 +1,5 @@
+import { isIP } from 'node:net';
+
 export interface CredentialHeaderReader {
   get(name: string): string | null;
 }
@@ -10,6 +12,20 @@ export type CredentialClientHeaders =
   | CredentialHeaderReader
   | CredentialHeaderRecord
   | undefined;
+
+export interface CredentialClientSourceRuntime {
+  production?: boolean;
+  vercel?: boolean;
+}
+
+export class CredentialSourceUnavailableError extends Error {
+  readonly code = 'SOURCE_UNAVAILABLE' as const;
+
+  constructor() {
+    super('Credential client source is unavailable.');
+    this.name = 'CredentialSourceUnavailableError';
+  }
+}
 
 function isHeaderReader(
   headers: CredentialClientHeaders
@@ -36,13 +52,33 @@ function readHeader(
 }
 
 export function getCredentialClientSource(
-  headers: CredentialClientHeaders
+  headers: CredentialClientHeaders,
+  runtime: CredentialClientSourceRuntime = {}
 ): string {
-  const value =
-    readHeader(headers, 'x-vercel-forwarded-for') ??
-    readHeader(headers, 'x-forwarded-for') ??
-    readHeader(headers, 'x-real-ip') ??
-    'unknown';
+  const requiresTrustedVercelSource =
+    process.env.NODE_ENV === 'production' ||
+    process.env.VERCEL === '1' ||
+    runtime.production === true ||
+    runtime.vercel === true;
+  const value = requiresTrustedVercelSource
+    ? readHeader(headers, 'x-vercel-forwarded-for')
+    : readHeader(headers, 'x-vercel-forwarded-for') ??
+      readHeader(headers, 'x-forwarded-for') ??
+      readHeader(headers, 'x-real-ip');
 
-  return value.split(',')[0].trim().slice(0, 128) || 'unknown';
+  if (value === undefined) {
+    if (!requiresTrustedVercelSource) return 'local-development';
+    throw new CredentialSourceUnavailableError();
+  }
+
+  const candidate = value.split(',')[0].trim();
+  const version = isIP(candidate);
+  if (version === 4) return candidate;
+
+  if (version === 6) {
+    const hostname = new URL(`http://[${candidate}]/`).hostname;
+    return hostname.slice(1, -1);
+  }
+
+  throw new CredentialSourceUnavailableError();
 }

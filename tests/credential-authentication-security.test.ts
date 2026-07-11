@@ -23,6 +23,17 @@ interface ThrottleInput {
   source: string;
 }
 
+interface ThrottleReservation {
+  sourceKey: string;
+  pairKey: string;
+  sourceWindowStartedAt: Date;
+  pairWindowStartedAt: Date;
+}
+
+type ThrottleAdmission =
+  | { allowed: false }
+  | { allowed: true; reservation: ThrottleReservation };
+
 interface CredentialUser {
   _id: { toString(): string };
   email: string;
@@ -38,11 +49,10 @@ interface CredentialUser {
 }
 
 interface AuthenticationDependenciesDouble {
-  isBlocked(input: ThrottleInput): Promise<boolean>;
+  reserveAttempt(input: ThrottleInput): Promise<ThrottleAdmission>;
   findByEmailWithPassword(email: string): Promise<CredentialUser | null>;
   comparePassword(plainPassword: string, passwordHash: string): Promise<boolean>;
-  recordFailure(input: ThrottleInput): Promise<void>;
-  clearPair(input: ThrottleInput): Promise<void>;
+  completeSuccessfulAttempt(reservation: ThrottleReservation): Promise<void>;
 }
 
 interface AuthenticationServiceDouble {
@@ -127,17 +137,27 @@ async function loadCredentialSentryScrubber(): Promise<CredentialSentryScrubberM
 async function createHarness(options: AuthenticationHarnessOptions = {}) {
   const { createAuthenticationService } = await loadAuthenticationModule();
   const calls = {
-    blocked: [] as ThrottleInput[],
-    clear: [] as ThrottleInput[],
+    reserveAttempts: [] as ThrottleInput[],
+    clear: [] as ThrottleReservation[],
     compared: [] as Array<{ plainPassword: string; passwordHash: string }>,
-    failures: [] as ThrottleInput[],
+    admittedReservations: [] as ThrottleInput[],
     lookups: [] as string[],
   };
 
   const service = createAuthenticationService({
-    isBlocked: async (input) => {
-      calls.blocked.push(input);
-      return options.blocked ?? false;
+    reserveAttempt: async (input) => {
+      calls.reserveAttempts.push(input);
+      if (options.blocked) return { allowed: false };
+      calls.admittedReservations.push(input);
+      return {
+        allowed: true,
+        reservation: {
+          sourceKey: `source:${input.source}`,
+          pairKey: `pair:${input.source}:${input.email}`,
+          sourceWindowStartedAt: new Date(0),
+          pairWindowStartedAt: new Date(0),
+        },
+      };
     },
     findByEmailWithPassword: async (email) => {
       calls.lookups.push(email);
@@ -147,11 +167,8 @@ async function createHarness(options: AuthenticationHarnessOptions = {}) {
       calls.compared.push({ plainPassword, passwordHash });
       return options.compareResult ?? false;
     },
-    recordFailure: async (input) => {
-      calls.failures.push(input);
-    },
-    clearPair: async (input) => {
-      calls.clear.push(input);
+    completeSuccessfulAttempt: async (reservation) => {
+      calls.clear.push(reservation);
     },
   });
 
@@ -249,7 +266,7 @@ test('missing email and missing password each perform exactly one comparison', a
     },
     { plainPassword: '', passwordHash: 'real-password-hash' },
   ]);
-  assert.deepEqual(calls.failures, [
+  assert.deepEqual(calls.admittedReservations, [
     { email: '', source: 'source-a' },
     { email: 'student@example.com', source: 'source-b' },
   ]);
@@ -286,7 +303,7 @@ test('non-string credentials normalize to empty values before lookup and bcrypt'
   );
   assert.deepEqual(calls.lookups, malformedValues.map(() => ''));
   assert.deepEqual(
-    calls.failures,
+    calls.admittedReservations,
     malformedValues.map((_, index) => ({
       email: '',
       source: `malformed-source-${index}`,
@@ -326,7 +343,7 @@ test('absent and OAuth-only accounts take the same public failure path', async (
     calls.compared.map(({ passwordHash }) => passwordHash),
     [EXPECTED_DUMMY_PASSWORD_HASH, EXPECTED_DUMMY_PASSWORD_HASH]
   );
-  assert.deepEqual(calls.failures, [
+  assert.deepEqual(calls.admittedReservations, [
     { email: 'missing@example.com', source: 'source-a' },
     { email: 'oauth@example.com', source: 'source-a' },
   ]);
@@ -359,11 +376,11 @@ test('a matching dummy comparison never authenticates an absent or OAuth-only ac
   );
 
   assert.equal(calls.compared.length, 2);
-  assert.equal(calls.failures.length, 2);
+  assert.equal(calls.admittedReservations.length, 2);
   assert.deepEqual(calls.clear, []);
 });
 
-test('a wrong password compares once with the real hash and records one throttle failure', async () => {
+test('a wrong password compares once with the real hash and retains its reservation', async () => {
   const user = createUser();
   const { calls, service } = await createHarness({
     findByEmail: () => user,
@@ -378,7 +395,7 @@ test('a wrong password compares once with the real hash and records one throttle
     null
   );
 
-  assert.deepEqual(calls.blocked, [
+  assert.deepEqual(calls.reserveAttempts, [
     { email: 'student@example.com', source: 'source-a' },
   ]);
   assert.deepEqual(calls.lookups, ['student@example.com']);
@@ -388,7 +405,7 @@ test('a wrong password compares once with the real hash and records one throttle
       passwordHash: 'real-password-hash',
     },
   ]);
-  assert.deepEqual(calls.failures, [
+  assert.deepEqual(calls.admittedReservations, [
     { email: 'student@example.com', source: 'source-a' },
   ]);
   assert.deepEqual(calls.clear, []);
@@ -406,16 +423,16 @@ test('a blocked credential request short-circuits before lookup or comparison', 
     null
   );
 
-  assert.deepEqual(calls.blocked, [
+  assert.deepEqual(calls.reserveAttempts, [
     { email: 'student@example.com', source: 'blocked-source' },
   ]);
   assert.deepEqual(calls.lookups, []);
   assert.deepEqual(calls.compared, []);
-  assert.deepEqual(calls.failures, []);
+  assert.deepEqual(calls.admittedReservations, []);
   assert.deepEqual(calls.clear, []);
 });
 
-test('a valid password returns the user and clears only the pair bucket', async () => {
+test('a valid password returns the user and completes its throttle reservation', async () => {
   const user = createUser();
   const { calls, service } = await createHarness({
     compareResult: true,
@@ -435,9 +452,16 @@ test('a valid password returns the user and clears only the pair bucket', async 
       passwordHash: 'real-password-hash',
     },
   ]);
-  assert.deepEqual(calls.failures, []);
-  assert.deepEqual(calls.clear, [
+  assert.deepEqual(calls.admittedReservations, [
     { email: 'student@example.com', source: 'source-a' },
+  ]);
+  assert.deepEqual(calls.clear, [
+    {
+      sourceKey: 'source:source-a',
+      pairKey: 'pair:source-a:student@example.com',
+      sourceWindowStartedAt: new Date(0),
+      pairWindowStartedAt: new Date(0),
+    },
   ]);
 });
 
@@ -553,7 +577,9 @@ test('Credentials authorize captures unexpected failures and fails closed', asyn
   );
 
   assert.equal(result, null);
-  assert.deepEqual(reports, [[]]);
+  assert.deepEqual(reports, [
+    [{ category: 'authentication_service_failure' }],
+  ]);
 });
 
 test('credential callback Sentry events remove all request and user secrets', async () => {
@@ -1109,12 +1135,15 @@ test('authentication code logs no credential material and exports the service', 
   const serverAuthentication = `${authenticationSource}\n${optionsSource}`;
 
   assert.match(authenticationSource, /bcrypt\.compare/);
-  assert.match(authenticationSource, /loginThrottleService\.recordFailure/);
-  assert.match(authenticationSource, /loginThrottleService\.clearPair/);
+  assert.match(authenticationSource, /loginThrottleService\.reserveAttempt/);
+  assert.match(
+    authenticationSource,
+    /loginThrottleService\.completeSuccessfulAttempt/
+  );
   assert.match(optionsSource, /authorize:\s*credentialsAuthorize/);
   assert.match(
     optionsSource,
-    /catch\s*\{\s*dependencies\.reportUnexpectedFailure\(\)/
+    /catch\s*\(error\)\s*\{[\s\S]*dependencies\.reportUnexpectedFailure\(/
   );
   assert.doesNotMatch(optionsSource, /dependencies\.captureException/);
   assert.doesNotMatch(serverAuthentication, /console\.(?:debug|error|info|log|warn)/);

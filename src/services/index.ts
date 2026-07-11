@@ -23,8 +23,10 @@ export {
   loginThrottleService,
 } from './login-throttle.service';
 export type {
+  LoginThrottleAdmission,
   LoginThrottleInput,
   LoginThrottleKeys,
+  LoginThrottleReservation,
 } from './login-throttle.service';
 export {
   authenticationService,

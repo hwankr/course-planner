@@ -224,7 +224,7 @@ src/
 
 ```env
 # Database
-MONGODB_URI=mongodb://localhost:27017/course-planner
+MONGODB_URI=mongodb://localhost:27017/course-planner?replicaSet=rs0
 
 # NextAuth
 NEXTAUTH_URL=http://localhost:3000
@@ -234,6 +234,8 @@ NEXTAUTH_SECRET=your-secret-key
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
+
+관리자 역할 변경, 관리자 사용자 삭제, 회원 탈퇴는 마지막 관리자 불변식을 지키기 위해 MongoDB 트랜잭션을 사용한다. 따라서 운영 환경은 Atlas 또는 트랜잭션을 지원하는 replica set/sharded cluster여야 하며, 로컬은 `mongod --replSet rs0` 실행 후 `rs.initiate()`로 구성한 단일 노드 replica set을 사용한다. 트랜잭션을 지원하지 않는 토폴로지에서는 해당 API가 HTTP 503을 반환한다. 실제 Atlas 토폴로지는 배포 전 별도로 확인해야 한다.
 
 ## Commands
 
