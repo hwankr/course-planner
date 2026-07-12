@@ -16,6 +16,10 @@ import { usePlanStore } from '@/stores/planStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
 import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
+import {
+  resolveGraduationSummaryState,
+  retryGraduationSummaryQueries,
+} from '@/lib/graduationSummaryState';
 import * as Sentry from '@sentry/nextjs';
 
 // ============================================
@@ -132,11 +136,26 @@ function TrackRow({ label, earned, enrolled = 0, planned = 0, required, prior = 
 export function RequirementsSummary() {
   const [isEditing, setIsEditing] = useState(false);
   const [requirementYear, setRequirementYear] = useState<number>(DEFAULT_REQUIREMENT_YEAR);
+  const [retryingAfterError, setRetryingAfterError] = useState(false);
 
-  const { data: requirement, isLoading: loadingReq } = useGraduationRequirement();
-  const { data: progress, isLoading: loadingProgress } = useGraduationProgress();
+  const requirementQuery = useGraduationRequirement();
+  const progressQuery = useGraduationProgress();
+  const requirementData = requirementQuery.data;
+  const progress = progressQuery.data;
   const upsertMutation = useUpsertGraduationRequirement();
   const createDefaults = useCreateDefaultGraduationRequirement();
+
+  const summaryState = resolveGraduationSummaryState({
+    requirement: requirementData,
+    progress,
+    requirementIsLoading: requirementQuery.isLoading,
+    progressIsLoading: progressQuery.isLoading,
+    requirementIsError: requirementQuery.isError,
+    progressIsError: progressQuery.isError,
+    retryingAfterError,
+  });
+  const isRetrying =
+    retryingAfterError || requirementQuery.isFetching || progressQuery.isFetching;
 
   // Get user's profile majorType for conditional radio display
   const { data: session } = useSession();
@@ -169,8 +188,8 @@ export function RequirementsSummary() {
 
   // Sync requirementYear from saved requirement on load
   const [yearInitialized, setYearInitialized] = useState(false);
-  if (requirement?.requirementYear && !yearInitialized) {
-    setRequirementYear(requirement.requirementYear);
+  if (requirementData?.requirementYear && !yearInitialized) {
+    setRequirementYear(requirementData.requirementYear);
     setYearInitialized(true);
   }
 
@@ -208,7 +227,17 @@ export function RequirementsSummary() {
     return json.success ? json.data : null;
   };
 
-  const isLoading = loadingReq || loadingProgress;
+  const handleRetry = async () => {
+    try {
+      await retryGraduationSummaryQueries({
+        setRetryingAfterError,
+        refetchRequirement: () => requirementQuery.refetch(),
+        refetchProgress: () => progressQuery.refetch(),
+      });
+    } catch (error) {
+      Sentry.captureException(error);
+    }
+  };
 
   const handleCreateDefault = async () => {
     try {
@@ -253,7 +282,7 @@ export function RequirementsSummary() {
   };
 
   // Loading state
-  if (isLoading) {
+  if (summaryState === 'loading') {
     return (
       <Card>
         <CardContent className="py-3">
@@ -263,8 +292,27 @@ export function RequirementsSummary() {
     );
   }
 
+  // Error state - one or both queries failed
+  if (summaryState === 'error') {
+    return (
+      <Card role="alert" className="border-red-200">
+        <CardContent className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-sm text-red-600">졸업요건 정보를 불러오지 못했습니다.</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleRetry}
+            disabled={isRetrying}
+          >
+            {isRetrying ? '다시 시도 중...' : '다시 시도'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Empty state - no requirement set
-  if (!requirement) {
+  if (summaryState === 'empty') {
     return (
       <Card className="border-dashed">
         <CardContent className="py-4">
@@ -309,6 +357,8 @@ export function RequirementsSummary() {
       </Card>
     );
   }
+
+  const requirement = requirementData!;
 
   // Edit mode
   if (isEditing) {

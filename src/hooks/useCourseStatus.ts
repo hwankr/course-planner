@@ -1,10 +1,12 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { usePlanStore } from '@/stores/planStore';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { graduationRequirementKeys } from './useGraduationRequirements';
+import { planKeys } from './usePlans';
 import type { ApiResponse, IPlan, Term } from '@/types';
 
 // ============================================
@@ -18,6 +20,13 @@ interface UpdateCourseStatusInput {
   courseId: string;
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
   grade?: string;
+}
+
+interface CourseStatusMutationContext {
+  planId: string;
+  courseId: string;
+  previousStatus: UpdateCourseStatusInput['status'] | undefined;
+  release: () => void;
 }
 
 // ============================================
@@ -43,15 +52,111 @@ async function updateCourseStatus(input: UpdateCourseStatusInput): Promise<IPlan
 }
 
 // ============================================
-// Hook
+// Mutation Handlers
 // ============================================
 
-const planKeys = {
-  all: ['plans'] as const,
-  lists: () => [...planKeys.all, 'list'] as const,
-  details: () => [...planKeys.all, 'detail'] as const,
-  detail: (id: string) => [...planKeys.details(), id] as const,
-};
+export function createCourseStatusMutationHandlers(queryClient: QueryClient) {
+  const courseMutationQueues = new Map<string, Promise<void>>();
+
+  return {
+    onMutate: async (
+      variables: UpdateCourseStatusInput
+    ): Promise<CourseStatusMutationContext> => {
+      const queueKey = JSON.stringify([variables.planId, variables.courseId]);
+      const previousLifecycle = courseMutationQueues.get(queueKey) ?? Promise.resolve();
+      let releaseCurrent!: () => void;
+      let released = false;
+      const currentLifecycle = new Promise<void>((resolve) => {
+        releaseCurrent = resolve;
+      });
+      const queuedLifecycle = previousLifecycle.then(() => currentLifecycle);
+      courseMutationQueues.set(queueKey, queuedLifecycle);
+      const release = () => {
+        if (released) return;
+        released = true;
+        releaseCurrent();
+        if (courseMutationQueues.get(queueKey) === queuedLifecycle) {
+          courseMutationQueues.delete(queueKey);
+        }
+      };
+
+      try {
+        await previousLifecycle;
+        await queryClient.cancelQueries({ queryKey: planKeys.detail('my') });
+
+        const activePlan = usePlanStore.getState().activePlan;
+        const previousStatus = activePlan?.id === variables.planId
+          ? activePlan.semesters
+              .flatMap((semester) => semester.courses)
+              .find((course) => course.id === variables.courseId)?.status
+          : undefined;
+
+        usePlanStore.getState().updateCourseStatus(
+          variables.year,
+          variables.term,
+          variables.courseId,
+          variables.status
+        );
+
+        return {
+          planId: variables.planId,
+          courseId: variables.courseId,
+          previousStatus,
+          release,
+        };
+      } catch (error) {
+        release();
+        throw error;
+      }
+    },
+    onError: (
+      _error: Error,
+      _variables: UpdateCourseStatusInput,
+      context: CourseStatusMutationContext | undefined
+    ) => {
+      if (!context || context.previousStatus === undefined) return;
+
+      const { activePlan, updateCourseStatus } = usePlanStore.getState();
+      if (!activePlan || activePlan.id !== context.planId) return;
+
+      const currentSemester = activePlan.semesters.find((semester) =>
+        semester.courses.some((course) => course.id === context.courseId)
+      );
+      if (!currentSemester) return;
+
+      updateCourseStatus(
+        currentSemester.year,
+        currentSemester.term,
+        context.courseId,
+        context.previousStatus
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: graduationRequirementKeys.progress(),
+      });
+    },
+    onSettled: async (
+      _data: IPlan | undefined,
+      _error: Error | null,
+      _variables: UpdateCourseStatusInput,
+      context: CourseStatusMutationContext | undefined
+    ) => {
+      try {
+        await queryClient.invalidateQueries({
+          queryKey: planKeys.detail('my'),
+          refetchType: 'none',
+        });
+      } finally {
+        context?.release();
+      }
+    },
+  };
+}
+
+// ============================================
+// Hook
+// ============================================
 
 /**
  * Update course status with optimistic Zustand update
@@ -61,29 +166,14 @@ export function useUpdateCourseStatus() {
   const updateStoreStatus = usePlanStore((s) => s.updateCourseStatus);
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestUpdateStatus = useGuestPlanStore((s) => s.updateCourseStatus);
+  const mutationHandlers = useMemo(
+    () => createCourseStatusMutationHandlers(queryClient),
+    [queryClient]
+  );
 
   const apiMutation = useMutation({
     mutationFn: updateCourseStatus,
-    onMutate: (variables) => {
-      // Optimistic update via Zustand store
-      updateStoreStatus(
-        variables.year,
-        variables.term,
-        variables.courseId,
-        variables.status
-      );
-    },
-    onSuccess: (_, variables) => {
-      // Invalidate plan queries to sync with server
-      queryClient.invalidateQueries({ queryKey: planKeys.lists() });
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-      // Also invalidate requirement progress since status change affects it
-      queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });
-    },
-    onError: (_, variables) => {
-      // On error, refetch to rollback optimistic update
-      queryClient.invalidateQueries({ queryKey: planKeys.detail(variables.planId) });
-    },
+    ...mutationHandlers,
   });
 
   if (isGuest) {
