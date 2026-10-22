@@ -581,8 +581,8 @@
   },
   "lastChange": {
     "by": "hwankr",
-    "at": "2026-10-22T15:01:12.404Z",
+    "at": "2026-10-22T15:51:03.130Z",
     "via": "Claude Code · GitHub hwankr/course-planner@b3e587f",
-    "note": "Added ProfileCard, HelpSection and ModalShell pattern cards; applied verification fixes to 10 component cards"
+    "note": "Added the Callout pattern card; all 34 cards now published"
   }
 }

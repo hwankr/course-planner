@@ -28,10 +28,10 @@ Generated from this session's workflow journals. "Verified" means an independent
 | PageHeader | Patterns | built, render-checked, not yet verified line by line | verify |
 | FilterChips | Patterns | built, render-checked, not yet verified line by line | verify |
 | Badge | Patterns | built, render-checked, not yet verified line by line | verify |
-| Callout | Patterns | build was still running when this was saved; files may be incomplete | finish build, render-check, verify |
+| Callout | Patterns | built, render-checked, not yet verified line by line | verify |
 | StatusStates | Patterns | built, render-checked, not yet verified line by line | verify |
 | Statistics | Patterns | built, render-checked, not yet verified line by line | verify |
-| Onboarding | Patterns | verified, 7 findings; a fix agent was still running when this was saved | check whether pending/Onboarding.md items landed |
+| Onboarding | Patterns | verified, 7 findings NOT applied | apply pending/Onboarding.md |
 | CalendarGrid | Patterns | built, render-checked, not yet verified line by line | verify |
 | HelpSection | Patterns | built by hand from source, render-checked | verify |
 | AdminList | Patterns | built, render-checked, not yet verified line by line | verify |
