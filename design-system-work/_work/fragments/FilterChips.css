@@ -1,0 +1,161 @@
+/* FilterChips (pattern) — hand-translated from src/app/(dashboard)/planner/page.tsx (학년 pills), src/app/(dashboard)/statistics/page.tsx (gradient chips, two sizes), src/app/(dashboard)/admin/courses/page.tsx (개설 학기 toggles); the CourseCatalog 이수 chips reuse .cp-course-catalog__filters / __filter-row--category / __filter-label / __chip(--red…--gray) from CourseCatalog.css and the calendar chips reuse .cp-calendar__filters / __chip(--all…--other) from CalendarGrid.css — neither is redefined here; the statistics rows sit in .cp-card from Card.css; no component exists in the source */
+
+/* Block = a neutral root around any chip row. Every page renders its row straight into the page
+   container (body font 16px/1.5 Arial, `foreground` text; `gray-900` inside a Card), restated here
+   so the statistics chips inherit the same 16px/24px line box they get in the app. */
+.cp-filter-chips {
+  box-sizing: border-box;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+}
+.cp-filter-chips *,
+.cp-filter-chips *::before,
+.cp-filter-chips *::after {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------- Rows */
+/* statistics and admin: "flex flex-wrap gap-2" — no items-center, so every chip stretches to its line. */
+.cp-filter-chips__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+/* planner: "flex items-center gap-1.5 overflow-x-auto pb-0.5" — one scrolling line, never wraps. */
+.cp-filter-chips__row--planner {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  overflow-x: auto;
+  padding-bottom: var(--space-0-5, 2px);
+}
+
+/* planner row label <span> "text-[11px] font-medium text-gray-400 flex-shrink-0" — micro-11 (arbitrary
+   size inherits the 1.5 line-height → 16.5px). gray-400 on gray-50 is 2.5:1 in the source, kept. */
+.cp-filter-chips__label {
+  flex-shrink: 0;
+  color: var(--gray-400, #99a1af);
+  font: 500 11px/16.5px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* ---------------------------------------------------------------- Chip base (the <button> preflight facts) */
+/* Shared by the three recipes defined here: no border, transparent, inherits color, no pointer cursor
+   (Tailwind v4 keeps the UA default), "transition-colors". Size, radius, font and colors come from the
+   recipe modifier. Active chips carry no hover class in the source, so every .is-active rule is written
+   after its :hover rule and wins at equal specificity. */
+.cp-filter-chips__chip {
+  appearance: button;
+  margin: 0;
+  border: 0 solid;
+  background-color: var(--transparent, transparent);
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+  text-decoration: none;
+  cursor: default;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* ---------------------------------------------------------------- planner/page.tsx — 학년 pills */
+/* "px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0" (caption-medium);
+   inactive "bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20" (9.0:1 over gray-50), active
+   "bg-[#153974] text-white" (11.2:1). Same recipe as the CourseCatalog default chip, on gray-50. */
+.cp-filter-chips__chip--planner {
+  flex-shrink: 0;
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-filter-chips__chip--planner:hover,
+.cp-filter-chips__chip--planner.is-hover {
+  background-color: var(--yu-navy-a20, #15397433);
+}
+.cp-filter-chips__chip--planner.is-active {
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+}
+
+/* ---------------------------------------------------------------- statistics/page.tsx — gradient chips */
+/* Category: "px-4 py-2 rounded-lg font-medium transition-colors" — no text-size class, so the body
+   16px/24px (40px tall). Inactive "bg-gray-100 text-gray-700 hover:bg-gray-200" (9.4:1), active
+   "bg-gradient-to-r from-[#153974] to-[#3069B3] text-white" (11.2:1 at the navy end, 5.5:1 at the blue end). */
+.cp-filter-chips__chip--stat {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--gray-100, #f3f4f6);
+  color: var(--gray-700, #364153);
+  font: 500 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* Semester: "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors" — body-sm-medium, 32px tall; same colors. */
+.cp-filter-chips__chip--stat-sm {
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--gray-100, #f3f4f6);
+  color: var(--gray-700, #364153);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-filter-chips__chip--stat:hover,
+.cp-filter-chips__chip--stat.is-hover,
+.cp-filter-chips__chip--stat-sm:hover,
+.cp-filter-chips__chip--stat-sm.is-hover {
+  background-color: var(--gray-200, #e5e7eb);
+}
+.cp-filter-chips__chip--stat.is-active,
+.cp-filter-chips__chip--stat-sm.is-active {
+  background-color: var(--transparent, transparent);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+}
+
+/* Container: <Card className="mb-6 p-4"> — .cp-card (gray-900 hairline, white, shadow-sm) plus this padding. */
+.cp-filter-chips__panel {
+  padding: var(--space-4, 16px);
+}
+/* Hint <p> above each row: "text-sm text-gray-500 mb-3" (body-sm, 4.8:1 on white). */
+.cp-filter-chips__hint {
+  margin: 0 0 var(--space-3, 12px);
+  color: var(--gray-500, #6a7282);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* Semester section: "mt-4 pt-4 border-t" — bare border-t under v4 is 1px currentColor = the Card's gray-900. */
+.cp-filter-chips__section--divided {
+  margin-top: var(--space-4, 16px);
+  padding-top: var(--space-4, 16px);
+  border-top: 1px solid var(--border-default, #101828);
+}
+
+/* ---------------------------------------------------------------- admin/courses/page.tsx — 개설 학기 toggles */
+/* "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer" (caption-medium, 28px tall);
+   inactive "bg-slate-100 text-slate-600 hover:bg-slate-200" (6.9:1), active "bg-[#00AACA] text-white" —
+   2.8:1 in the source, kept. Multi-select: several chips can be active at once. */
+.cp-filter-chips__chip--admin {
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-600, #45556c);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  cursor: pointer;
+}
+.cp-filter-chips__chip--admin:hover,
+.cp-filter-chips__chip--admin.is-hover {
+  background-color: var(--slate-200, #e2e8f0);
+}
+.cp-filter-chips__chip--admin.is-active {
+  background-color: var(--yu-cyan, #00aaca);
+  color: var(--white, #ffffff);
+}
+
+/* Field label above the toggles: <label class="mb-2 block text-sm font-medium text-slate-700">개설 학기 <span class="text-red-500">*</span></label> */
+.cp-filter-chips__field-label {
+  display: block;
+  margin: 0 0 var(--space-2, 8px);
+  color: var(--slate-700, #314158);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-filter-chips__required {
+  color: var(--red-500, #fb2c36);
+}

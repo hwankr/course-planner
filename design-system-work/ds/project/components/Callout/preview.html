@@ -1,0 +1,137 @@
+<!-- @dsCard group="Patterns" height=680 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Callout — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+  .full + .grid, .grid + .grid { margin-top: 16px; }
+  .cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .stack { gap: 12px; }   /* two sources sharing one column */
+  .alt { display: flex; flex-direction: column; gap: 8px; }   /* either/or strips shown together */
+  .stage { padding: 12px; background: var(--green-50-a30, #f0fdf44d); }   /* the feedback item's green-50/30 surface the reply box sits on */
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="cell full">
+  <div class="cp-callout cp-callout--guest-strip">
+    <div class="cp-callout__strip-inner">
+      <div class="cp-callout__message">
+        <svg class="lucide lucide-alert-triangle cp-callout__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <p class="cp-callout__text">비회원 모드입니다. 데이터가 이 브라우저에만 저장됩니다.</p>
+      </div>
+      <div class="cp-callout__actions">
+        <button class="cp-callout__link">구글로 로그인</button>
+        <a href="/register" class="cp-callout__link is-hover">회원가입하기</a>
+      </div>
+    </div>
+  </div>
+  <p class="cap">(dashboard)/layout.tsx · 비회원 strip under the header: full-width amber-50 band, centered container · AlertTriangle and text amber-800 · underlined amber-900 button + link, 회원가입하기 in hover (amber-700)</p>
+</div>
+
+<div class="grid">
+  <div class="cell">
+    <div class="cp-callout cp-callout--stat-guest">
+      <div class="cp-callout__row">
+        <svg class="lucide lucide-log-in cp-callout__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>
+        <div class="cp-callout__body">
+          <p class="cp-callout__title">회원가입하고 다른 학생들도 통계를 볼 수 있도록 도와주세요!</p>
+          <p class="cp-callout__text">로그인하면 나의 수강 계획이 통계에 반영되어, 같은 학과 학생들이 더 정확한 데이터를 참고할 수 있습니다.</p>
+          <div class="cp-callout__actions">
+            <button class="cp-callout__button">구글로 로그인</button>
+            <a href="/register" class="cp-callout__link">회원가입하기</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">statistics/page.tsx · guest callout · LogIn amber-600 · amber-600 button (white 3.2:1, flagged) · amber-900 link</p>
+  </div>
+
+  <div class="cell">
+    <div class="cp-callout cp-callout--stat-info">
+      <div class="cp-callout__row">
+        <svg class="lucide lucide-info cp-callout__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <div class="cp-callout__body">
+          <p class="cp-callout__title">이 페이지는 어떤 데이터를 보여주나요?</p>
+          <p class="cp-callout__text"><strong class="cp-callout__strong">컴퓨터공학과</strong> 소속 학생들이 작성한 수강 계획을 분석한 결과입니다. 직접 추가한 과목(커스텀 과목)은 통계에서 제외되며, 공식 교과목만 집계됩니다.</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">statistics/page.tsx · data-scope info · Info yu-blue · gray-900 title, gray-700 body, &lt;strong&gt; department</p>
+  </div>
+
+  <div class="cell stack">
+    <div class="cell">
+      <div class="cp-callout cp-callout--login-error">이메일 또는 비밀번호가 올바르지 않습니다. 잠시 후 다시 시도해주세요.</div>
+      <p class="cap">(auth)/login/page.tsx · inline form error · red-50 / red-200 / red-600 (4.4:1, flagged) · radius-md</p>
+    </div>
+    <div class="cell">
+      <div class="cp-callout cp-callout--admin-error">과목 목록을 불러오는데 실패했습니다.</div>
+      <p class="cap">admin/courses/page.tsx · list error banner · same reds, radius-2xl, p-6, centered</p>
+    </div>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="cell">
+    <div class="cp-callout cp-callout--inapp">
+      <p class="cp-callout__title">카카오톡 내 브라우저에서는 Google 로그인이 지원되지 않습니다.</p>
+      <p class="cp-callout__text">하단의 <span class="cp-callout__strong">ꞏꞏꞏ</span> 또는 <span class="cp-callout__strong">공유</span> 버튼을 눌러<span class="cp-callout__strong"> "Safari로 열기"</span>를 선택해주세요.</p>
+    </div>
+    <p class="cap">(auth)/login/page.tsx · in-app browser notice, iOS · amber-800 title, amber-700 hint with bold runs</p>
+  </div>
+
+  <div class="cell">
+    <div class="cp-callout cp-callout--inapp">
+      <p class="cp-callout__title">카카오톡 내 브라우저에서는 Google 로그인이 지원되지 않습니다.</p>
+      <button type="button" class="cp-callout__button is-hover">외부 브라우저에서 열기</button>
+    </div>
+    <p class="cap">(auth)/login/page.tsx · in-app browser notice, Android · full-width amber-100 button shown in hover (amber-200)</p>
+  </div>
+
+  <div class="cell">
+    <div class="alt">
+      <p class="cp-callout cp-callout--form-info"><span class="cp-callout__medium">1학년 1학기</span>에 바로 추가됩니다.</p>
+      <p class="cp-callout cp-callout--form-warning">학기를 먼저 클릭하여 포커스하면 해당 학기에 바로 추가됩니다.</p>
+    </div>
+    <p class="cap">CustomCourseForm.tsx · either/or on focusedSemester · blue-600 on blue-50 · amber-600 on amber-50 (3.1:1, flagged) · no border</p>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="cell">
+    <div class="cp-callout cp-callout--req-help">
+      <svg class="lucide lucide-help-circle cp-callout__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+      <span>졸업 기준과 취득 학점을 잘 모르시나요? <a href="/help/graduation-guide" class="cp-callout__link">확인 방법 보기</a></span>
+    </div>
+    <p class="cap">RequirementForm.tsx · help banner · blue-50 / blue-100 · HelpCircle and link yu-cyan (2.5:1, flagged) · gray-500 12px</p>
+  </div>
+
+  <div class="cell">
+    <div class="cp-callout cp-callout--req-suggest">
+      <p class="cp-callout__text">계획에 ‘이수’ 과목이 있습니다. 해당 학기가 기이수(성적표)에 이미 반영되어 있다면, 기준 학기를 설정해야 중복 합산되지 않습니다.</p>
+      <button type="button" class="cp-callout__button">2학년 2학기까지로 설정</button>
+    </div>
+    <p class="cap">RequirementForm.tsx · cutoff suggestion · amber-50 / amber-200 · amber-800 12px text · amber-100 button with amber-300 border</p>
+  </div>
+
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-callout cp-callout--reply">
+        <div class="cp-callout__head">
+          <span class="cp-callout__pill">관리자 답변</span>
+          <span class="cp-callout__meta">2026. 10. 20. 오후 03:12</span>
+        </div>
+        <p class="cp-callout__text">확인했습니다. 다음 업데이트에 반영하겠습니다.</p>
+      </div>
+    </div>
+    <p class="cap">help/feedback/page.tsx · admin reply · white box, green-200 border, green-100 / green-700 pill, slate-400 date (2.6:1, flagged) · on the item's green-50/30 surface</p>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!-- @dsCard group="Primitives" height=400 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Toast — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: flex; align-items: flex-start; gap: 24px; margin: 0 0 24px; }
+  .row:last-child { margin-bottom: 0; }
+  .cell { display: flex; flex-direction: column; gap: 4px; }
+  .col > .cell + .cell { margin-top: 16px; }
+  .col { width: 384px; flex: 0 0 auto; }
+  .stage { box-sizing: border-box; width: 416px; padding: 16px; background: var(--gray-50, #f9fafb); display: flex; flex-direction: column; justify-content: flex-end; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; width: 100%; }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-toast-stack cp-toast-stack--inline">
+        <div class="cp-toast-stack__list">
+          <div class="cp-toast cp-toast--success">
+            <div class="cp-toast__row">
+              <div class="cp-toast__body">
+                <div class="cp-toast__message">자료구조 추가됨 · +3학점 전공핵심</div>
+              </div>
+              <div class="cp-toast__actions">
+                <button type="button" class="cp-toast__action">실행 취소</button>
+                <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="cp-toast cp-toast--info">
+            <div class="cp-toast__row">
+              <div class="cp-toast__body">
+                <div class="cp-toast__message">실행 취소됨</div>
+              </div>
+              <div class="cp-toast__actions">
+                <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="cp-toast cp-toast--warning">
+            <div class="cp-toast__row">
+              <div class="cp-toast__body">
+                <div class="cp-toast__message">내보내기에 실패했습니다.</div>
+              </div>
+              <div class="cp-toast__actions">
+                <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Stack over the gray-50 app frame · fixed bottom-4, column-reverse (newest on top), sm:max-w-sm · success with 실행 취소 · info · warning</p>
+  </div>
+
+  <div class="col">
+    <div class="cell">
+      <div class="cp-toast cp-toast--success">
+        <div class="cp-toast__row">
+          <div class="cp-toast__body">
+            <div class="cp-toast__message">자료구조 추가됨 · +3학점 전공핵심</div>
+            <div class="cp-toast__delta">
+              <div class="cp-toast__delta-row">
+                <span class="cp-toast__delta-label">전공</span>
+                <div class="cp-toast__track">
+                  <div class="cp-toast__bar cp-toast__bar--category cp-toast__bar--after" style="width: 59%"></div>
+                  <div class="cp-toast__bar cp-toast__bar--category cp-toast__bar--before" style="width: 55%"></div>
+                </div>
+                <span class="cp-toast__delta-value">39/66</span>
+              </div>
+              <div class="cp-toast__delta-row">
+                <span class="cp-toast__delta-label cp-toast__delta-label--auto">전공핵심</span>
+                <div class="cp-toast__track">
+                  <div class="cp-toast__bar cp-toast__bar--second cp-toast__bar--after" style="width: 63%"></div>
+                  <div class="cp-toast__bar cp-toast__bar--second cp-toast__bar--before" style="width: 50%"></div>
+                </div>
+                <span class="cp-toast__delta-value">15/24</span>
+              </div>
+            </div>
+          </div>
+          <div class="cp-toast__actions">
+            <button type="button" class="cp-toast__action">실행 취소</button>
+            <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p class="cap">graduationDelta · 전공 row: yu-blue before (55%) over yu-blue-a40 after (59%), 39/66 · 전공핵심 row: green-500 over green-300, 15/24</p>
+    </div>
+
+    <div class="cell">
+      <div class="cp-toast cp-toast--info">
+        <div class="cp-toast__row">
+          <div class="cp-toast__body">
+            <div class="cp-toast__message">계획이 초기화되었습니다.</div>
+            <div class="cp-toast__description">모든 학기와 과목이 삭제되었습니다.</div>
+          </div>
+          <div class="cp-toast__actions">
+            <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p class="cap">message + description (gray-500 caption, mt-0.5) · no call site passes the prop · placeholder copy — no app string exists for this slot</p>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="grid3">
+    <div class="cell">
+      <div class="cp-toast cp-toast--success">
+        <div class="cp-toast__row">
+          <div class="cp-toast__body">
+            <div class="cp-toast__message">PNG 이미지로 내보내기 완료</div>
+          </div>
+          <div class="cp-toast__actions">
+            <button type="button" class="cp-toast__action">실행 취소</button>
+            <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p class="cap">success · action green-600, hover green-700</p>
+    </div>
+    <div class="cell">
+      <div class="cp-toast cp-toast--info">
+        <div class="cp-toast__row">
+          <div class="cp-toast__body">
+            <div class="cp-toast__message">로그인 후 이용할 수 있는 기능입니다.</div>
+          </div>
+          <div class="cp-toast__actions">
+            <button type="button" class="cp-toast__action is-hover">실행 취소</button>
+            <button type="button" class="cp-toast__close is-hover" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p class="cap">info · action hover: yu-navy-hover on gray-50 · close hover gray-600 · long message truncates</p>
+    </div>
+    <div class="cell">
+      <div class="cp-toast cp-toast--warning">
+        <div class="cp-toast__row">
+          <div class="cp-toast__body">
+            <div class="cp-toast__message">일정 저장에 실패했습니다.</div>
+          </div>
+          <div class="cp-toast__actions">
+            <button type="button" class="cp-toast__action">실행 취소</button>
+            <button type="button" class="cp-toast__close" aria-label="닫기"><svg class="cp-toast__close-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p class="cap">warning · action amber-600 (3.2:1 on white, flagged) · in the app only the success add-course toast carries an action</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

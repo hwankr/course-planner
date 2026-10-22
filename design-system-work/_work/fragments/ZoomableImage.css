@@ -1,0 +1,217 @@
+/* ZoomableImage — hand-translated from src/components/ui/ZoomableImage.tsx (thumbnail with hint overlays + fullscreen lightbox) */
+
+.cp-zoomable-image,
+.cp-zoomable-image *,
+.cp-zoomable-image *::before,
+.cp-zoomable-image *::after,
+.cp-zoomable-image__lightbox,
+.cp-zoomable-image__lightbox *,
+.cp-zoomable-image__lightbox *::before,
+.cp-zoomable-image__lightbox *::after {
+  box-sizing: border-box;
+}
+
+/* Thumbnail root: "relative group cursor-pointer". The whole block is the click target (onClick → open);
+   `group` makes both overlays and the desktop pill react to hover on this element. Untyped text inherits
+   the app body (16px, line-height 1.5, Arial). */
+.cp-zoomable-image {
+  position: relative;
+  cursor: pointer;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Thumbnail <img> (next/image): preflight only — display block, max-width 100%, height auto, color transparent.
+   The consumer's className lands here; every call site in the app passes "w-full h-auto" (--fluid). */
+.cp-zoomable-image__img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  color: transparent;
+}
+.cp-zoomable-image__img--fluid {
+  width: 100%;
+  height: auto;
+}
+
+/* Hint overlays (both): "absolute inset-0 flex items-center justify-center bg-black/0 transition-all
+   group-hover:bg-black/10". bg-black/0 is black at 0% alpha = transparent. */
+.cp-zoomable-image__hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--transparent, #00000000);
+  transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-zoomable-image:hover .cp-zoomable-image__hint,
+.cp-zoomable-image.is-hover .cp-zoomable-image__hint {
+  background-color: var(--black-a10, #0000001a);
+}
+
+/* Mobile overlay: shown below md (md:hidden). Desktop overlay: "hidden md:flex". */
+.cp-zoomable-image__hint--desktop {
+  display: none;
+}
+@media (min-width: 768px) {
+  .cp-zoomable-image__hint--mobile {
+    display: none;
+  }
+  .cp-zoomable-image__hint--desktop {
+    display: flex;
+  }
+}
+/* Preview-only viewport mirrors: force one variant regardless of frame width. */
+.cp-zoomable-image--mobile .cp-zoomable-image__hint--mobile {
+  display: flex;
+}
+.cp-zoomable-image--mobile .cp-zoomable-image__hint--desktop {
+  display: none;
+}
+.cp-zoomable-image--desktop .cp-zoomable-image__hint--mobile {
+  display: none;
+}
+.cp-zoomable-image--desktop .cp-zoomable-image__hint--desktop {
+  display: flex;
+}
+
+/* Pills share "flex items-center rounded-full". */
+.cp-zoomable-image__pill {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-full, 9999px);
+}
+
+/* Mobile pill: "gap-1.5 bg-black/40 px-3 py-1.5 text-[11px] text-white/80". Always visible at rest below md.
+   text-[11px] sets only the size; the line-height ratio (1.5) is inherited → 16.5px. */
+.cp-zoomable-image__pill--mobile {
+  gap: var(--space-1-5, 6px);
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  background-color: var(--black-a40, #00000066);
+  color: var(--white-a80, #ffffffcc);
+  font: 400 11px/16.5px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Desktop pill: "gap-2 bg-[#153974]/90 px-4 py-2 text-sm font-medium text-white shadow-lg opacity-0
+   transition-opacity group-hover:opacity-100". Invisible at rest, fades in on hover of the thumbnail. */
+.cp-zoomable-image__pill--desktop {
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  background-color: var(--yu-navy-a90, #153974e6);
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+  opacity: 0;
+  transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-zoomable-image:hover .cp-zoomable-image__pill--desktop,
+.cp-zoomable-image.is-hover .cp-zoomable-image__pill--desktop {
+  opacity: 1;
+}
+
+/* Lucide icons sized by class: ZoomIn h-3 w-3 (mobile), h-4 w-4 (desktop), X h-6 w-6 (close). Stroke currentColor. */
+.cp-zoomable-image__icon {
+  display: block;
+}
+.cp-zoomable-image__icon--xs {
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+}
+.cp-zoomable-image__icon--md {
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+.cp-zoomable-image__icon--xl {
+  width: var(--icon-xl, 24px);
+  height: var(--icon-xl, 24px);
+}
+
+/* Lightbox root (rendered as a sibling after the thumbnail while isOpen): "fixed inset-0 z-50 flex items-center
+   justify-center bg-black/95 p-4 animate-in fade-in duration-200". A click on the backdrop closes.
+   `animate-in` and `fade-in` belong to tailwindcss-animate, which is not installed: they emit no CSS.
+   `duration-200` alone emits transition-duration, inert without a transition-property — kept, no entrance. */
+.cp-zoomable-image__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--black-a95, #000000f2);
+  padding: var(--space-4, 16px);
+  transition-duration: var(--duration-base, 200ms);
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* Preview-only modifier: pin the lightbox to a positioned stage instead of the viewport. */
+.cp-zoomable-image__lightbox--staged {
+  position: absolute;
+}
+
+/* Close button: "absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10
+   text-white transition-colors hover:bg-white/20 active:bg-white/30", aria-label="닫기".
+   Preflight resets (no border, font inherit, no pointer cursor — the source sets none). */
+.cp-zoomable-image__close {
+  position: absolute;
+  top: var(--space-4, 16px);
+  right: var(--space-4, 16px);
+  z-index: var(--z-sticky, 10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-md, 40px);
+  height: var(--control-md, 40px);
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  appearance: button;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--white-a10, #ffffff1a);
+  color: var(--white, #ffffff);
+  font: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-zoomable-image__close:hover,
+.cp-zoomable-image__close.is-hover {
+  background-color: var(--white-a20, #ffffff33);
+}
+.cp-zoomable-image__close:active,
+.cp-zoomable-image__close.is-active {
+  background-color: var(--white-a30, #ffffff4d);
+}
+
+/* Pan container: "max-h-full max-w-full overflow-auto touch-pan-x touch-pan-y" + inline WebkitOverflowScrolling: touch.
+   Clicks inside stop propagation, so only the backdrop closes. */
+.cp-zoomable-image__pan {
+  max-width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Full image: "h-auto w-auto max-w-none" (quality 100, priority) — natural pixel size, panned inside the container. */
+.cp-zoomable-image__full {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  color: transparent;
+}
+
+/* Bottom hint: "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-xs text-white/80
+   backdrop-blur-sm". Under Tailwind v4 backdrop-blur-sm is blur(8px). */
+.cp-zoomable-image__drag-hint {
+  position: absolute;
+  bottom: var(--space-4, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--white-a10, #ffffff1a);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--white-a80, #ffffffcc);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}

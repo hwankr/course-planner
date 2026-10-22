@@ -1,0 +1,147 @@
+<!-- @dsCard group="Patterns" height=1010 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>StatusStates — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: flex; align-items: stretch; gap: 24px; }
+  .row + .row { margin-top: 24px; }
+  .cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 0; }
+  .cell--spinners { flex: 0 0 416px; }
+  .cell--page { flex: 0 0 270px; }
+  .stage { box-sizing: border-box; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--gray-50, #f9fafb); }
+  .stage--white { background: var(--white, #ffffff); }
+  .stage--top { align-items: flex-start; }
+  .stage--bare { padding: 0; }
+  .stage--bare > * { width: 100%; }
+  .fill { width: 100%; }
+  .spin-grid { display: flex; align-items: center; gap: 24px; }
+  .skel-grid { display: flex; align-items: flex-start; gap: 16px; width: 100%; }
+  .skel-grid > .skel-admin { flex: 0 0 192px; }
+  .skel-grid > .skel-card { flex: 1 1 0; min-width: 0; }
+  .skel-grid > .skel-cell { flex: 0 0 90px; }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+  <div class="cell cell--spinners">
+    <div class="stage">
+      <div class="cp-status spin-grid">
+        <div class="cp-status__loading-stack">
+          <div class="cp-status__ring"></div>
+          <p class="cp-status__loading-label">로딩 중...</p>
+        </div>
+        <div class="cp-status__arc"></div>
+        <div class="cp-status__arc cp-status__arc--lg"></div>
+        <div class="cp-status__loading-copy">
+          <svg class="cp-status__loader cp-status__loader--stacked" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          <p class="cp-status__loading-text">통계를 불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Spinners · loading.tsx ring + 로딩 중... · OnboardingGuard border-b-2 arc 32px · planner arc 48px · statistics Loader2 + 통계를 불러오는 중...</p>
+  </div>
+  <div class="cell">
+    <div class="stage stage--top">
+      <div class="cp-status skel-grid">
+        <div class="cp-status__skeleton-stack skel-admin">
+          <div class="cp-status__skeleton cp-status__skeleton--title"></div>
+          <div class="cp-status__skeleton cp-status__skeleton--block"></div>
+        </div>
+        <div class="skel-card">
+          <div class="cp-card">
+            <div class="cp-card__content cp-status__skeleton-host">
+              <div class="cp-status__skeleton cp-status__skeleton--bar"></div>
+            </div>
+          </div>
+        </div>
+        <div class="cp-status__skeleton cp-status__skeleton--cell skel-cell"></div>
+      </div>
+    </div>
+    <p class="cap">Skeletons (animate-pulse) · admin/courses h-8 w-48 + h-24 slate-200 · RequirementsSummary h-4 gray-200 bar in CardContent py-3 · calendar gray-100 cell, gray-200 border</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell cell--page">
+    <div class="stage stage--bare">
+      <div class="cp-status cp-status__page cp-status__page--min-400">
+        <div class="cp-status__well cp-status__well--danger">
+          <svg class="cp-status__glyph cp-status__glyph--danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div class="cp-status__text">
+          <h2 class="cp-status__title">문제가 발생했습니다</h2>
+          <p class="cp-status__body">일시적인 오류가 발생했습니다. 다시 시도해주세요.</p>
+        </div>
+        <button type="button" class="cp-status__action">다시 시도</button>
+      </div>
+    </div>
+    <p class="cap">(dashboard)/error.tsx · min-h-[400px] on gray-50 · global-error.tsx: same column at min-h-screen, 심각한 오류가 발생했습니다, no focus ring</p>
+  </div>
+  <div class="cell cell--page">
+    <div class="stage stage--white stage--bare">
+      <div class="cp-status cp-status__page">
+        <div class="cp-status__well cp-status__well--info">
+          <svg class="cp-status__glyph cp-status__glyph--brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="cp-status__text">
+          <h2 class="cp-status__title">페이지를 찾을 수 없습니다</h2>
+          <p class="cp-status__body">요청하신 페이지가 존재하지 않거나 이동되었습니다.</p>
+        </div>
+        <a class="cp-status__action is-hover" href="#">수강 플래너로 이동</a>
+      </div>
+    </div>
+    <p class="cap">not-found.tsx · min-h-screen on the white root body (shown at column height) · Link in hover (yu-navy-hover)</p>
+  </div>
+  <div class="cell">
+    <div class="stage stage--top">
+      <div class="cp-status fill">
+        <div class="cp-card cp-status__stat">
+          <svg class="cp-status__stat-icon cp-status__stat-icon--muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+          <h2 class="cp-status__stat-title">통계 데이터를 찾을 수 없습니다</h2>
+          <p class="cp-status__stat-body cp-status__stat-body--mb-4">설정된 학과 정보를 확인할 수 없습니다. 프로필에서 학과를 다시 설정해주세요.</p>
+          <a class="cp-status__cta" href="#">프로필 설정하기<svg class="cp-status__cta-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div>
+      </div>
+    </div>
+    <p class="cap">statistics/page.tsx · Card max-w-2xl p-8 · gray-400 BarChart3 64px (2.6:1, flagged) · siblings: red-500 AlertCircle, blue-100 well + yu-blue Info</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-status fill">
+        <div class="cp-status__empty-box">
+          <svg class="cp-status__empty-box-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+          <p class="cp-status__empty-box-text">등록된 과목이 없습니다.</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">admin/courses empty · slate-200 border, p-12, slate-300 BookOpen (1.5:1, flagged), slate-500 body-sm</p>
+  </div>
+  <div class="cell">
+    <div class="stage stage--white">
+      <div class="cp-status cp-status__list-empty fill">
+        <p class="cp-status__list-empty-title">아직 공개된 수강 계획이 없습니다</p>
+        <p class="cp-status__list-empty-text">학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다</p>
+      </div>
+    </div>
+    <p class="cap">AllPlansModal.tsx empty · py-12 gray-500 · body 500 + body-sm (statistics repeats it)</p>
+  </div>
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-status fill">
+        <div class="cp-status__banner">과목 목록을 불러오는데 실패했습니다.</div>
+      </div>
+    </div>
+    <p class="cap">admin/courses error · red-200 border, red-50, p-6, red-600 body-sm (4.4:1, flagged)</p>
+  </div>
+</div>
+
+</body>
+</html>

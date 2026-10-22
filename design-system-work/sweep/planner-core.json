@@ -1,0 +1,550 @@
+{
+  "files_read": [
+    "/home/user/course-planner/src/components/features/CourseCard.tsx",
+    "/home/user/course-planner/src/components/features/SemesterColumn.tsx",
+    "/home/user/course-planner/src/components/features/ReadOnlySemesterColumn.tsx",
+    "/home/user/course-planner/src/hooks/useCourseStatus.ts",
+    "/home/user/course-planner/src/components/ui/Card.tsx (resolved: Card base classes imported by all three components)",
+    "/home/user/course-planner/src/components/ui/index.ts (resolved: Card re-export)",
+    "/home/user/course-planner/src/lib/utils.ts (resolved: cn = twMerge(clsx()))",
+    "/home/user/course-planner/src/app/globals.css (grep only, for border-color compat rule; none found)",
+    "/home/user/course-planner/package.json (grep only: tailwindcss ^4, @dnd-kit/core ^6.3.1, @dnd-kit/sortable ^10.0.0, @dnd-kit/utilities ^3.2.2, lucide-react ^0.563.0, next 16.2.10, react 19.2.7)"
+  ],
+  "components": [
+    {
+      "name": "Card (ui base, resolved import)",
+      "file": "src/components/ui/Card.tsx",
+      "purpose": "Shared surface primitive that CourseCard, SemesterColumn and ReadOnlySemesterColumn all wrap; className merged via cn() = twMerge(clsx()) so callers' bg-*/border-* override base.",
+      "props": "React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>> — only className + div attrs; no variants. Also exports CardHeader ('flex flex-col space-y-1.5 p-6'), CardTitle ('text-2xl font-semibold leading-none tracking-tight', h3), CardDescription ('text-sm text-gray-500'), CardContent ('p-6 pt-0'), CardFooter ('flex items-center p-6 pt-0') — none used by the planner files.",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300" }
+      ],
+      "notes": "Bare `border` has no color class; under Tailwind v4 (confirmed @import \"tailwindcss\", no compat rule in globals.css) that resolves to currentColor = text-gray-900."
+    },
+    {
+      "name": "CourseCard (default / full mode)",
+      "file": "src/components/features/CourseCard.tsx",
+      "purpose": "Draggable course tile shown in semester columns and the course catalog; surface tint encodes course status, chips encode requirement category, department (복수전공/부전공) and status; optional remove X and click-to-toggle status.",
+      "props": "interface CourseCardProps { course: { _id?: Types.ObjectId | string; id?: string; code: string; name: string; credits: number; category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching'; status?: 'planned' | 'enrolled' | 'completed' | 'failed' }; index?: number; onRemove?: () => void; onStatusChange?: (courseId: string, newStatus: 'planned' | 'enrolled' | 'completed' | 'failed') => void; isDragDisabled?: boolean; compact?: boolean; departmentLabel?: string }. Status defaults to 'planned'. getNextStatus(): current === 'completed' ? 'planned' : 'completed' (2-step toggle; enrolled/failed -> completed).",
+      "elements": [
+        {
+          "part": "root",
+          "tag": "Card",
+          "classes": "mb-2 p-3 transition-shadow ${statusColors[status]} ${isDragDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-move'} shadow-sm hover:shadow-md",
+          "states": [
+            { "state": "status=planned", "classes": "bg-[#153974]/5 border-[#153974]/20" },
+            { "state": "status=enrolled", "classes": "bg-green-50 border-green-200" },
+            { "state": "status=completed", "classes": "bg-gray-50 border-gray-200" },
+            { "state": "status=failed", "classes": "bg-red-50 border-red-200" },
+            { "state": "isDragDisabled=true (already in plan)", "classes": "opacity-60 cursor-not-allowed" },
+            { "state": "isDragDisabled=false", "classes": "cursor-move" }
+          ]
+        },
+        { "part": "row", "tag": "div", "classes": "flex items-start justify-between" },
+        { "part": "content", "tag": "div", "classes": "flex-1 min-w-0" },
+        { "part": "chip-row", "tag": "div", "classes": "flex items-center gap-1.5 mb-1" },
+        {
+          "part": "category-chip",
+          "tag": "span",
+          "classes": "text-xs px-1.5 py-0.5 rounded font-medium ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}",
+          "text": "전공핵심 | 전공필수 | 전공선택 | 교양필수 | 교양선택 | 교직 | 자유선택",
+          "states": [
+            { "state": "major_required", "classes": "bg-red-100 text-red-700" },
+            { "state": "major_compulsory", "classes": "bg-rose-100 text-rose-700" },
+            { "state": "major_elective", "classes": "bg-orange-100 text-orange-700" },
+            { "state": "general_required", "classes": "bg-blue-100 text-blue-700" },
+            { "state": "general_elective", "classes": "bg-green-100 text-green-700" },
+            { "state": "teaching", "classes": "bg-violet-100 text-violet-700" },
+            { "state": "free_elective", "classes": "bg-gray-100 text-gray-600" },
+            { "state": "unknown category fallback", "classes": "bg-gray-100 text-gray-600" }
+          ]
+        },
+        {
+          "part": "department-chip",
+          "tag": "span",
+          "classes": "text-xs px-1.5 py-0.5 rounded font-medium",
+          "text": "복수전공 | 부전공",
+          "states": [
+            { "state": "departmentLabel === '복수전공'", "classes": "bg-purple-100 text-purple-700" },
+            { "state": "departmentLabel === '부전공'", "classes": "bg-orange-100 text-orange-700" },
+            { "state": "other departmentLabel", "classes": "bg-gray-100 text-gray-600" }
+          ]
+        },
+        {
+          "part": "status-toggle-button (course.status && onStatusChange)",
+          "tag": "button",
+          "classes": "text-xs px-2 py-0.5 rounded-full bg-white border hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer",
+          "text": "계획 | 수강중 | 완료 | 재수강 (statusLabels); aria-label=`상태 변경: ${statusLabels[status]}`"
+        },
+        {
+          "part": "status-static-pill (course.status, no onStatusChange)",
+          "tag": "span",
+          "classes": "text-xs px-2 py-0.5 rounded-full bg-white border",
+          "text": "계획 | 수강중 | 완료 | 재수강"
+        },
+        { "part": "course-name", "tag": "p", "classes": "text-sm font-medium text-gray-800 truncate", "text": "{course.name}" },
+        { "part": "credits", "tag": "p", "classes": "text-xs text-gray-500 mt-1", "text": "{course.credits}학점" },
+        {
+          "part": "remove-button (onRemove && !isDragDisabled)",
+          "tag": "button",
+          "classes": "ml-2 p-1 hover:bg-white rounded-full transition-colors",
+          "text": "aria-label=\"과목 제거\""
+        },
+        {
+          "part": "remove-icon (inline SVG X, heroicons-v1 solid, viewBox 0 0 20 20, fill=currentColor)",
+          "tag": "svg",
+          "classes": "w-4 h-4 text-gray-400 hover:text-red-500"
+        }
+      ],
+      "notes": "Card base adds rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300; twMerge lets statusColors bg-* win over bg-white. shadow-sm hover:shadow-md transition-shadow is repeated redundantly. No drag handle — whole card is the handle (cursor-move) via the parent DraggableSemesterCourse wrapper; CourseCard itself has no dnd-kit code."
+    },
+    {
+      "name": "CourseCard (compact mode)",
+      "file": "src/components/features/CourseCard.tsx",
+      "purpose": "Single-line condensed course tile used when SemesterColumn compact=true (overview / export). Adds a colored status pill with a one-time pulse hint.",
+      "props": "Same CourseCardProps with compact=true. showPulse = !statusHintShown && status === 'planned' && onStatusChange, where statusHintShown is a module-level boolean set true on first status click (not persisted).",
+      "elements": [
+        {
+          "part": "root",
+          "tag": "Card",
+          "classes": "mb-1 px-2 py-1.5 transition-shadow ${statusColors[status]} ${isDragDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-move'} shadow-sm hover:shadow-md",
+          "states": [
+            { "state": "status=planned", "classes": "bg-[#153974]/5 border-[#153974]/20" },
+            { "state": "status=enrolled", "classes": "bg-green-50 border-green-200" },
+            { "state": "status=completed", "classes": "bg-gray-50 border-gray-200" },
+            { "state": "status=failed", "classes": "bg-red-50 border-red-200" },
+            { "state": "isDragDisabled", "classes": "opacity-60 cursor-not-allowed" },
+            { "state": "draggable", "classes": "cursor-move" }
+          ]
+        },
+        { "part": "row", "tag": "div", "classes": "flex items-center justify-between gap-1" },
+        { "part": "content", "tag": "div", "classes": "flex items-center gap-1.5 min-w-0 flex-1" },
+        {
+          "part": "status-pill-button (onStatusChange)",
+          "tag": "button",
+          "classes": "px-1.5 py-0.5 rounded text-[9px] font-medium flex-shrink-0 cursor-pointer transition-all hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 ${statusPillColors[status]} ${showPulse ? 'animate-pulse ring-2 ring-blue-300/50' : ''}",
+          "text": "예정 | 수강중 | 이수 | 재수강 (statusPillLabels); aria-label=`상태 변경: ${statusLabels[status]}`; title=\"클릭하여 상태 변경: 예정 ↔ 이수\"",
+          "states": [
+            { "state": "planned", "classes": "bg-blue-100 text-blue-700" },
+            { "state": "enrolled", "classes": "bg-green-100 text-green-700" },
+            { "state": "completed", "classes": "bg-emerald-100 text-emerald-700" },
+            { "state": "failed", "classes": "bg-red-100 text-red-700" },
+            { "state": "showPulse (first-visit hint on planned)", "classes": "animate-pulse ring-2 ring-blue-300/50" },
+            { "state": "hover", "classes": "hover:ring-2 hover:ring-offset-1 hover:ring-gray-300" }
+          ]
+        },
+        {
+          "part": "category-chip",
+          "tag": "span",
+          "classes": "text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}",
+          "text": "전공핵심 | 전공필수 | 전공선택 | 교양필수 | 교양선택 | 교직 | 자유선택 (full labels even in compact)"
+        },
+        {
+          "part": "department-chip",
+          "tag": "span",
+          "classes": "text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap",
+          "states": [
+            { "state": "복수전공", "classes": "bg-purple-100 text-purple-700" },
+            { "state": "부전공", "classes": "bg-orange-100 text-orange-700" },
+            { "state": "other", "classes": "bg-gray-100 text-gray-600" }
+          ]
+        },
+        { "part": "course-name", "tag": "span", "classes": "text-xs font-medium text-gray-800 truncate" },
+        { "part": "credits", "tag": "span", "classes": "text-[10px] text-gray-500 whitespace-nowrap", "text": "{course.credits}학점" },
+        { "part": "remove-button", "tag": "button", "classes": "p-0.5 hover:bg-white rounded-full transition-colors flex-shrink-0", "text": "aria-label=\"과목 제거\"" },
+        { "part": "remove-icon (inline SVG X)", "tag": "svg", "classes": "w-3 h-3 text-gray-400 hover:text-red-500" }
+      ],
+      "notes": "Compact pill labels (예정/이수) differ from default-mode labels (계획/완료) for the same enum. 9px interactive text."
+    },
+    {
+      "name": "DraggableSemesterCourse",
+      "file": "src/components/features/SemesterColumn.tsx",
+      "purpose": "dnd-kit useDraggable wrapper around CourseCard inside a semester column; whole card is the drag handle.",
+      "props": "{ course; index: number; compact: boolean; containerId: string; onRemove: () => void; onStatusChange? } — useDraggable({ id: course.id, data: { containerId, course, type: 'semester' } }); spreads attributes + listeners on the wrapper div.",
+      "elements": [
+        {
+          "part": "root",
+          "tag": "div",
+          "classes": "${isDragging ? 'opacity-50' : ''}",
+          "inline_style": "transform: CSS.Translate.toString(transform); touchAction: 'none'",
+          "states": [
+            { "state": "isDragging (source ghost)", "classes": "opacity-50" },
+            { "state": "idle", "classes": "" }
+          ]
+        }
+      ],
+      "notes": "Uses @dnd-kit/core useDraggable + @dnd-kit/utilities CSS.Translate (not Sortable here, though @dnd-kit/sortable is installed). No DragOverlay is rendered in these files — the source element itself translates at opacity-50; any DragOverlay would live in the parent planner page (not in this reader's list). No activationConstraint visible here."
+    },
+    {
+      "name": "SemesterColumn",
+      "file": "src/components/features/SemesterColumn.tsx",
+      "purpose": "Editable semester column: dnd-kit droppable Card with header (year/term, credit total, category breakdown, clear/delete icon buttons, Focus badge), dashed empty dropzone, list of DraggableSemesterCourse, compact show-more/collapse.",
+      "props": "interface SemesterColumnProps { semester: { year: number; term: 'spring' | 'fall'; courses: Array<{ id; code; name; credits; category?; status: 'planned'|'enrolled'|'completed'|'failed' }> }; onRemoveCourse: (courseId: string) => void; onDelete?: () => void; onClear?: () => void; isFocused?: boolean; onFocus?: () => void; compact?: boolean; onStatusChange? }. Constants: MAX_VISIBLE = 4; droppableId = `semester-${year}-${term}`; termLabel spring→'1학기', fall→'2학기'; reads usePlanStore(s => s.isExporting) to suppress buttons/ring/collapse during export.",
+      "elements": [
+        {
+          "part": "root (useDroppable setNodeRef)",
+          "tag": "Card",
+          "classes": "flex flex-col ${compact ? 'min-h-[180px]' : 'h-full min-h-[400px]'} ${isFocused && !isExporting ? 'ring-2 ring-[#00AACA] border-[#00AACA]' : ''} ${isOver ? 'ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5' : ''}",
+          "states": [
+            { "state": "compact", "classes": "min-h-[180px]" },
+            { "state": "default", "classes": "h-full min-h-[400px]" },
+            { "state": "isFocused && !isExporting", "classes": "ring-2 ring-[#00AACA] border-[#00AACA]" },
+            { "state": "isOver (drop target hover)", "classes": "ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5" }
+          ]
+        },
+        {
+          "part": "header (onClick=onFocus)",
+          "tag": "div",
+          "classes": "${compact ? 'p-2' : 'p-4'} border-b cursor-pointer transition-colors ${isFocused ? 'bg-[#153974]/5' : 'bg-gray-50'}",
+          "states": [
+            { "state": "isFocused", "classes": "bg-[#153974]/5" },
+            { "state": "default", "classes": "bg-gray-50" },
+            { "state": "compact", "classes": "p-2" },
+            { "state": "default size", "classes": "p-4" }
+          ]
+        },
+        { "part": "header-row", "tag": "div", "classes": "flex items-center justify-between" },
+        {
+          "part": "title",
+          "tag": "h3",
+          "classes": "${compact ? 'text-sm' : 'text-lg'} font-semibold text-gray-800",
+          "text": "{semester.year}학년 {termLabel}  (e.g. 1학년 1학기)"
+        },
+        {
+          "part": "credit-total",
+          "tag": "p",
+          "classes": "${compact ? 'text-xs' : 'text-sm'} text-gray-500 mt-1",
+          "text": "{totalCredits}학점"
+        },
+        {
+          "part": "category-breakdown",
+          "tag": "span",
+          "classes": "text-gray-400 ml-1",
+          "text": "({label}{credits} · ...) e.g. (전핵3 · 전선6 · 교필3) using short labels 전핵/전필/전선/교필/교선/교직/자선"
+        },
+        { "part": "action-cluster", "tag": "div", "classes": "flex items-center gap-2" },
+        {
+          "part": "clear-button (onClear && courses.length>0 && !isExporting)",
+          "tag": "button",
+          "classes": "p-1 hover:bg-amber-100 rounded-full transition-colors",
+          "text": "aria-label=\"학기 초기화\"; window.confirm(`이 학기의 모든 과목(${n}개)을 제거하시겠습니까?`)"
+        },
+        { "part": "clear-icon (inline SVG refresh/arrows, heroicons-v1 solid 20x20)", "tag": "svg", "classes": "w-4 h-4 text-gray-400 hover:text-amber-500" },
+        {
+          "part": "delete-button (onDelete && !isExporting)",
+          "tag": "button",
+          "classes": "p-1 hover:bg-red-100 rounded-full transition-colors",
+          "text": "aria-label=\"학기 삭제\"; window.confirm(`이 학기에 ${n}개의 과목이 있습니다. 정말 삭제하시겠습니까?`) only when courses exist"
+        },
+        { "part": "delete-icon (inline SVG trash, heroicons-v1 solid 20x20)", "tag": "svg", "classes": "w-4 h-4 text-gray-400 hover:text-red-500" },
+        {
+          "part": "focus-badge (isFocused)",
+          "tag": "span",
+          "classes": "text-xs px-2 py-1 bg-[#153974] text-white rounded-full font-medium",
+          "text": "Focus"
+        },
+        { "part": "droppable-body", "tag": "div", "classes": "flex-1 ${compact ? 'p-2' : 'p-4'} transition-colors" },
+        {
+          "part": "empty-state (courses.length === 0)",
+          "tag": "div",
+          "classes": "h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg"
+        },
+        {
+          "part": "empty-state-text",
+          "tag": "p",
+          "classes": "${compact ? 'text-xs' : 'text-sm'} text-gray-400",
+          "text": "isFocused ? '과목 리스트에서 + 버튼으로 과목을 추가하세요' : '과목을 드래그하세요'"
+        },
+        {
+          "part": "list-wrapper",
+          "tag": "div",
+          "classes": "transition-all duration-200 ${compact && !isExpanded && !isExporting ? 'max-h-[280px] overflow-hidden' : ''}",
+          "states": [
+            { "state": "compact collapsed (not exporting)", "classes": "max-h-[280px] overflow-hidden" },
+            { "state": "expanded / default / exporting", "classes": "" }
+          ]
+        },
+        {
+          "part": "show-more-button (compact && !isExpanded && hiddenCount>0 && !isExporting)",
+          "tag": "button",
+          "classes": "w-full text-xs text-[#3069B3] hover:text-[#153974] py-1 text-center",
+          "text": "+{hiddenCount}개 더 보기"
+        },
+        {
+          "part": "collapse-button (compact && isExpanded && courses.length > 4 && !isExporting)",
+          "tag": "button",
+          "classes": "w-full text-xs text-gray-400 hover:text-gray-600 py-1 text-center",
+          "text": "접기"
+        }
+      ],
+      "notes": "Card base classes also apply (rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300). Header border-b has no color class (currentColor under Tailwind v4). When isFocused and isOver are both true, both ring strings are present and twMerge keeps the later ring-[#00AACA]/50, so the focus ring dims to 50% during a hover-drop. There is no overload / prerequisite warning UI in this file — only the credit total and breakdown; no threshold coloring."
+    },
+    {
+      "name": "ReadOnlySemesterColumn",
+      "file": "src/components/features/ReadOnlySemesterColumn.tsx",
+      "purpose": "Non-interactive semester summary (shared/public plan view): header with credits · course count and breakdown, collapsible in compact, list of flat course rows with short category chip, name, code, credits.",
+      "props": "interface ReadOnlySemesterColumnProps { semester: { year: number; term: string; courses: Array<{ code; name; credits; category?: string }> }; compact?: boolean }. isExpanded initial = !compact. term === 'spring' ? '1학기' : '2학기'.",
+      "elements": [
+        { "part": "root", "tag": "Card", "classes": "flex flex-col" },
+        {
+          "part": "header (onClick toggles only when compact)",
+          "tag": "div",
+          "classes": "${compact ? 'p-2' : 'p-3'} border-b bg-gray-50 cursor-pointer",
+          "states": [
+            { "state": "compact", "classes": "p-2" },
+            { "state": "default", "classes": "p-3" }
+          ]
+        },
+        { "part": "header-row", "tag": "div", "classes": "flex items-center justify-between" },
+        { "part": "title", "tag": "h4", "classes": "${compact ? 'text-sm' : 'text-base'} font-semibold text-gray-800", "text": "{semester.year}학년 {termLabel}" },
+        { "part": "credit-total", "tag": "p", "classes": "${compact ? 'text-xs' : 'text-sm'} text-gray-500 mt-0.5", "text": "{totalCredits}학점 · {courses.length}과목" },
+        { "part": "category-breakdown", "tag": "span", "classes": "text-gray-400 ml-1", "text": "({label}{credits} · ...)" },
+        { "part": "expand-toggle (compact)", "tag": "button", "classes": "text-gray-400 text-xs", "text": "isExpanded ? '접기' : '펼치기'" },
+        { "part": "list (isExpanded)", "tag": "div", "classes": "${compact ? 'p-2' : 'p-3'} space-y-1.5" },
+        { "part": "course-row", "tag": "div", "classes": "flex items-center gap-2 p-2 rounded-md bg-white border border-gray-100" },
+        {
+          "part": "category-chip (short label)",
+          "tag": "span",
+          "classes": "text-[10px] px-1.5 py-0.5 rounded font-medium ${categoryColors[cat] || categoryColors.free_elective}",
+          "text": "전핵 | 전필 | 전선 | 교필 | 교선 | 교직 | 자선 (fallback '자선')",
+          "states": [
+            { "state": "major_required", "classes": "bg-red-100 text-red-700" },
+            { "state": "major_compulsory", "classes": "bg-rose-100 text-rose-700" },
+            { "state": "major_elective", "classes": "bg-orange-100 text-orange-700" },
+            { "state": "general_required", "classes": "bg-blue-100 text-blue-700" },
+            { "state": "general_elective", "classes": "bg-green-100 text-green-700" },
+            { "state": "teaching", "classes": "bg-violet-100 text-violet-700" },
+            { "state": "free_elective / fallback", "classes": "bg-gray-100 text-gray-600" }
+          ]
+        },
+        { "part": "content", "tag": "div", "classes": "flex-1 min-w-0" },
+        { "part": "course-name", "tag": "p", "classes": "text-sm font-medium text-gray-800 truncate" },
+        { "part": "course-code", "tag": "p", "classes": "text-xs text-gray-400", "text": "{course.code}" },
+        { "part": "credits", "tag": "span", "classes": "text-xs text-gray-500 whitespace-nowrap", "text": "{course.credits}학점" }
+      ],
+      "notes": "No status styling in read-only view (no status field). Category color map is a verbatim copy of CourseCard's; short-label map is a verbatim copy of SemesterColumn's inline map."
+    },
+    {
+      "name": "useUpdateCourseStatus / createCourseStatusMutationHandlers (hook, no UI)",
+      "file": "src/hooks/useCourseStatus.ts",
+      "purpose": "TanStack mutation that PATCHes /api/plans/{planId}/courses/status with optimistic Zustand update (usePlanStore.updateCourseStatus), per-course serial queue, rollback on error, invalidates graduationRequirementKeys.progress() on success and planKeys.detail('my') (refetchType 'none') on settle; guest mode writes to useGuestPlanStore and returns isPending:false.",
+      "props": "interface UpdateCourseStatusInput { planId: string; year: number; term: Term; courseId: string; status: 'planned' | 'enrolled' | 'completed' | 'failed'; grade?: string }",
+      "elements": [
+        { "part": "none (no JSX)", "classes": "" }
+      ],
+      "notes": "Error path rolls back silently — no toast or inline error is raised from this hook; thrown message is English 'Failed to update course status' or the API's result.error. Status change in the planner therefore has no visible failure feedback unless the caller adds one."
+    }
+  ],
+  "semantic_maps": [
+    {
+      "domain": "RequirementCategory → full label → chip color (categoryLabels / categoryColors)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        { "key": "major_required", "label": "전공핵심", "classes": "bg-red-100 text-red-700" },
+        { "key": "major_compulsory", "label": "전공필수", "classes": "bg-rose-100 text-rose-700" },
+        { "key": "major_elective", "label": "전공선택", "classes": "bg-orange-100 text-orange-700" },
+        { "key": "general_required", "label": "교양필수", "classes": "bg-blue-100 text-blue-700" },
+        { "key": "general_elective", "label": "교양선택", "classes": "bg-green-100 text-green-700" },
+        { "key": "teaching", "label": "교직", "classes": "bg-violet-100 text-violet-700" },
+        { "key": "free_elective", "label": "자유선택", "classes": "bg-gray-100 text-gray-600" },
+        { "key": "(fallback: unknown category)", "label": "(chip hidden if no label)", "classes": "bg-gray-100 text-gray-600" }
+      ]
+    },
+    {
+      "domain": "RequirementCategory → short label (breakdown + read-only chips); same colors duplicated in ReadOnlySemesterColumn.categoryColors",
+      "file": "src/components/features/SemesterColumn.tsx; src/components/features/ReadOnlySemesterColumn.tsx",
+      "entries": [
+        { "key": "major_required", "label": "전핵", "classes": "bg-red-100 text-red-700" },
+        { "key": "major_compulsory", "label": "전필", "classes": "bg-rose-100 text-rose-700" },
+        { "key": "major_elective", "label": "전선", "classes": "bg-orange-100 text-orange-700" },
+        { "key": "general_required", "label": "교필", "classes": "bg-blue-100 text-blue-700" },
+        { "key": "general_elective", "label": "교선", "classes": "bg-green-100 text-green-700" },
+        { "key": "teaching", "label": "교직", "classes": "bg-violet-100 text-violet-700" },
+        { "key": "free_elective", "label": "자선", "classes": "bg-gray-100 text-gray-600" },
+        { "key": "(missing category)", "label": "자선 (coerced to free_elective)", "classes": "bg-gray-100 text-gray-600" }
+      ]
+    },
+    {
+      "domain": "Course status → card surface tint (statusColors) + default-mode label (statusLabels)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        { "key": "planned", "label": "계획", "classes": "bg-[#153974]/5 border-[#153974]/20" },
+        { "key": "enrolled", "label": "수강중", "classes": "bg-green-50 border-green-200" },
+        { "key": "completed", "label": "완료", "classes": "bg-gray-50 border-gray-200" },
+        { "key": "failed", "label": "재수강", "classes": "bg-red-50 border-red-200" },
+        { "key": "(default-mode status pill, any status)", "label": "statusLabels[status]", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border" }
+      ]
+    },
+    {
+      "domain": "Course status → compact pill (statusPillColors + statusPillLabels)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        { "key": "planned", "label": "예정", "classes": "bg-blue-100 text-blue-700" },
+        { "key": "enrolled", "label": "수강중", "classes": "bg-green-100 text-green-700" },
+        { "key": "completed", "label": "이수", "classes": "bg-emerald-100 text-emerald-700" },
+        { "key": "failed", "label": "재수강", "classes": "bg-red-100 text-red-700" },
+        { "key": "(first-time hint, planned only)", "label": "pulse", "classes": "animate-pulse ring-2 ring-blue-300/50" }
+      ]
+    },
+    {
+      "domain": "departmentLabel (string equality) → chip color",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        { "key": "복수전공", "label": "복수전공", "classes": "bg-purple-100 text-purple-700" },
+        { "key": "부전공", "label": "부전공", "classes": "bg-orange-100 text-orange-700" },
+        { "key": "(other string)", "label": "as given", "classes": "bg-gray-100 text-gray-600" }
+      ]
+    },
+    {
+      "domain": "Semester column interaction state → Card / header classes",
+      "file": "src/components/features/SemesterColumn.tsx",
+      "entries": [
+        { "key": "default", "label": "header", "classes": "bg-gray-50" },
+        { "key": "isFocused", "label": "card ring + header tint + badge", "classes": "ring-2 ring-[#00AACA] border-[#00AACA] | bg-[#153974]/5 | bg-[#153974] text-white rounded-full" },
+        { "key": "isOver (dnd-kit droppable)", "label": "drop target", "classes": "ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5" },
+        { "key": "isDragging (dnd-kit draggable source)", "label": "ghost", "classes": "opacity-50" },
+        { "key": "isDragDisabled (catalog item already in plan)", "label": "disabled card", "classes": "opacity-60 cursor-not-allowed" },
+        { "key": "empty", "label": "dashed dropzone", "classes": "border-2 border-dashed border-gray-200 rounded-lg text-gray-400" }
+      ]
+    },
+    {
+      "domain": "Term → label",
+      "file": "src/components/features/SemesterColumn.tsx; src/components/features/ReadOnlySemesterColumn.tsx",
+      "entries": [
+        { "key": "spring", "label": "1학기", "classes": "" },
+        { "key": "fall (or any non-spring)", "label": "2학기", "classes": "" }
+      ]
+    },
+    {
+      "domain": "Destructive icon-button hover accents",
+      "file": "src/components/features/SemesterColumn.tsx; src/components/features/CourseCard.tsx",
+      "entries": [
+        { "key": "clear semester (학기 초기화)", "label": "amber", "classes": "hover:bg-amber-100 + icon hover:text-amber-500" },
+        { "key": "delete semester (학기 삭제)", "label": "red", "classes": "hover:bg-red-100 + icon hover:text-red-500" },
+        { "key": "remove course (과목 제거)", "label": "white bg, red icon", "classes": "hover:bg-white + icon hover:text-red-500" }
+      ]
+    }
+  ],
+  "color_classes_seen": [
+    "bg-[#153974]/5", "border-[#153974]/20", "bg-[#153974]", "text-[#153974]", "text-[#3069B3]",
+    "ring-[#00AACA]", "border-[#00AACA]", "ring-[#00AACA]/50", "bg-[#00AACA]/5",
+    "bg-white", "text-white",
+    "bg-gray-50", "bg-gray-100", "border-gray-100", "border-gray-200", "ring-gray-300", "border-gray-400",
+    "text-gray-400", "text-gray-500", "text-gray-600", "text-gray-800", "text-gray-900",
+    "bg-green-50", "border-green-200", "bg-green-100", "text-green-700",
+    "bg-emerald-100", "text-emerald-700",
+    "bg-red-50", "border-red-200", "bg-red-100", "text-red-700", "text-red-500",
+    "bg-rose-100", "text-rose-700",
+    "bg-orange-100", "text-orange-700",
+    "bg-blue-100", "text-blue-700", "ring-blue-300/50",
+    "bg-violet-100", "text-violet-700",
+    "bg-purple-100", "text-purple-700",
+    "bg-amber-100", "text-amber-500",
+    "border (no color → currentColor in Tailwind v4)"
+  ],
+  "typography": [
+    { "role": "Semester title (editable, default)", "classes": "text-lg font-semibold text-gray-800", "where": "SemesterColumn h3" },
+    { "role": "Semester title (editable, compact)", "classes": "text-sm font-semibold text-gray-800", "where": "SemesterColumn h3" },
+    { "role": "Semester title (read-only, default)", "classes": "text-base font-semibold text-gray-800", "where": "ReadOnlySemesterColumn h4" },
+    { "role": "Semester title (read-only, compact)", "classes": "text-sm font-semibold text-gray-800", "where": "ReadOnlySemesterColumn h4" },
+    { "role": "Semester credit total", "classes": "text-sm text-gray-500 mt-1 (compact: text-xs; read-only uses mt-0.5)", "where": "SemesterColumn / ReadOnlySemesterColumn p" },
+    { "role": "Category breakdown parenthetical", "classes": "text-gray-400 ml-1 (inherits size)", "where": "SemesterColumn / ReadOnlySemesterColumn span" },
+    { "role": "Course name (default)", "classes": "text-sm font-medium text-gray-800 truncate", "where": "CourseCard p, ReadOnlySemesterColumn p" },
+    { "role": "Course name (compact)", "classes": "text-xs font-medium text-gray-800 truncate", "where": "CourseCard compact span" },
+    { "role": "Credits meta (default)", "classes": "text-xs text-gray-500 mt-1", "where": "CourseCard p" },
+    { "role": "Credits meta (compact / read-only)", "classes": "text-[10px] text-gray-500 whitespace-nowrap (read-only: text-xs text-gray-500 whitespace-nowrap)", "where": "CourseCard compact span; ReadOnlySemesterColumn span" },
+    { "role": "Course code", "classes": "text-xs text-gray-400", "where": "ReadOnlySemesterColumn p" },
+    { "role": "Chip (default)", "classes": "text-xs px-1.5 py-0.5 rounded font-medium", "where": "CourseCard category/department chips" },
+    { "role": "Chip (compact)", "classes": "text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap", "where": "CourseCard compact chips" },
+    { "role": "Chip (read-only)", "classes": "text-[10px] px-1.5 py-0.5 rounded font-medium", "where": "ReadOnlySemesterColumn category chip" },
+    { "role": "Status pill (default, outlined)", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border", "where": "CourseCard" },
+    { "role": "Status pill (compact, filled)", "classes": "px-1.5 py-0.5 rounded text-[9px] font-medium", "where": "CourseCard compact button" },
+    { "role": "Focus badge", "classes": "text-xs px-2 py-1 bg-[#153974] text-white rounded-full font-medium", "where": "SemesterColumn" },
+    { "role": "Empty-state hint", "classes": "text-sm text-gray-400 (compact: text-xs)", "where": "SemesterColumn p" },
+    { "role": "Inline text button (brand link)", "classes": "text-xs text-[#3069B3] hover:text-[#153974]", "where": "SemesterColumn show-more" },
+    { "role": "Inline text button (muted)", "classes": "text-xs text-gray-400 hover:text-gray-600 | text-gray-400 text-xs", "where": "SemesterColumn collapse; ReadOnly toggle" }
+  ],
+  "layout_patterns": [
+    { "name": "Semester column shell", "description": "Card as flex column; fixed minimum heights by density; header + flexible body", "classes": "flex flex-col h-full min-h-[400px] (compact: min-h-[180px]) ; header p-4 border-b bg-gray-50 (compact p-2) ; body flex-1 p-4 (compact p-2)", "where": "SemesterColumn" },
+    { "name": "Header row with action cluster", "description": "Title block left, icon buttons + badge right", "classes": "flex items-center justify-between ; actions flex items-center gap-2", "where": "SemesterColumn, ReadOnlySemesterColumn" },
+    { "name": "Card content row", "description": "Text block that truncates next to a trailing icon button", "classes": "flex items-start justify-between > flex-1 min-w-0 ; truncate on name ; remove button ml-2 p-1", "where": "CourseCard default" },
+    { "name": "Compact single-line card", "description": "All chips, name and credits on one line, remove X at end", "classes": "flex items-center justify-between gap-1 > flex items-center gap-1.5 min-w-0 flex-1 ; flex-shrink-0 on chips/button ; whitespace-nowrap on chips/credits", "where": "CourseCard compact" },
+    { "name": "Chip row above title", "description": "Inline chips (category, department, status) in a row with small gap", "classes": "flex items-center gap-1.5 mb-1", "where": "CourseCard default" },
+    { "name": "Stack spacing via per-card margin", "description": "Cards stack with bottom margin on each card instead of gap/space-y on the parent", "classes": "mb-2 (default) / mb-1 (compact)", "where": "CourseCard" },
+    { "name": "Dashed empty dropzone", "description": "Full-height centered dashed box as drop affordance", "classes": "h-full flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg", "where": "SemesterColumn empty state" },
+    { "name": "Compact overflow clamp", "description": "Show first 4 cards, clamp height, then '+N개 더 보기' / '접기' full-width text buttons", "classes": "transition-all duration-200 max-h-[280px] overflow-hidden ; button w-full text-xs py-1 text-center", "where": "SemesterColumn (MAX_VISIBLE=4)" },
+    { "name": "Round icon button", "description": "Padded circular hover target with 16px currentColor SVG", "classes": "p-1 hover:bg-{amber|red|white}-100 rounded-full transition-colors > svg w-4 h-4 text-gray-400 hover:text-{amber|red}-500", "where": "SemesterColumn, CourseCard" },
+    { "name": "Read-only list rows", "description": "Flat bordered rows spaced vertically", "classes": "space-y-1.5 ; row flex items-center gap-2 p-2 rounded-md bg-white border border-gray-100", "where": "ReadOnlySemesterColumn" },
+    { "name": "Density toggle via compact prop", "description": "Same component switches p-4/p-2, text-lg/text-sm, text-sm/text-xs, min-h; CourseCard switches to a separate single-line render path", "classes": "compact ? 'p-2' : 'p-4' ; compact ? 'text-sm' : 'text-lg' ; compact ? 'text-xs' : 'text-sm'", "where": "SemesterColumn, ReadOnlySemesterColumn, CourseCard" },
+    { "name": "dnd-kit droppable/draggable", "description": "useDroppable on the column Card (id semester-{year}-{term}); useDraggable on a wrapper div per course with CSS.Translate transform and touch-action none; isOver tints the column, isDragging fades the source", "classes": "ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5 (isOver) ; opacity-50 (isDragging)", "where": "SemesterColumn" }
+  ],
+  "copy_samples": [
+    { "text": "계획 / 수강중 / 완료 / 재수강", "where": "CourseCard statusLabels (default-mode status pill)", "note": "Noun labels; 'failed' is rendered as 재수강 (retake) — consequence rather than state" },
+    { "text": "예정 / 수강중 / 이수 / 재수강", "where": "CourseCard statusPillLabels (compact pill)", "note": "Different vocabulary for the same enum in compact mode" },
+    { "text": "전공핵심 / 전공필수 / 전공선택 / 교양필수 / 교양선택 / 교직 / 자유선택", "where": "CourseCard categoryLabels", "note": "Full category names" },
+    { "text": "전핵 / 전필 / 전선 / 교필 / 교선 / 교직 / 자선", "where": "SemesterColumn breakdown labels, ReadOnlySemesterColumn chips", "note": "2-syllable abbreviations" },
+    { "text": "상태 변경: ${statusLabels[status]}", "where": "CourseCard aria-label on status button", "note": "Colon + space, no honorific" },
+    { "text": "클릭하여 상태 변경: 예정 ↔ 이수", "where": "CourseCard compact pill title tooltip", "note": "Uses ↔ arrow glyph; '-하여' formal connective" },
+    { "text": "과목 제거", "where": "CourseCard remove button aria-label", "note": "" },
+    { "text": "{credits}학점", "where": "CourseCard / columns", "note": "Number directly followed by 학점, no space" },
+    { "text": "복수전공 / 부전공", "where": "CourseCard departmentLabel chips", "note": "Matched by string equality" },
+    { "text": "{year}학년 {termLabel}  → e.g. 1학년 1학기", "where": "SemesterColumn h3 / ReadOnly h4", "note": "spring→1학기, fall→2학기" },
+    { "text": "{totalCredits}학점 · {n}과목", "where": "ReadOnlySemesterColumn", "note": "Middle dot · as separator" },
+    { "text": "(전핵3 · 교필6)", "where": "SemesterColumn / ReadOnly breakdown", "note": "Label glued to number, items joined by ' · '" },
+    { "text": "이 학기의 모든 과목({n}개)을 제거하시겠습니까?", "where": "SemesterColumn clear window.confirm", "note": "합니다체/하십시오체 question (-시겠습니까?)" },
+    { "text": "이 학기에 {n}개의 과목이 있습니다. 정말 삭제하시겠습니까?", "where": "SemesterColumn delete window.confirm", "note": "Two sentences, 합니다체; '정말' emphasis" },
+    { "text": "학기 초기화 / 학기 삭제", "where": "SemesterColumn icon button aria-labels", "note": "" },
+    { "text": "Focus", "where": "SemesterColumn focused badge", "note": "English word inside an otherwise Korean UI" },
+    { "text": "과목 리스트에서 + 버튼으로 과목을 추가하세요", "where": "SemesterColumn empty state when focused", "note": "해요체 imperative (-하세요); literal '+' glyph in prose; loanword 리스트" },
+    { "text": "과목을 드래그하세요", "where": "SemesterColumn empty state default", "note": "해요체 imperative; loanword 드래그" },
+    { "text": "+{hiddenCount}개 더 보기", "where": "SemesterColumn show-more button", "note": "Leading + sign" },
+    { "text": "접기 / 펼치기", "where": "SemesterColumn collapse, ReadOnly toggle", "note": "Verb-stem nominal labels" },
+    { "text": "Failed to update course status", "where": "useCourseStatus thrown error fallback", "note": "English developer-facing; never surfaced as toast in these files" },
+    { "text": "TONE SUMMARY", "where": "all four files", "note": "Labels are terse nouns; instructions use 해요체 (-하세요); confirmations use 합니다체 (-습니다 / -시겠습니까?); no emoji anywhere; punctuation limited to · ↔ + ( ) : ? and sentence period; native window.confirm for destructive prompts" }
+  ],
+  "motion": [
+    { "classes": "transition-shadow shadow-sm hover:shadow-md", "where": "CourseCard root (default + compact) — duplicates Card base 'transition-shadow duration-300'" },
+    { "classes": "transition-all hover:ring-2 hover:ring-offset-1 hover:ring-gray-300", "where": "CourseCard compact status pill" },
+    { "classes": "animate-pulse ring-2 ring-blue-300/50", "where": "CourseCard compact status pill first-time hint (module flag statusHintShown)" },
+    { "classes": "transition-colors", "where": "CourseCard remove button, default status toggle button; SemesterColumn header, clear/delete buttons, droppable body" },
+    { "classes": "transition-all duration-200", "where": "SemesterColumn compact list wrapper (max-h-[280px] overflow-hidden collapse)" },
+    { "classes": "opacity-50", "where": "DraggableSemesterCourse while isDragging (no transition class)" },
+    { "classes": "style={{ transform: CSS.Translate.toString(transform), touchAction: 'none' }}", "where": "DraggableSemesterCourse inline (dnd-kit translate; no transition on transform)" },
+    { "classes": "ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5", "where": "SemesterColumn isOver — applied instantly; Card only transitions shadow, not ring/bg" }
+  ],
+  "icons": [
+    { "name": "(no lucide-react icons in these files; lucide-react ^0.563.0 is installed but unused here)", "where": "CourseCard, SemesterColumn, ReadOnlySemesterColumn" },
+    { "name": "Inline SVG X / close (heroicons v1 solid 'x', viewBox 0 0 20 20, fill=currentColor, fillRule/clipRule evenodd)", "size_classes": "w-4 h-4 text-gray-400 hover:text-red-500", "where": "CourseCard default remove button" },
+    { "name": "Inline SVG X / close (same path)", "size_classes": "w-3 h-3 text-gray-400 hover:text-red-500", "where": "CourseCard compact remove button" },
+    { "name": "Inline SVG refresh / two circular arrows (heroicons v1 solid 'refresh', viewBox 0 0 20 20)", "size_classes": "w-4 h-4 text-gray-400 hover:text-amber-500", "where": "SemesterColumn clear-semester button" },
+    { "name": "Inline SVG trash (heroicons v1 solid 'trash', viewBox 0 0 20 20)", "size_classes": "w-4 h-4 text-gray-400 hover:text-red-500", "where": "SemesterColumn delete-semester button" },
+    { "name": "Text glyphs used as icons: '+' (empty-state prose and '+N개 더 보기'), '↔' (tooltip), '·' (separators)", "where": "SemesterColumn, CourseCard, ReadOnlySemesterColumn" }
+  ],
+  "oddities": [
+    "Two parallel status vocabularies for one enum: default mode statusLabels (계획/수강중/완료/재수강) vs compact statusPillLabels (예정/수강중/이수/재수강); the 'failed' state is labeled 재수강 (retake) in both.",
+    "Two parallel status color systems: card surface statusColors uses brand navy for planned (bg-[#153974]/5 border-[#153974]/20) and gray for completed, while compact statusPillColors uses Tailwind blue-100/700 for planned and emerald-100/700 for completed; enrolled pill is green-100/700 — green vs emerald sit side by side and are nearly indistinguishable.",
+    "Color collisions across dimensions: general_required (교양필수) chip = bg-blue-100 text-blue-700 = planned (예정) status pill, so a planned 교양필수 course in compact mode shows two identical blue chips meaning different things; major_elective (전공선택) chip = 부전공 department chip = bg-orange-100 text-orange-700; major_required (전공핵심) chip = failed (재수강) pill = bg-red-100 text-red-700.",
+    "Adjacent category hues red-100 (전공핵심) and rose-100 (전공필수) are very close; violet-100 (교직) and purple-100 (복수전공) are also near-identical.",
+    "categoryColors map is duplicated verbatim in CourseCard.tsx and ReadOnlySemesterColumn.tsx; the short-label map (전핵/전필/…) is duplicated in SemesterColumn.tsx (inline IIFE) and ReadOnlySemesterColumn.tsx; the category enum union is re-typed inline in CourseCard and SemesterColumn props instead of imported — no shared token/constant.",
+    "Arbitrary micro type sizes text-[9px] (interactive compact status pill) and text-[10px] (chips, credits) fall below Tailwind's text-xs (12px); 9px clickable text is a legibility/target-size concern.",
+    "Hard-coded hex in these files is confined to the brand trio #153974 / #3069B3 / #00AACA (no off-brand hex), but every semantic color (category, status, destructive hover) is a raw Tailwind palette class with no token layer; brand is used only for planned tint, focus ring, Focus badge and show-more link.",
+    "Focused semester uses two different brand colors for one state: cyan ring (ring-2 ring-[#00AACA] border-[#00AACA]) on the Card plus navy header tint (bg-[#153974]/5) and navy Focus badge (bg-[#153974] text-white).",
+    "When a column is both isFocused and isOver, both class strings are concatenated; twMerge in Card keeps the later ring-[#00AACA]/50, so the solid focus ring dims to 50% while a course is dragged over it (likely unintended).",
+    "Tailwind v4 confirmed (@import \"tailwindcss\"; grep found no border-color compat rule in globals.css): Card base `border`, column header `border-b`, and the default status pill `rounded-full bg-white border` have no border color class, so they render in currentColor (text-gray-900 / inherited) rather than the v3-era gray-200 — much darker borders than the explicit border-gray-100/200 used elsewhere in the same components.",
+    "CourseCard repeats shadow-sm hover:shadow-md transition-shadow that Card already supplies (twMerge dedupes, harmless); Card's transition is shadow-only so ring/bg state changes on SemesterColumn (focus, isOver) snap with no transition.",
+    "Four border radii in one surface: rounded (chips), rounded-md (read-only rows), rounded-lg (Card, dashed empty box), rounded-full (status pill, Focus badge, icon buttons).",
+    "Inconsistent chip padding: default chips px-1.5, compact chips px-1, read-only compact chips px-1.5 — compact CourseCard and compact ReadOnly rows use different chip metrics at the same text-[10px] size.",
+    "Credit meta sizing differs between compact CourseCard (text-[10px] text-gray-500) and ReadOnly rows (text-xs text-gray-500) for the same '{n}학점' string; semester subtitle margin is mt-1 in SemesterColumn but mt-0.5 in ReadOnly.",
+    "Hover color on the SVG glyph itself (hover:text-red-500 / hover:text-amber-500) fires only when the pointer is over the 16px icon, not the padded button; the button's hover:bg fires on the whole 24px target — mismatched feedback areas. Remove button hover bg is white on an already light card (hover:bg-white) — nearly invisible on completed (gray-50) cards and literally invisible if a parent is white.",
+    "Clickable header <div onClick> in SemesterColumn (onFocus) and ReadOnlySemesterColumn (toggle) has cursor-pointer but no role=button, tabIndex or key handler — not keyboard reachable; ReadOnly nests a <button> inside that clickable div (double activation target).",
+    "Compact status pill button sits inside the dnd-kit draggable wrapper that spreads listeners on the whole card; handleStatusClick stops propagation of click but pointerdown still reaches the drag sensor — no activationConstraint is visible in these files, so tap vs drag conflicts are possible on nested buttons.",
+    "First-time 'pulse' hint is a module-level mutable boolean (statusHintShown) — shared across all cards, resets on reload, never persisted; it also only exists in compact mode while the tooltip title (클릭하여 상태 변경: 예정 ↔ 이수) is likewise compact-only, leaving the default-mode toggle unexplained.",
+    "Status toggle is a 2-step planned↔completed cycle; enrolled and failed can only be clicked into completed and the UI never offers 수강중/재수강 as targets, yet the aria-label says generic '상태 변경'.",
+    "Destructive confirmations use native window.confirm (unstyled, 합니다체) while the rest of the planner is custom-styled; 'Focus' badge is English in a Korean UI; thrown error text in useCourseStatus is English and never surfaced — status update failures roll back silently with no toast.",
+    "departmentLabel coloring branches on Korean string equality ('복수전공' / '부전공') rather than an enum key.",
+    "Compact clamp uses two independently hard-coded limits (MAX_VISIBLE = 4 and max-h-[280px]) that must be kept in sync with compact card height by hand.",
+    "No prerequisite warning, credit-overload warning, or threshold coloring exists in these planner files: credit totals are plain text-gray-500 regardless of value; any such warnings must live elsewhere (outside this reader's list).",
+    "No DragOverlay is rendered here; the drag ghost is the source element itself at opacity-50 translated via CSS.Translate — overlay styling (if any) is in the parent planner page, not in these files.",
+    "Gray scale is consistently gray-* in these four files (no slate/zinc/neutral mix); Card base sets text-gray-900 but every text node overrides to gray-800/500/400, so gray-900 is only visible via the currentColor borders noted above."
+  ]
+}

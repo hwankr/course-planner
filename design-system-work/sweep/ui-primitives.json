@@ -1,0 +1,308 @@
+{
+  "files_read": [
+    "/home/user/course-planner/src/components/ui/SearchableSelect.tsx",
+    "/home/user/course-planner/src/components/ui/CopyEmail.tsx",
+    "/home/user/course-planner/src/components/ui/Footer.tsx",
+    "/home/user/course-planner/src/components/ui/ZoomableImage.tsx",
+    "/home/user/course-planner/src/components/ErrorBoundary.tsx",
+    "/home/user/course-planner/src/stores/toastStore.ts",
+    "/home/user/course-planner/src/app/globals.css (grep only, to resolve animate-in/fade-in)",
+    "/home/user/course-planner/package.json (grep only, to check for tailwindcss-animate)"
+  ],
+  "components": [
+    {
+      "name": "SearchableSelect",
+      "file": "src/components/ui/SearchableSelect.tsx",
+      "purpose": "Client-side combobox: text input that filters a flat or grouped option list, with clear (X) button, click-outside and Escape to close. Named export.",
+      "props": "export interface SearchableSelectOption { value: string; label: string; group?: string; }\nexport interface SearchableSelectProps { options: SearchableSelectOption[]; value: string; onChange: (value: string) => void; placeholder?: string; /* default '선택하세요' */ disabled?: boolean; /* default false */ className?: string; /* default '' */ }",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "relative ${className}", "states": [] },
+        { "part": "input-wrapper", "tag": "div", "classes": "relative" },
+        { "part": "input", "tag": "input[type=text]", "classes": "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50 pr-8", "text": "placeholder: 선택하세요", "states": [
+          { "state": "focus", "classes": "focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:border-transparent" },
+          { "state": "disabled", "classes": "disabled:cursor-not-allowed disabled:opacity-50" },
+          { "state": "open", "classes": "(value shows searchTerm instead of selectedOption.label)" }
+        ] },
+        { "part": "clear-button", "tag": "button[type=button]", "classes": "absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600", "states": [
+          { "state": "hover", "classes": "hover:text-gray-600" },
+          { "state": "visible-when", "classes": "value && !disabled" }
+        ] },
+        { "part": "clear-icon", "tag": "svg (inline, fill=none stroke=currentColor viewBox 0 0 24 24, strokeWidth 2, round caps/joins, d=M6 18L18 6M6 6l12 12)", "classes": "h-4 w-4" },
+        { "part": "dropdown", "tag": "div", "classes": "absolute z-50 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg max-h-60 overflow-y-auto", "states": [
+          { "state": "visible-when", "classes": "isOpen && !disabled" }
+        ] },
+        { "part": "empty-state", "tag": "div", "classes": "px-3 py-2 text-sm text-gray-500 text-center", "text": "검색 결과가 없습니다." },
+        { "part": "option", "tag": "button[type=button]", "classes": "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${option.value === value ? 'bg-[#153974]/10 text-[#153974] font-medium' : ''}", "states": [
+          { "state": "default", "classes": "w-full text-left px-3 py-2 text-sm hover:bg-gray-100" },
+          { "state": "hover", "classes": "hover:bg-gray-100" },
+          { "state": "selected", "classes": "bg-[#153974]/10 text-[#153974] font-medium" }
+        ] },
+        { "part": "group-header", "tag": "div", "classes": "text-xs font-semibold text-gray-500 uppercase px-3 py-1 bg-gray-50" }
+      ],
+      "notes": "Ungrouped options render first, then grouped options under their header. Filtering is case-insensitive on label. Clear button stops propagation, resets value to '' and refocuses input. No ARIA roles (combobox/listbox/option), no aria-label on the clear button, no arrow-key navigation; only Escape and click-outside are handled."
+    },
+    {
+      "name": "CopyEmail",
+      "file": "src/components/ui/CopyEmail.tsx",
+      "purpose": "Footer-only button that copies an email to clipboard and shows a 2-second '복사됨!' confirmation. Named export.",
+      "props": "{ email: string }",
+      "elements": [
+        { "part": "root", "tag": "button[type=button] title=\"클릭하여 복사\"", "classes": "text-sm text-gray-400 transition-colors hover:text-white cursor-pointer", "text": "Contact : {email}", "states": [
+          { "state": "hover", "classes": "hover:text-white" },
+          { "state": "copied (2000ms)", "classes": "renders child span .ml-2.text-xs.text-[#00AACA]" }
+        ] },
+        { "part": "copied-badge", "tag": "span", "classes": "ml-2 text-xs text-[#00AACA]", "text": "복사됨!" }
+      ],
+      "notes": "Colors (gray-400 -> white) presuppose a dark background; only meaningful inside Footer. navigator.clipboard.writeText has no try/catch. No aria-live on the confirmation."
+    },
+    {
+      "name": "Footer",
+      "file": "src/components/ui/Footer.tsx",
+      "purpose": "Site footer on dark navy: gradient hairline on top, 4-column (2 on mobile) link grid with brand column, bottom bar with copyright and mail icon, 3-stop brand gradient bar at the very bottom. Server component (no 'use client'). Named export.",
+      "props": "(none)",
+      "elements": [
+        { "part": "root", "tag": "footer", "classes": "mt-auto" },
+        { "part": "top-gradient-hairline", "tag": "div", "classes": "h-px bg-gradient-to-r from-transparent via-[#3069B3] to-transparent" },
+        { "part": "body", "tag": "div", "classes": "bg-[#0d2654] pt-16 pb-8" },
+        { "part": "container", "tag": "div", "classes": "container mx-auto px-4" },
+        { "part": "grid", "tag": "div", "classes": "grid grid-cols-2 md:grid-cols-4 gap-10 mb-12" },
+        { "part": "brand-column", "tag": "div", "classes": "col-span-2 md:col-span-1" },
+        { "part": "logo-link", "tag": "Link href=\"/\"", "classes": "flex items-center gap-2 mb-4" },
+        { "part": "logo-image", "tag": "next/image src=\"/yu-logo-white.svg\" alt=\"영남대학교\" width={120} height={48}", "classes": "h-6", "inline_style": "{ width: 'auto' }" },
+        { "part": "brand-name", "tag": "span", "classes": "font-bold text-lg text-white", "text": "YU 수강 플래너" },
+        { "part": "brand-tagline (EMPTY)", "tag": "p", "classes": "text-gray-400 text-sm leading-relaxed mb-3", "text": "(empty — renders nothing but keeps mb-3 spacing)" },
+        { "part": "brand-contact", "tag": "<CopyEmail email=\"fabronjeon@gmail.com\" />", "classes": "(see CopyEmail)" },
+        { "part": "column-heading", "tag": "h4", "classes": "text-xs font-semibold text-white tracking-widest uppercase mb-5", "text": "Service | Support | Legal" },
+        { "part": "link-list", "tag": "ul", "classes": "space-y-3 text-sm text-gray-400" },
+        { "part": "link", "tag": "Link / a", "classes": "hover:text-[#00AACA] transition-colors", "text": "수강 계획 (/planner) · 졸업 요건 추적 (/planner) · 학과 통계 (/statistics) · 도움말 (/help) · 문의 및 건의 (/help/feedback) · 영남대학교 바로가기 (https://www.yu.ac.kr/main/index.do, target=_blank rel=noreferrer) · 개인정보처리방침 (/privacy) · 이용약관 (/terms)", "states": [
+          { "state": "hover", "classes": "hover:text-[#00AACA]" }
+        ] },
+        { "part": "legal-disclaimer", "tag": "p", "classes": "mt-4 text-xs text-gray-500 leading-relaxed", "text": "이 서비스는 영남대학교 공식 서비스가 아닙니다" },
+        { "part": "bottom-bar", "tag": "div", "classes": "border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4" },
+        { "part": "copyright", "tag": "p", "classes": "text-xs text-gray-500", "text": "© {new Date().getFullYear()} YU 수강 플래너. All rights reserved." },
+        { "part": "social-row", "tag": "div", "classes": "flex space-x-5" },
+        { "part": "mail-link", "tag": "a href=\"mailto:fabronjeon@gmail.com\"", "classes": "text-gray-500 hover:text-white transition-colors", "states": [
+          { "state": "hover", "classes": "hover:text-white" }
+        ] },
+        { "part": "mail-icon", "tag": "<Mail /> (lucide-react)", "classes": "w-4 h-4" },
+        { "part": "bottom-gradient-bar", "tag": "div", "classes": "h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]" }
+      ],
+      "notes": "Layout: footer body #0d2654 (not one of the brand trio) with pt-16 pb-8; grid is 2 columns on mobile where the brand column spans both (col-span-2) and 4 columns from md:. Column headings are English uppercase tracked labels; links are Korean. Logo: /yu-logo-white.svg at h-6 with width auto beside 'YU 수강 플래너' in font-bold text-lg text-white. Two gradients: a 1px hairline fading in/out through #3069B3 on top, and a 4px solid brand gradient #153974 -> #3069B3 -> #00AACA at the bottom."
+    },
+    {
+      "name": "ZoomableImage",
+      "file": "src/components/ui/ZoomableImage.tsx",
+      "purpose": "Image thumbnail with hover/tap hint overlays that opens a full-screen, scrollable lightbox with close button and drag hint. Locks body scroll while open. Default export.",
+      "props": "interface ZoomableImageProps { src: string; alt: string; width: number; height: number; className?: string; /* default '' */ }",
+      "elements": [
+        { "part": "thumbnail-wrapper", "tag": "div onClick", "classes": "relative group cursor-pointer" },
+        { "part": "thumbnail-image", "tag": "next/image", "classes": "${className}" },
+        { "part": "mobile-overlay", "tag": "div", "classes": "absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/10 md:hidden", "states": [
+          { "state": "group-hover", "classes": "group-hover:bg-black/10" },
+          { "state": "md+", "classes": "md:hidden" }
+        ] },
+        { "part": "mobile-hint-pill", "tag": "div", "classes": "flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-[11px] text-white/80", "text": "탭하여 확대" },
+        { "part": "mobile-hint-icon", "tag": "<ZoomIn />", "classes": "h-3 w-3" },
+        { "part": "desktop-overlay", "tag": "div", "classes": "absolute inset-0 hidden items-center justify-center bg-black/0 transition-all group-hover:bg-black/10 md:flex", "states": [
+          { "state": "group-hover", "classes": "group-hover:bg-black/10" },
+          { "state": "md+", "classes": "md:flex" }
+        ] },
+        { "part": "desktop-hint-pill", "tag": "div", "classes": "flex items-center gap-2 rounded-full bg-[#153974]/90 px-4 py-2 text-sm font-medium text-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100", "text": "클릭하여 확대", "states": [
+          { "state": "default", "classes": "opacity-0" },
+          { "state": "group-hover", "classes": "group-hover:opacity-100" }
+        ] },
+        { "part": "desktop-hint-icon", "tag": "<ZoomIn />", "classes": "h-4 w-4" },
+        { "part": "modal-backdrop", "tag": "div onClick=close", "classes": "fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 animate-in fade-in duration-200", "states": [
+          { "state": "visible-when", "classes": "isOpen" }
+        ] },
+        { "part": "close-button", "tag": "button aria-label=\"닫기\"", "classes": "absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 active:bg-white/30", "states": [
+          { "state": "hover", "classes": "hover:bg-white/20" },
+          { "state": "active", "classes": "active:bg-white/30" }
+        ] },
+        { "part": "close-icon", "tag": "<X />", "classes": "h-6 w-6" },
+        { "part": "image-scroll-container", "tag": "div onClick=stopPropagation", "classes": "max-h-full max-w-full overflow-auto touch-pan-x touch-pan-y", "inline_style": "{ WebkitOverflowScrolling: 'touch' }" },
+        { "part": "fullscreen-image", "tag": "next/image quality={100} priority", "classes": "h-auto w-auto max-w-none" },
+        { "part": "bottom-hint-pill", "tag": "div", "classes": "absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-xs text-white/80 backdrop-blur-sm", "text": "이미지를 드래그하여 이동하세요" }
+      ],
+      "notes": "Body scroll locked via document.body.style.overflow = 'hidden' while open. Thumbnail is a clickable div (not a button): no keyboard access, no role. Modal has no role=dialog/aria-modal, no focus trap, no Escape handler. 'animate-in fade-in' are not defined anywhere in the project (no tailwindcss-animate; globals.css only has .animate-fade-in), so the modal does not actually animate."
+    },
+    {
+      "name": "ErrorBoundary (default fallback UI)",
+      "file": "src/components/ErrorBoundary.tsx",
+      "purpose": "React class error boundary; reports to Sentry and renders a centered card with warning icon, heading, explanation, dev-only collapsible stack, and a brand-navy 'retry' button that reloads the page. Named export.",
+      "props": "interface ErrorBoundaryProps { children: React.ReactNode; fallback?: React.ReactNode; }\ninterface ErrorBoundaryState { hasError: boolean; error: Error | null; }",
+      "elements": [
+        { "part": "root-card", "tag": "div", "classes": "flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-8 text-center" },
+        { "part": "icon-circle", "tag": "div", "classes": "rounded-full bg-red-100 p-3" },
+        { "part": "warning-icon", "tag": "svg (inline, fill=none stroke=currentColor viewBox 0 0 24 24, strokeWidth 2, round caps/joins, heroicons outline exclamation-triangle path M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z)", "classes": "h-8 w-8 text-red-600" },
+        { "part": "text-stack", "tag": "div", "classes": "space-y-2" },
+        { "part": "heading", "tag": "h2", "classes": "text-xl font-semibold text-gray-900", "text": "문제가 발생했습니다" },
+        { "part": "body", "tag": "p", "classes": "text-sm text-gray-600", "text": "일시적인 오류가 발생했습니다. 페이지를 새로고침하거나 잠시 후 다시 시도해주세요." },
+        { "part": "details (dev only: NODE_ENV !== 'production')", "tag": "details", "classes": "mt-4 text-left" },
+        { "part": "details-summary", "tag": "summary", "classes": "cursor-pointer text-sm text-gray-500 hover:text-gray-700", "text": "오류 상세 정보", "states": [
+          { "state": "hover", "classes": "hover:text-gray-700" }
+        ] },
+        { "part": "stack-pre", "tag": "pre", "classes": "mt-2 overflow-auto rounded bg-gray-100 p-2 text-xs text-gray-700", "text": "{error.message}\\n\\n{error.stack}" },
+        { "part": "retry-button", "tag": "button", "classes": "rounded-md bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003E7E] focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:ring-offset-2", "text": "다시 시도", "states": [
+          { "state": "hover", "classes": "hover:bg-[#003E7E]" },
+          { "state": "focus", "classes": "focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:ring-offset-2" }
+        ] }
+      ],
+      "notes": "componentDidCatch -> Sentry.captureException(error, { extra: { componentStack } }). handleReset = window.location.reload(). If props.fallback is provided it replaces this UI entirely. Primary button is hand-rolled here rather than reusing the Button primitive; its hover color #003E7E is not in the brand trio."
+    },
+    {
+      "name": "useToastStore (toastStore)",
+      "file": "src/stores/toastStore.ts",
+      "purpose": "Zustand store holding the toast queue: addToast returns an id, auto-dismisses after duration, caps the queue at 3 (drops oldest). No styling in this file.",
+      "props": "export interface Toast { id: string; message: string; description?: string; graduationDelta?: { creditsDelta: number; categoryLabel: string; categoryPct?: { before: number; after: number }; categoryCredits?: { after: number; required: number }; secondRowLabel: string; secondRowPct: { before: number; after: number }; secondRowCredits: { after: number; required: number }; }; type: 'success' | 'info' | 'warning'; action?: { label: string; onClick: () => void }; duration?: number; }\ninterface ToastState { toasts: Toast[]; addToast: (toast: Omit<Toast, 'id'>) => string; removeToast: (id: string) => void; }",
+      "elements": [
+        { "part": "store-behavior", "classes": "(no className) default duration = toast.duration ?? 5000 ms; max 3 toasts visible (newToasts.slice(-3)); id = crypto.randomUUID(); auto-dismiss via setTimeout -> removeToast(id)" }
+      ],
+      "notes": "Type union is 'success' | 'info' | 'warning' — there is no 'error' toast type. graduationDelta carries before/after percentages and after/required credit pairs for two rows (a category row and a 'second row'), implying the Toast UI renders mini progress deltas."
+    }
+  ],
+  "semantic_maps": [
+    {
+      "domain": "Toast.type union (toastStore)",
+      "file": "src/stores/toastStore.ts",
+      "entries": [
+        { "key": "success", "label": "success", "classes": "n/a in this file — styling lives in the Toast component (captured by another reader)" },
+        { "key": "info", "label": "info", "classes": "n/a in this file" },
+        { "key": "warning", "label": "warning", "classes": "n/a in this file" }
+      ]
+    },
+    {
+      "domain": "Toast timing / queue constants",
+      "file": "src/stores/toastStore.ts",
+      "entries": [
+        { "key": "defaultDuration", "label": "auto-dismiss", "classes": "5000 ms (toast.duration ?? 5000)" },
+        { "key": "maxVisible", "label": "queue cap", "classes": "3 (oldest dropped)" }
+      ]
+    },
+    {
+      "domain": "SearchableSelect option selection state",
+      "file": "src/components/ui/SearchableSelect.tsx",
+      "entries": [
+        { "key": "selected", "label": "option.value === value", "classes": "bg-[#153974]/10 text-[#153974] font-medium" },
+        { "key": "unselected", "label": "default", "classes": "(none extra) w-full text-left px-3 py-2 text-sm hover:bg-gray-100" }
+      ]
+    },
+    {
+      "domain": "CopyEmail copied feedback",
+      "file": "src/components/ui/CopyEmail.tsx",
+      "entries": [
+        { "key": "copied", "label": "복사됨!", "classes": "ml-2 text-xs text-[#00AACA] (visible 2000 ms)" }
+      ]
+    }
+  ],
+  "color_classes_seen": [
+    "border-gray-300", "bg-white", "ring-[#00AACA]", "border-transparent", "text-gray-400", "text-gray-600", "bg-gray-100", "bg-[#153974]/10", "text-[#153974]", "text-gray-500", "bg-gray-50", "text-white", "text-[#00AACA]", "from-transparent", "via-[#3069B3]", "to-transparent", "bg-[#0d2654]", "border-white/10", "from-[#153974]", "to-[#00AACA]", "bg-black/0", "bg-black/10", "bg-black/40", "text-white/80", "bg-[#153974]/90", "bg-black/95", "bg-white/10", "bg-white/20", "bg-white/30", "border-gray-200", "bg-red-100", "text-red-600", "text-gray-900", "text-gray-700", "bg-[#153974]", "bg-[#003E7E]"
+  ],
+  "typography": [
+    { "role": "input text / option label / body copy", "classes": "text-sm", "where": "SearchableSelect input and options, Footer links, ErrorBoundary body, CopyEmail" },
+    { "role": "selected option emphasis", "classes": "text-sm font-medium text-[#153974]", "where": "SearchableSelect selected option" },
+    { "role": "group / section eyebrow", "classes": "text-xs font-semibold text-gray-500 uppercase", "where": "SearchableSelect group header" },
+    { "role": "footer column eyebrow", "classes": "text-xs font-semibold text-white tracking-widest uppercase", "where": "Footer h4 Service/Support/Legal" },
+    { "role": "brand wordmark", "classes": "font-bold text-lg text-white", "where": "Footer 'YU 수강 플래너'" },
+    { "role": "fine print / legal / copyright", "classes": "text-xs text-gray-500 leading-relaxed", "where": "Footer disclaimer and copyright (copyright lacks leading-relaxed)" },
+    { "role": "inline confirmation badge", "classes": "text-xs text-[#00AACA]", "where": "CopyEmail '복사됨!'" },
+    { "role": "mobile micro hint", "classes": "text-[11px] text-white/80", "where": "ZoomableImage mobile pill" },
+    { "role": "desktop hint pill", "classes": "text-sm font-medium text-white", "where": "ZoomableImage desktop pill" },
+    { "role": "modal helper text", "classes": "text-xs text-white/80", "where": "ZoomableImage bottom hint" },
+    { "role": "error state heading", "classes": "text-xl font-semibold text-gray-900", "where": "ErrorBoundary h2" },
+    { "role": "error body", "classes": "text-sm text-gray-600", "where": "ErrorBoundary p" },
+    { "role": "disclosure summary", "classes": "text-sm text-gray-500 hover:text-gray-700", "where": "ErrorBoundary summary" },
+    { "role": "code / stack trace", "classes": "text-xs text-gray-700 (pre, monospace default)", "where": "ErrorBoundary pre" },
+    { "role": "primary button label", "classes": "text-sm font-medium text-white", "where": "ErrorBoundary retry button" }
+  ],
+  "layout_patterns": [
+    { "name": "Footer responsive grid", "description": "2 columns on mobile with brand column spanning both; 4 equal columns from md. Column gap 40px, 48px below grid.", "classes": "grid grid-cols-2 md:grid-cols-4 gap-10 mb-12 / col-span-2 md:col-span-1", "where": "Footer" },
+    { "name": "Page container", "description": "Tailwind container centered with 16px side gutters.", "classes": "container mx-auto px-4", "where": "Footer" },
+    { "name": "Footer bottom bar", "description": "Stacked on mobile, row with space-between from md; separated by a 10% white top border.", "classes": "border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4", "where": "Footer" },
+    { "name": "Gradient hairline divider", "description": "1px line fading in from transparent through brand mid-blue and back out.", "classes": "h-px bg-gradient-to-r from-transparent via-[#3069B3] to-transparent", "where": "Footer top" },
+    { "name": "Brand gradient bar", "description": "4px solid 3-stop brand gradient navy -> blue -> cyan.", "classes": "h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]", "where": "Footer bottom" },
+    { "name": "Text input with trailing icon button", "description": "h-10 rounded-md bordered input with right padding reserved (pr-8) and an absolutely centered trailing button.", "classes": "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm ... pr-8 / absolute right-2 top-1/2 -translate-y-1/2", "where": "SearchableSelect" },
+    { "name": "Anchored dropdown panel", "description": "Full-width popover directly under the trigger, capped at 240px with internal scroll, elevated with shadow-lg at z-50.", "classes": "absolute z-50 mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg max-h-60 overflow-y-auto", "where": "SearchableSelect" },
+    { "name": "List option row", "description": "Full-width left-aligned 12x8 padded row; light gray hover; brand tint + brand text + medium weight when selected.", "classes": "w-full text-left px-3 py-2 text-sm hover:bg-gray-100 [selected: bg-[#153974]/10 text-[#153974] font-medium]", "where": "SearchableSelect" },
+    { "name": "Group header strip", "description": "Uppercase xs eyebrow on gray-50 strip inside dropdown.", "classes": "text-xs font-semibold text-gray-500 uppercase px-3 py-1 bg-gray-50", "where": "SearchableSelect" },
+    { "name": "Hover-reveal overlay (group pattern)", "description": "Parent .group with absolute inset-0 overlay that tints on hover; inner pill fades in via opacity.", "classes": "relative group cursor-pointer / absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/10 / opacity-0 transition-opacity group-hover:opacity-100", "where": "ZoomableImage" },
+    { "name": "Responsive swap mobile/desktop variant", "description": "Two sibling overlays, one md:hidden and one hidden md:flex, with different copy and sizing.", "classes": "md:hidden vs hidden ... md:flex", "where": "ZoomableImage" },
+    { "name": "Pill badge", "description": "Fully rounded translucent chip with icon + text.", "classes": "rounded-full bg-black/40 px-3 py-1.5 text-[11px] text-white/80 | rounded-full bg-[#153974]/90 px-4 py-2 text-sm font-medium text-white shadow-lg | rounded-full bg-white/10 px-4 py-2 text-xs text-white/80 backdrop-blur-sm", "where": "ZoomableImage" },
+    { "name": "Fullscreen lightbox", "description": "Fixed full-viewport near-black backdrop, centered content with 16px padding, circular 40px close button top-right, hint pill bottom-center.", "classes": "fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 / absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 / absolute bottom-4 left-1/2 -translate-x-1/2", "where": "ZoomableImage" },
+    { "name": "Centered state card (error/empty)", "description": "Min 400px tall, column-centered, 16px gap, rounded-lg gray-50 card with gray-200 border and 32px padding, text centered.", "classes": "flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-8 text-center", "where": "ErrorBoundary" },
+    { "name": "Icon in tinted circle", "description": "Status icon inside a soft-tinted circular well.", "classes": "rounded-full bg-red-100 p-3 + h-8 w-8 text-red-600", "where": "ErrorBoundary" },
+    { "name": "Vertical text stack", "description": "8px vertical rhythm between heading/body.", "classes": "space-y-2", "where": "ErrorBoundary" },
+    { "name": "Primary button (hand-rolled)", "description": "Brand navy filled button, 16x8 padding, rounded-md, cyan focus ring with offset.", "classes": "rounded-md bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#003E7E] focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:ring-offset-2", "where": "ErrorBoundary" },
+    { "name": "Footer link list", "description": "12px vertical spacing, gray-400 text, cyan on hover.", "classes": "space-y-3 text-sm text-gray-400 / hover:text-[#00AACA] transition-colors", "where": "Footer" }
+  ],
+  "copy_samples": [
+    { "text": "선택하세요", "where": "SearchableSelect default placeholder", "note": "polite imperative (하세요), no period" },
+    { "text": "검색 결과가 없습니다.", "where": "SearchableSelect empty state", "note": "합니다체, ends with period" },
+    { "text": "클릭하여 복사", "where": "CopyEmail title tooltip", "note": "noun-phrase label, no period" },
+    { "text": "Contact : {email}", "where": "CopyEmail button text", "note": "English label with space before colon" },
+    { "text": "복사됨!", "where": "CopyEmail confirmation badge", "note": "terse past-participle + exclamation mark; only exclamation in these files" },
+    { "text": "YU 수강 플래너", "where": "Footer brand wordmark", "note": "Latin 'YU' + Korean" },
+    { "text": "영남대학교", "where": "Footer logo alt" },
+    { "text": "Service", "where": "Footer column heading", "note": "English, uppercase via CSS; also 'Support', 'Legal'" },
+    { "text": "수강 계획", "where": "Footer link -> /planner" },
+    { "text": "졸업 요건 추적", "where": "Footer link -> /planner" },
+    { "text": "학과 통계", "where": "Footer link -> /statistics" },
+    { "text": "도움말", "where": "Footer link -> /help" },
+    { "text": "문의 및 건의", "where": "Footer link -> /help/feedback" },
+    { "text": "영남대학교 바로가기", "where": "Footer external link -> yu.ac.kr" },
+    { "text": "개인정보처리방침", "where": "Footer link -> /privacy" },
+    { "text": "이용약관", "where": "Footer link -> /terms" },
+    { "text": "이 서비스는 영남대학교 공식 서비스가 아닙니다", "where": "Footer legal disclaimer", "note": "합니다체 (아닙니다), NO trailing period — inconsistent with error copy" },
+    { "text": "© {year} YU 수강 플래너. All rights reserved.", "where": "Footer copyright", "note": "mixed Korean/English, © via \\u00A9 escape" },
+    { "text": "탭하여 확대", "where": "ZoomableImage mobile hint", "note": "short imperative noun phrase" },
+    { "text": "클릭하여 확대", "where": "ZoomableImage desktop hint" },
+    { "text": "닫기", "where": "ZoomableImage close button aria-label" },
+    { "text": "이미지를 드래그하여 이동하세요", "where": "ZoomableImage modal bottom hint", "note": "해요체 imperative (하세요), no period" },
+    { "text": "문제가 발생했습니다", "where": "ErrorBoundary heading", "note": "합니다체, no period on heading" },
+    { "text": "일시적인 오류가 발생했습니다. 페이지를 새로고침하거나 잠시 후 다시 시도해주세요.", "where": "ErrorBoundary body", "note": "합니다체 statement + 해주세요 request, both sentences end with period" },
+    { "text": "오류 상세 정보", "where": "ErrorBoundary details summary (dev only)" },
+    { "text": "다시 시도", "where": "ErrorBoundary retry button", "note": "2-word noun-phrase button label, no period" }
+  ],
+  "motion": [
+    { "classes": "transition-colors", "where": "CopyEmail root, Footer links and mail icon, ZoomableImage close button, ErrorBoundary retry button" },
+    { "classes": "transition-all group-hover:bg-black/10 (from bg-black/0)", "where": "ZoomableImage mobile and desktop overlays" },
+    { "classes": "opacity-0 transition-opacity group-hover:opacity-100", "where": "ZoomableImage desktop hint pill" },
+    { "classes": "animate-in fade-in duration-200", "where": "ZoomableImage modal backdrop — animate-in/fade-in are NOT defined in this project (no tailwindcss-animate; globals.css only has .animate-fade-in), so no animation actually runs" },
+    { "classes": "hover:bg-white/20 active:bg-white/30", "where": "ZoomableImage close button pressed state" },
+    { "classes": "hover:text-gray-600 / hover:text-gray-700 / hover:text-white / hover:text-[#00AACA] / hover:bg-gray-100 / hover:bg-[#003E7E]", "where": "hover color shifts across SearchableSelect, ErrorBoundary, CopyEmail, Footer" },
+    { "classes": "backdrop-blur-sm", "where": "ZoomableImage bottom hint pill" },
+    { "classes": "(JS timing) copied state resets after setTimeout 2000 ms", "where": "CopyEmail" },
+    { "classes": "(JS timing) toast auto-dismiss after duration ?? 5000 ms; queue capped at 3", "where": "toastStore" }
+  ],
+  "icons": [
+    { "name": "Mail (lucide-react)", "size_classes": "w-4 h-4", "where": "Footer bottom bar mailto link" },
+    { "name": "ZoomIn (lucide-react)", "size_classes": "h-3 w-3", "where": "ZoomableImage mobile hint pill" },
+    { "name": "ZoomIn (lucide-react)", "size_classes": "h-4 w-4", "where": "ZoomableImage desktop hint pill" },
+    { "name": "X (lucide-react)", "size_classes": "h-6 w-6", "where": "ZoomableImage modal close button" },
+    { "name": "inline SVG X / close (heroicons-style, stroke currentColor, strokeWidth 2, d=\"M6 18L18 6M6 6l12 12\")", "size_classes": "h-4 w-4", "where": "SearchableSelect clear button" },
+    { "name": "inline SVG exclamation-triangle (heroicons outline, stroke currentColor, strokeWidth 2)", "size_classes": "h-8 w-8 text-red-600", "where": "ErrorBoundary icon circle" }
+  ],
+  "oddities": [
+    "Footer background bg-[#0d2654] is an off-brand hex (darker navy) not in the #153974 / #3069B3 / #00AACA trio; appears only here.",
+    "ErrorBoundary primary button hover uses hover:bg-[#003E7E], another off-brand hex; hover shade for the navy button is not derived from the trio.",
+    "ZoomableImage modal uses 'animate-in fade-in duration-200' but no tailwindcss-animate plugin is installed and globals.css only defines .animate-fade-in / -up / -down, so these are dead classes and the lightbox appears without animation.",
+    "Footer contains an empty <p className=\"text-gray-400 text-sm leading-relaxed mb-3\"></p> (tagline left blank) that still contributes mb-3 spacing.",
+    "Footer links '수강 계획' and '졸업 요건 추적' both point to /planner.",
+    "Icon source inconsistency: SearchableSelect clear button and ErrorBoundary use hand-inlined heroicons-style SVGs while ZoomableImage and Footer use lucide-react (X, ZoomIn, Mail).",
+    "Size-class order inconsistency: Footer Mail uses 'w-4 h-4' while everything else uses 'h-4 w-4'.",
+    "ErrorBoundary hand-rolls its primary button instead of reusing the Button primitive; its focus ring uses focus:ring-offset-2 while SearchableSelect's input ring has no offset.",
+    "Border-radius mix: ErrorBoundary pre uses 'rounded' (4px) while cards use rounded-lg and controls rounded-md.",
+    "One-off font size text-[11px] in the ZoomableImage mobile pill (everything else uses text-xs/text-sm).",
+    "Brand opacity variants used ad hoc: bg-[#153974]/10 (selected option tint) and bg-[#153974]/90 (desktop zoom pill).",
+    "CopyEmail is hard-coupled to a dark background (text-gray-400 -> hover:text-white) and to a personal Gmail address hard-coded twice in Footer (CopyEmail prop and mailto href).",
+    "Footer column headings are English ('Service', 'Support', 'Legal') while all links are Korean; copyright line is mixed Korean/English.",
+    "Punctuation inconsistency: ErrorBoundary body and SearchableSelect empty state end with periods, while the Footer disclaimer '이 서비스는 영남대학교 공식 서비스가 아닙니다' and most hints do not; '복사됨!' is the only exclamation.",
+    "Contrast concern: text-gray-500 (fine print, copyright, mail icon) on #0d2654 footer background is roughly 3.5:1 — below AA 4.5:1 for text-xs copy. text-white/80 on bg-black/40 over an arbitrary image may also fail depending on the underlying picture.",
+    "Accessibility: SearchableSelect has no role=combobox/listbox/option, no aria-expanded, no aria-label on the clear button, no arrow-key navigation (Escape and click-outside only). ZoomableImage thumbnail is a clickable div (not focusable), modal lacks role=dialog/aria-modal, focus trap and Escape handling. CopyEmail confirmation has no aria-live.",
+    "SearchableSelect option: hover:bg-gray-100 wins over bg-[#153974]/10 when hovering the selected option, so the selected tint disappears on hover.",
+    "ZoomableImage is a default export while the other ui/ primitives are named exports.",
+    "toastStore type union is 'success' | 'info' | 'warning' only — there is no 'error' variant; default duration 5000 ms, hard cap of 3 toasts (oldest dropped).",
+    "Footer 'flex space-x-5' social row has a single child (Mail), so the spacing utility is unused.",
+    "Only gray-* neutrals appear in these files (no slate/zinc) — consistent within this slice."
+  ]
+}

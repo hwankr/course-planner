@@ -1,0 +1,226 @@
+/* Footer — hand-translated from src/components/ui/Footer.tsx (hairline, navy body, 4-column grid, bottom bar, gradient bar) and src/components/ui/CopyEmail.tsx (the Contact button and its 복사됨! span) */
+
+/* Block = <footer class="mt-auto">. It inherits the body context globals.css sets (Arial 16px/1.5,
+   foreground); every visible text below sets its own color. */
+.cp-footer {
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  margin-top: auto;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.cp-footer *,
+.cp-footer *::before,
+.cp-footer *::after {
+  box-sizing: border-box;
+}
+
+/* Top hairline: h-px bg-gradient-to-r from-transparent via-[#3069B3] to-transparent (v4 interpolates in oklab) */
+.cp-footer__hairline {
+  height: 1px;
+  background-image: linear-gradient(to right in oklab, var(--transparent, #00000000), var(--yu-blue, #3069b3), var(--transparent, #00000000));
+}
+
+/* Body: bg-[#0d2654] pt-16 pb-8 */
+.cp-footer__body {
+  background-color: var(--footer-navy, #0d2654);
+  padding-top: var(--space-16, 64px);
+  padding-bottom: var(--space-8, 32px);
+}
+
+/* container mx-auto px-4. Tailwind v4 `container` is width 100% plus a max-width equal to each
+   viewport breakpoint (sm 640, md 768, lg 1024, xl 1280, 2xl 1536); the breakpoint widths are
+   layout constants, not tokens. */
+.cp-footer__container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4, 16px);
+  padding-right: var(--space-4, 16px);
+}
+@media (min-width: 640px)  { .cp-footer__container { max-width: 640px; } }
+@media (min-width: 768px)  { .cp-footer__container { max-width: 768px; } }
+@media (min-width: 1024px) { .cp-footer__container { max-width: 1024px; } }
+@media (min-width: 1280px) { .cp-footer__container { max-width: 1280px; } }
+@media (min-width: 1536px) { .cp-footer__container { max-width: 1536px; } }
+
+/* Grid: grid grid-cols-2 md:grid-cols-4 gap-10 mb-12 */
+.cp-footer__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-10, 40px);
+  margin-bottom: var(--space-12, 48px);
+}
+
+/* Brand column: col-span-2 md:col-span-1 */
+.cp-footer__brand {
+  grid-column: span 2 / span 2;
+}
+@media (min-width: 768px) {
+  .cp-footer__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cp-footer__brand { grid-column: span 1 / span 1; }
+}
+
+/* Logo link: <Link href="/" class="flex items-center gap-2 mb-4">; no hover or focus style of its own */
+.cp-footer__logo-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-4, 16px);
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/* Logo: next/image width=120 height=48, style width:auto, class h-6 → 24px tall, width from the
+   SVG's 297.4×57.3 viewBox (about 125px). color:transparent hides alt text while loading. */
+.cp-footer__logo {
+  display: block;
+  height: var(--space-6, 24px);
+  width: auto;
+  max-width: 100%;
+  color: transparent;
+}
+
+/* Wordmark: font-bold text-lg text-white */
+.cp-footer__wordmark {
+  font: 700 18px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--white, #ffffff);
+}
+
+/* Blurb: text-gray-400 text-sm leading-relaxed mb-3. Empty in the source: zero height, and its
+   bottom margin collapses into the logo link's mb-4. */
+.cp-footer__blurb {
+  margin: 0 0 var(--space-3, 12px);
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+
+/* CopyEmail: <button type="button" class="text-sm text-gray-400 transition-colors hover:text-white cursor-pointer" title="클릭하여 복사">
+   Preflight resets (no border, transparent fill, zero padding) plus the one explicit pointer cursor in the footer. */
+.cp-footer__copy-email {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  border-radius: 0;
+  background-color: transparent;
+  appearance: button;
+  text-transform: none;
+  letter-spacing: inherit;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-footer__copy-email:hover,
+.cp-footer__copy-email.is-hover {
+  color: var(--white, #ffffff);
+}
+
+/* Copied feedback, rendered for 2000 ms after a click: <span class="ml-2 text-xs text-[#00AACA]">복사됨!</span> */
+.cp-footer__copied {
+  margin-left: var(--space-2, 8px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-cyan, #00aaca);
+}
+
+/* Column heading: <h4 class="text-xs font-semibold text-white tracking-widest uppercase mb-5"> */
+.cp-footer__heading {
+  margin: 0 0 var(--space-5, 20px);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--white, #ffffff);
+}
+
+/* Link list: <ul class="space-y-3 text-sm text-gray-400"> (preflight: no bullets, no margin, no padding) */
+.cp-footer__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+.cp-footer__list > * + * {
+  margin-top: var(--space-3, 12px);
+}
+
+/* Link: hover:text-[#00AACA] transition-colors; the resting gray-400 is inherited from the list */
+.cp-footer__link {
+  color: inherit;
+  text-decoration: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-footer__link:hover,
+.cp-footer__link.is-hover {
+  color: var(--yu-cyan, #00aaca);
+}
+
+/* Disclaimer under Legal: <p class="mt-4 text-xs text-gray-500 leading-relaxed"> */
+.cp-footer__disclaimer {
+  margin: var(--space-4, 16px) 0 0;
+  font: 400 12px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Bottom bar: border-t border-white/10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 */
+.cp-footer__bottom {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4, 16px);
+  border-top: 1px solid var(--white-a10, #ffffff1a);
+  padding-top: var(--space-6, 24px);
+}
+@media (min-width: 768px) {
+  .cp-footer__bottom { flex-direction: row; }
+}
+
+/* Copyright: <p class="text-xs text-gray-500"> */
+.cp-footer__copyright {
+  margin: 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Icon row: <div class="flex space-x-5"> (a single child in the source, so the spacing never shows) */
+.cp-footer__social {
+  display: flex;
+}
+.cp-footer__social > * + * {
+  margin-left: var(--space-5, 20px);
+}
+
+/* Mail link: <a href="mailto:…" class="text-gray-500 hover:text-white transition-colors"> */
+.cp-footer__icon-link {
+  color: var(--gray-500, #6a7282);
+  text-decoration: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-footer__icon-link:hover,
+.cp-footer__icon-link.is-hover {
+  color: var(--white, #ffffff);
+}
+
+/* Mail icon: lucide <Mail class="w-4 h-4" />, 2px stroke in currentColor; preflight makes svg display:block */
+.cp-footer__icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* Bottom gradient bar: h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] */
+.cp-footer__bar {
+  height: var(--space-1, 4px);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+}

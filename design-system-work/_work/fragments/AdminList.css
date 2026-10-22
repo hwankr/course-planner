@@ -1,0 +1,545 @@
+/* AdminList — pattern extracted from src/app/(dashboard)/admin/page.tsx, admin/courses/page.tsx, admin/users/page.tsx and admin/departments/page.tsx; stat, menu and row containers reuse .cp-card (src/components/ui/Card.tsx), filter controls reuse .cp-input--soft (src/components/ui/Input.tsx) */
+
+/* Block = the page root <div className="space-y-6">. Nothing on it sets a color, so text inherits the body
+   `foreground`; inside a Card the Card's gray-900 takes over. */
+.cp-admin {
+  box-sizing: border-box;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+}
+.cp-admin *,
+.cp-admin *::before,
+.cp-admin *::after {
+  box-sizing: border-box;
+}
+.cp-admin > * + * {
+  margin-top: var(--space-6, 24px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Dashboard (admin/page.tsx)
+   --------------------------------------------------------------------------------------------- */
+
+/* Stats grid: grid grid-cols-2 md:grid-cols-4 gap-4 */
+.cp-admin__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4, 16px);
+}
+@media (min-width: 768px) {
+  .cp-admin__stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* <CardContent className="pt-6">: cn("p-6 pt-0", "pt-6") keeps p-6 and drops pt-0 → 24px on every side. */
+.cp-card__content.cp-admin__stat-content {
+  padding: var(--space-6, 24px);
+}
+
+/* Stat value <div>: text-3xl font-bold (heading-1 size) in one of four decorative accents. All four are
+   30px bold, so the 3:1 large-text floor applies: yu-navy 11.2:1, purple-600 ~6:1, orange-600 3.9:1,
+   green-600 3.2:1 on white. */
+.cp-admin__stat-value {
+  font: 700 30px/36px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-admin__stat-value--navy   { color: var(--yu-navy, #153974); }
+.cp-admin__stat-value--green  { color: var(--green-600, #00a63e); }
+.cp-admin__stat-value--purple { color: var(--purple-600, #9810fa); }
+.cp-admin__stat-value--orange { color: var(--orange-600, #f54900); }
+
+/* Stat label <p>: text-sm text-gray-600 (body-sm). Preflight: no margin. */
+.cp-admin__stat-label {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* Inline stat skeleton while the query loads: <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-200"> */
+.cp-admin__stat-skeleton {
+  display: inline-block;
+  width: var(--space-12, 48px);
+  height: var(--space-8, 32px);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--slate-200, #e2e8f0);
+  animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Menu grid: grid grid-cols-1 md:grid-cols-2 gap-4; each cell is a Next <Link> (an <a> with no classes) */
+.cp-admin__menus {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-4, 16px);
+}
+@media (min-width: 768px) {
+  .cp-admin__menus { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* The <a>: preflight gives links color: inherit and text-decoration: inherit; as a grid item it is blockified. */
+.cp-admin__menu-link {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/* <Card className="hover:shadow-md transition-shadow cursor-pointer h-full"> — hover:shadow-md and
+   transition-shadow repeat the Card base; cursor-pointer and h-full are the additions. */
+.cp-card.cp-admin__menu-card {
+  height: 100%;
+  cursor: pointer;
+}
+
+/* <CardTitle className="text-lg">: cn replaces text-2xl with text-lg; leading-none and tracking-tight stay → 18px/1. */
+.cp-card__title.cp-admin__menu-title {
+  font: 600 18px/1 var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: -0.025em;
+}
+
+/* CardHeader's space-y-1.5 restated for the menu grid: in the Card fragment `.cp-card__description { margin: 0 }`
+   shares the specificity of `.cp-card__header > * + *` and is declared later, so the 6px gap is lost there;
+   the source renders 6px between title and description. */
+.cp-admin__menus .cp-card__header > * + * {
+  margin-top: var(--space-1-5, 6px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   List page filter bar (courses recipe; users and departments differ only in padding, see README)
+   --------------------------------------------------------------------------------------------- */
+
+/* flex flex-wrap gap-3 */
+.cp-admin__filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+}
+
+/* Filter controls are bare <input>/<select> in the soft recipe with bg-white and NO width class, so the
+   .cp-input stand-in wrapper and its field shrink to their intrinsic size here. */
+.cp-admin__filters .cp-input {
+  width: auto;
+}
+.cp-admin__filters .cp-input--soft .cp-input__field {
+  width: auto;
+  background-color: var(--white, #ffffff);
+}
+
+/* Search wrapper <div className="relative"> */
+.cp-admin__search {
+  position: relative;
+}
+
+/* <input className="… py-2 pl-9 pr-8 …">: pl-9 is 36px — the scale has no space-9 token, so it is written
+   as 3 × space-3; pr-8 clears the 16px clear button sitting 8px from the right edge. */
+.cp-admin__search.cp-input--soft .cp-input__field {
+  padding: var(--space-2, 8px) var(--space-8, 32px) var(--space-2, 8px) calc(var(--space-3, 12px) * 3);
+}
+
+/* <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /> */
+.cp-admin__search-icon {
+  position: absolute;
+  left: var(--space-3, 12px);
+  top: 50%;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  transform: translateY(-50%);
+  color: var(--slate-400, #90a1b9);
+  pointer-events: none;
+}
+
+/* Clear <button className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer">,
+   rendered only while the search term is non-empty. Preflight: zero padding/border, transparent fill. */
+.cp-admin__search-clear {
+  position: absolute;
+  right: var(--space-2, 8px);
+  top: 50%;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  border-radius: 0;
+  background-color: transparent;
+  appearance: button;
+  font: inherit;
+  color: var(--slate-400, #90a1b9);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+.cp-admin__search-clear:hover,
+.cp-admin__search-clear.is-hover {
+  color: var(--slate-600, #45556c);
+}
+.cp-admin__search-clear .cp-admin__icon {
+  display: block;
+}
+
+/* Generic 16px lucide glyph (h-4 w-4); preflight makes svg display:block. */
+.cp-admin__icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Rows (courses recipe)
+   --------------------------------------------------------------------------------------------- */
+
+/* List <div className="space-y-3"> */
+.cp-admin__list > * + * {
+  margin-top: var(--space-3, 12px);
+}
+
+/* <Card className="overflow-hidden"> */
+.cp-card.cp-admin__row {
+  overflow: hidden;
+}
+
+/* <CardContent className="p-4 sm:p-5">: cn drops p-6 and pt-0 → 16px, 20px from sm. */
+.cp-card__content.cp-admin__row-content {
+  padding: var(--space-4, 16px);
+}
+@media (min-width: 640px) {
+  .cp-card__content.cp-admin__row-content { padding: var(--space-5, 20px); }
+}
+
+/* flex flex-wrap items-start justify-between gap-2 */
+.cp-admin__row-flex {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+}
+
+/* min-w-0 flex-1 */
+.cp-admin__row-info {
+  min-width: 0;
+  flex: 1 1 0%;
+}
+
+/* flex flex-wrap items-center gap-2 */
+.cp-admin__row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+/* <span className="text-sm font-bold text-slate-800"> */
+.cp-admin__code {
+  font: 700 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-800, #1d293d);
+}
+
+/* <span className="text-sm font-medium text-slate-700"> (body-sm-medium) */
+.cp-admin__name {
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-700, #314158);
+}
+
+/* Category badge: inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold + CATEGORY_COLORS[category] */
+.cp-admin__badge {
+  display: inline-flex;
+  padding: var(--space-0-5, 2px) var(--space-2-5, 10px);
+  border-radius: var(--radius-full, 9999px);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-admin__badge--major-required    { background-color: var(--red-100, #ffe2e2);    color: var(--red-700, #c10007); }
+.cp-admin__badge--major-compulsory  { background-color: var(--orange-100, #ffedd4); color: var(--orange-700, #ca3500); }
+.cp-admin__badge--major-elective    { background-color: var(--blue-100, #dbeafe);   color: var(--blue-700, #1447e6); }
+.cp-admin__badge--general-required  { background-color: var(--green-100, #dcfce7);  color: var(--green-700, #008236); }
+.cp-admin__badge--general-elective  { background-color: var(--teal-100, #cbfbf1);   color: var(--teal-700, #00786f); }
+.cp-admin__badge--free-elective     { background-color: var(--gray-100, #f3f4f6);   color: var(--gray-700, #364153); }
+.cp-admin__badge--teaching          { background-color: var(--purple-100, #f3e8ff); color: var(--purple-700, #8200db); }
+
+/* Credits badge: inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 (caption-medium) */
+.cp-admin__badge--credits {
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-600, #45556c);
+  font-weight: 500;
+}
+
+/* Meta line: mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400 — caption in slate-400 (2.6:1 on white, source pair kept) */
+.cp-admin__row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-2, 8px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+
+/* Actions <div className="flex items-center gap-2"> */
+.cp-admin__row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+/* Icon button: rounded-lg p-2 text-slate-400 transition-colors cursor-pointer, with a 16px lucide glyph → 32px square.
+   Preflight: zero border, transparent fill, font/color inherit. */
+.cp-admin__icon-button {
+  display: inline-block;
+  margin: 0;
+  padding: var(--space-2, 8px);
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  appearance: button;
+  font: inherit;
+  color: var(--slate-400, #90a1b9);
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* title="수정": hover:bg-slate-100 hover:text-slate-600 */
+.cp-admin__icon-button--edit:hover,
+.cp-admin__icon-button--edit.is-hover {
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-600, #45556c);
+}
+/* title="삭제": hover:bg-red-50 hover:text-red-600 */
+.cp-admin__icon-button--delete:hover,
+.cp-admin__icon-button--delete.is-hover {
+  background-color: var(--red-50, #fef2f2);
+  color: var(--red-600, #e7000b);
+}
+
+/* Step two of the inline delete: <div className="flex items-center gap-1"> replaces the Trash2 button */
+.cp-admin__confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Text buttons. One base (preflight reset + rounded-lg + cursor-pointer) and one modifier per source
+   recipe. The app has no shared class for these; each modifier is named after the file it comes from.
+   --------------------------------------------------------------------------------------------- */
+.cp-admin__btn {
+  display: inline-block;
+  margin: 0;
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  appearance: button;
+  text-transform: none;
+  letter-spacing: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* courses/page.tsx — inline 삭제: rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 (no transition) */
+.cp-admin__btn--danger-courses-inline {
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--red-600, #e7000b);
+  color: var(--white, #ffffff);
+}
+.cp-admin__btn--danger-courses-inline:hover,
+.cp-admin__btn--danger-courses-inline.is-hover {
+  background-color: var(--red-700, #c10007);
+}
+
+/* courses/page.tsx — inline 취소: rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-300 (no transition) */
+.cp-admin__btn--cancel-courses-inline {
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--slate-200, #e2e8f0);
+  color: var(--slate-600, #45556c);
+}
+.cp-admin__btn--cancel-courses-inline:hover,
+.cp-admin__btn--cancel-courses-inline.is-hover {
+  background-color: var(--slate-300, #cad5e2);
+}
+
+/* courses/page.tsx — form-modal 취소: rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-300 (no transition) */
+.cp-admin__btn--cancel-courses-modal {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--slate-200, #e2e8f0);
+  color: var(--slate-600, #45556c);
+}
+.cp-admin__btn--cancel-courses-modal:hover,
+.cp-admin__btn--cancel-courses-modal.is-hover {
+  background-color: var(--slate-300, #cad5e2);
+}
+
+/* departments/page.tsx — form-modal and delete-modal 취소 (ghost): rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 */
+.cp-admin__btn--cancel-departments {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-admin__btn--cancel-departments:hover,
+.cp-admin__btn--cancel-departments.is-hover {
+  background-color: var(--slate-100, #f1f5f9);
+}
+
+/* users/page.tsx — delete-confirm 취소: rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200 */
+.cp-admin__btn--cancel-users {
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-600, #45556c);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-admin__btn--cancel-users:hover,
+.cp-admin__btn--cancel-users.is-hover {
+  background-color: var(--slate-200, #e2e8f0);
+}
+
+/* departments/page.tsx — delete-modal 삭제: rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 */
+.cp-admin__btn--danger-departments {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--red-600, #e7000b);
+  color: var(--white, #ffffff);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-admin__btn--danger-departments:hover,
+.cp-admin__btn--danger-departments.is-hover {
+  background-color: var(--red-700, #c10007);
+}
+
+/* users/page.tsx — 삭제 확인 / 삭제 중...: rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 */
+.cp-admin__btn--danger-users {
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--red-600, #e7000b);
+  color: var(--white, #ffffff);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-admin__btn--danger-users:hover,
+.cp-admin__btn--danger-users.is-hover {
+  background-color: var(--red-700, #c10007);
+}
+.cp-admin__btn--danger-users:disabled,
+.cp-admin__btn--danger-users.is-disabled {
+  opacity: var(--opacity-disabled, 0.5);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Confirm modal (departments/page.tsx 학과 삭제)
+   --------------------------------------------------------------------------------------------- */
+
+/* Overlay <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"> */
+.cp-admin__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--black-a50, #00000080);
+}
+/* Preview-only modifier (not in the source): the same overlay held inside a stage instead of covering the viewport. */
+.cp-admin__overlay--staged {
+  position: relative;
+  inset: auto;
+  padding: var(--space-6, 24px);
+}
+
+/* Panel <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"> */
+.cp-admin__dialog {
+  width: 100%;
+  max-width: var(--container-sm, 384px);
+  padding: var(--space-6, 24px);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1));
+}
+
+/* <h2 className="text-lg font-bold text-gray-900"> — heading-4 size at 700 */
+.cp-admin__dialog-title {
+  margin: 0;
+  font: 700 18px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* <p className="mt-2 text-sm text-slate-600"> (body-sm) */
+.cp-admin__dialog-body {
+  margin: var(--space-2, 8px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+
+/* <div className="mt-4 flex items-center justify-end gap-3"> */
+.cp-admin__dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-4, 16px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Empty, error and loading boxes
+   --------------------------------------------------------------------------------------------- */
+
+/* <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center"> */
+.cp-admin__empty {
+  padding: var(--space-12, 48px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  text-align: center;
+}
+
+/* <BookOpen className="mx-auto h-12 w-12 text-slate-300" /> (User on users, Search on departments) */
+.cp-admin__empty-icon {
+  display: block;
+  width: var(--space-12, 48px);
+  height: var(--space-12, 48px);
+  margin: 0 auto;
+  color: var(--slate-300, #cad5e2);
+}
+
+/* <p className="mt-4 text-sm text-slate-500"> — body-sm in slate-500 (4.8:1) */
+.cp-admin__empty-text {
+  margin: var(--space-4, 16px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+
+/* <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600"> */
+.cp-admin__error {
+  padding: var(--space-6, 24px);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--red-50, #fef2f2);
+  text-align: center;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-600, #e7000b);
+}
+
+/* Loading list: <div className="space-y-4"> of h-24 tiles (courses, departments use space-y-4; users space-y-3 with h-20) */
+.cp-admin__skeleton > * + * {
+  margin-top: var(--space-4, 16px);
+}
+.cp-admin__skeleton--tight > * + * {
+  margin-top: var(--space-3, 12px);
+}
+
+/* <div className="h-24 animate-pulse rounded-2xl bg-slate-200" /> */
+.cp-admin__skeleton-row {
+  height: var(--space-24, 96px);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--slate-200, #e2e8f0);
+  animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+/* h-20 variant (users list, departments list) */
+.cp-admin__skeleton-row--sm {
+  height: var(--space-20, 80px);
+}
+
+@keyframes cp-pulse {
+  50% { opacity: 0.5; }
+}

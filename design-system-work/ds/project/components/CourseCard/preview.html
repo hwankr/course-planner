@@ -1,0 +1,243 @@
+<!-- @dsCard group="Planner" height=490 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>CourseCard — preview</title>
+<style>
+  body { margin: 16px; font-family: Arial, Helvetica, sans-serif; }
+  .section + .section { margin-top: 24px; }
+  .label { margin: 0 0 8px; font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .cap { margin: 0; font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <p class="label">Default mode · status surfaces, category and department chips, outlined status pill, remove X</p>
+  <div class="grid">
+
+    <div>
+      <div class="cp-course-card cp-course-card--planned">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <div class="cp-course-card__chips">
+              <span class="cp-course-card__chip cp-course-card__chip--major-required">전공핵심</span>
+              <button class="cp-course-card__status cp-course-card__status--button" aria-label="상태 변경: 계획">계획</button>
+            </div>
+            <p class="cp-course-card__name">자료구조</p>
+            <p class="cp-course-card__credits">3학점</p>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">planned · 전공핵심 · 계획 toggle</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--enrolled">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <div class="cp-course-card__chips">
+              <span class="cp-course-card__chip cp-course-card__chip--major-elective">전공선택</span>
+              <button class="cp-course-card__status cp-course-card__status--button" aria-label="상태 변경: 수강중">수강중</button>
+            </div>
+            <p class="cp-course-card__name">운영체제</p>
+            <p class="cp-course-card__credits">3학점</p>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">enrolled · 전공선택 · 수강중</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--completed">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <div class="cp-course-card__chips">
+              <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+              <button class="cp-course-card__status cp-course-card__status--button" aria-label="상태 변경: 완료">완료</button>
+            </div>
+            <p class="cp-course-card__name">대학글쓰기</p>
+            <p class="cp-course-card__credits">2학점</p>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">completed · 교양필수 · 완료</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--failed">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <div class="cp-course-card__chips">
+              <span class="cp-course-card__chip cp-course-card__chip--teaching">교직</span>
+              <span class="cp-course-card__status">재수강</span>
+            </div>
+            <p class="cp-course-card__name">교육심리학</p>
+            <p class="cp-course-card__credits">2학점</p>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">failed · 교직 · static 재수강 pill (no onStatusChange)</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--planned cp-course-card--disabled">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <div class="cp-course-card__chips">
+              <span class="cp-course-card__chip cp-course-card__chip--free-elective">자유선택</span>
+              <span class="cp-course-card__chip cp-course-card__chip--double-major">복수전공</span>
+            </div>
+            <p class="cp-course-card__name">경영학원론</p>
+            <p class="cp-course-card__credits">3학점</p>
+          </div>
+        </div>
+      </div>
+      <p class="cap">isDragDisabled (catalog, already in plan) · 자유선택 · 복수전공</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--planned is-hover">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <div class="cp-course-card__chips">
+              <span class="cp-course-card__chip cp-course-card__chip--major-compulsory">전공필수</span>
+              <span class="cp-course-card__chip cp-course-card__chip--minor">부전공</span>
+              <button class="cp-course-card__status cp-course-card__status--button is-hover" aria-label="상태 변경: 계획">계획</button>
+            </div>
+            <p class="cp-course-card__name">선형대수학과 그 응용 — 긴 과목명은 한 줄에서 잘립니다</p>
+            <p class="cp-course-card__credits">3학점</p>
+          </div>
+          <button class="cp-course-card__remove is-hover" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon is-hover" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">is-hover: card, 계획 pill, X · 전공필수 · 부전공 · truncated name</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <p class="label">Compact mode · single line, filled 9px status pill, 10px chips</p>
+  <div class="grid">
+
+    <div>
+      <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <button class="cp-course-card__pill cp-course-card__pill--planned cp-course-card__pill--hint" aria-label="상태 변경: 계획" title="클릭하여 상태 변경: 예정 ↔ 이수">예정</button>
+            <span class="cp-course-card__chip cp-course-card__chip--general-elective">교양선택</span>
+            <span class="cp-course-card__name">컴퓨터네트워크</span>
+            <span class="cp-course-card__credits">3학점</span>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">planned · 예정 with pulse hint · 교양선택</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--compact cp-course-card--enrolled">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <button class="cp-course-card__pill cp-course-card__pill--enrolled" aria-label="상태 변경: 수강중" title="클릭하여 상태 변경: 예정 ↔ 이수">수강중</button>
+            <span class="cp-course-card__chip cp-course-card__chip--major-required">전공핵심</span>
+            <span class="cp-course-card__name">데이터베이스</span>
+            <span class="cp-course-card__credits">3학점</span>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">enrolled · 수강중</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--compact cp-course-card--completed">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <button class="cp-course-card__pill cp-course-card__pill--completed" aria-label="상태 변경: 완료" title="클릭하여 상태 변경: 예정 ↔ 이수">이수</button>
+            <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+            <span class="cp-course-card__name">영어회화</span>
+            <span class="cp-course-card__credits">2학점</span>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">completed · 이수 (emerald)</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--compact cp-course-card--failed">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <button class="cp-course-card__pill cp-course-card__pill--failed" aria-label="상태 변경: 재수강" title="클릭하여 상태 변경: 예정 ↔ 이수">재수강</button>
+            <span class="cp-course-card__chip cp-course-card__chip--major-elective">전공선택</span>
+            <span class="cp-course-card__name">소프트웨어공학</span>
+            <span class="cp-course-card__credits">3학점</span>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">failed · 재수강</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <button class="cp-course-card__pill cp-course-card__pill--planned is-hover" aria-label="상태 변경: 계획" title="클릭하여 상태 변경: 예정 ↔ 이수">예정</button>
+            <span class="cp-course-card__chip cp-course-card__chip--teaching">교직</span>
+            <span class="cp-course-card__chip cp-course-card__chip--double-major">복수전공</span>
+            <span class="cp-course-card__name">교육철학및교육사</span>
+            <span class="cp-course-card__credits">2학점</span>
+          </div>
+          <button class="cp-course-card__remove" aria-label="과목 제거">
+            <svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="cap">pill is-hover (gray-300 ring, 1px offset) · 교직 · 복수전공</p>
+    </div>
+
+    <div>
+      <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+        <div class="cp-course-card__row">
+          <div class="cp-course-card__content">
+            <span class="cp-course-card__chip cp-course-card__chip--free-elective">자유선택</span>
+            <span class="cp-course-card__name">회계원리</span>
+            <span class="cp-course-card__credits">3학점</span>
+          </div>
+        </div>
+      </div>
+      <p class="cap">compact · drag ghost (no onStatusChange / onRemove)</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

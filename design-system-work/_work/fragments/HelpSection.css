@@ -1,0 +1,519 @@
+/* HelpSection (pattern) — hand-translated from src/app/(dashboard)/help/page.tsx and src/app/(dashboard)/help/graduation-guide/page.tsx: the slate article shell, header card, section cards with icon tiles, the 비회원/회원 comparison boxes, numbered step rows, image frames, the guide link card, the contact block, the bottom nav, and the guide's two-pane STEP sections. Slate neutrals throughout, as in the source. */
+
+/* Shell: <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100"> (the guide drops min-h-screen) */
+.cp-help {
+  box-sizing: border-box;
+  background-image: linear-gradient(to bottom in oklab, var(--slate-50, #f8fafc), var(--white, #ffffff), var(--slate-100, #f1f5f9));
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+  -webkit-font-smoothing: antialiased;
+}
+.cp-help *,
+.cp-help *::before,
+.cp-help *::after {
+  box-sizing: border-box;
+}
+.cp-help--full {
+  min-height: 100vh;
+}
+
+/* <div className="mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10"> */
+.cp-help__inner {
+  max-width: var(--container-5xl, 1024px);
+  margin: 0 auto;
+  padding: var(--space-6, 24px) var(--space-4, 16px) var(--space-12, 48px);
+}
+@media (min-width: 48rem) {
+  .cp-help__inner {
+    padding: var(--space-10, 40px) var(--space-6, 24px) var(--space-12, 48px);
+  }
+}
+
+/* Section card: "mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7"; the guide header uses md:p-8. */
+.cp-help__card {
+  margin: 0 0 var(--space-8, 32px);
+  padding: var(--space-6, 24px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+@media (min-width: 48rem) {
+  .cp-help__card { padding: var(--space-7, 28px); }
+  .cp-help__card--roomy { padding: var(--space-8, 32px); }
+}
+/* The guide header and its sections sit in a mt-8 space-y-6 stack instead of mb-8 margins. */
+.cp-help__card--flush {
+  margin-bottom: 0;
+}
+
+/* Back / nav links: "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]".
+   yu-cyan text on white is 2.8:1 in the source — kept, flagged. */
+.cp-help__link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-cyan, #00aaca);
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-help__link:hover,
+.cp-help__link.is-hover {
+  color: var(--yu-navy, #153974);
+}
+/* Header back link carries mb-4 */
+.cp-help__link--back {
+  margin-bottom: var(--space-4, 16px);
+}
+/* Guide header back link: "text-sm text-slate-600 hover:text-[#00AACA]" — weight 400, the hover inverted to cyan. */
+.cp-help__link--muted {
+  font-weight: 400;
+  color: var(--slate-600, #45556c);
+}
+.cp-help__link--muted:hover,
+.cp-help__link--muted.is-hover {
+  color: var(--yu-cyan, #00aaca);
+}
+/* ArrowLeft / ExternalLink className="h-4 w-4" */
+.cp-help__link-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* Eyebrow pill: "mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700" */
+.cp-help__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0 0 var(--space-3, 12px);
+  padding: var(--space-1, 4px) var(--space-3, 12px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-700, #314158);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* Guide header: "bg-[#153974]/5 text-[#153974]", no bottom margin (the h1 carries mt-3). */
+.cp-help__eyebrow--navy {
+  background-color: var(--yu-navy-a5, #1539740d);
+  color: var(--yu-navy, #153974);
+}
+.cp-help__eyebrow--flush {
+  margin-bottom: 0;
+}
+/* HelpCircle / GraduationCap className="h-3.5 w-3.5" */
+.cp-help__eyebrow-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+}
+
+/* h1: "text-3xl font-bold text-[#153974] md:text-4xl"; the guide adds mt-3 tracking-tight. */
+.cp-help__title {
+  margin: 0;
+  font: 700 30px/36px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-navy, #153974);
+}
+@media (min-width: 48rem) {
+  .cp-help__title { font-size: 36px; line-height: 40px; }
+}
+.cp-help__title--tight {
+  margin-top: var(--space-3, 12px);
+  letter-spacing: -0.025em;
+}
+/* Lead: "mt-2 text-sm text-slate-500" */
+.cp-help__lead {
+  margin: var(--space-2, 8px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+
+/* Section heading row: "mb-5 flex items-center gap-3" */
+.cp-help__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-5, 20px);
+}
+/* Icon tile: "flex h-10 w-10 items-center justify-center rounded-lg" + a tint */
+.cp-help__tile {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-md, 40px);
+  height: var(--control-md, 40px);
+  border-radius: var(--radius-lg, 8px);
+}
+.cp-help__tile--navy { background-color: var(--yu-navy-a10, #1539741a); color: var(--yu-navy, #153974); }
+.cp-help__tile--blue { background-color: var(--yu-blue-a10, #3069b31a); color: var(--yu-blue, #3069b3); }
+.cp-help__tile--cyan { background-color: var(--yu-cyan-a10, #00aaca1a); color: var(--yu-cyan, #00aaca); }
+.cp-help__tile--purple { background-color: var(--purple-100, #f3e8ff); color: var(--purple-600, #9810fa); }
+/* Rocket / Calendar / GraduationCap / BarChart3 / UserCog / Search / BookOpen / FileText className="h-5 w-5" */
+.cp-help__tile-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+/* h2: "text-2xl font-bold text-[#153974]" */
+.cp-help__h2 {
+  margin: 0;
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-navy, #153974);
+}
+/* Guide pane h2: "mt-3 flex items-center gap-3 …" with the tile inside the heading */
+.cp-help__h2--pane {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-3, 12px);
+}
+
+/* Prose: "mb-4 text-sm leading-relaxed text-slate-600 md:text-base" */
+.cp-help__p {
+  margin: 0 0 var(--space-4, 16px);
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+@media (min-width: 48rem) {
+  .cp-help__p { font-size: 16px; }
+}
+.cp-help__p--last { margin-bottom: 0; }
+
+/* Comparison boxes: "mb-4 grid gap-4 md:grid-cols-2" */
+.cp-help__compare {
+  display: grid;
+  gap: var(--space-4, 16px);
+  margin-bottom: var(--space-4, 16px);
+}
+@media (min-width: 48rem) {
+  .cp-help__compare { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* "rounded-xl border border-slate-200 bg-slate-50 p-4"; the member box: "border-[#00AACA]/30 bg-[#00AACA]/5" */
+.cp-help__box {
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--slate-50, #f8fafc);
+}
+.cp-help__box--accent {
+  border-color: var(--yu-cyan-a30, #00aaca4d);
+  background-color: var(--yu-cyan-a5, #00aaca0d);
+}
+/* h3: "mb-2 font-semibold text-[#153974]" */
+.cp-help__box-title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-navy, #153974);
+}
+/* ul: "space-y-1 text-sm text-slate-600" — the bullets are literal "• " characters in the text, no list-style. */
+.cp-help__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+.cp-help__list > * + * {
+  margin-top: var(--space-1, 4px);
+}
+
+/* Numbered rows (help): "mb-4 space-y-3" of "rounded-lg bg-slate-50 p-3" */
+.cp-help__steps {
+  margin-bottom: var(--space-4, 16px);
+}
+.cp-help__steps > * + * {
+  margin-top: var(--space-3, 12px);
+}
+.cp-help__step {
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--slate-50, #f8fafc);
+}
+/* "1." — "font-semibold text-[#153974]" at the inherited 16px/24px */
+.cp-help__step-num {
+  font-weight: 600;
+  color: var(--yu-navy, #153974);
+}
+/* "text-sm text-slate-600 md:text-base" */
+.cp-help__step-text {
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--slate-600, #45556c);
+}
+@media (min-width: 48rem) {
+  .cp-help__step-text { font-size: 16px; line-height: 24px; }
+}
+
+/* Image frame around ZoomableImage: "overflow-hidden rounded-xl border border-slate-200" (+ mt-4 on single frames) */
+.cp-help__figure {
+  overflow: hidden;
+  margin-top: var(--space-4, 16px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+}
+.cp-help__figure > img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Guide link card: "mb-4 flex items-center gap-2 rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4 text-sm font-medium
+   text-[#153974] transition-colors hover:border-[#00AACA]/50 hover:bg-[#00AACA]/10" */
+.cp-help__link-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-4, 16px);
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--yu-cyan-a30, #00aaca4d);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--yu-cyan-a5, #00aaca0d);
+  color: var(--yu-navy, #153974);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-help__link-card:hover,
+.cp-help__link-card.is-hover {
+  border-color: var(--yu-cyan-a50, #00aaca80);
+  background-color: var(--yu-cyan-a10, #00aaca1a);
+}
+/* ExternalLink className="h-4 w-4 text-[#00AACA]" */
+.cp-help__link-card-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--yu-cyan, #00aaca);
+}
+
+/* Contact block: "mb-8 rounded-2xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-6 text-center" */
+.cp-help__contact {
+  margin: 0 0 var(--space-8, 32px);
+  padding: var(--space-6, 24px);
+  border: 1px solid var(--yu-cyan-a30, #00aaca4d);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--yu-cyan-a5, #00aaca0d);
+  text-align: center;
+}
+/* "mb-3 text-sm text-slate-600 md:text-base" */
+.cp-help__contact-text {
+  margin: 0 0 var(--space-3, 12px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+@media (min-width: 48rem) {
+  .cp-help__contact-text { font-size: 16px; line-height: 24px; }
+}
+/* CTA: "inline-flex items-center gap-2 rounded-xl bg-[#153974] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f]" */
+.cp-help__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2-5, 10px) var(--space-6, 24px);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-help__cta:hover,
+.cp-help__cta.is-hover {
+  background-color: var(--yu-blue-dark, #1a4a8f);
+}
+
+/* Bottom nav: "flex flex-wrap justify-center gap-4"; the guide's is "mt-8 text-center" with one link. */
+.cp-help__nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4, 16px);
+}
+.cp-help__nav--spaced {
+  margin-top: var(--space-8, 32px);
+}
+
+/* Guide stack: "mt-8 space-y-6" */
+.cp-help__stack {
+  margin-top: var(--space-8, 32px);
+}
+.cp-help__stack > * + * {
+  margin-top: var(--space-6, 24px);
+}
+
+/* Guide STEP section: "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" */
+.cp-help__pane {
+  overflow: hidden;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+/* "grid gap-0 lg:grid-cols-[1.05fr_1fr]" — .is-lg mirrors the lg layout in a narrower frame */
+.cp-help__pane-grid {
+  display: grid;
+  gap: 0;
+}
+@media (min-width: 64rem) {
+  .cp-help__pane-grid { grid-template-columns: 1.05fr 1fr; }
+}
+.cp-help__pane-grid.is-lg {
+  grid-template-columns: 1.05fr 1fr;
+}
+/* "p-6 md:p-7" */
+.cp-help__pane-text {
+  padding: var(--space-6, 24px);
+}
+@media (min-width: 48rem) {
+  .cp-help__pane-text { padding: var(--space-7, 28px); }
+}
+/* Description "mt-3 text-sm leading-relaxed text-slate-600 md:text-base" — the guide's descriptions are empty strings,
+   so this renders as an empty paragraph that still adds its 12px margin. */
+.cp-help__pane-desc {
+  margin: var(--space-3, 12px) 0 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+@media (min-width: 48rem) {
+  .cp-help__pane-desc { font-size: 16px; }
+}
+/* ol: "mt-4 space-y-2" of li "flex items-start gap-3 rounded-lg bg-slate-50 p-3" */
+.cp-help__ol {
+  margin: var(--space-4, 16px) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cp-help__ol > * + * {
+  margin-top: var(--space-2, 8px);
+}
+.cp-help__ol-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--slate-50, #f8fafc);
+}
+/* "mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#153974] text-xs font-bold text-white" */
+.cp-help__ol-num {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  margin-top: var(--space-0-5, 2px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+  font: 700 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* "text-sm leading-relaxed text-slate-700" */
+.cp-help__ol-text {
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-700, #314158);
+}
+/* Image pane: "border-t border-slate-200 bg-slate-50 lg:border-l lg:border-t-0" */
+.cp-help__pane-media {
+  border-top: 1px solid var(--slate-200, #e2e8f0);
+  background-color: var(--slate-50, #f8fafc);
+}
+@media (min-width: 64rem) {
+  .cp-help__pane-media { border-top: 0; border-left: 1px solid var(--slate-200, #e2e8f0); }
+}
+.cp-help__pane-grid.is-lg .cp-help__pane-media {
+  border-top: 0;
+  border-left: 1px solid var(--slate-200, #e2e8f0);
+}
+/* Zoom button: "group relative block aspect-[4/3] w-full cursor-zoom-in lg:aspect-[1/1]" (preflight: no border, no background) */
+.cp-help__zoom {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+@media (min-width: 64rem) {
+  .cp-help__zoom { aspect-ratio: 1 / 1; }
+}
+.cp-help__pane-grid.is-lg .cp-help__zoom {
+  aspect-ratio: 1 / 1;
+}
+/* next/image fill + "object-contain transition-transform duration-200 group-hover:scale-[1.01]" */
+.cp-help__zoom-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: transform var(--duration-base, 200ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-help__zoom:hover .cp-help__zoom-img,
+.cp-help__zoom.is-hover .cp-help__zoom-img {
+  transform: scale(1.01);
+}
+/* Hint: "absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-2.5 py-1 text-xs font-medium text-white opacity-0
+   transition-opacity group-hover:opacity-100" */
+.cp-help__zoom-hint {
+  position: absolute;
+  right: var(--space-3, 12px);
+  bottom: var(--space-3, 12px);
+  padding: var(--space-1, 4px) var(--space-2-5, 10px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--slate-900-a75, #0f172bbf);
+  color: var(--white, #ffffff);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  opacity: 0;
+  transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-help__zoom:hover .cp-help__zoom-hint,
+.cp-help__zoom.is-hover .cp-help__zoom-hint {
+  opacity: 1;
+}
+/* Caption: "border-t border-slate-200 bg-white px-4 py-3 text-sm text-slate-600" — the guide's captions are empty strings,
+   so the source renders a 45px empty white strip under each image. */
+.cp-help__pane-caption {
+  margin: 0;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-top: 1px solid var(--slate-200, #e2e8f0);
+  background-color: var(--white, #ffffff);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+  min-height: 45px;
+}
+
+/* Audit items: "mt-5 grid gap-3 md:grid-cols-2" of "rounded-xl border border-slate-200 bg-slate-50 p-4" */
+.cp-help__audit {
+  display: grid;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-5, 20px);
+}
+@media (min-width: 48rem) {
+  .cp-help__audit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* h3 "text-base font-semibold text-[#153974]"; p "mt-1 text-sm leading-relaxed text-slate-600" */
+.cp-help__audit-title {
+  margin: 0;
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-navy, #153974);
+}
+.cp-help__audit-text {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}

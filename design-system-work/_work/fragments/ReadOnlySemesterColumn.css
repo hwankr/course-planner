@@ -1,0 +1,145 @@
+/* ReadOnlySemesterColumn — hand-translated from src/components/features/ReadOnlySemesterColumn.tsx (Card base from src/components/ui/Card.tsx) */
+
+.cp-read-only-semester-column,
+.cp-read-only-semester-column *,
+.cp-read-only-semester-column *::before,
+.cp-read-only-semester-column *::after { box-sizing: border-box; }
+
+/* Root = Card base ("rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300")
+   + "flex flex-col". The bare `border` is currentColor under Tailwind v4, i.e. gray-900. No overflow-hidden in the
+   source, so the gray-50 header background is not clipped by the radius: its square top corners overpaint the
+   border curve at both top corners. Body type inherits 16px / 1.5. */
+.cp-read-only-semester-column {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-default, #101828);
+  border-radius: var(--radius-lg, 8px);
+  background: var(--white, #ffffff);
+  color: var(--gray-900, #101828);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  transition: box-shadow var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-read-only-semester-column:hover,
+.cp-read-only-semester-column.is-hover {
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+/* Header: "p-3 border-b bg-gray-50 cursor-pointer" (compact: p-2). border-b is currentColor = gray-900.
+   cursor-pointer is set in both modes although the click only toggles when compact. */
+.cp-read-only-semester-column__header {
+  padding: var(--space-3, 12px);
+  border-bottom: 1px solid var(--border-default, #101828);
+  background: var(--gray-50, #f9fafb);
+  cursor: pointer;
+}
+.cp-read-only-semester-column--compact .cp-read-only-semester-column__header { padding: var(--space-2, 8px); }
+
+/* "flex items-center justify-between" */
+.cp-read-only-semester-column__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* h4 "text-base font-semibold text-gray-800" (compact: text-sm) */
+.cp-read-only-semester-column__title {
+  margin: 0;
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-800, #1e2939);
+}
+.cp-read-only-semester-column--compact .cp-read-only-semester-column__title {
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* p "text-sm text-gray-500 mt-0.5" (compact: text-xs) — "12학점 · 4과목" */
+.cp-read-only-semester-column__credits {
+  margin: var(--space-0-5, 2px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+.cp-read-only-semester-column--compact .cp-read-only-semester-column__credits {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* span "text-gray-400 ml-1" — "(전핵6 · 교필2 · 교선3)"; inherits the credits size */
+.cp-read-only-semester-column__breakdown {
+  margin-left: var(--space-1, 4px);
+  color: var(--gray-400, #99a1af);
+}
+
+/* compact-only button "text-gray-400 text-xs" — 접기 / 펼치기. No padding, border, type or cursor class in the source;
+   preflight resets it to 0 padding, transparent fill, inherited font and color. */
+.cp-read-only-semester-column__toggle {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+
+/* Course list (rendered only while expanded): "p-3 space-y-1.5" (compact: p-2) */
+.cp-read-only-semester-column__list { padding: var(--space-3, 12px); }
+.cp-read-only-semester-column__list > * + * { margin-top: var(--space-1-5, 6px); }
+.cp-read-only-semester-column--compact .cp-read-only-semester-column__list { padding: var(--space-2, 8px); }
+
+/* Row: "flex items-center gap-2 p-2 rounded-md bg-white border border-gray-100" */
+.cp-read-only-semester-column__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px);
+  border: 1px solid var(--gray-100, #f3f4f6);
+  border-radius: var(--radius-md, 6px);
+  background: var(--white, #ffffff);
+}
+
+/* Category chip: "text-[10px] px-1.5 py-0.5 rounded font-medium" + category colors. 10px with the inherited 1.5 line-height = 15px. */
+.cp-read-only-semester-column__chip {
+  display: inline-block;
+  padding: var(--space-0-5, 2px) var(--space-1-5, 6px);
+  border-radius: var(--radius-sm, 4px);
+  font: 500 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-read-only-semester-column__chip--major-required   { background: var(--category-major-required-bg, #ffe2e2);   color: var(--category-major-required-text, #c10007); }
+.cp-read-only-semester-column__chip--major-compulsory { background: var(--category-major-compulsory-bg, #ffe4e6); color: var(--category-major-compulsory-text, #c70036); }
+.cp-read-only-semester-column__chip--major-elective   { background: var(--category-major-elective-bg, #ffedd4);   color: var(--category-major-elective-text, #ca3500); }
+.cp-read-only-semester-column__chip--general-required { background: var(--category-general-required-bg, #dbeafe); color: var(--category-general-required-text, #1447e6); }
+.cp-read-only-semester-column__chip--general-elective { background: var(--category-general-elective-bg, #dcfce7); color: var(--category-general-elective-text, #008236); }
+.cp-read-only-semester-column__chip--teaching         { background: var(--category-teaching-bg, #ede9fe);         color: var(--category-teaching-text, #7008e7); }
+.cp-read-only-semester-column__chip--free-elective    { background: var(--category-free-elective-bg, #f3f4f6);    color: var(--category-free-elective-text, #4a5565); }
+
+/* "flex-1 min-w-0" — lets the name truncate */
+.cp-read-only-semester-column__content {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+/* p "text-sm font-medium text-gray-800 truncate" */
+.cp-read-only-semester-column__name {
+  margin: 0;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-800, #1e2939);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* p "text-xs text-gray-400" — course code */
+.cp-read-only-semester-column__code {
+  margin: 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+
+/* span "text-xs text-gray-500 whitespace-nowrap" — "{credits}학점" */
+.cp-read-only-semester-column__course-credits {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+  white-space: nowrap;
+}

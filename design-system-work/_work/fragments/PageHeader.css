@@ -1,0 +1,334 @@
+/* PageHeader — PATTERN hand-translated from inline markup in src/app/(dashboard)/planner/page.tsx, src/app/(dashboard)/statistics/page.tsx and src/app/(dashboard)/admin/courses/page.tsx; no component exists in the source. The planner buttons are .cp-button.cp-button--outline from Button.css. */
+
+/* Block = the header root of each page. In the app it is the first child of the page root inside
+   <main class="container mx-auto px-3 py-4 sm:px-4 sm:py-8"> on the gray-50 frame, and inherits the
+   body font (Arial, 16px, preflight line-height 1.5) and the body text color (globals.css --foreground). */
+.cp-page-header {
+  box-sizing: border-box;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+}
+.cp-page-header *,
+.cp-page-header *::before,
+.cp-page-header *::after {
+  box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Recipe 1 — planner/page.tsx
+   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+   ------------------------------------------------------------------------------------------------ */
+.cp-page-header--planner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+}
+@media (min-width: 640px) {
+  .cp-page-header--planner {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* Title block: a bare <div> with no classes. */
+.cp-page-header__title-block {
+  display: block;
+}
+
+/* <h1 className="text-xl sm:text-2xl font-bold text-gray-900">수강 계획</h1> — 20px/28px, heading-2 (24px/32px) from sm. */
+.cp-page-header--planner .cp-page-header__title {
+  margin: 0;
+  font: 700 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+@media (min-width: 640px) {
+  .cp-page-header--planner .cp-page-header__title {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
+
+/* Badge row: <div className="flex items-center gap-2 mt-1 flex-wrap"> */
+.cp-page-header__badges {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-1, 4px);
+}
+
+/* Badge: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" plus one color pair. */
+.cp-page-header__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-0-5, 2px) var(--space-2-5, 10px);
+  border-radius: var(--radius-full, 9999px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* {departmentName}: bg-[#153974]/10 text-[#153974] */
+.cp-page-header__badge--department {
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+}
+/* 복수전공: {secondaryDepartmentName} — headerMajorType === 'double': bg-purple-100 text-purple-700 */
+.cp-page-header__badge--double {
+  background-color: var(--purple-100, #f3e8ff);
+  color: var(--purple-700, #8200db);
+}
+/* 부전공: {secondaryDepartmentName} — headerMajorType === 'minor': bg-orange-100 text-orange-700 */
+.cp-page-header__badge--minor {
+  background-color: var(--orange-100, #ffedd4);
+  color: var(--orange-700, #ca3500);
+}
+
+/* No department: <Link href="/profile" className="text-xs text-gray-400 hover:text-[#153974] underline">학과를 설정해주세요 */
+.cp-page-header__dept-link {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+  text-decoration-line: underline;
+}
+.cp-page-header__dept-link:hover,
+.cp-page-header__dept-link.is-hover {
+  color: var(--yu-navy, #153974);
+}
+
+/* Instruction line: <p data-export-ignore className="text-gray-600 mt-1 text-sm sm:text-base"> */
+.cp-page-header--planner .cp-page-header__subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+@media (min-width: 640px) {
+  .cp-page-header--planner .cp-page-header__subtitle {
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+
+/* Actions: <div className="flex items-center gap-2 sm:gap-3 flex-wrap"> — always rendered; its buttons only when activePlan.semesters.length > 0. */
+.cp-page-header__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+@media (min-width: 640px) {
+  .cp-page-header__actions {
+    gap: var(--space-3, 12px);
+  }
+}
+
+/* Export anchor: <div ref={exportMenuRef} className="relative"> around the Button and its menu. */
+.cp-page-header__export {
+  position: relative;
+}
+
+/* Button content: <span className="flex items-center gap-1"> (idle: Download + 내보내기; exporting: arc + 내보내는 중...). */
+.cp-page-header__button-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+/* Lucide icons at w-4 h-4 / h-4 w-4 (Download, Users, ArrowLeft, Plus). Preflight makes <svg> block-level. */
+.cp-page-header__icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* Exporting arc: <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600"> — a flex item, so the
+   inline <span> is blockified; preflight `border: 0 solid` plus border-b-2 leaves only the 2px bottom arc. */
+.cp-page-header__mini-spinner {
+  display: block;
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+  border: 0 solid var(--gray-600, #4a5565);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-full, 9999px);
+  animation: cp-spin 1s linear infinite;
+}
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Export menu (showExportMenu): "absolute left-0 sm:left-auto sm:right-0 top-full mt-1 bg-white border rounded-lg shadow-lg
+   py-1 z-50 min-w-[140px]". Bare `border` under v4 is 1px solid currentColor — here the inherited body foreground
+   (#171717), not gray-900. min-w-[140px] is an arbitrary value with no size token. */
+.cp-page-header__menu {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: var(--z-modal, 50);
+  min-width: 140px;
+  margin-top: var(--space-1, 4px);
+  padding: var(--space-1, 4px) 0;
+  border: 1px solid var(--foreground, #171717);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--white, #ffffff);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+}
+@media (min-width: 640px) {
+  .cp-page-header__menu {
+    left: auto;
+    right: 0;
+  }
+}
+
+/* Menu item: <button className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"> — preflight: font, letter-spacing and
+   color inherit, transparent background, no border, no pointer cursor. */
+.cp-page-header__menu-item {
+  display: inline-block;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 0 solid;
+  background-color: transparent;
+  color: inherit;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-align: left;
+  appearance: button;
+}
+.cp-page-header__menu-item:hover,
+.cp-page-header__menu-item.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* 초기화: <Button variant="outline" className="text-sm text-red-600 border-red-300 hover:bg-red-50"> — through cn()/tailwind-merge the
+   red classes replace the variant's border-gray-300 and hover:bg-gray-50. Scoped under the block to win over .cp-button--outline. */
+.cp-page-header .cp-page-header__reset {
+  color: var(--red-600, #e7000b);
+  border-color: var(--red-300, #ffa2a2);
+}
+.cp-page-header .cp-page-header__reset:hover,
+.cp-page-header .cp-page-header__reset.is-hover {
+  background-color: var(--red-50, #fef2f2);
+}
+
+/* Export-only header — planner/page.tsx, rendered inside the capture only while isExporting:
+   <div className="pb-2"><h1 className="text-xl font-bold text-gray-900">수강 계획</h1> + the badge row; no instruction line, no actions. */
+.cp-page-header--export-only {
+  display: block;
+  padding-bottom: var(--space-2, 8px);
+}
+.cp-page-header--export-only .cp-page-header__title {
+  margin: 0;
+  font: 700 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Recipe 2 — statistics/page.tsx
+   <div className="mb-8"> inside "container mx-auto px-4 py-8 max-w-7xl"
+   ------------------------------------------------------------------------------------------------ */
+.cp-page-header--statistics {
+  display: block;
+  margin-bottom: var(--space-8, 32px);
+}
+
+/* <h1 className="text-3xl font-bold mb-2"> — heading-1; no color class, the inner span carries the gradient. */
+.cp-page-header--statistics .cp-page-header__title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 700 30px/36px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* <span className="text-gradient">학과 수강 통계</span> — globals.css .text-gradient: linear-gradient(135deg, #153974, #3069B3, #00AACA)
+   clipped to the glyphs. Plain CSS gradient (no oklab interpolation). */
+.cp-page-header__title-gradient {
+  background: linear-gradient(135deg, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* <p className="text-xl text-gray-700 mb-2">{departmentName} 학생들이 많이 듣는 과목</p> */
+.cp-page-header--statistics .cp-page-header__subtitle {
+  margin: 0 0 var(--space-2, 8px);
+  font: 400 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+
+/* Meta row: <div className="flex items-center gap-2 text-sm text-gray-500"> Users · <span>s with a literal · separator. */
+.cp-page-header__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Recipe 3 — admin/courses/page.tsx
+   a bare <div> holding the back Link and the title row
+   ------------------------------------------------------------------------------------------------ */
+.cp-page-header--admin {
+  display: block;
+}
+
+/* <Link href="/admin" className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]">
+   ArrowLeft + 관리자 대시보드로 돌아가기. Preflight: <a> inherits text-decoration (none here). */
+.cp-page-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-4, 16px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-cyan, #00aaca);
+  text-decoration: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-page-header__back:hover,
+.cp-page-header__back.is-hover {
+  color: var(--yu-navy, #153974);
+}
+
+/* Title row: <div className="flex items-center justify-between"> */
+.cp-page-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* <h1 className="text-2xl font-bold text-gray-900">과목 관리</h1> — heading-2 */
+.cp-page-header--admin .cp-page-header__title {
+  margin: 0;
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* <p className="mt-1 text-gray-600">등록된 과목을 관리합니다. ({courses.length}건)</p> — inherited body size */
+.cp-page-header--admin .cp-page-header__subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-[#00AACA] px-4 py-2 text-sm font-medium text-white
+   transition-colors hover:bg-[#153974] cursor-pointer"> Plus + 과목 추가 — a hand-rolled button, not the Button primitive. */
+.cp-page-header__primary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--yu-cyan, #00aaca);
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  appearance: button;
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-page-header__primary:hover,
+.cp-page-header__primary.is-hover {
+  background-color: var(--yu-navy, #153974);
+}

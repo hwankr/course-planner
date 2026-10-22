@@ -1,0 +1,733 @@
+{
+  "files_read": [
+    "/home/user/course-planner/src/app/(dashboard)/dashboard/page.tsx",
+    "/home/user/course-planner/src/app/(dashboard)/planner/page.tsx",
+    "/home/user/course-planner/src/app/(dashboard)/requirements/page.tsx",
+    "/home/user/course-planner/src/app/(dashboard)/statistics/page.tsx",
+    "/home/user/course-planner/src/app/globals.css (only .text-gradient* rules, to resolve the class used by the statistics h1)",
+    "/home/user/course-planner/src/lib/graduationDelta.ts (only the GRADUATION_CATEGORY_LABELS export line, to resolve toast copy source)"
+  ],
+  "components": [
+    {
+      "name": "DashboardPage",
+      "file": "src/app/(dashboard)/dashboard/page.tsx",
+      "purpose": "Server component that immediately redirect('/planner'). Renders no UI.",
+      "elements": [
+        { "part": "root", "tag": "none", "classes": "", "text": "" }
+      ],
+      "notes": "No markup, no classes. /dashboard is an alias of /planner."
+    },
+    {
+      "name": "RequirementsPage",
+      "file": "src/app/(dashboard)/requirements/page.tsx",
+      "purpose": "Server component that immediately redirect('/planner'). Renders no UI.",
+      "elements": [
+        { "part": "root", "tag": "none", "classes": "", "text": "" }
+      ],
+      "notes": "No markup, no classes. Requirements UI lives inside the planner via <RequirementsSummary />."
+    },
+    {
+      "name": "PlannerPage / loading state",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Full-area centered CSS border spinner while useMyPlan() loads",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "flex items-center justify-center min-h-[400px]" },
+        { "part": "spinner", "tag": "div", "classes": "animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]" }
+      ],
+      "notes": "CSS half-border spinner (border-b-2 only), 48px, brand mid-blue. Statistics page uses lucide Loader2 instead."
+    },
+    {
+      "name": "PlannerPage / error state",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Centered error message with retry Button (reloads window)",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "flex flex-col items-center justify-center min-h-[400px] text-center" },
+        { "part": "message", "tag": "p", "classes": "text-red-500 mb-4", "text": "계획을 불러오는데 실패했습니다." },
+        { "part": "retry button", "tag": "Button (default variant, from @/components/ui)", "classes": "", "text": "다시 시도" }
+      ]
+    },
+    {
+      "name": "PlannerPage / page root + header",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Page header: title, department badge row, instructional subtitle, right-aligned action buttons (Export, Reset)",
+      "props": "export default function PlannerPage() — no props. State: isAddSemesterOpen, semesterYearFilter: number|null, showExportMenu, activeDragData {id, containerId, course, type:'catalog'|'semester'}|null",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "space-y-6" },
+        { "part": "header row", "tag": "div", "classes": "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3" },
+        { "part": "title", "tag": "h1", "classes": "text-xl sm:text-2xl font-bold text-gray-900", "text": "수강 계획" },
+        { "part": "badge row", "tag": "div", "classes": "flex items-center gap-2 mt-1 flex-wrap" },
+        { "part": "department badge", "tag": "span", "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]", "text": "{departmentName}" },
+        {
+          "part": "secondary major badge",
+          "tag": "span",
+          "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+          "text": "복수전공: {secondaryDepartmentName} | 부전공: {secondaryDepartmentName}",
+          "states": [
+            { "state": "headerMajorType === 'double'", "classes": "bg-purple-100 text-purple-700" },
+            { "state": "else (minor)", "classes": "bg-orange-100 text-orange-700" }
+          ]
+        },
+        { "part": "no-department link", "tag": "Link href=/profile", "classes": "text-xs text-gray-400 hover:text-[#153974] underline", "text": "학과를 설정해주세요" },
+        { "part": "subtitle (data-export-ignore)", "tag": "p", "classes": "text-gray-600 mt-1 text-sm sm:text-base", "text": "학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요." },
+        { "part": "actions", "tag": "div", "classes": "flex items-center gap-2 sm:gap-3 flex-wrap" }
+      ],
+      "notes": "Title is text-xl on mobile / text-2xl on sm+ (smaller than statistics' text-3xl). Badges only render when activePlan exists. Actions are only shown when activePlan.semesters.length > 0."
+    },
+    {
+      "name": "PlannerPage / Export button + dropdown menu",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Outline Button toggling a small dropdown with PNG/PDF export; guests get an info toast instead",
+      "elements": [
+        { "part": "wrapper", "tag": "div ref=exportMenuRef", "classes": "relative" },
+        { "part": "button", "tag": "Button variant=\"outline\" disabled={isExporting}", "classes": "text-sm" },
+        { "part": "exporting label", "tag": "span", "classes": "flex items-center gap-1", "text": "내보내는 중..." },
+        { "part": "exporting mini spinner", "tag": "span", "classes": "animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600" },
+        { "part": "idle label", "tag": "span", "classes": "flex items-center gap-1", "text": "내보내기" },
+        { "part": "icon", "tag": "Download (lucide)", "classes": "w-4 h-4" },
+        { "part": "dropdown", "tag": "div", "classes": "absolute left-0 sm:left-auto sm:right-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[140px]" },
+        { "part": "menu item", "tag": "button", "classes": "w-full text-left px-3 py-2 text-sm hover:bg-gray-50", "text": "PNG 이미지" },
+        { "part": "menu item", "tag": "button", "classes": "w-full text-left px-3 py-2 text-sm hover:bg-gray-50", "text": "PDF 문서" }
+      ],
+      "notes": "Menu anchors left on mobile, right on sm+. Closes on outside mousedown/touchstart. `border` has no color token (Tailwind default)."
+    },
+    {
+      "name": "PlannerPage / Reset button",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Destructive outline button; uses window.confirm then resets the plan",
+      "elements": [
+        { "part": "button", "tag": "Button variant=\"outline\" isLoading={resetPlanMutation.isPending}", "classes": "text-sm text-red-600 border-red-300 hover:bg-red-50", "text": "초기화" }
+      ],
+      "notes": "Destructive styling is achieved by overriding the outline variant with red classes rather than a 'danger' variant."
+    },
+    {
+      "name": "PlannerPage / export-only header",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Duplicate compact header rendered only while isExporting so the PNG/PDF capture has a title and badges",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "pb-2" },
+        { "part": "title", "tag": "h1", "classes": "text-xl font-bold text-gray-900", "text": "수강 계획" },
+        { "part": "badge row", "tag": "div", "classes": "flex items-center gap-2 mt-1 flex-wrap" },
+        { "part": "department badge", "tag": "span", "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]" },
+        {
+          "part": "secondary major badge",
+          "tag": "span",
+          "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+          "states": [
+            { "state": "double", "classes": "bg-purple-100 text-purple-700" },
+            { "state": "minor", "classes": "bg-orange-100 text-orange-700" }
+          ]
+        }
+      ],
+      "notes": "Export container (ref=exportRef, className=\"space-y-6\") gets imperative style.minWidth='768px' in beforeCapture and '' in afterCapture to force desktop layout."
+    },
+    {
+      "name": "PlannerPage / DnD body layout",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Vertical stack inside DndContext: RequirementsSummary widget, full-width CourseCatalog row, then the semester grid",
+      "elements": [
+        { "part": "export container", "tag": "div ref=exportRef", "classes": "space-y-6" },
+        { "part": "requirements wrapper", "tag": "div ref=requirementsSummaryRef", "classes": "" },
+        { "part": "catalog wrapper (data-export-ignore)", "tag": "div ref=courseCatalogRef", "classes": "", "inline_style": "scrollMarginTop: '72px'" },
+        { "part": "semester grid wrapper", "tag": "div ref=semesterGridRef", "classes": "space-y-4" }
+      ],
+      "notes": "NOT a horizontal scroller of semester columns and NOT a sidebar: catalog is a full-width top row, semesters are a responsive grid below. 72px is the sticky app-header offset (also used as -72 in smoothScrollTo after a touch drag). Sensors: MouseSensor distance 8; TouchSensor delay 150 / tolerance 8."
+    },
+    {
+      "name": "PlannerPage / year filter pill toolbar",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Horizontally scrollable row of pill toggles filtering the semester grid by 학년 (data-export-ignore)",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "flex items-center gap-1.5 overflow-x-auto pb-0.5" },
+        { "part": "label", "tag": "span", "classes": "text-[11px] font-medium text-gray-400 flex-shrink-0", "text": "학년" },
+        {
+          "part": "pill",
+          "tag": "button",
+          "classes": "px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0",
+          "text": "{y}학년 | 전체",
+          "states": [
+            { "state": "semesterYearFilter === y (selected)", "classes": "bg-[#153974] text-white" },
+            { "state": "unselected", "classes": "bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20" }
+          ]
+        }
+      ],
+      "notes": "Class string in source contains a literal newline/indentation inside the template literal between the base classes and the ternary. Clicking a semester (handleSemesterFocus) also sets the year filter to that semester's year."
+    },
+    {
+      "name": "PlannerPage / year group + semester grid",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Semesters grouped by year; eyebrow heading with credit total, one-time status legend hint, 2-col grid of compact SemesterColumn",
+      "elements": [
+        { "part": "year group", "tag": "div", "classes": "space-y-2" },
+        { "part": "heading row", "tag": "div", "classes": "flex items-center gap-2 flex-wrap" },
+        { "part": "year heading", "tag": "h3", "classes": "text-sm font-semibold text-gray-500 uppercase tracking-wide", "text": "{year}학년" },
+        { "part": "credit total", "tag": "span", "classes": "ml-2 text-xs font-normal text-gray-400", "text": "({n}학점)" },
+        { "part": "legend hint (first year group only)", "tag": "span", "classes": "flex items-center gap-1 text-[10px]" },
+        { "part": "legend chip planned", "tag": "span", "classes": "px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700", "text": "예정" },
+        { "part": "legend arrow", "tag": "span", "classes": "text-gray-400", "text": "↔" },
+        { "part": "legend chip completed", "tag": "span", "classes": "px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700", "text": "이수" },
+        { "part": "legend caption", "tag": "span", "classes": "text-gray-400 ml-0.5", "text": "클릭하여 변경" },
+        { "part": "semester grid", "tag": "div", "classes": "grid grid-cols-1 sm:grid-cols-2 gap-3" },
+        { "part": "semester cell", "tag": "div > SemesterColumn compact={true} isFocused onFocus onRemoveCourse onDelete onClear onStatusChange", "classes": "" }
+      ],
+      "notes": "uppercase tracking-wide applied to Korean text (no visual effect on Hangul). The hint uses blue-100/700 for 예정 and emerald-100/700 for 이수."
+    },
+    {
+      "name": "PlannerPage / Add Semester button",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Centered dashed ghost button opening AddSemesterDialog (data-export-ignore)",
+      "elements": [
+        { "part": "wrapper", "tag": "div", "classes": "flex justify-center py-4" },
+        { "part": "button", "tag": "Button variant=\"ghost\"", "classes": "text-gray-500 hover:text-gray-700 border-dashed border-2 px-6 py-3", "text": "학기 추가" },
+        { "part": "icon", "tag": "svg (inline, viewBox 0 0 20 20, fill currentColor, heroicons solid 'plus' path)", "classes": "w-5 h-5 mr-2" }
+      ],
+      "notes": "Inline SVG instead of lucide Plus. border-dashed border-2 with no border color token."
+    },
+    {
+      "name": "PlannerPage / DragOverlay ghost",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Fixed-width floating CourseCard shown while dragging",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "w-[250px] shadow-lg rounded-lg opacity-90 pointer-events-none" },
+        { "part": "card", "tag": "CourseCard compact={true}", "classes": "" }
+      ]
+    },
+    {
+      "name": "PlannerPage / toasts & confirm (non-visual copy)",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Toast payloads sent to useToastStore and native confirm dialog",
+      "elements": [
+        { "part": "toast success (add course)", "tag": "addToast", "classes": "type:'success' duration:5000 action:{label:'실행 취소'} graduationDelta:{...}", "text": "{course.name} 추가됨 · +{credits}학점 {catLabel}" },
+        { "part": "toast info (undo)", "tag": "addToast", "classes": "type:'info' duration:1500", "text": "실행 취소됨" },
+        { "part": "toast info (reset)", "tag": "addToast", "classes": "type:'info' duration:3000", "text": "계획이 초기화되었습니다." },
+        { "part": "toast info (guest export)", "tag": "addToast", "classes": "type:'info' duration:3000", "text": "로그인 후 이용할 수 있는 기능입니다." },
+        { "part": "native confirm", "tag": "window.confirm", "classes": "", "text": "모든 학기와 과목이 삭제됩니다. 계획을 초기화하시겠습니까?" }
+      ],
+      "notes": "graduationDelta payload carries secondRowLabel '전공핵심' | '전체', categoryPct {before, after}, categoryCredits {after, required}. Fallback labels: '자유선택', 'Loading...', 'N/A', 'Unknown Course'."
+    },
+    {
+      "name": "StatisticsPage / loading state",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Centered lucide spinner with caption",
+      "elements": [
+        { "part": "container", "tag": "div", "classes": "container mx-auto px-4 py-8" },
+        { "part": "center", "tag": "div", "classes": "flex items-center justify-center min-h-[400px]" },
+        { "part": "inner", "tag": "div", "classes": "text-center" },
+        { "part": "spinner", "tag": "Loader2 (lucide)", "classes": "w-8 h-8 animate-spin mx-auto mb-4 text-[#3069B3]" },
+        { "part": "caption", "tag": "p", "classes": "text-gray-600", "text": "통계를 불러오는 중..." }
+      ]
+    },
+    {
+      "name": "StatisticsPage / DEPARTMENT_NOT_SET empty state",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Centered Card with icon-in-circle, heading, body and gradient CTA to /profile",
+      "elements": [
+        { "part": "container", "tag": "div", "classes": "container mx-auto px-4 py-8" },
+        { "part": "card", "tag": "Card", "classes": "max-w-2xl mx-auto p-8 text-center" },
+        { "part": "icon circle", "tag": "div", "classes": "w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4" },
+        { "part": "icon", "tag": "Info (lucide)", "classes": "w-8 h-8 text-[#3069B3]" },
+        { "part": "heading", "tag": "h2", "classes": "text-2xl font-bold mb-2", "text": "학과를 설정해주세요" },
+        { "part": "body", "tag": "p", "classes": "text-gray-600 mb-6", "text": "학과별 수강 통계를 확인하려면 프로필에서 학과를 설정해야 합니다." },
+        { "part": "cta", "tag": "Link href=/profile", "classes": "inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg hover:opacity-90 transition-opacity", "text": "프로필 설정하기" },
+        { "part": "cta icon", "tag": "ChevronRight (lucide)", "classes": "w-5 h-5" }
+      ]
+    },
+    {
+      "name": "StatisticsPage / error state",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Centered Card with large red alert icon",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "max-w-2xl mx-auto p-8 text-center" },
+        { "part": "icon", "tag": "AlertCircle (lucide)", "classes": "w-16 h-16 text-red-500 mx-auto mb-4" },
+        { "part": "heading", "tag": "h2", "classes": "text-2xl font-bold mb-2", "text": "통계를 불러오는데 실패했습니다" },
+        { "part": "body", "tag": "p", "classes": "text-gray-600", "text": "잠시 후 다시 시도해주세요." }
+      ]
+    },
+    {
+      "name": "StatisticsPage / no-data state",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Centered Card with large gray chart icon and gradient CTA",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "max-w-2xl mx-auto p-8 text-center" },
+        { "part": "icon", "tag": "BarChart3 (lucide)", "classes": "w-16 h-16 text-gray-400 mx-auto mb-4" },
+        { "part": "heading", "tag": "h2", "classes": "text-2xl font-bold mb-2", "text": "통계 데이터를 찾을 수 없습니다" },
+        { "part": "body", "tag": "p", "classes": "text-gray-600 mb-4", "text": "설정된 학과 정보를 확인할 수 없습니다. 프로필에서 학과를 다시 설정해주세요." },
+        { "part": "cta", "tag": "Link href=/profile", "classes": "inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg hover:opacity-90 transition-opacity", "text": "프로필 설정하기" },
+        { "part": "cta icon", "tag": "ChevronRight (lucide)", "classes": "w-5 h-5" }
+      ]
+    },
+    {
+      "name": "StatisticsPage / page root + header",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Page header with gradient title, large subtitle, and meta line (student count, relative update time)",
+      "props": "export default function StatisticsPage() — no props. State: selectedCategory: 'all'|RequirementCategory, selectedSemester: 'all'|string, visibleCount (3, +5 per click), selectedPlanId, isAllPlansModalOpen",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "container mx-auto px-4 py-8 max-w-7xl" },
+        { "part": "header", "tag": "div", "classes": "mb-8" },
+        { "part": "title", "tag": "h1", "classes": "text-3xl font-bold mb-2" },
+        { "part": "title gradient span", "tag": "span", "classes": "text-gradient", "text": "학과 수강 통계" },
+        { "part": "subtitle", "tag": "p", "classes": "text-xl text-gray-700 mb-2", "text": "{departmentName} 학생들이 많이 듣는 과목" },
+        { "part": "meta row", "tag": "div", "classes": "flex items-center gap-2 text-sm text-gray-500" },
+        { "part": "meta icon", "tag": "Users (lucide)", "classes": "w-4 h-4" },
+        { "part": "meta text", "tag": "span", "classes": "", "text": "{n}명의 학생 데이터 기반" },
+        { "part": "meta separator", "tag": "span", "classes": "", "text": "·" },
+        { "part": "meta text", "tag": "span", "classes": "", "text": "{relativeTime} 갱신" }
+      ],
+      "notes": ".text-gradient (globals.css) = background: linear-gradient(135deg, #153974, #3069B3, #00AACA); background-clip: text; -webkit-text-fill-color: transparent."
+    },
+    {
+      "name": "StatisticsPage / guest login banner",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Amber callout for guests with Google login button and register link",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg" },
+        { "part": "row", "tag": "div", "classes": "flex items-start gap-3" },
+        { "part": "icon", "tag": "LogIn (lucide)", "classes": "w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" },
+        { "part": "body", "tag": "div", "classes": "flex-1" },
+        { "part": "title", "tag": "p", "classes": "text-sm font-medium text-amber-900 mb-1", "text": "회원가입하고 다른 학생들도 통계를 볼 수 있도록 도와주세요!" },
+        { "part": "description", "tag": "p", "classes": "text-sm text-amber-800 mb-3", "text": "로그인하면 나의 수강 계획이 통계에 반영되어, 같은 학과 학생들이 더 정확한 데이터를 참고할 수 있습니다." },
+        { "part": "actions", "tag": "div", "classes": "flex items-center gap-3" },
+        { "part": "primary button", "tag": "button onClick=loginWithGoogle", "classes": "inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm font-medium", "text": "구글로 로그인" },
+        { "part": "secondary link", "tag": "Link href=/register", "classes": "text-sm font-medium text-amber-900 hover:text-amber-700 underline", "text": "회원가입하기" }
+      ],
+      "notes": "Only banner on the page using a non-brand (amber) action color."
+    },
+    {
+      "name": "StatisticsPage / data scope info banner",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Blue informational callout explaining what data the page shows",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg" },
+        { "part": "row", "tag": "div", "classes": "flex items-start gap-3" },
+        { "part": "icon", "tag": "Info (lucide)", "classes": "w-5 h-5 text-[#3069B3] mt-0.5 flex-shrink-0" },
+        { "part": "body", "tag": "div", "classes": "text-sm text-gray-700 space-y-1" },
+        { "part": "title", "tag": "p", "classes": "font-medium text-gray-900", "text": "이 페이지는 어떤 데이터를 보여주나요?" },
+        { "part": "description", "tag": "p", "classes": "", "text": "<strong>{departmentName}</strong> 소속 학생들이 작성한 수강 계획을 분석한 결과입니다. 직접 추가한 과목(커스텀 과목)은 통계에서 제외되며, 공식 교과목만 집계됩니다." }
+      ]
+    },
+    {
+      "name": "StatisticsPage / filter card (category + semester chips)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Card containing two rows of toggle chips: 이수구분 category filter and 학기 filter",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "mb-6 p-4" },
+        { "part": "helper text", "tag": "p", "classes": "text-sm text-gray-500 mb-3", "text": "이수구분별로 인기 과목을 필터링할 수 있습니다" },
+        { "part": "chip row", "tag": "div", "classes": "flex flex-wrap gap-2" },
+        {
+          "part": "category chip",
+          "tag": "button",
+          "classes": "px-4 py-2 rounded-lg font-medium transition-colors",
+          "text": "전체 | 전공핵심 | 전공필수 | 전공선택 | 교양필수 | 교양선택 | 교직 | 자유선택",
+          "states": [
+            { "state": "selected", "classes": "bg-gradient-to-r from-[#153974] to-[#3069B3] text-white" },
+            { "state": "unselected", "classes": "bg-gray-100 text-gray-700 hover:bg-gray-200" }
+          ]
+        },
+        { "part": "semester section", "tag": "div", "classes": "mt-4 pt-4 border-t" },
+        { "part": "helper text", "tag": "p", "classes": "text-sm text-gray-500 mb-3", "text": "학기별로 필터링할 수 있습니다" },
+        { "part": "chip row", "tag": "div", "classes": "flex flex-wrap gap-2" },
+        {
+          "part": "semester chip",
+          "tag": "button",
+          "classes": "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors",
+          "text": "전체 학기 | {year}학년 {1|2}학기",
+          "states": [
+            { "state": "selected", "classes": "bg-gradient-to-r from-[#153974] to-[#3069B3] text-white" },
+            { "state": "unselected", "classes": "bg-gray-100 text-gray-700 hover:bg-gray-200" }
+          ]
+        }
+      ],
+      "notes": "Two chip sizes in one card: category chips px-4 py-2 at base text size, semester chips px-3 py-1.5 text-sm. Selecting any chip resets visibleCount to 3."
+    },
+    {
+      "name": "StatisticsPage / popular courses ranking card",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Ranked list of courses with numbered gradient circle, category badge, gradient progress bar, percentage; show-more/collapse footer and gray note",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "mb-8" },
+        { "part": "card header", "tag": "div", "classes": "p-6 border-b" },
+        { "part": "section title", "tag": "h2", "classes": "text-xl font-bold flex items-center gap-2", "text": "인기 과목 순위" },
+        { "part": "section icon", "tag": "BookOpen (lucide)", "classes": "w-5 h-5 text-[#3069B3]" },
+        { "part": "section subtitle", "tag": "p", "classes": "text-sm text-gray-500 mt-1", "text": "{n}명 중 해당 과목을 계획에 포함한 학생 비율 순으로 정렬됩니다" },
+        { "part": "list", "tag": "div", "classes": "divide-y" },
+        { "part": "empty state", "tag": "div", "classes": "p-8 text-center text-gray-500" },
+        { "part": "empty title", "tag": "p", "classes": "font-medium mb-1", "text": "아직 수강 계획 데이터가 없습니다" },
+        { "part": "empty body", "tag": "p", "classes": "text-sm", "text": "학과 학생들이 수강 계획을 작성하면 이곳에 인기 과목이 표시됩니다" },
+        { "part": "empty (filtered) text", "tag": "text", "classes": "", "text": "해당 조건에 맞는 과목이 없습니다." },
+        { "part": "row", "tag": "div", "classes": "p-4 hover:bg-gray-50 transition-colors" },
+        { "part": "row inner", "tag": "div", "classes": "flex items-start gap-4" },
+        { "part": "rank circle", "tag": "div", "classes": "flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] text-white flex items-center justify-center font-bold text-sm", "text": "{index + 1}" },
+        { "part": "row body", "tag": "div", "classes": "flex-1 min-w-0" },
+        { "part": "info row", "tag": "div", "classes": "flex items-start justify-between gap-2 mb-2" },
+        { "part": "course name", "tag": "h3", "classes": "font-semibold text-gray-900 truncate", "text": "{course.name}" },
+        { "part": "course meta", "tag": "p", "classes": "text-sm text-gray-600", "text": "{code} · {credits}학점" },
+        { "part": "category badge", "tag": "span", "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${CATEGORY_COLORS[category]}" },
+        { "part": "progress wrapper", "tag": "div", "classes": "mb-1" },
+        { "part": "progress track", "tag": "div", "classes": "h-2 bg-gray-200 rounded-full overflow-hidden" },
+        { "part": "progress fill", "tag": "div", "classes": "h-full bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] transition-all duration-300", "inline_style": "width: `${course.percentage}%`" },
+        { "part": "stats row", "tag": "div", "classes": "flex items-center gap-2 text-sm" },
+        { "part": "percentage", "tag": "span", "classes": "font-semibold text-[#3069B3]", "text": "{percentage.toFixed(1)}%" },
+        { "part": "count", "tag": "span", "classes": "text-gray-500", "text": "({studentCount}명)" },
+        { "part": "footer (show more)", "tag": "div", "classes": "p-4 border-t" },
+        { "part": "show more button", "tag": "button", "classes": "w-full py-2.5 text-sm font-medium text-[#3069B3] hover:bg-blue-50 rounded-lg transition-colors", "text": "{remainingCount}개 더보기" },
+        { "part": "collapse button", "tag": "button", "classes": "w-full py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-lg transition-colors", "text": "접기" },
+        { "part": "note footer", "tag": "div", "classes": "p-4 bg-gray-50 border-t" },
+        { "part": "note text", "tag": "p", "classes": "text-sm text-gray-600 flex items-center gap-1", "text": "계획을 작성한 학생 중 비율입니다" },
+        { "part": "note icon", "tag": "Info (lucide)", "classes": "w-4 h-4" }
+      ],
+      "notes": "This is the only bar/ranking visualization: a horizontal bar whose fill is the 3-stop brand gradient (navy -> mid blue -> cyan), track gray-200, 8px tall, fully rounded. Rows have hover:bg-gray-50 but are not clickable. Initially shows 3 rows, +5 per 더보기."
+    },
+    {
+      "name": "StatisticsPage / semester distribution stat tiles",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Card with 1/2/4-col grid of gray stat tiles: semester label + avg courses/credits",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "mb-8" },
+        { "part": "card header", "tag": "div", "classes": "p-6 border-b" },
+        { "part": "section title", "tag": "h2", "classes": "text-xl font-bold flex items-center gap-2", "text": "학기별 평균 수강 현황" },
+        { "part": "section icon", "tag": "BarChart3 (lucide)", "classes": "w-5 h-5 text-[#3069B3]" },
+        { "part": "section subtitle", "tag": "p", "classes": "text-sm text-gray-500 mt-1", "text": "같은 학과 학생들의 학기별 평균 수강 과목 수와 학점입니다" },
+        { "part": "card body", "tag": "div", "classes": "p-6" },
+        { "part": "grid", "tag": "div", "classes": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" },
+        { "part": "tile", "tag": "div", "classes": "p-4 bg-gray-50 rounded-lg" },
+        { "part": "tile title", "tag": "h3", "classes": "font-semibold text-gray-900 mb-2", "text": "{year}학년 {1|2}학기" },
+        { "part": "tile value", "tag": "p", "classes": "text-sm text-gray-600", "text": "{avgCourses.toFixed(1)}과목 · {avgCredits.toFixed(1)}학점" }
+      ],
+      "notes": "Stat tiles are text-only; no big-number typography, no sparkline."
+    },
+    {
+      "name": "StatisticsPage / anonymous plans (guest variant)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "Locked section for guests with icon, message, gradient primary + outlined secondary CTA",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "" },
+        { "part": "card header", "tag": "div", "classes": "p-6 border-b" },
+        { "part": "section title", "tag": "h2", "classes": "text-xl font-bold mb-1", "text": "익명 수강계획 열람" },
+        { "part": "section subtitle", "tag": "p", "classes": "text-sm text-gray-600", "text": "같은 학과 학생들의 수강 계획을 참고하세요" },
+        { "part": "body", "tag": "div", "classes": "p-8 text-center" },
+        { "part": "icon", "tag": "Users (lucide)", "classes": "w-12 h-12 text-gray-300 mx-auto mb-4" },
+        { "part": "title", "tag": "p", "classes": "font-medium text-gray-900 mb-2", "text": "로그인하면 다른 학생들의 수강 계획을 열람할 수 있습니다" },
+        { "part": "description", "tag": "p", "classes": "text-sm text-gray-500 mb-6", "text": "회원가입 후 나의 계획을 등록하면, 같은 학과 학생들의 익명 수강 계획도 참고할 수 있어요." },
+        { "part": "actions", "tag": "div", "classes": "flex items-center justify-center gap-3" },
+        { "part": "primary button", "tag": "button onClick=loginWithGoogle", "classes": "inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium", "text": "구글로 로그인" },
+        { "part": "secondary link", "tag": "Link href=/register", "classes": "inline-flex items-center gap-2 px-5 py-2.5 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors text-sm font-medium", "text": "회원가입하기" }
+      ]
+    },
+    {
+      "name": "StatisticsPage / anonymous plans (member variant)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "purpose": "3-col grid of clickable plan tiles (A/B/C) opening AnonymousPlanModal, anonymity footnote, 'view all' outlined button opening AllPlansModal, and empty state",
+      "elements": [
+        { "part": "card", "tag": "Card", "classes": "" },
+        { "part": "card header", "tag": "div", "classes": "p-6 border-b" },
+        { "part": "section title", "tag": "h2", "classes": "text-xl font-bold mb-1", "text": "익명 수강계획 열람" },
+        { "part": "section subtitle", "tag": "p", "classes": "text-sm text-gray-600", "text": "같은 학과 학생들의 수강 계획을 참고하세요" },
+        { "part": "body", "tag": "div", "classes": "p-6" },
+        { "part": "loading", "tag": "div", "classes": "flex items-center justify-center py-12" },
+        { "part": "loading spinner", "tag": "Loader2 (lucide)", "classes": "w-8 h-8 animate-spin text-[#3069B3]" },
+        { "part": "tile grid", "tag": "div", "classes": "grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" },
+        { "part": "plan tile", "tag": "button", "classes": "p-4 border-2 border-gray-200 rounded-lg hover:border-[#3069B3] hover:shadow-md transition-all text-left" },
+        { "part": "tile header", "tag": "div", "classes": "flex items-center gap-2 mb-3" },
+        { "part": "letter avatar", "tag": "div", "classes": "w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] text-white flex items-center justify-center font-bold text-sm", "text": "A | B | C (String.fromCharCode(65 + index))" },
+        { "part": "tile title", "tag": "span", "classes": "font-semibold text-gray-900", "text": "계획 {label}" },
+        { "part": "tile meta", "tag": "div", "classes": "space-y-1 text-sm text-gray-600", "text": "{n}개 학기 / {n}개 과목 · {n}학점" },
+        { "part": "anonymity note", "tag": "p", "classes": "text-xs text-gray-400 mt-4 flex items-center gap-1", "text": "모든 계획은 익명으로 표시됩니다" },
+        { "part": "note icon", "tag": "Info (lucide)", "classes": "w-3.5 h-3.5" },
+        { "part": "view-all wrapper", "tag": "div", "classes": "text-center mt-4" },
+        { "part": "view-all button", "tag": "button", "classes": "inline-flex items-center gap-2 px-6 py-3 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors", "text": "전체 {total}개 수강계획 보기" },
+        { "part": "view-all icon", "tag": "ChevronRight (lucide)", "classes": "w-5 h-5" },
+        { "part": "empty state", "tag": "div", "classes": "text-center py-12 text-gray-500" },
+        { "part": "empty title", "tag": "p", "classes": "font-medium mb-1", "text": "아직 공개된 수강 계획이 없습니다" },
+        { "part": "empty body", "tag": "p", "classes": "text-sm", "text": "학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다" }
+      ],
+      "notes": "Modals (AnonymousPlanModal, AllPlansModal) are rendered conditionally; their styles live in their own component files (not in this reader's list)."
+    }
+  ],
+  "semantic_maps": [
+    {
+      "domain": "RequirementCategory labels (CATEGORY_LABELS)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "entries": [
+        { "key": "major_required", "label": "전공핵심", "classes": "" },
+        { "key": "major_compulsory", "label": "전공필수", "classes": "" },
+        { "key": "major_elective", "label": "전공선택", "classes": "" },
+        { "key": "general_required", "label": "교양필수", "classes": "" },
+        { "key": "general_elective", "label": "교양선택", "classes": "" },
+        { "key": "teaching", "label": "교직", "classes": "" },
+        { "key": "free_elective", "label": "자유선택", "classes": "" }
+      ]
+    },
+    {
+      "domain": "RequirementCategory badge colors (CATEGORY_COLORS)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "entries": [
+        { "key": "major_required", "label": "전공핵심", "classes": "bg-red-100 text-red-700" },
+        { "key": "major_compulsory", "label": "전공필수", "classes": "bg-rose-100 text-rose-700" },
+        { "key": "major_elective", "label": "전공선택", "classes": "bg-orange-100 text-orange-700" },
+        { "key": "general_required", "label": "교양필수", "classes": "bg-blue-100 text-blue-700" },
+        { "key": "general_elective", "label": "교양선택", "classes": "bg-green-100 text-green-700" },
+        { "key": "teaching", "label": "교직", "classes": "bg-violet-100 text-violet-700" },
+        { "key": "free_elective", "label": "자유선택", "classes": "bg-gray-100 text-gray-600" }
+      ]
+    },
+    {
+      "domain": "Major type header badge",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "entries": [
+        { "key": "primary department", "label": "{departmentName}", "classes": "bg-[#153974]/10 text-[#153974]" },
+        { "key": "double", "label": "복수전공: {name}", "classes": "bg-purple-100 text-purple-700" },
+        { "key": "minor", "label": "부전공: {name}", "classes": "bg-orange-100 text-orange-700" }
+      ]
+    },
+    {
+      "domain": "Course status legend chips",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "entries": [
+        { "key": "planned", "label": "예정", "classes": "px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700" },
+        { "key": "completed", "label": "이수", "classes": "px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700" }
+      ]
+    },
+    {
+      "domain": "Year filter pill state",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "entries": [
+        { "key": "selected", "label": "{y}학년 / 전체", "classes": "bg-[#153974] text-white" },
+        { "key": "unselected", "label": "{y}학년 / 전체", "classes": "bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20" }
+      ]
+    },
+    {
+      "domain": "Filter chip state (category + semester)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "entries": [
+        { "key": "selected", "classes": "bg-gradient-to-r from-[#153974] to-[#3069B3] text-white" },
+        { "key": "unselected", "classes": "bg-gray-100 text-gray-700 hover:bg-gray-200" }
+      ]
+    },
+    {
+      "domain": "Toast types used",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "entries": [
+        { "key": "success", "label": "{name} 추가됨 · +{n}학점 {category} (duration 5000, action 실행 취소, graduationDelta)", "classes": "" },
+        { "key": "info", "label": "실행 취소됨 (1500) / 계획이 초기화되었습니다. (3000) / 로그인 후 이용할 수 있는 기능입니다. (3000)", "classes": "" }
+      ]
+    },
+    {
+      "domain": "Relative time (formatRelativeTime)",
+      "file": "src/app/(dashboard)/statistics/page.tsx",
+      "entries": [
+        { "key": "<1m", "label": "방금 전", "classes": "" },
+        { "key": "<60m", "label": "{n}분 전", "classes": "" },
+        { "key": "<24h", "label": "{n}시간 전", "classes": "" },
+        { "key": "<30d", "label": "{n}일 전", "classes": "" },
+        { "key": ">=30d", "label": "{n}개월 전", "classes": "" }
+      ]
+    }
+  ],
+  "color_classes_seen": [
+    "border-[#3069B3]",
+    "text-[#3069B3]",
+    "bg-[#3069B3]",
+    "from-[#153974]",
+    "via-[#3069B3]",
+    "to-[#3069B3]",
+    "to-[#00AACA]",
+    "bg-[#153974]",
+    "bg-[#153974]/10",
+    "bg-[#153974]/20",
+    "text-[#153974]",
+    "text-white",
+    "bg-white",
+    "text-gray-900",
+    "text-gray-700",
+    "text-gray-600",
+    "text-gray-500",
+    "text-gray-400",
+    "text-gray-300",
+    "bg-gray-50",
+    "bg-gray-100",
+    "bg-gray-200",
+    "border-gray-200",
+    "border-gray-600",
+    "text-red-500",
+    "text-red-600",
+    "text-red-700",
+    "bg-red-50",
+    "bg-red-100",
+    "border-red-300",
+    "bg-rose-100",
+    "text-rose-700",
+    "bg-orange-100",
+    "text-orange-700",
+    "bg-blue-50",
+    "bg-blue-100",
+    "text-blue-700",
+    "border-blue-200",
+    "bg-green-100",
+    "text-green-700",
+    "bg-emerald-100",
+    "text-emerald-700",
+    "bg-violet-100",
+    "text-violet-700",
+    "bg-purple-100",
+    "text-purple-700",
+    "bg-amber-50",
+    "border-amber-200",
+    "text-amber-600",
+    "text-amber-700",
+    "text-amber-800",
+    "text-amber-900",
+    "bg-amber-600",
+    "bg-amber-700"
+  ],
+  "typography": [
+    { "role": "page title (planner)", "classes": "text-xl sm:text-2xl font-bold text-gray-900", "where": "planner/page.tsx h1" },
+    { "role": "page title (statistics, gradient)", "classes": "text-3xl font-bold mb-2 + span.text-gradient", "where": "statistics/page.tsx h1" },
+    { "role": "export-capture title", "classes": "text-xl font-bold text-gray-900", "where": "planner/page.tsx export-only h1" },
+    { "role": "page subtitle (planner, instruction)", "classes": "text-gray-600 mt-1 text-sm sm:text-base", "where": "planner/page.tsx p" },
+    { "role": "page subtitle (statistics)", "classes": "text-xl text-gray-700 mb-2", "where": "statistics/page.tsx p" },
+    { "role": "page meta line", "classes": "flex items-center gap-2 text-sm text-gray-500", "where": "statistics/page.tsx header" },
+    { "role": "card section title", "classes": "text-xl font-bold flex items-center gap-2", "where": "statistics/page.tsx h2 (with w-5 h-5 brand icon)" },
+    { "role": "card section title (no icon)", "classes": "text-xl font-bold mb-1", "where": "statistics/page.tsx anonymous plans h2" },
+    { "role": "card section subtitle", "classes": "text-sm text-gray-500 mt-1", "where": "statistics/page.tsx" },
+    { "role": "card section subtitle (alt)", "classes": "text-sm text-gray-600", "where": "statistics/page.tsx anonymous plans" },
+    { "role": "empty/error state heading", "classes": "text-2xl font-bold mb-2", "where": "statistics/page.tsx h2 (no color class, inherits)" },
+    { "role": "empty/error state body", "classes": "text-gray-600", "where": "statistics/page.tsx p" },
+    { "role": "list empty-state title", "classes": "font-medium mb-1", "where": "statistics/page.tsx inside text-gray-500 container" },
+    { "role": "list empty-state body", "classes": "text-sm", "where": "statistics/page.tsx" },
+    { "role": "eyebrow / group heading", "classes": "text-sm font-semibold text-gray-500 uppercase tracking-wide", "where": "planner/page.tsx year h3" },
+    { "role": "group heading suffix", "classes": "ml-2 text-xs font-normal text-gray-400", "where": "planner/page.tsx credit total" },
+    { "role": "toolbar label", "classes": "text-[11px] font-medium text-gray-400", "where": "planner/page.tsx year filter" },
+    { "role": "micro hint", "classes": "text-[10px]", "where": "planner/page.tsx status legend" },
+    { "role": "item title", "classes": "font-semibold text-gray-900 truncate", "where": "statistics/page.tsx course h3" },
+    { "role": "item title (tile)", "classes": "font-semibold text-gray-900 mb-2", "where": "statistics/page.tsx stat tile h3" },
+    { "role": "item meta", "classes": "text-sm text-gray-600", "where": "statistics/page.tsx" },
+    { "role": "badge / pill", "classes": "text-xs font-medium", "where": "both pages (rounded-full px-2.5 py-0.5)" },
+    { "role": "pill (compact)", "classes": "text-xs rounded-full font-medium", "where": "planner/page.tsx year filter (px-2 py-0.5)" },
+    { "role": "stat value emphasis", "classes": "font-semibold text-[#3069B3]", "where": "statistics/page.tsx percentage (inside text-sm)" },
+    { "role": "rank / avatar glyph", "classes": "font-bold text-sm text-white", "where": "statistics/page.tsx w-8 h-8 gradient circle" },
+    { "role": "footnote", "classes": "text-xs text-gray-400", "where": "statistics/page.tsx anonymity note" },
+    { "role": "banner title", "classes": "text-sm font-medium text-amber-900 | font-medium text-gray-900", "where": "statistics/page.tsx banners" },
+    { "role": "banner body", "classes": "text-sm text-amber-800 | text-sm text-gray-700", "where": "statistics/page.tsx banners" },
+    { "role": "button label", "classes": "text-sm font-medium", "where": "statistics/page.tsx CTA buttons; planner Button className=\"text-sm\"" },
+    { "role": "dropdown item", "classes": "text-sm", "where": "planner/page.tsx export menu" },
+    { "role": "error text", "classes": "text-red-500", "where": "planner/page.tsx error p" },
+    { "role": "inline link", "classes": "text-xs text-gray-400 hover:text-[#153974] underline | text-sm font-medium text-amber-900 hover:text-amber-700 underline", "where": "planner header / statistics banner" }
+  ],
+  "layout_patterns": [
+    { "name": "Statistics page container", "description": "Centered container with max width and vertical padding", "classes": "container mx-auto px-4 py-8 max-w-7xl", "where": "statistics/page.tsx root" },
+    { "name": "Planner page root", "description": "No container/padding of its own; just vertical rhythm (relies on dashboard layout wrapper)", "classes": "space-y-6", "where": "planner/page.tsx root and export container" },
+    { "name": "Centered full-state card", "description": "Loading/error/empty page states: container > centered Card", "classes": "container mx-auto px-4 py-8 > Card.max-w-2xl mx-auto p-8 text-center", "where": "statistics/page.tsx" },
+    { "name": "Centered spinner area", "description": "Min-height centered loader", "classes": "flex items-center justify-center min-h-[400px]", "where": "both pages" },
+    { "name": "Header split (title left, actions right)", "description": "Stacks on mobile, row on sm+", "classes": "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3", "where": "planner/page.tsx" },
+    { "name": "Header block (statistics)", "description": "Title, big subtitle, meta row; no action buttons", "classes": "mb-8 > h1.text-3xl font-bold mb-2 > p.text-xl text-gray-700 mb-2 > div.flex items-center gap-2 text-sm text-gray-500", "where": "statistics/page.tsx" },
+    { "name": "Card with header/body/footer", "description": "Card > header p-6 border-b (h2 + p) > body p-6 or divide-y list > footer p-4 border-t; optional gray note footer", "classes": "p-6 border-b | p-6 | divide-y | p-4 border-t | p-4 bg-gray-50 border-t", "where": "statistics/page.tsx" },
+    { "name": "Filter chip toolbar", "description": "Wrapping chip row inside a padded Card, second row separated by top border", "classes": "Card.mb-6 p-4 > p.text-sm text-gray-500 mb-3 > div.flex flex-wrap gap-2 ; second row: mt-4 pt-4 border-t", "where": "statistics/page.tsx" },
+    { "name": "Horizontally scrolling pill toolbar", "description": "Single-line pill row that scrolls on overflow; children flex-shrink-0", "classes": "flex items-center gap-1.5 overflow-x-auto pb-0.5", "where": "planner/page.tsx year filter" },
+    { "name": "Ranking row", "description": "Numbered circle + flexible body with title/badge row, progress bar, stats line", "classes": "p-4 hover:bg-gray-50 transition-colors > flex items-start gap-4 > [w-8 h-8 rounded-full gradient] + [flex-1 min-w-0]", "where": "statistics/page.tsx" },
+    { "name": "Horizontal progress bar", "description": "8px rounded track with gradient fill, width set inline", "classes": "h-2 bg-gray-200 rounded-full overflow-hidden > h-full bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] transition-all duration-300 style={{width:'{pct}%'}}", "where": "statistics/page.tsx" },
+    { "name": "Stat tile grid", "description": "1/2/4 responsive grid of flat gray tiles", "classes": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 > p-4 bg-gray-50 rounded-lg", "where": "statistics/page.tsx semester distribution" },
+    { "name": "Selectable tile grid", "description": "1/3 responsive grid of bordered button tiles with hover border + shadow", "classes": "grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 > button.p-4 border-2 border-gray-200 rounded-lg hover:border-[#3069B3] hover:shadow-md transition-all text-left", "where": "statistics/page.tsx anonymous plans" },
+    { "name": "Callout banner", "description": "Tinted rounded box with leading icon and text column", "classes": "mb-6 p-4 bg-{amber|blue}-50 border border-{amber|blue}-200 rounded-lg > flex items-start gap-3 > icon.w-5 h-5 mt-0.5 flex-shrink-0 + flex-1", "where": "statistics/page.tsx" },
+    { "name": "Dropdown menu", "description": "Absolutely positioned under trigger, right-aligned on sm+", "classes": "relative > absolute left-0 sm:left-auto sm:right-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[140px] > button.w-full text-left px-3 py-2 text-sm hover:bg-gray-50", "where": "planner/page.tsx export" },
+    { "name": "Planner vertical stack", "description": "RequirementsSummary -> CourseCatalog (full-width top row, scroll-margin-top 72px) -> semester grid; catalog is not a sidebar and semesters do not scroll horizontally", "classes": "space-y-6 ; semester grid wrapper space-y-4 ; year group space-y-2 ; grid grid-cols-1 sm:grid-cols-2 gap-3", "where": "planner/page.tsx" },
+    { "name": "Centered dashed add action", "description": "Add-row affordance centered under the grid", "classes": "flex justify-center py-4 > Button ghost text-gray-500 hover:text-gray-700 border-dashed border-2 px-6 py-3", "where": "planner/page.tsx" },
+    { "name": "Drag overlay ghost", "description": "Fixed-width floating card", "classes": "w-[250px] shadow-lg rounded-lg opacity-90 pointer-events-none", "where": "planner/page.tsx DragOverlay" },
+    { "name": "CTA pair", "description": "Gradient primary + 2px outlined brand secondary side by side", "classes": "flex items-center justify-center gap-3 > [px-5 py-2.5 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg hover:opacity-90 transition-opacity text-sm font-medium] + [px-5 py-2.5 border-2 border-[#3069B3] text-[#3069B3] rounded-lg hover:bg-[#3069B3] hover:text-white transition-colors text-sm font-medium]", "where": "statistics/page.tsx guest anonymous plans" }
+  ],
+  "copy_samples": [
+    { "text": "수강 계획", "where": "planner h1", "note": "Noun-phrase page title" },
+    { "text": "학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.", "where": "planner subtitle", "note": "하세요체 instruction, period, comma" },
+    { "text": "학과를 설정해주세요", "where": "planner header link / statistics empty-state h2", "note": "해주세요 polite request, no period in link, no period in h2" },
+    { "text": "내보내기", "where": "planner export button", "note": "~기 nominal verb CTA" },
+    { "text": "내보내는 중...", "where": "planner export loading", "note": "ASCII three dots, not ellipsis character" },
+    { "text": "PNG 이미지 / PDF 문서", "where": "planner export menu", "note": "Latin acronym + Korean noun" },
+    { "text": "초기화", "where": "planner reset button", "note": "Single noun, destructive" },
+    { "text": "모든 학기와 과목이 삭제됩니다. 계획을 초기화하시겠습니까?", "where": "planner window.confirm", "note": "합니다체 + 하시겠습니까 formal question" },
+    { "text": "계획이 초기화되었습니다.", "where": "planner toast (info)", "note": "합니다체 with period" },
+    { "text": "로그인 후 이용할 수 있는 기능입니다.", "where": "planner toast (info, guest export)", "note": "합니다체" },
+    { "text": "{course.name} 추가됨 · +{credits}학점 {catLabel}", "where": "planner toast (success)", "note": "Terse past-participle '추가됨', middle-dot separator, plus sign" },
+    { "text": "실행 취소 / 실행 취소됨", "where": "planner toast action label / undo toast", "note": "Undo CTA and confirmation" },
+    { "text": "계획을 불러오는데 실패했습니다.", "where": "planner error", "note": "합니다체 with period" },
+    { "text": "다시 시도", "where": "planner error retry Button", "note": "Short imperative noun" },
+    { "text": "학년 · 전체 · {y}학년 · ({n}학점)", "where": "planner year filter / group heading", "note": "Labels; credits in parentheses" },
+    { "text": "예정 ↔ 이수 클릭하여 변경", "where": "planner status legend", "note": "Unicode arrow glyph between status chips" },
+    { "text": "학기 추가", "where": "planner add semester button", "note": "Noun + 추가" },
+    { "text": "복수전공: {name} / 부전공: {name}", "where": "planner header badge", "note": "Colon separated" },
+    { "text": "학과 수강 통계", "where": "statistics h1 (gradient)", "note": "Noun-phrase title" },
+    { "text": "{departmentName} 학생들이 많이 듣는 과목", "where": "statistics subtitle", "note": "Descriptive noun phrase, no period" },
+    { "text": "{n}명의 학생 데이터 기반 · {time} 갱신", "where": "statistics meta", "note": "Middle dot separator; relative time 방금 전/{n}분 전/{n}시간 전/{n}일 전/{n}개월 전" },
+    { "text": "회원가입하고 다른 학생들도 통계를 볼 수 있도록 도와주세요!", "where": "statistics guest banner title", "note": "Only exclamation mark in these pages; 해주세요" },
+    { "text": "로그인하면 나의 수강 계획이 통계에 반영되어, 같은 학과 학생들이 더 정확한 데이터를 참고할 수 있습니다.", "where": "statistics guest banner body", "note": "합니다체" },
+    { "text": "구글로 로그인 / 회원가입하기 / 프로필 설정하기", "where": "statistics CTAs", "note": "~하기 nominal CTAs; '구글' transliterated" },
+    { "text": "이 페이지는 어떤 데이터를 보여주나요?", "where": "statistics info banner title", "note": "해요체 question" },
+    { "text": "직접 추가한 과목(커스텀 과목)은 통계에서 제외되며, 공식 교과목만 집계됩니다.", "where": "statistics info banner body", "note": "합니다체, parenthetical" },
+    { "text": "이수구분별로 인기 과목을 필터링할 수 있습니다", "where": "statistics filter helper", "note": "합니다체 without period" },
+    { "text": "인기 과목 순위", "where": "statistics section h2", "note": "" },
+    { "text": "{n}명 중 해당 과목을 계획에 포함한 학생 비율 순으로 정렬됩니다", "where": "statistics section subtitle", "note": "No period" },
+    { "text": "아직 수강 계획 데이터가 없습니다 / 학과 학생들이 수강 계획을 작성하면 이곳에 인기 과목이 표시됩니다", "where": "statistics empty list", "note": "Two-line empty state, no periods" },
+    { "text": "해당 조건에 맞는 과목이 없습니다.", "where": "statistics filtered-empty", "note": "With period (inconsistent with sibling)" },
+    { "text": "{n}개 더보기 / 접기", "where": "statistics show more / collapse", "note": "" },
+    { "text": "계획을 작성한 학생 중 비율입니다", "where": "statistics gray footer note", "note": "" },
+    { "text": "학기별 평균 수강 현황 / {year}학년 {1|2}학기 / {n}과목 · {n}학점", "where": "statistics stat tiles", "note": "Numbers to 1 decimal (toFixed(1))" },
+    { "text": "익명 수강계획 열람 / 같은 학과 학생들의 수강 계획을 참고하세요", "where": "statistics anonymous plans header", "note": "하세요 imperative" },
+    { "text": "회원가입 후 나의 계획을 등록하면, 같은 학과 학생들의 익명 수강 계획도 참고할 수 있어요.", "where": "statistics guest anonymous plans", "note": "해요체 (only '~어요' in these pages)" },
+    { "text": "계획 A / {n}개 학기 / {n}개 과목 · {n}학점 / 모든 계획은 익명으로 표시됩니다 / 전체 {n}개 수강계획 보기", "where": "statistics plan tiles", "note": "Letter labels A/B/C" },
+    { "text": "통계를 불러오는 중... / 통계를 불러오는데 실패했습니다 / 잠시 후 다시 시도해주세요. / 통계 데이터를 찾을 수 없습니다", "where": "statistics states", "note": "Mixed period usage" }
+  ],
+  "motion": [
+    { "classes": "animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]", "where": "planner/page.tsx page loading spinner (CSS border)" },
+    { "classes": "animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600", "where": "planner/page.tsx export button mini spinner" },
+    { "classes": "w-8 h-8 animate-spin mx-auto mb-4 text-[#3069B3]", "where": "statistics/page.tsx Loader2 page loading" },
+    { "classes": "w-8 h-8 animate-spin text-[#3069B3]", "where": "statistics/page.tsx Loader2 plans loading" },
+    { "classes": "transition-colors", "where": "chips, pills, menu items, ranking rows, outlined buttons, amber button (both pages)" },
+    { "classes": "hover:opacity-90 transition-opacity", "where": "statistics/page.tsx gradient CTA buttons/links" },
+    { "classes": "transition-all duration-300", "where": "statistics/page.tsx progress bar fill (width animates)" },
+    { "classes": "hover:border-[#3069B3] hover:shadow-md transition-all", "where": "statistics/page.tsx plan tile" },
+    { "classes": "hover:bg-[#3069B3] hover:text-white transition-colors", "where": "statistics/page.tsx outlined secondary buttons (fill on hover)" },
+    { "classes": "hover:bg-gray-50 transition-colors", "where": "statistics/page.tsx ranking rows (non-interactive)" },
+    { "classes": "opacity-90 shadow-lg pointer-events-none", "where": "planner/page.tsx DragOverlay ghost" },
+    { "classes": "JS: smoothScrollTo(scrollTop + rect.top - 72, 250) after 150ms timeout", "where": "planner/page.tsx auto scroll back to catalog after touch drop" },
+    { "classes": "JS: triggerHighlight() on add/remove (graduationPreviewStore)", "where": "planner/page.tsx — animates RequirementsSummary (styles live elsewhere)" },
+    { "classes": "JS: MouseSensor activationConstraint distance 8; TouchSensor delay 150 tolerance 8", "where": "planner/page.tsx dnd-kit sensors" }
+  ],
+  "icons": [
+    { "name": "Download (lucide-react)", "size_classes": "w-4 h-4", "where": "planner export button" },
+    { "name": "inline SVG plus (heroicons-style solid, viewBox 0 0 20 20, fill currentColor, path d=\"M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z\")", "size_classes": "w-5 h-5 mr-2", "where": "planner add semester button" },
+    { "name": "Loader2 (lucide-react)", "size_classes": "w-8 h-8 animate-spin", "where": "statistics page loading / plans loading" },
+    { "name": "Info (lucide-react)", "size_classes": "w-8 h-8 (in w-16 h-16 bg-blue-100 circle) | w-5 h-5 mt-0.5 flex-shrink-0 (banner) | w-4 h-4 (footer note) | w-3.5 h-3.5 (anonymity footnote)", "where": "statistics empty state, info banner, notes" },
+    { "name": "AlertCircle (lucide-react)", "size_classes": "w-16 h-16 text-red-500", "where": "statistics error state" },
+    { "name": "BarChart3 (lucide-react)", "size_classes": "w-16 h-16 text-gray-400 (empty) | w-5 h-5 text-[#3069B3] (section title)", "where": "statistics no-data state / semester distribution h2" },
+    { "name": "Users (lucide-react)", "size_classes": "w-4 h-4 (meta) | w-12 h-12 text-gray-300 (locked section)", "where": "statistics header meta / guest anonymous plans" },
+    { "name": "BookOpen (lucide-react)", "size_classes": "w-5 h-5 text-[#3069B3]", "where": "statistics popular courses h2" },
+    { "name": "ChevronRight (lucide-react)", "size_classes": "w-5 h-5", "where": "statistics CTA links/buttons (trailing)" },
+    { "name": "LogIn (lucide-react)", "size_classes": "w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0", "where": "statistics guest banner" },
+    { "name": "Unicode glyphs: '·' (middle dot separator), '↔' (status legend arrow)", "size_classes": "inherit", "where": "both pages" }
+  ],
+  "oddities": [
+    "dashboard/page.tsx and requirements/page.tsx are pure redirect('/planner') server components with zero markup; only planner and statistics carry design.",
+    "Page title scale differs: planner h1 is text-xl sm:text-2xl font-bold text-gray-900 (solid), statistics h1 is text-3xl font-bold with a .text-gradient span (135deg #153974 -> #3069B3 -> #00AACA). No shared page-header component.",
+    "Page container strategy differs: statistics wraps itself in container mx-auto px-4 py-8 max-w-7xl; planner root is just space-y-6 and relies on the layout for gutters.",
+    "Two spinner implementations: planner uses a CSS border spinner (animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]; mini h-3 w-3 border-gray-600), statistics uses lucide Loader2 w-8 h-8 animate-spin text-[#3069B3].",
+    "Add Semester uses an inline heroicons-style SVG plus (w-5 h-5 mr-2) instead of lucide Plus, while every other icon on these pages is lucide-react.",
+    "CATEGORY_LABELS and CATEGORY_COLORS are defined locally in statistics/page.tsx; planner imports GRADUATION_CATEGORY_LABELS from src/lib/graduationDelta.ts (which re-exports a CATEGORY_LABELS). Duplicated semantic map.",
+    "Gradient direction varies: buttons/chips use bg-gradient-to-r from-[#153974] to-[#3069B3]; rank circles and letter avatars use bg-gradient-to-br from-[#153974] to-[#3069B3]; progress fill uses a 3-stop bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]. #00AACA appears only in the progress bar and .text-gradient on these pages.",
+    "Off-brand amber palette (bg-amber-50/200/600/700, text-amber-600/800/900) used for the guest CTA banner on the same page as brand-gradient buttons; the amber button (bg-amber-600 + text-white, text-sm) is roughly 3:1 contrast, borderline for small text.",
+    "Color collision: planner minor-major badge is bg-orange-100 text-orange-700, identical to the statistics 전공선택 (major_elective) category badge; planner double-major badge uses purple-100/700 while statistics 교직 uses violet-100/700 (purple vs violet mix).",
+    "Green vs emerald mix: planner 이수 legend chip is bg-emerald-100 text-emerald-700, statistics 교양선택 badge is bg-green-100 text-green-700.",
+    "red vs rose mix in category badges: major_required bg-red-100 text-red-700 next to major_compulsory bg-rose-100 text-rose-700 (very similar hues for adjacent categories).",
+    "Border utilities without a color token (border, border-t, border-b, divide-y, border-dashed border-2) rely on Tailwind v4's default border color (currentColor unless globals.css overrides) — risk of dark borders if the base layer does not set one.",
+    "Arbitrary one-off values: text-[11px] (year filter label), text-[10px] (status legend), min-w-[140px] (export menu), w-[250px] (drag overlay), min-h-[400px] (loading/error areas), scrollMarginTop '72px' and -72 in JS (sticky header height magic number), imperative style.minWidth = '768px' during export.",
+    "Low contrast: text-gray-400 on white for the '학과를 설정해주세요' link, '({n}학점)' suffix, '학년' toolbar label, 'ㆍ클릭하여 변경' hint (text-[10px] text-gray-400 — tiny AND low contrast), and text-xs text-gray-400 footnote; text-gray-300 Users icon is decorative only.",
+    "Hover feedback inconsistent: gradient buttons use hover:opacity-90, amber button hover:bg-amber-700, chips hover:bg-gray-200, outlined buttons invert (hover:bg-[#3069B3] hover:text-white), year pills hover:bg-[#153974]/20.",
+    "Two chip sizes in the same filter card: category chips px-4 py-2 (base 16px text), semester chips px-3 py-1.5 text-sm.",
+    "Ranking rows have hover:bg-gray-50 transition-colors but no click handler (hover affordance without action).",
+    "No focus-visible styles on any hand-rolled button (chips, pills, menu items, plan tiles, show-more); only the shared Button component may provide them.",
+    "Destructive reset uses native window.confirm instead of a design-system dialog, and gets its danger look by overriding Button variant='outline' with text-red-600 border-red-300 hover:bg-red-50 rather than a dedicated variant.",
+    "uppercase tracking-wide applied to Korean year headings ({year}학년) — has no effect on Hangul, suggests copied English eyebrow pattern.",
+    "Year-filter pill className template literal contains a literal newline and indentation whitespace between base classes and the ternary (harmless but untidy).",
+    "Empty/error state h2s (text-2xl font-bold mb-2) carry no text color and inherit; sibling body copy is text-gray-600.",
+    "Punctuation inconsistency: some 합니다체 sentences end with a period ('해당 조건에 맞는 과목이 없습니다.', '잠시 후 다시 시도해주세요.') while sibling messages do not ('아직 수강 계획 데이터가 없습니다'). Loading copy uses ASCII '...' not '…'. One exclamation mark and one 해요체 '~어요' sentence amid otherwise 합니다체/하세요체 copy.",
+    "Planner layout contradicts the expected 'horizontal scroll of semester columns + sidebar catalog': the catalog is a full-width row above, semesters are a grid grid-cols-1 sm:grid-cols-2 gap-3 grouped by year, and the only horizontally scrolling element is the year-filter pill row (overflow-x-auto). Sticky behaviour, if any, lives inside CourseCatalog/RequirementsSummary (not in this file) — the page only exposes scrollMarginTop: 72px for it.",
+    "No stat-tile number typography: statistics tiles are plain font-semibold title + text-sm value; the only data visualization is a gradient horizontal bar (h-2) per ranked course — no ring charts or bar charts on these pages.",
+    "Statistics planner 'rank' uses index+1 of the *filtered* list, so rank numbers restart at 1 whenever a filter is applied."
+  ]
+}

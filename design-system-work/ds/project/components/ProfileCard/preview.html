@@ -1,0 +1,189 @@
+<!-- @dsCard group="Patterns" height=1554 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>ProfileCard — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); -webkit-font-smoothing: antialiased; }
+  .row { display: flex; gap: 24px; align-items: flex-start; }
+  .main { flex: 0 0 640px; }
+  .side { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .stage { background: var(--gray-50, #f9fafb); padding: 16px; }
+  .cap { margin: 8px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+  .side .cp-profile__toggles { flex-direction: column; }
+</style>
+</head>
+<body>
+
+<div class="row">
+  <div class="main">
+    <div class="stage">
+      <div class="cp-profile">
+        <div>
+          <h1 class="cp-profile__title">프로필</h1>
+          <p class="cp-profile__subtitle">개인 정보를 관리하세요.</p>
+        </div>
+
+        <div class="cp-profile__banner-wrap">
+          <div class="cp-profile__banner">
+            <div class="cp-profile__avatar"><span class="cp-profile__avatar-initial">홍</span></div>
+          </div>
+          <div class="cp-profile__identity">
+            <h2 class="cp-profile__name">홍길동</h2>
+            <div class="cp-profile__badges">
+              <span class="cp-profile__badge cp-profile__badge--department"><svg class="cp-profile__badge-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg>컴퓨터공학과</span>
+              <span class="cp-profile__badge cp-profile__badge--year"><svg class="cp-profile__badge-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>2024년 입학</span>
+              <span class="cp-profile__badge cp-profile__badge--double"><svg class="cp-profile__badge-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg>복수전공: 경영학과</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card cp-profile__card--basic">
+          <div class="cp-card__header cp-profile__card-header--split">
+            <div class="cp-profile__card-heading"><svg class="cp-profile__card-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg><h3 class="cp-card__title">기본 정보</h3></div>
+            <button class="cp-button cp-button--ghost cp-button--sm"><svg class="cp-button__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" /></svg></button>
+          </div>
+          <div class="cp-card__content">
+            <div class="cp-profile__rows">
+              <div class="cp-profile__row">
+                <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" /><rect x="2" y="4" width="20" height="16" rx="2" /></svg><span class="cp-profile__row-key">이메일</span></div>
+                <span class="cp-profile__row-value">hong@yu.ac.kr</span>
+              </div>
+              <div class="cp-profile__row">
+                <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg><span class="cp-profile__row-key">이름</span></div>
+                <span class="cp-profile__row-value">홍길동</span>
+              </div>
+              <div class="cp-profile__row">
+                <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg><span class="cp-profile__row-key">입학년도</span></div>
+                <span class="cp-profile__row-value">2024년</span>
+              </div>
+              <div class="cp-profile__row">
+                <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg><span class="cp-profile__row-key">커리큘럼 연도</span></div>
+                <span class="cp-profile__row-value">2026년</span>
+              </div>
+              <div class="cp-profile__row">
+                <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg><span class="cp-profile__row-key">학과</span></div>
+                <span class="cp-profile__row-value">컴퓨터공학과</span>
+              </div>
+              <div class="cp-profile__row cp-profile__row--last">
+                <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg><span class="cp-profile__row-key">복수전공</span></div>
+                <span class="cp-profile__row-value">경영학과</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card cp-profile__card--major">
+          <div class="cp-card__header">
+            <div class="cp-profile__card-heading"><svg class="cp-profile__card-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg><h3 class="cp-card__title">전공 설정</h3></div>
+          </div>
+          <div class="cp-card__content">
+            <div class="cp-profile__stack">
+              <div>
+                <label class="cp-profile__label">복수전공 / 부전공</label>
+                <div class="cp-profile__toggles">
+                  <button type="button" class="cp-profile__toggle cp-profile__toggle--double is-active"><span class="cp-profile__toggle-inner"><svg class="cp-profile__toggle-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M20 6 9 17l-5-5" /></svg>복수전공</span></button>
+                  <button type="button" class="cp-profile__toggle cp-profile__toggle--minor" disabled><span class="cp-profile__toggle-inner">+ 부전공 추가</span></button>
+                </div>
+                <p class="cp-profile__hint">복수전공을 선택했습니다. 해제하려면 다시 클릭하세요.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card">
+          <div class="cp-card__header">
+            <div class="cp-profile__card-heading"><svg class="cp-profile__card-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /></svg><h3 class="cp-card__title">계정 정보</h3></div>
+          </div>
+          <div class="cp-card__content">
+            <div class="cp-profile__rows">
+              <div class="cp-profile__row">
+                <span class="cp-profile__row-key">계정 유형</span>
+                <div class="cp-profile__row-value cp-profile__row-value--group"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10.88 21.94 15.46 14" /><path d="M21.17 8H12" /><path d="M3.95 6.06 8.54 14" /><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="4" /></svg>Google 계정</div>
+              </div>
+              <div class="cp-profile__row cp-profile__row--last">
+                <span class="cp-profile__row-key">권한</span>
+                <div class="cp-profile__row-value cp-profile__row-value--group"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z" /></svg><span class="cp-profile__row-role">student</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card cp-profile__card--danger">
+          <div class="cp-card__header">
+            <div class="cp-profile__card-heading"><svg class="cp-profile__card-icon cp-profile__card-icon--danger" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 11v6" /><path d="M14 11v6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M3 6h18" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg><h3 class="cp-card__title cp-profile__card-title--danger">위험 구역</h3></div>
+          </div>
+          <div class="cp-card__content">
+            <p class="cp-profile__danger-text">회원 탈퇴 시 모든 수강 계획, 커스텀 과목 등 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다.</p>
+            <button class="cp-button cp-button--outline cp-profile__danger-button">회원 탈퇴</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">profile/page.tsx (signed in) · banner h-32 rounded-xl 3-stop gradient with the 80px initial avatar (ring-4 white, shadow-lg) · badges yu-navy-a10 / yu-cyan-a10 (2.4:1, flagged) / purple-100 · 기본 정보 read-only rows on bare border-b (currentColor) with the ghost sm Pencil · 전공 설정 with 복수전공 on and 부전공 disabled · 계정 정보 · 위험 구역 with a red-200 border</p>
+  </div>
+
+  <div class="side">
+    <div>
+      <div class="stage cp-profile">
+        <div class="cp-profile__toggles">
+          <button type="button" class="cp-profile__toggle cp-profile__toggle--double"><span class="cp-profile__toggle-inner">+ 복수전공 추가</span></button>
+          <button type="button" class="cp-profile__toggle cp-profile__toggle--double is-hover"><span class="cp-profile__toggle-inner">+ 복수전공 추가</span></button>
+          <button type="button" class="cp-profile__toggle cp-profile__toggle--minor is-hover"><span class="cp-profile__toggle-inner">+ 부전공 추가</span></button>
+          <button type="button" class="cp-profile__toggle cp-profile__toggle--minor is-active"><span class="cp-profile__toggle-inner"><svg class="cp-profile__toggle-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M20 6 9 17l-5-5" /></svg>부전공</span></button>
+        </div>
+      </div>
+      <p class="cap">major-type toggles · rest · 복수전공 hover (purple-400 / purple-600) · 부전공 hover (orange-400 / orange-600) · 부전공 on (orange-500, white 2.9:1 — flagged)</p>
+    </div>
+
+    <div>
+      <div class="stage cp-profile">
+        <div class="cp-profile__badges" style="justify-content:flex-start;margin-top:0">
+          <span class="cp-profile__badge cp-profile__badge--minor"><svg class="cp-profile__badge-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M10 12h4" /><path d="M10 8h4" /><path d="M14 21v-3a2 2 0 0 0-4 0v3" /><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2" /><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" /></svg>부전공: 통계학과</span>
+        </div>
+      </div>
+      <p class="cap">부전공 badge (orange-100 / orange-700)</p>
+    </div>
+
+    <div>
+      <div class="stage cp-profile">
+        <div class="cp-card">
+          <div class="cp-card__content" style="padding-top:16px">
+            <div class="cp-profile__rows">
+              <div class="cp-profile__row">
+                <span class="cp-profile__row-key">계정 유형</span>
+                <span class="cp-profile__row-value cp-profile__row-value--amber">게스트 모드</span>
+              </div>
+              <div class="cp-profile__row cp-profile__row--last">
+                <span class="cp-profile__row-key">데이터 저장</span>
+                <span class="cp-profile__row-value cp-profile__row-value--muted">이 브라우저에만 저장</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="cap">guest 계정 정보 rows · 게스트 모드 in amber-600 (3.2:1, flagged) · 이 브라우저에만 저장 in gray-500</p>
+    </div>
+
+    <div>
+      <div class="stage cp-profile">
+        <div class="cp-profile__row cp-profile__row--last" style="font-size:16px">
+          <div class="cp-profile__row-label"><svg class="cp-profile__row-icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ><path d="M8 2v4" /><path d="M16 2v4" /><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M3 10h18" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg><span class="cp-profile__row-key">입학년도</span></div>
+          <span class="cp-profile__row-value cp-profile__row-value--empty">미설정</span>
+        </div>
+      </div>
+      <p class="cap">missing value · 미설정 in gray-400 (2.6:1, flagged)</p>
+    </div>
+
+    <div>
+      <div class="stage cp-profile">
+        <button class="cp-button cp-button--outline cp-profile__danger-button is-hover">회원 탈퇴</button>
+      </div>
+      <p class="cap">회원 탈퇴 hover · red-50 fill, red-400 border (red-600 on red-50 is 4.4:1, flagged)</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

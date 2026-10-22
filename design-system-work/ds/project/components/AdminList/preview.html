@@ -1,0 +1,264 @@
+<!-- @dsCard group="Patterns" height=1180 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AdminList — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .section + .section { margin-top: 24px; }
+  .stage { box-sizing: border-box; background: var(--gray-50, #f9fafb); padding: 16px; }
+  .cap { margin: 8px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+  .trio { display: flex; gap: 24px; align-items: flex-start; }
+  .trio > .col { flex: 1 1 0; min-width: 0; }
+  .trio > .col--modal { flex: 0 0 432px; }
+  .trio > .col--empty { flex: 0 0 256px; }
+  .recipes { display: flex; gap: 24px; align-items: flex-start; }
+  .recipe { display: flex; flex-direction: column; gap: 8px; flex: 1 1 0; min-width: 0; }
+  .recipe > .pair { display: flex; align-items: center; gap: 8px; }
+  .recipe > .cap { margin: 0; }
+</style>
+</head>
+<body>
+
+<!-- admin/page.tsx: dashboard stat grid + menu grid -->
+<div class="section">
+  <div class="stage">
+    <div class="cp-admin">
+      <div class="cp-admin__stats">
+        <div class="cp-card">
+          <div class="cp-card__content cp-admin__stat-content">
+            <div class="cp-admin__stat-value cp-admin__stat-value--navy">1284</div>
+            <p class="cp-admin__stat-label">공식 과목 (2026)</p>
+          </div>
+        </div>
+        <div class="cp-card">
+          <div class="cp-card__content cp-admin__stat-content">
+            <div class="cp-admin__stat-value cp-admin__stat-value--green">42</div>
+            <p class="cp-admin__stat-label">학과</p>
+          </div>
+        </div>
+        <div class="cp-card">
+          <div class="cp-card__content cp-admin__stat-content">
+            <div class="cp-admin__stat-value cp-admin__stat-value--purple">318</div>
+            <p class="cp-admin__stat-label">사용자</p>
+          </div>
+        </div>
+        <div class="cp-card">
+          <div class="cp-card__content cp-admin__stat-content">
+            <div class="cp-admin__stat-value cp-admin__stat-value--orange">276</div>
+            <p class="cp-admin__stat-label">수강 계획</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="cp-admin__menus">
+        <a href="/admin/courses" class="cp-admin__menu-link">
+          <div class="cp-card cp-admin__menu-card">
+            <div class="cp-card__header">
+              <h3 class="cp-card__title cp-admin__menu-title">과목 관리</h3>
+              <p class="cp-card__description">과목을 추가, 수정, 삭제합니다.</p>
+            </div>
+          </div>
+        </a>
+        <a href="/admin/departments" class="cp-admin__menu-link">
+          <div class="cp-card cp-admin__menu-card is-hover">
+            <div class="cp-card__header">
+              <h3 class="cp-card__title cp-admin__menu-title">학과 관리</h3>
+              <p class="cp-card__description">학과 정보를 관리합니다.</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  <p class="cap">admin/page.tsx · stat Cards (pt-6; text-3xl bold in yu-navy · green-600 · purple-600 · orange-600) · menu Cards in a Link (text-lg title; right one .is-hover)</p>
+</div>
+
+<!-- admin/courses/page.tsx: filter bar + row Cards -->
+<div class="section">
+  <div class="stage">
+    <div class="cp-admin">
+      <div class="cp-admin__filters">
+        <div class="cp-admin__search cp-input cp-input--soft">
+          <svg class="lucide lucide-search cp-admin__search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input class="cp-input__field" type="text" placeholder="과목명 또는 코드 검색" value="CSE">
+          <button type="button" class="cp-admin__search-clear"><svg class="lucide lucide-x cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>
+        <div class="cp-input cp-input--soft">
+          <select class="cp-input__field">
+            <option value="" selected>전체 학과</option>
+            <option>컴퓨터공학과</option>
+          </select>
+        </div>
+        <div class="cp-input cp-input--soft">
+          <select class="cp-input__field">
+            <option value="" selected>전체 카테고리</option>
+            <option>전공핵심</option>
+            <option>전공필수</option>
+            <option>전공선택</option>
+            <option>교양필수</option>
+            <option>교양선택</option>
+            <option>자유선택</option>
+            <option>교직</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cp-admin__list">
+        <div class="cp-card cp-admin__row">
+          <div class="cp-card__content cp-admin__row-content">
+            <div class="cp-admin__row-flex">
+              <div class="cp-admin__row-info">
+                <div class="cp-admin__row-title">
+                  <span class="cp-admin__code">CSE1001</span>
+                  <span class="cp-admin__name">프로그래밍 기초</span>
+                  <span class="cp-admin__badge cp-admin__badge--credits">3학점</span>
+                  <span class="cp-admin__badge cp-admin__badge--major-compulsory">전공필수</span>
+                </div>
+                <div class="cp-admin__row-meta">
+                  <span>컴퓨터공학과</span>
+                  <span>1학기, 2학기</span>
+                  <span>1학년 권장</span>
+                </div>
+              </div>
+              <div class="cp-admin__row-actions">
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card cp-admin__row">
+          <div class="cp-card__content cp-admin__row-content">
+            <div class="cp-admin__row-flex">
+              <div class="cp-admin__row-info">
+                <div class="cp-admin__row-title">
+                  <span class="cp-admin__code">CSE2010</span>
+                  <span class="cp-admin__name">자료구조</span>
+                  <span class="cp-admin__badge cp-admin__badge--credits">3학점</span>
+                  <span class="cp-admin__badge cp-admin__badge--major-required">전공핵심</span>
+                </div>
+                <div class="cp-admin__row-meta">
+                  <span>컴퓨터공학과</span>
+                  <span>1학기</span>
+                  <span>2학년 권장</span>
+                </div>
+              </div>
+              <div class="cp-admin__row-actions">
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit is-hover" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete is-hover" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card cp-admin__row">
+          <div class="cp-card__content cp-admin__row-content">
+            <div class="cp-admin__row-flex">
+              <div class="cp-admin__row-info">
+                <div class="cp-admin__row-title">
+                  <span class="cp-admin__code">CSE3030</span>
+                  <span class="cp-admin__name">운영체제</span>
+                  <span class="cp-admin__badge cp-admin__badge--credits">3학점</span>
+                  <span class="cp-admin__badge cp-admin__badge--major-elective">전공선택</span>
+                </div>
+                <div class="cp-admin__row-meta">
+                  <span>컴퓨터공학과</span>
+                  <span>2학기</span>
+                  <span>3학년 권장</span>
+                </div>
+              </div>
+              <div class="cp-admin__row-actions">
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <div class="cp-admin__confirm-inline">
+                  <button type="button" class="cp-admin__btn cp-admin__btn--danger-courses-inline">삭제</button>
+                  <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-inline">취소</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">admin/courses/page.tsx · soft search (pl-9 pr-8, icon left-3, X right-2) + soft selects · Card rows, p-5 · row 2: icon buttons .is-hover · row 3: deletingId → [삭제][취소]</p>
+</div>
+
+<!-- departments/page.tsx confirm modal · courses empty box · loading tiles -->
+<div class="section">
+  <div class="stage">
+    <div class="trio">
+      <div class="col col--modal">
+        <div class="cp-admin">
+          <div class="cp-admin__overlay cp-admin__overlay--staged">
+            <div class="cp-admin__dialog">
+              <h2 class="cp-admin__dialog-title">학과 삭제</h2>
+              <p class="cp-admin__dialog-body">정말로 이 학과를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+              <div class="cp-admin__dialog-footer">
+                <button type="button" class="cp-admin__btn cp-admin__btn--cancel-departments">취소</button>
+                <button type="button" class="cp-admin__btn cp-admin__btn--danger-departments">삭제</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col col--empty">
+        <div class="cp-admin">
+          <div class="cp-admin__empty">
+            <svg class="lucide lucide-book-open cp-admin__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+            <p class="cp-admin__empty-text">등록된 과목이 없습니다.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="cp-admin">
+          <div class="cp-admin__skeleton">
+            <div class="cp-admin__skeleton-row"></div>
+            <div class="cp-admin__skeleton-row"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">departments/page.tsx 학과 삭제 modal (max-w-sm, shadow-xl, black-a50 overlay) · courses empty box (p-12) · h-24 loading tiles (three in the page)</p>
+</div>
+
+<!-- the four 취소 recipes, rest · .is-hover -->
+<div class="section">
+  <div class="recipes">
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-inline">취소</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-inline is-hover">취소</button>
+      </div>
+      <p class="cap">courses/page.tsx · inline delete pair · slate-200 → slate-300 · xs · no transition</p>
+    </div>
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-modal">취소</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-modal is-hover">취소</button>
+      </div>
+      <p class="cap">courses/page.tsx · form modal footer · slate-200 → slate-300 · sm · no transition</p>
+    </div>
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-departments">취소</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-departments is-hover">취소</button>
+      </div>
+      <p class="cap">departments/page.tsx · form + delete modals · ghost → slate-100 · sm · transition-colors</p>
+    </div>
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-users">취소</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--cancel-users is-hover">취소</button>
+      </div>
+      <p class="cap">users/page.tsx · delete confirm · slate-100 → slate-200 · xs · transition-colors</p>
+    </div>
+  </div>
+  <p class="cap">Four 취소 recipes, rest · .is-hover, named by source file; none sets a focus style.</p>
+</div>
+
+</body>
+</html>

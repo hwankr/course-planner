@@ -1,0 +1,563 @@
+{
+  "files_read": [
+    "/home/user/course-planner/src/components/features/RequirementsSummary.tsx",
+    "/home/user/course-planner/src/components/features/RequirementForm.tsx",
+    "/home/user/course-planner/src/components/features/CustomCourseForm.tsx",
+    "/home/user/course-planner/src/components/features/AddSemesterDialog.tsx",
+    "/home/user/course-planner/src/lib/graduationSummaryState.ts"
+  ],
+  "components": [
+    {
+      "name": "StackedBar",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Horizontal stacked progress bar: earned -> enrolled -> planned segments laid side by side inside a gray track; cumulative width clamped at 100%.",
+      "props": "{ earned: number; enrolled?: number; planned?: number; required: number; size?: 'lg' | 'md' | 'sm' }  // size map: lg -> 'h-2.5', md -> 'h-2', sm -> 'h-1.5'",
+      "elements": [
+        { "part": "root (track)", "tag": "div", "classes": "flex-1 ${height} bg-gray-100 rounded-full overflow-hidden flex", "states": [
+          { "state": "size=lg", "classes": "flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden flex" },
+          { "state": "size=md (default)", "classes": "flex-1 h-2 bg-gray-100 rounded-full overflow-hidden flex" },
+          { "state": "size=sm", "classes": "flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden flex" }
+        ] },
+        { "part": "earned segment", "tag": "div", "classes": "bg-emerald-500 | bg-blue-600", "inline_style": "width: `${widths.earned}%`", "states": [
+          { "state": "met (required > 0 && earned >= required)", "classes": "bg-emerald-500" },
+          { "state": "not met", "classes": "bg-blue-600" }
+        ] },
+        { "part": "enrolled segment", "tag": "div", "classes": "bg-sky-400", "inline_style": "width: `${widths.enrolled}%`" },
+        { "part": "planned segment", "tag": "div", "classes": "", "inline_style": "width: `${widths.planned}%`; backgroundImage: repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)" }
+      ],
+      "notes": "PLANNED_STRIPES constant = 'repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)' (Tailwind blue-300 / blue-100 hex, hard-coded). Segments only render when width > 0."
+    },
+    {
+      "name": "BreakdownLine",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Legend/number line under a bar: colored 8px square swatches + '이수 N', '수강중 N', '예정 N', '미계획 N'. Zero items hidden. Collapses to '요건 충족' when met with nothing enrolled/planned.",
+      "props": "{ earned: number; enrolled?: number; planned?: number; required: number; prior?: number; className?: string }",
+      "elements": [
+        { "part": "root (met & nothing pending)", "tag": "p", "classes": "text-[11px] text-emerald-600 ${className}", "text": "요건 충족" },
+        { "part": "root (default)", "tag": "p", "classes": "text-[11px] text-gray-400 flex items-center gap-x-2.5 gap-y-0.5 flex-wrap ${className}" },
+        { "part": "item wrapper", "tag": "span", "classes": "flex items-center gap-1" },
+        { "part": "swatch earned", "tag": "span", "classes": "w-2 h-2 rounded-[2px] inline-block ${met ? 'bg-emerald-500' : 'bg-blue-600'}", "states": [
+          { "state": "met", "classes": "w-2 h-2 rounded-[2px] inline-block bg-emerald-500" },
+          { "state": "not met", "classes": "w-2 h-2 rounded-[2px] inline-block bg-blue-600" }
+        ], "text": "이수 {earned} (기이수 {prior} 포함)" },
+        { "part": "swatch enrolled", "tag": "span", "classes": "w-2 h-2 rounded-[2px] inline-block bg-sky-400", "text": "수강중 {enrolled}" },
+        { "part": "swatch planned", "tag": "span", "classes": "w-2 h-2 rounded-[2px] inline-block", "inline_style": "backgroundImage: repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)", "text": "예정 {planned}" },
+        { "part": "swatch unplanned", "tag": "span", "classes": "w-2 h-2 rounded-[2px] inline-block bg-gray-200", "text": "미계획 {unplanned}" }
+      ],
+      "notes": "className passed from callers: 'mt-0.5 pl-[72px]' (TrackRow) and 'mt-1.5' (hero)."
+    },
+    {
+      "name": "TrackRow",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "One requirement row: fixed-width label + StackedBar + right-aligned 'earned/required' + BreakdownLine beneath. sub=true renders an indented thinner sub-row prefixed with '└ '.",
+      "props": "SegmentValues & { label: string; prior?: number; sub?: boolean }",
+      "elements": [
+        { "part": "row", "tag": "div", "classes": "flex items-center gap-2" },
+        { "part": "label", "tag": "span", "classes": "w-16 flex-shrink-0 whitespace-nowrap ${sub ? 'pl-3 text-[11px] text-gray-400' : 'text-xs text-gray-600'}", "states": [
+          { "state": "sub=true", "classes": "w-16 flex-shrink-0 whitespace-nowrap pl-3 text-[11px] text-gray-400" },
+          { "state": "sub=false", "classes": "w-16 flex-shrink-0 whitespace-nowrap text-xs text-gray-600" }
+        ], "text": "전공 | └ 핵심 | └ 주전공최소 | 복수전공 | 부전공 | 교양" },
+        { "part": "bar", "tag": "StackedBar", "classes": "size={sub ? 'sm' : 'md'}" },
+        { "part": "value", "tag": "span", "classes": "w-16 flex-shrink-0 text-right whitespace-nowrap ${sub ? 'text-[11px]' : 'text-xs'} ${met ? 'text-emerald-600' : 'text-gray-500'}", "states": [
+          { "state": "met", "classes": "text-emerald-600 (text prefixed with '✓ ')" },
+          { "state": "not met", "classes": "text-gray-500" },
+          { "state": "sub", "classes": "text-[11px]" },
+          { "state": "main", "classes": "text-xs" }
+        ], "text": "✓ {earned}/{required}" },
+        { "part": "value earned number", "tag": "span", "classes": "font-medium" },
+        { "part": "breakdown", "tag": "BreakdownLine", "classes": "mt-0.5 pl-[72px]" }
+      ],
+      "notes": "pl-[72px] = w-16 (64px) + gap-2 (8px) to align the legend under the bar start."
+    },
+    {
+      "name": "RequirementsSummary (loading state)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Skeleton shown while graduation requirement/progress queries load.",
+      "elements": [
+        { "part": "root", "tag": "Card", "classes": "" },
+        { "part": "content", "tag": "CardContent", "classes": "py-3" },
+        { "part": "skeleton bar", "tag": "div", "classes": "h-4 bg-gray-200 rounded animate-pulse" }
+      ]
+    },
+    {
+      "name": "RequirementsSummary (error state)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Alert card when one or both queries fail; offers retry.",
+      "elements": [
+        { "part": "root", "tag": "Card role=\"alert\"", "classes": "border-red-200" },
+        { "part": "content", "tag": "CardContent", "classes": "py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3" },
+        { "part": "message", "tag": "p", "classes": "text-sm text-red-600", "text": "졸업요건 정보를 불러오지 못했습니다." },
+        { "part": "retry button", "tag": "Button size=\"sm\" variant=\"outline\"", "classes": "", "text": "다시 시도", "states": [
+          { "state": "isRetrying (disabled)", "classes": "disabled; text '다시 시도 중...'" }
+        ] }
+      ]
+    },
+    {
+      "name": "RequirementsSummary (empty state)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Dashed card prompting the user to set requirements; toggles into inline RequirementForm.",
+      "elements": [
+        { "part": "root", "tag": "Card", "classes": "border-dashed" },
+        { "part": "content", "tag": "CardContent", "classes": "py-4" },
+        { "part": "prompt row", "tag": "div", "classes": "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2" },
+        { "part": "prompt text", "tag": "p", "classes": "text-sm text-gray-500", "text": "졸업 요건을 설정하세요" },
+        { "part": "button group", "tag": "div", "classes": "flex gap-2 flex-shrink-0" },
+        { "part": "secondary button", "tag": "Button size=\"sm\" variant=\"outline\"", "classes": "", "text": "직접 입력" },
+        { "part": "primary button", "tag": "Button size=\"sm\"", "classes": "", "text": "기본 요건 생성", "states": [
+          { "state": "createDefaults.isPending (disabled)", "classes": "disabled; text '생성 중...'" }
+        ] },
+        { "part": "inline editor heading", "tag": "p", "classes": "text-sm font-medium text-gray-700 mb-3", "text": "졸업 요건 입력" },
+        { "part": "inline editor save error", "tag": "p", "classes": "text-sm text-red-500 mb-2", "text": "저장에 실패했습니다." }
+      ]
+    },
+    {
+      "name": "RequirementsSummary (edit mode)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Card wrapping RequirementForm with initialData when a requirement exists.",
+      "elements": [
+        { "part": "root", "tag": "Card", "classes": "" },
+        { "part": "content", "tag": "CardContent", "classes": "py-4" },
+        { "part": "header row", "tag": "div", "classes": "flex items-center justify-between mb-3" },
+        { "part": "heading", "tag": "p", "classes": "text-sm font-medium text-gray-700", "text": "졸업 요건 수정" },
+        { "part": "save error", "tag": "p", "classes": "text-sm text-red-500 mb-2" }
+      ]
+    },
+    {
+      "name": "RequirementsSummary (view/ready state)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Graduation progress card: header with title + year badge + big percentage, hero total bar, per-track rows, footer hint + edit button.",
+      "elements": [
+        { "part": "root", "tag": "Card", "classes": "" },
+        { "part": "content", "tag": "CardContent", "classes": "py-3 px-3 sm:px-4" },
+        { "part": "header", "tag": "div", "classes": "flex items-baseline justify-between gap-2 flex-wrap" },
+        { "part": "title group", "tag": "div", "classes": "flex items-center gap-2" },
+        { "part": "title", "tag": "span", "classes": "text-sm font-medium text-gray-700 whitespace-nowrap", "text": "졸업 요건" },
+        { "part": "year badge", "tag": "span", "classes": "text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full whitespace-nowrap", "text": "{requirementYear}년 기준" },
+        { "part": "percentage group", "tag": "div", "classes": "flex items-baseline gap-1.5" },
+        { "part": "percentage", "tag": "span", "classes": "text-lg font-semibold ${total.percentage >= 100 ? 'text-emerald-600' : 'text-gray-800'}", "states": [
+          { "state": "percentage >= 100", "classes": "text-lg font-semibold text-emerald-600" },
+          { "state": "percentage < 100", "classes": "text-lg font-semibold text-gray-800" }
+        ], "text": "{total.percentage}%" },
+        { "part": "projected hint", "tag": "span", "classes": "text-xs text-gray-400 whitespace-nowrap", "text": "→ 계획 반영 시 {projected}%" },
+        { "part": "hero bar row", "tag": "div", "classes": "mt-2 flex items-center gap-2" },
+        { "part": "hero bar", "tag": "StackedBar size=\"lg\"", "classes": "" },
+        { "part": "hero value", "tag": "span", "classes": "text-xs text-gray-500 whitespace-nowrap", "text": "{earned}/{required}학점" },
+        { "part": "hero value earned", "tag": "span", "classes": "font-medium text-gray-700" },
+        { "part": "hero breakdown", "tag": "BreakdownLine", "classes": "mt-1.5" },
+        { "part": "details section", "tag": "div", "classes": "mt-3 pt-3 border-t space-y-2.5" },
+        { "part": "footer", "tag": "div", "classes": "mt-3 pt-2.5 border-t flex items-center justify-between gap-2 flex-wrap" },
+        { "part": "footer hint", "tag": "span", "classes": "text-[11px] text-gray-400", "text": "과목 카드의 상태(예정·수강중·이수)를 바꾸면 바로 반영됩니다." },
+        { "part": "edit button", "tag": "button", "classes": "inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#153974] bg-[#153974]/10 hover:bg-[#153974]/20 rounded-md transition-colors", "text": "요건 수정", "states": [
+          { "state": "hover", "classes": "bg-[#153974]/20" }
+        ] },
+        { "part": "edit icon (inline SVG pencil)", "tag": "svg", "classes": "w-3 h-3", "inline_style": "fill=none viewBox=0 0 24 24 stroke=currentColor strokeLinecap=round strokeLinejoin=round strokeWidth=2 d=M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" }
+      ],
+      "notes": "Rows rendered: 전공, └ 핵심 (sub), └ 주전공최소 (sub, only for minor), 복수전공 + └ 핵심 (double), 부전공 + └ 핵심 (minor), 교양. border-t/border-b used without an explicit border color."
+    },
+    {
+      "name": "RequirementForm",
+      "file": "src/components/features/RequirementForm.tsx",
+      "purpose": "Inline (non-modal) graduation requirement editor: help banner, major-type radios, load-from-department button + year select, 2-col numeric field grids per section, prior-credit cutoff select with amber suggestion, footer save/cancel.",
+      "props": "interface RequirementFormProps { initialData?: RequirementFormData; onSubmit: (data: RequirementFormData) => void; onCancel: () => void; isLoading?: boolean; onLoadFromDeptReq?: () => Promise<Partial<RequirementFormData> | null>; userMajorType?: MajorType; requirementYear?: number; onYearChange?: (year: number) => void; semesterOptions?: Array<{ year: number; term: 'spring' | 'fall'; label: string }>; suggestedCutoff?: { year: number; term: 'spring' | 'fall'; label: string } | null }",
+      "elements": [
+        { "part": "root form", "tag": "form", "classes": "space-y-5 p-4 bg-gray-50 rounded-lg border" },
+        { "part": "help banner", "tag": "div", "classes": "flex items-center gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2", "text": "졸업 기준과 취득 학점을 잘 모르시나요? 확인 방법 보기" },
+        { "part": "help icon", "tag": "HelpCircle", "classes": "w-3.5 h-3.5 text-[#00AACA] flex-shrink-0" },
+        { "part": "help link", "tag": "Link href=\"/help/graduation-guide\"", "classes": "text-[#00AACA] hover:text-[#153974] underline", "text": "확인 방법 보기", "states": [
+          { "state": "hover", "classes": "text-[#153974]" }
+        ] },
+        { "part": "section wrapper (first)", "tag": "div", "classes": "space-y-3" },
+        { "part": "section wrapper (subsequent)", "tag": "div", "classes": "border-t pt-4" },
+        { "part": "section heading (first)", "tag": "p", "classes": "text-sm font-semibold text-gray-800 border-b pb-2", "text": "전공 유형" },
+        { "part": "section heading (grid sections)", "tag": "p", "classes": "text-sm font-semibold text-gray-800 border-b pb-2 mb-3", "text": "졸업 기준 | 복수전공 | 부전공" },
+        { "part": "section heading (no underline, 기이수)", "tag": "p", "classes": "text-sm font-semibold text-gray-800", "text": "기이수 학점" },
+        { "part": "section subheading", "tag": "p", "classes": "text-xs text-gray-400 mt-0.5 mb-3", "text": "성적표 기준으로 이미 이수한 학점" },
+        { "part": "radio group", "tag": "div", "classes": "flex gap-4" },
+        { "part": "radio label", "tag": "label", "classes": "flex items-center gap-2 cursor-pointer" },
+        { "part": "radio input", "tag": "input type=\"radio\"", "classes": "w-4 h-4" },
+        { "part": "radio text", "tag": "span", "classes": "text-sm", "text": "단일전공 | 복수전공 | 부전공" },
+        { "part": "single-major notice", "tag": "p", "classes": "text-xs text-gray-500", "text": "단일전공으로 설정되어 있습니다. 복수전공/부전공은 프로필에서 변경하세요." },
+        { "part": "profile link", "tag": "Link href=\"/profile\"", "classes": "text-[#00AACA] hover:text-[#153974] underline" },
+        { "part": "load row wrapper", "tag": "div", "classes": "space-y-1" },
+        { "part": "load row", "tag": "div", "classes": "flex items-center gap-2" },
+        { "part": "load button", "tag": "Button type=\"button\" variant=\"outline\" size=\"sm\"", "classes": "", "text": "학과 기준표에서 불러오기" },
+        { "part": "year select", "tag": "select", "classes": "text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500", "text": "2025년 | 2026년", "states": [
+          { "state": "focus", "classes": "outline-none ring-1 ring-blue-500" }
+        ] },
+        { "part": "load success message", "tag": "p", "classes": "text-xs text-blue-600", "text": "학과 기준표에서 불러왔습니다. 수정할 수 있습니다." },
+        { "part": "field grid", "tag": "div", "classes": "grid grid-cols-2 gap-x-3 gap-y-2" },
+        { "part": "field label", "tag": "label", "classes": "block text-xs font-medium text-gray-600 mb-1", "text": "졸업학점 | 교양학점 | 전공학점 | 전공핵심 (최소) | 복수전공 학점 | 복수전공핵심 (최소) | 부전공 학점 | 부전공핵심 (최소) | 주전공 최소 학점 | 기이수에 반영된 마지막 학기 | 교양 | 전공 | 전공핵심 | 복수전공 | 복수전공핵심 | 부전공 | 부전공핵심" },
+        { "part": "field input", "tag": "Input type=\"number\"", "classes": "${errors.X ? 'border-red-500' : ''}", "states": [
+          { "state": "error", "classes": "border-red-500" },
+          { "state": "default", "classes": "" }
+        ] },
+        { "part": "field error", "tag": "p", "classes": "text-xs text-red-500 mt-1" },
+        { "part": "field help text", "tag": "p", "classes": "text-xs text-gray-400 mt-0.5", "text": "이미 이수한 총 학점 (전공+교양+기타 포함)" },
+        { "part": "cutoff suggestion banner", "tag": "div", "classes": "mb-3 text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2" },
+        { "part": "cutoff suggestion text", "tag": "p", "classes": "text-amber-800" },
+        { "part": "cutoff suggestion button", "tag": "button", "classes": "mt-1.5 inline-flex items-center px-2 py-1 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded transition-colors", "text": "{suggestedCutoff.label}까지로 설정", "states": [
+          { "state": "hover", "classes": "bg-amber-200" }
+        ] },
+        { "part": "cutoff select wrapper", "tag": "div", "classes": "mb-3" },
+        { "part": "cutoff select", "tag": "select", "classes": "w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500", "states": [
+          { "state": "focus", "classes": "outline-none ring-1 ring-blue-500" }
+        ] },
+        { "part": "cutoff select help", "tag": "p", "classes": "text-xs text-gray-400 mt-0.5" },
+        { "part": "footer", "tag": "div", "classes": "flex gap-2 pt-2" },
+        { "part": "submit button", "tag": "Button type=\"submit\" isLoading={isLoading}", "classes": "flex-1", "text": "수정 (initialData) | 저장 (new)" },
+        { "part": "cancel button", "tag": "Button type=\"button\" variant=\"outline\"", "classes": "", "text": "취소" }
+      ],
+      "notes": "Validation via setErrors(Record<string,string>); only the Input border and a text-xs red line change, no icon. Cross-field messages are full sentences without a period. Section headings underlined with border-b pb-2; sections separated with border-t pt-4."
+    },
+    {
+      "name": "CustomCourseForm",
+      "file": "src/components/features/CustomCourseForm.tsx",
+      "purpose": "Modal for adding a user-defined course (name, credits, category) to the focused semester.",
+      "props": "interface CustomCourseFormProps { onClose: () => void; departmentId?: string; availableCategories?: RequirementCategory[]; focusedSemester?: { year: number; term: string } | null; onClickAdd?: (courseId: string, courseData: { code: string; name: string; credits: number; category?: RequirementCategory; departmentId?: string }) => void }",
+      "elements": [
+        { "part": "overlay", "tag": "div", "classes": "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" },
+        { "part": "panel", "tag": "div", "classes": "bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto" },
+        { "part": "header", "tag": "div", "classes": "px-6 py-4 border-b border-gray-200" },
+        { "part": "title", "tag": "h3", "classes": "text-lg font-semibold text-gray-900", "text": "커스텀 과목 추가" },
+        { "part": "subtitle", "tag": "p", "classes": "text-sm text-gray-500 mt-1", "text": "나만의 과목을 추가하세요." },
+        { "part": "body form", "tag": "form", "classes": "p-6 space-y-4" },
+        { "part": "field label", "tag": "label", "classes": "block text-sm font-medium text-gray-700 mb-1", "text": "과목명 * | 학점 * | 이수구분 *" },
+        { "part": "required asterisk", "tag": "span", "classes": "text-red-500", "text": "*" },
+        { "part": "text input", "tag": "Input name=\"name\" required", "classes": "", "text": "placeholder: 예: 데이터베이스" },
+        { "part": "number input", "tag": "Input name=\"credits\" type=\"number\" min=1 max=12 required", "classes": "" },
+        { "part": "select", "tag": "select required", "classes": "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm", "text": "선택하세요 (empty option)" },
+        { "part": "focused-semester info banner", "tag": "p", "classes": "text-sm text-blue-600 bg-blue-50 rounded-md px-3 py-2", "text": "{year}학년 {1학기|2학기}에 바로 추가됩니다." },
+        { "part": "focused-semester info emphasis", "tag": "span", "classes": "font-medium" },
+        { "part": "no-focus warning banner", "tag": "p", "classes": "text-sm text-amber-600 bg-amber-50 rounded-md px-3 py-2", "text": "학기를 먼저 클릭하여 포커스하면 해당 학기에 바로 추가됩니다." },
+        { "part": "no-department warning", "tag": "p", "classes": "text-sm text-amber-600", "text": "학과를 먼저 설정해주세요. 프로필 설정" },
+        { "part": "no-department link", "tag": "a href=\"/profile\"", "classes": "underline font-medium", "text": "프로필 설정" },
+        { "part": "mutation error", "tag": "p", "classes": "text-sm text-red-500", "text": "과목 생성에 실패했습니다." },
+        { "part": "footer", "tag": "div", "classes": "flex gap-3 pt-2" },
+        { "part": "cancel button", "tag": "Button type=\"button\" variant=\"ghost\"", "classes": "flex-1", "text": "취소" },
+        { "part": "submit button", "tag": "Button type=\"submit\"", "classes": "flex-1", "text": "추가", "states": [
+          { "state": "isPending", "classes": "disabled; text '추가 중...'" },
+          { "state": "disabled (no departmentId | no category | no focusedSemester)", "classes": "disabled" }
+        ] }
+      ],
+      "notes": "No role=dialog/aria-modal, no Escape or backdrop-click close, no close X. Cancel sits LEFT of primary (opposite of AddSemesterDialog)."
+    },
+    {
+      "name": "AddSemesterDialog",
+      "file": "src/components/features/AddSemesterDialog.tsx",
+      "purpose": "Modal to add a semester: 5-column grade segmented selector, 2-column term selector, duplicate warning, add/cancel. Closes on Escape and backdrop click.",
+      "props": "interface AddSemesterDialogProps { isOpen: boolean; onClose: () => void; onAdd: (year: number, term: Term) => void; existingSemesters: Array<{ year: number; term: Term }>; isLoading?: boolean }",
+      "elements": [
+        { "part": "overlay", "tag": "div onClick=handleBackdropClick", "classes": "fixed inset-0 z-50 flex items-center justify-center bg-black/50" },
+        { "part": "panel", "tag": "Card", "classes": "w-full max-w-md bg-white" },
+        { "part": "content", "tag": "CardContent", "classes": "pt-6" },
+        { "part": "title", "tag": "h2", "classes": "text-2xl font-semibold mb-6", "text": "학기 추가" },
+        { "part": "form", "tag": "form", "classes": "space-y-6" },
+        { "part": "field label", "tag": "label", "classes": "block text-sm font-medium text-gray-700 mb-2", "text": "학년 | 학기" },
+        { "part": "grade grid", "tag": "div", "classes": "grid grid-cols-5 gap-2" },
+        { "part": "grade button", "tag": "button type=\"button\"", "classes": "py-2.5 px-2 rounded-md border-2 transition-colors font-medium text-sm whitespace-nowrap", "text": "{grade}학년", "states": [
+          { "state": "selected (year === grade)", "classes": "border-[#153974] bg-[#153974]/10 text-[#153974]" },
+          { "state": "unselected", "classes": "border-gray-300 bg-white text-gray-700 hover:border-gray-400" },
+          { "state": "isLoading", "classes": "opacity-50 cursor-not-allowed" },
+          { "state": "enabled", "classes": "cursor-pointer" }
+        ] },
+        { "part": "term grid", "tag": "div", "classes": "grid grid-cols-2 gap-3" },
+        { "part": "term button", "tag": "button type=\"button\"", "classes": "py-3 px-4 rounded-md border-2 transition-colors font-medium", "text": "1학기 | 2학기", "states": [
+          { "state": "selected", "classes": "border-[#153974] bg-[#153974]/10 text-[#153974]" },
+          { "state": "unselected", "classes": "border-gray-300 bg-white text-gray-700 hover:border-gray-400" },
+          { "state": "isLoading", "classes": "opacity-50 cursor-not-allowed" },
+          { "state": "enabled", "classes": "cursor-pointer" }
+        ] },
+        { "part": "duplicate warning box", "tag": "div", "classes": "p-3 rounded-md bg-red-50 border border-red-200" },
+        { "part": "duplicate warning text", "tag": "p", "classes": "text-sm text-red-700 font-medium", "text": "{year}학년 {1학기|2학기}는 이미 추가되어 있습니다." },
+        { "part": "footer", "tag": "div", "classes": "flex gap-3 pt-2" },
+        { "part": "submit button", "tag": "Button type=\"submit\" isLoading={isLoading}", "classes": "flex-1", "text": "추가", "states": [
+          { "state": "isDuplicate || isLoading", "classes": "disabled" }
+        ] },
+        { "part": "cancel button", "tag": "Button type=\"button\" variant=\"outline\"", "classes": "flex-1", "text": "취소" }
+      ],
+      "notes": "Primary LEFT, cancel RIGHT. Overlay lacks p-4 gutter and panel lacks max-h/overflow. Term button has no explicit text size (inherits base). Grade default is Math.min(last.year + 1, 5)."
+    },
+    {
+      "name": "resolveGraduationSummaryState / retryGraduationSummaryQueries",
+      "file": "src/lib/graduationSummaryState.ts",
+      "purpose": "Pure helper that collapses query flags into one of 'loading' | 'error' | 'empty' | 'ready'; retry helper that flips retryingAfterError while refetching both queries and rethrows the first error.",
+      "props": "export type GraduationSummaryState = 'loading' | 'error' | 'empty' | 'ready'; export interface GraduationSummaryStateInput { requirement: unknown | null | undefined; progress: unknown | null | undefined; requirementIsLoading: boolean; progressIsLoading: boolean; requirementIsError: boolean; progressIsError: boolean; retryingAfterError: boolean }",
+      "elements": [
+        { "part": "logic (no DOM)", "classes": "", "text": "retryingAfterError -> 'error'; any isLoading -> 'loading'; any isError -> 'error'; requirement/progress undefined -> 'loading'; requirement === null -> 'empty'; else 'ready'" }
+      ],
+      "notes": "No classes; its 4 states are mapped to Card variants in RequirementsSummary (see semantic_maps)."
+    }
+  ],
+  "semantic_maps": [
+    {
+      "domain": "GraduationSummaryState -> card treatment",
+      "file": "src/lib/graduationSummaryState.ts + src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        { "key": "loading", "label": "(skeleton)", "classes": "Card > CardContent.py-3 > div.h-4 bg-gray-200 rounded animate-pulse" },
+        { "key": "error", "label": "졸업요건 정보를 불러오지 못했습니다.", "classes": "Card[role=alert].border-red-200 ; p.text-sm text-red-600 ; Button size=sm variant=outline" },
+        { "key": "empty", "label": "졸업 요건을 설정하세요", "classes": "Card.border-dashed ; p.text-sm text-gray-500 ; Button size=sm variant=outline + Button size=sm" },
+        { "key": "ready", "label": "졸업 요건", "classes": "Card > CardContent.py-3 px-3 sm:px-4 (full progress view)" }
+      ]
+    },
+    {
+      "domain": "Progress bar segment / legend colors",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        { "key": "track", "label": "(background)", "classes": "bg-gray-100 rounded-full overflow-hidden" },
+        { "key": "earned (met)", "label": "이수 / 요건 충족", "classes": "bg-emerald-500" },
+        { "key": "earned (not met)", "label": "이수", "classes": "bg-blue-600" },
+        { "key": "enrolled", "label": "수강중", "classes": "bg-sky-400" },
+        { "key": "planned", "label": "예정", "classes": "style backgroundImage: repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)" },
+        { "key": "unplanned", "label": "미계획", "classes": "bg-gray-200 (legend swatch only)" }
+      ]
+    },
+    {
+      "domain": "Satisfied vs unsatisfied text",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        { "key": "met (earned >= required, required > 0)", "label": "✓ {earned}/{required}", "classes": "text-emerald-600" },
+        { "key": "not met", "label": "{earned}/{required}", "classes": "text-gray-500" },
+        { "key": "met & nothing pending", "label": "요건 충족", "classes": "text-[11px] text-emerald-600" },
+        { "key": "total.percentage >= 100", "label": "{percentage}%", "classes": "text-lg font-semibold text-emerald-600" },
+        { "key": "total.percentage < 100", "label": "{percentage}%", "classes": "text-lg font-semibold text-gray-800" },
+        { "key": "projected > percentage", "label": "→ 계획 반영 시 {projected}%", "classes": "text-xs text-gray-400 whitespace-nowrap" }
+      ]
+    },
+    {
+      "domain": "StackedBar size -> height",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        { "key": "lg", "label": "hero total bar", "classes": "h-2.5" },
+        { "key": "md", "label": "main track row", "classes": "h-2" },
+        { "key": "sm", "label": "sub track row", "classes": "h-1.5" }
+      ]
+    },
+    {
+      "domain": "TrackRow sub vs main",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        { "key": "main", "label": "전공 / 복수전공 / 부전공 / 교양", "classes": "label: text-xs text-gray-600 ; value: text-xs ; bar: size=md" },
+        { "key": "sub", "label": "└ 핵심 / └ 주전공최소", "classes": "label: pl-3 text-[11px] text-gray-400 ; value: text-[11px] ; bar: size=sm" }
+      ]
+    },
+    {
+      "domain": "RequirementCategory -> label (categoryLabels)",
+      "file": "src/components/features/CustomCourseForm.tsx",
+      "entries": [
+        { "key": "major_required", "label": "전공핵심", "classes": "(option text only, no classes)" },
+        { "key": "major_compulsory", "label": "전공필수", "classes": "(option text only)" },
+        { "key": "major_elective", "label": "전공선택", "classes": "(option text only)" },
+        { "key": "general_required", "label": "교양필수", "classes": "(option text only)" },
+        { "key": "general_elective", "label": "교양선택", "classes": "(option text only)" },
+        { "key": "teaching", "label": "교직", "classes": "(option text only)" },
+        { "key": "free_elective", "label": "자유선택", "classes": "(option text only)" }
+      ]
+    },
+    {
+      "domain": "Inline message/banner tone",
+      "file": "RequirementForm.tsx, CustomCourseForm.tsx, AddSemesterDialog.tsx, RequirementsSummary.tsx",
+      "entries": [
+        { "key": "help (neutral info w/ icon)", "label": "졸업 기준과 취득 학점을 잘 모르시나요?", "classes": "flex items-center gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2" },
+        { "key": "info", "label": "{year}학년 1학기에 바로 추가됩니다.", "classes": "text-sm text-blue-600 bg-blue-50 rounded-md px-3 py-2" },
+        { "key": "success (inline text)", "label": "학과 기준표에서 불러왔습니다.", "classes": "text-xs text-blue-600" },
+        { "key": "warning (boxed, sm)", "label": "학기를 먼저 클릭하여 포커스하면 해당 학기에 바로 추가됩니다.", "classes": "text-sm text-amber-600 bg-amber-50 rounded-md px-3 py-2" },
+        { "key": "warning (boxed, xs, bordered)", "label": "계획에 ‘이수’ 과목이 있습니다...", "classes": "mb-3 text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2 ; p.text-amber-800" },
+        { "key": "warning (plain text)", "label": "학과를 먼저 설정해주세요.", "classes": "text-sm text-amber-600" },
+        { "key": "danger (boxed)", "label": "{year}학년 1학기는 이미 추가되어 있습니다.", "classes": "p-3 rounded-md bg-red-50 border border-red-200 ; p.text-sm text-red-700 font-medium" },
+        { "key": "danger (field)", "label": "0 이상의 학점을 입력하세요", "classes": "text-xs text-red-500 mt-1 ; Input border-red-500" },
+        { "key": "danger (form-level)", "label": "저장에 실패했습니다.", "classes": "text-sm text-red-500 mb-2" },
+        { "key": "danger (query)", "label": "졸업요건 정보를 불러오지 못했습니다.", "classes": "text-sm text-red-600 (inside Card.border-red-200)" }
+      ]
+    },
+    {
+      "domain": "Segmented selector button (grade/term)",
+      "file": "src/components/features/AddSemesterDialog.tsx",
+      "entries": [
+        { "key": "selected", "label": "", "classes": "border-[#153974] bg-[#153974]/10 text-[#153974]" },
+        { "key": "unselected", "label": "", "classes": "border-gray-300 bg-white text-gray-700 hover:border-gray-400" },
+        { "key": "disabled (isLoading)", "label": "", "classes": "opacity-50 cursor-not-allowed" },
+        { "key": "enabled", "label": "", "classes": "cursor-pointer" }
+      ]
+    },
+    {
+      "domain": "Term -> label",
+      "file": "RequirementsSummary.tsx, CustomCourseForm.tsx, AddSemesterDialog.tsx",
+      "entries": [
+        { "key": "spring", "label": "1학기", "classes": "" },
+        { "key": "fall", "label": "2학기", "classes": "" }
+      ]
+    },
+    {
+      "domain": "Brand tint button (tertiary)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        { "key": "default", "label": "요건 수정", "classes": "inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#153974] bg-[#153974]/10 rounded-md transition-colors" },
+        { "key": "hover", "label": "", "classes": "hover:bg-[#153974]/20" }
+      ]
+    }
+  ],
+  "color_classes_seen": [
+    "bg-gray-50", "bg-gray-100", "bg-gray-200", "bg-white", "bg-black/50",
+    "text-gray-400", "text-gray-500", "text-gray-600", "text-gray-700", "text-gray-800", "text-gray-900",
+    "border-gray-200", "border-gray-300", "border-gray-400",
+    "bg-emerald-500", "text-emerald-600",
+    "bg-blue-600", "bg-blue-50", "border-blue-100", "text-blue-600", "ring-blue-500",
+    "bg-sky-400",
+    "text-teal-700", "bg-teal-50", "border-teal-200",
+    "text-red-500", "text-red-600", "text-red-700", "border-red-200", "border-red-500", "bg-red-50",
+    "text-amber-600", "text-amber-800", "bg-amber-50", "bg-amber-100", "bg-amber-200", "border-amber-200", "border-amber-300",
+    "text-[#153974]", "bg-[#153974]/10", "bg-[#153974]/20", "border-[#153974]",
+    "text-[#00AACA]",
+    "inline-hex:#93c5fd", "inline-hex:#dbeafe"
+  ],
+  "typography": [
+    { "role": "Dialog title (large)", "classes": "text-2xl font-semibold mb-6", "where": "AddSemesterDialog h2 '학기 추가'" },
+    { "role": "Modal title", "classes": "text-lg font-semibold text-gray-900", "where": "CustomCourseForm h3 '커스텀 과목 추가'" },
+    { "role": "Modal subtitle", "classes": "text-sm text-gray-500 mt-1", "where": "CustomCourseForm '나만의 과목을 추가하세요.'" },
+    { "role": "Card/section title", "classes": "text-sm font-medium text-gray-700", "where": "RequirementsSummary '졸업 요건' / '졸업 요건 입력' / '졸업 요건 수정'" },
+    { "role": "Form section heading", "classes": "text-sm font-semibold text-gray-800 border-b pb-2", "where": "RequirementForm '전공 유형', '졸업 기준', '복수전공', '부전공', '기이수 학점'" },
+    { "role": "Hero stat", "classes": "text-lg font-semibold text-gray-800 | text-emerald-600", "where": "RequirementsSummary percentage" },
+    { "role": "Field label (dense inline form)", "classes": "block text-xs font-medium text-gray-600 mb-1", "where": "RequirementForm" },
+    { "role": "Field label (modal form)", "classes": "block text-sm font-medium text-gray-700 mb-1", "where": "CustomCourseForm" },
+    { "role": "Field label (modal selector)", "classes": "block text-sm font-medium text-gray-700 mb-2", "where": "AddSemesterDialog" },
+    { "role": "Field error", "classes": "text-xs text-red-500 mt-1", "where": "RequirementForm" },
+    { "role": "Form-level error", "classes": "text-sm text-red-500", "where": "RequirementsSummary saveError (mb-2), CustomCourseForm mutation error" },
+    { "role": "Help text / caption", "classes": "text-xs text-gray-400 mt-0.5", "where": "RequirementForm under inputs and select" },
+    { "role": "Micro caption", "classes": "text-[11px] text-gray-400", "where": "BreakdownLine, TrackRow sub label, footer hint" },
+    { "role": "Micro badge", "classes": "text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full", "where": "RequirementsSummary year badge" },
+    { "role": "Track label", "classes": "text-xs text-gray-600", "where": "TrackRow main" },
+    { "role": "Track value", "classes": "text-xs text-gray-500 | text-emerald-600 (font-medium on earned)", "where": "TrackRow / hero value" },
+    { "role": "Radio label", "classes": "text-sm", "where": "RequirementForm major type" },
+    { "role": "Segmented button", "classes": "font-medium text-sm (grade) | font-medium (term, inherits base)", "where": "AddSemesterDialog" },
+    { "role": "Tertiary button", "classes": "text-xs font-medium text-[#153974]", "where": "RequirementsSummary '요건 수정'" },
+    { "role": "Inline link", "classes": "text-[#00AACA] hover:text-[#153974] underline", "where": "RequirementForm help/profile links" },
+    { "role": "Inline link (unbranded)", "classes": "underline font-medium", "where": "CustomCourseForm '프로필 설정' (inherits text-amber-600)" },
+    { "role": "Warning body", "classes": "text-sm text-amber-600 | text-xs text-amber-800", "where": "CustomCourseForm / RequirementForm" },
+    { "role": "Danger body (boxed)", "classes": "text-sm text-red-700 font-medium", "where": "AddSemesterDialog duplicate warning" },
+    { "role": "Empty-state text", "classes": "text-sm text-gray-500", "where": "RequirementsSummary '졸업 요건을 설정하세요'" }
+  ],
+  "layout_patterns": [
+    { "name": "Modal overlay (A)", "description": "Full-screen dimmed backdrop with 16px gutter, centered", "classes": "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4", "where": "CustomCourseForm" },
+    { "name": "Modal overlay (B)", "description": "Same backdrop without gutter; closes on backdrop click", "classes": "fixed inset-0 z-50 flex items-center justify-center bg-black/50", "where": "AddSemesterDialog" },
+    { "name": "Modal panel (A)", "description": "Raw white panel with scroll clamp", "classes": "bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto", "where": "CustomCourseForm" },
+    { "name": "Modal panel (B)", "description": "Reuses Card component as the panel", "classes": "Card: w-full max-w-md bg-white ; CardContent: pt-6", "where": "AddSemesterDialog" },
+    { "name": "Modal header", "description": "Title + subtitle separated from body by bottom border", "classes": "px-6 py-4 border-b border-gray-200", "where": "CustomCourseForm" },
+    { "name": "Modal body", "description": "Form body padding and vertical rhythm", "classes": "p-6 space-y-4 (CustomCourseForm) | space-y-6 (AddSemesterDialog form)", "where": "modals" },
+    { "name": "Modal footer buttons", "description": "Two equal-width buttons", "classes": "flex gap-3 pt-2 ; each Button className=\"flex-1\"", "where": "CustomCourseForm (ghost 취소 | primary 추가), AddSemesterDialog (primary 추가 | outline 취소)" },
+    { "name": "Inline form footer", "description": "Submit stretches, cancel is natural width", "classes": "flex gap-2 pt-2 ; submit flex-1 ; cancel variant=outline", "where": "RequirementForm" },
+    { "name": "Inline form container", "description": "Recessed gray panel for an in-card editor", "classes": "space-y-5 p-4 bg-gray-50 rounded-lg border", "where": "RequirementForm" },
+    { "name": "Form section", "description": "Top-rule separated section with underlined heading", "classes": "border-t pt-4 ; heading: text-sm font-semibold text-gray-800 border-b pb-2 mb-3", "where": "RequirementForm" },
+    { "name": "Two-column numeric field grid", "description": "Dense 2-col grid of label+Input+error", "classes": "grid grid-cols-2 gap-x-3 gap-y-2", "where": "RequirementForm (no responsive breakpoint)" },
+    { "name": "Field stack", "description": "label mb-1 -> Input -> optional help text mt-0.5 -> error mt-1", "classes": "block text-xs font-medium text-gray-600 mb-1 / text-xs text-gray-400 mt-0.5 / text-xs text-red-500 mt-1", "where": "RequirementForm" },
+    { "name": "Radio group", "description": "Horizontal native radios", "classes": "flex gap-4 ; label: flex items-center gap-2 cursor-pointer ; input: w-4 h-4 ; text: text-sm", "where": "RequirementForm" },
+    { "name": "Segmented selector grid", "description": "Border-2 toggle buttons in a grid", "classes": "grid grid-cols-5 gap-2 (grade: py-2.5 px-2) | grid grid-cols-2 gap-3 (term: py-3 px-4) ; rounded-md border-2 transition-colors font-medium", "where": "AddSemesterDialog" },
+    { "name": "Progress card content", "description": "Compact card padding with responsive side gutter", "classes": "py-3 px-3 sm:px-4", "where": "RequirementsSummary view" },
+    { "name": "Card header row", "description": "Title cluster left, stat right, wraps", "classes": "flex items-baseline justify-between gap-2 flex-wrap", "where": "RequirementsSummary" },
+    { "name": "Hero bar row", "description": "Bar + value on one line, legend beneath", "classes": "mt-2 flex items-center gap-2 ; BreakdownLine mt-1.5", "where": "RequirementsSummary" },
+    { "name": "Track row", "description": "Fixed 64px label, flexible bar, fixed 64px right-aligned value; legend indented 72px", "classes": "flex items-center gap-2 ; w-16 flex-shrink-0 ; flex-1 ; w-16 flex-shrink-0 text-right ; mt-0.5 pl-[72px]", "where": "TrackRow" },
+    { "name": "Details section", "description": "Top-rule list of track rows", "classes": "mt-3 pt-3 border-t space-y-2.5", "where": "RequirementsSummary" },
+    { "name": "Card footer", "description": "Hint left, action right, wraps", "classes": "mt-3 pt-2.5 border-t flex items-center justify-between gap-2 flex-wrap", "where": "RequirementsSummary" },
+    { "name": "Responsive stack-to-row", "description": "Column on mobile, row on sm+", "classes": "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 | gap-2", "where": "RequirementsSummary error/empty states" },
+    { "name": "Button cluster", "description": "Non-shrinking action pair", "classes": "flex gap-2 flex-shrink-0", "where": "RequirementsSummary empty state" },
+    { "name": "Load-from-department row", "description": "Small outline button beside a tiny select", "classes": "space-y-1 > flex items-center gap-2", "where": "RequirementForm" },
+    { "name": "Inline banner", "description": "Rounded tinted strip with px-3 py-2", "classes": "rounded-md px-3 py-2 (+ bg-blue-50 / bg-amber-50 ; optional border)", "where": "RequirementForm, CustomCourseForm" },
+    { "name": "Boxed alert", "description": "Padded bordered red box", "classes": "p-3 rounded-md bg-red-50 border border-red-200", "where": "AddSemesterDialog" },
+    { "name": "Skeleton", "description": "Single pulsing bar", "classes": "h-4 bg-gray-200 rounded animate-pulse", "where": "RequirementsSummary loading" }
+  ],
+  "copy_samples": [
+    { "text": "졸업 요건", "where": "RequirementsSummary title", "note": "noun phrase, space between words" },
+    { "text": "{year}년 기준", "where": "RequirementsSummary year badge" },
+    { "text": "→ 계획 반영 시 {projected}%", "where": "RequirementsSummary projected hint", "note": "unicode arrow prefix" },
+    { "text": "요건 충족", "where": "BreakdownLine met", "note": "terse noun phrase, no period" },
+    { "text": "이수 {n} (기이수 {n} 포함) · 수강중 {n} · 예정 {n} · 미계획 {n}", "where": "BreakdownLine legend", "note": "legend items; rendered with gaps, not literal dots" },
+    { "text": "└ 핵심", "where": "TrackRow sub label", "note": "box-drawing character as tree indent" },
+    { "text": "과목 카드의 상태(예정·수강중·이수)를 바꾸면 바로 반영됩니다.", "where": "RequirementsSummary footer hint", "note": "합니다체, middle dot list, period" },
+    { "text": "요건 수정", "where": "RequirementsSummary edit button" },
+    { "text": "졸업요건 정보를 불러오지 못했습니다.", "where": "RequirementsSummary error", "note": "합니다체 with period; '졸업요건' written without space unlike title" },
+    { "text": "다시 시도 / 다시 시도 중...", "where": "RequirementsSummary retry button", "note": "ASCII three dots for loading" },
+    { "text": "졸업 요건을 설정하세요", "where": "RequirementsSummary empty state", "note": "해요체 imperative, no period" },
+    { "text": "직접 입력 / 기본 요건 생성 / 생성 중...", "where": "RequirementsSummary empty state buttons" },
+    { "text": "졸업 요건 입력 / 졸업 요건 수정", "where": "inline editor headings" },
+    { "text": "저장에 실패했습니다.", "where": "RequirementsSummary save error fallback" },
+    { "text": "졸업 기준과 취득 학점을 잘 모르시나요? 확인 방법 보기", "where": "RequirementForm help banner", "note": "polite question + link CTA" },
+    { "text": "단일전공으로 설정되어 있습니다. 복수전공/부전공은 프로필에서 변경하세요.", "where": "RequirementForm single-major notice" },
+    { "text": "학과 기준표에서 불러오기", "where": "RequirementForm button" },
+    { "text": "학과 기준표에서 불러왔습니다. 수정할 수 있습니다.", "where": "RequirementForm load success" },
+    { "text": "전공핵심 (최소)", "where": "RequirementForm label", "note": "space before parenthesis" },
+    { "text": "예: 130 / 예: 30 / 예: 60 / 예: 24 / 예: 21 / 예: 9 / 예: 63 / 0", "where": "RequirementForm placeholders", "note": "'예:' example prefix convention" },
+    { "text": "1 이상의 학점을 입력하세요", "where": "RequirementForm validation", "note": "no period on validation messages" },
+    { "text": "0 이상의 학점을 입력하세요", "where": "RequirementForm validation (reused for all non-negative fields)" },
+    { "text": "전공핵심은 전공학점 이하여야 합니다", "where": "RequirementForm cross-field validation" },
+    { "text": "복수전공핵심은 복수전공학점 이하여야 합니다", "where": "RequirementForm validation" },
+    { "text": "부전공핵심은 부전공학점 이하여야 합니다", "where": "RequirementForm validation" },
+    { "text": "전공 + 복수전공/부전공 + 교양 학점이 졸업학점을 초과합니다", "where": "RequirementForm validation" },
+    { "text": "기이수 학점 — 성적표 기준으로 이미 이수한 학점", "where": "RequirementForm section heading + subheading" },
+    { "text": "계획에 ‘이수’ 과목이 있습니다. 해당 학기가 기이수(성적표)에 이미 반영되어 있다면, 기준 학기를 설정해야 중복 합산되지 않습니다.", "where": "RequirementForm amber suggestion", "note": "uses &lsquo;/&rsquo; typographic quotes" },
+    { "text": "기이수 학점을 수정했습니다. 성적표에 새로 반영된 학기가 있다면 기준 학기도 함께 올려주세요.", "where": "RequirementForm amber suggestion (edited variant)", "note": "해요체 '올려주세요'" },
+    { "text": "{label}까지로 설정", "where": "RequirementForm suggestion button" },
+    { "text": "선택 안 함 — 계획의 이수 과목을 모두 합산", "where": "RequirementForm cutoff select default option", "note": "em dash separator" },
+    { "text": "{label}까지 기이수에 반영됨", "where": "RequirementForm cutoff select options" },
+    { "text": "선택한 학기까지 계획에 ‘이수’로 표시한 과목은 기이수 학점에 이미 포함된 것으로 보고 중복 합산하지 않습니다.", "where": "RequirementForm select help" },
+    { "text": "이미 이수한 총 학점 (전공+교양+기타 포함)", "where": "RequirementForm field help" },
+    { "text": "수정 / 저장 / 취소", "where": "RequirementForm footer (수정 when editing, 저장 when new)" },
+    { "text": "커스텀 과목 추가", "where": "CustomCourseForm title" },
+    { "text": "나만의 과목을 추가하세요.", "where": "CustomCourseForm subtitle", "note": "해요체 with period" },
+    { "text": "과목명 * / 학점 * / 이수구분 *", "where": "CustomCourseForm labels", "note": "red asterisk for required" },
+    { "text": "예: 데이터베이스", "where": "CustomCourseForm placeholder" },
+    { "text": "선택하세요", "where": "CustomCourseForm select placeholder option" },
+    { "text": "{year}학년 1학기에 바로 추가됩니다.", "where": "CustomCourseForm info banner" },
+    { "text": "학기를 먼저 클릭하여 포커스하면 해당 학기에 바로 추가됩니다.", "where": "CustomCourseForm warning banner" },
+    { "text": "학과를 먼저 설정해주세요. 프로필 설정", "where": "CustomCourseForm warning + link" },
+    { "text": "과목 생성에 실패했습니다.", "where": "CustomCourseForm error fallback" },
+    { "text": "추가 / 추가 중...", "where": "CustomCourseForm submit" },
+    { "text": "학기 추가", "where": "AddSemesterDialog title" },
+    { "text": "학년 / 학기 / {n}학년 / 1학기 / 2학기", "where": "AddSemesterDialog labels and segmented buttons" },
+    { "text": "{year}학년 {1학기|2학기}는 이미 추가되어 있습니다.", "where": "AddSemesterDialog duplicate warning" }
+  ],
+  "motion": [
+    { "classes": "animate-pulse", "where": "RequirementsSummary loading skeleton (h-4 bg-gray-200 rounded animate-pulse)" },
+    { "classes": "transition-colors", "where": "RequirementsSummary '요건 수정' button (hover:bg-[#153974]/20)" },
+    { "classes": "transition-colors", "where": "AddSemesterDialog grade/term segmented buttons (hover:border-gray-400, selected border/bg swap)" },
+    { "classes": "transition-colors", "where": "RequirementForm amber suggestion button (hover:bg-amber-200)" },
+    { "classes": "hover:text-[#153974]", "where": "RequirementForm links (no transition class)" }
+  ],
+  "icons": [
+    { "name": "HelpCircle (lucide-react)", "size_classes": "w-3.5 h-3.5 text-[#00AACA] flex-shrink-0", "where": "RequirementForm help banner" },
+    { "name": "inline SVG pencil/edit (path M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z, fill=none stroke=currentColor strokeWidth=2 strokeLinecap=round strokeLinejoin=round)", "size_classes": "w-3 h-3", "where": "RequirementsSummary '요건 수정' button" },
+    { "name": "unicode ✓ (text, not icon)", "size_classes": "inherits text-xs / text-[11px] text-emerald-600", "where": "TrackRow met value prefix" },
+    { "name": "unicode └ (text)", "size_classes": "inherits text-[11px] text-gray-400", "where": "TrackRow sub label prefix" },
+    { "name": "unicode → (text)", "size_classes": "text-xs text-gray-400", "where": "RequirementsSummary projected hint" },
+    { "name": "legend swatch (colored square)", "size_classes": "w-2 h-2 rounded-[2px] inline-block", "where": "BreakdownLine" },
+    { "name": "native radio input", "size_classes": "w-4 h-4", "where": "RequirementForm major type" }
+  ],
+  "oddities": [
+    "Hard-coded hex in PLANNED_STRIPES: '#93c5fd' and '#dbeafe' (Tailwind blue-300/blue-100) via inline backgroundImage — outside the brand trio and not a Tailwind class, so it will not respond to theme changes.",
+    "Four separate blue/green families in one card: earned=bg-blue-600, enrolled=bg-sky-400, planned=blue-300/100 stripes, success=emerald-500/600, year badge=teal-50/200/700, brand button=#153974. Neither #3069B3 nor #00AACA is used for progress; teal is a fourth accent not in the brand trio.",
+    "Focus ring on selects is focus:ring-1 focus:ring-blue-500 (Tailwind blue), not brand #153974/#00AACA; CustomCourseForm select has NO focus style at all.",
+    "Three different native <select> recipes: 'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm' (CustomCourseForm), 'w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500' (RequirementForm cutoff), 'text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500' (RequirementForm year).",
+    "Field label scale differs by context: text-xs font-medium text-gray-600 mb-1 (RequirementForm) vs text-sm font-medium text-gray-700 mb-1 (CustomCourseForm) vs text-sm font-medium text-gray-700 mb-2 (AddSemesterDialog).",
+    "Dialog title scale inconsistent: text-2xl font-semibold (no color, AddSemesterDialog) vs text-lg font-semibold text-gray-900 (CustomCourseForm) vs text-sm font-medium text-gray-700 (inline editor heading).",
+    "Footer button order and cancel variant inconsistent: CustomCourseForm = [ghost 취소][primary 추가] gap-3 both flex-1; AddSemesterDialog = [primary 추가][outline 취소] gap-3 both flex-1; RequirementForm = [primary 저장/수정 flex-1][outline 취소 natural width] gap-2.",
+    "Two loading-button patterns: Button isLoading prop (RequirementForm, AddSemesterDialog) vs manual text swap '...중...' + disabled (RequirementsSummary, CustomCourseForm).",
+    "Modal overlay A (CustomCourseForm) has p-4 gutter and max-h-[90vh] overflow-y-auto; overlay B (AddSemesterDialog) has neither, so the panel can touch screen edges and overflow on short viewports. A uses a raw div panel with shadow-xl; B reuses Card.",
+    "Accessibility: neither modal sets role=\"dialog\"/aria-modal/aria-labelledby or traps focus. CustomCourseForm has no Escape or backdrop-click close and no close button; AddSemesterDialog has both. AddSemesterDialog's Escape listener is attached even when closed (guarded by isOpen check inside).",
+    "Red text shades vary by context: text-red-500 (field + form errors), text-red-600 (query error), text-red-700 (duplicate warning). Amber varies too: text-amber-600 vs text-amber-800.",
+    "Contrast: text-gray-400 at text-[10px]/text-[11px]/text-xs is used for legends, captions and the footer hint — roughly 2.5–3:1 on white/gray-50, below WCAG AA 4.5:1 for body text. text-red-500 at text-xs (~4:1) is also borderline. text-teal-700 on bg-teal-50 at 10px is small but passes.",
+    "Three micro-type tiers coexist: text-[10px] (badge), text-[11px] (legend/sub rows/hint), text-xs (12px). Arbitrary sizes bypass the Tailwind scale.",
+    "Magic numbers: pl-[72px] (= w-16 + gap-2) to align the legend; rounded-[2px] on swatches (one-off radius); max-h-[90vh].",
+    "'요건 수정' and the amber suggestion CTA are raw <button> elements with bespoke classes instead of the shared Button component; the amber one uses `rounded` (4px) while everything else uses rounded-md.",
+    "Brand tint button uses opacity modifiers on an arbitrary hex (bg-[#153974]/10, hover:bg-[#153974]/20) — works in Tailwind v4 but is a bespoke tertiary style not defined centrally.",
+    "Links: RequirementForm uses next/link <Link> with text-[#00AACA] hover:text-[#153974] underline; CustomCourseForm uses a plain <a href=\"/profile\"> with only 'underline font-medium' (inherits amber), causing a full page load and an unbranded link color.",
+    "Native radio inputs (w-4 h-4) with no accent-color class, so the checked color is the browser default blue, not brand.",
+    "border-t / border-b / border used without an explicit color in RequirementsSummary and RequirementForm; in Tailwind v4 the default border color is currentColor unless globals.css overrides it, so these rules may render darker than intended.",
+    "Mixed border widths: border-2 on segmented buttons vs border (1px) everywhere else.",
+    "Term button in AddSemesterDialog has no explicit text size (inherits base 16px) while the grade button sets text-sm — mismatched within the same dialog.",
+    "Copy inconsistency: title '졸업 요건' (with space) vs error '졸업요건 정보를…' (no space). Validation messages omit the trailing period while status/success messages include it.",
+    "BreakdownLine docstring describes '·' separators but the rendered markup uses gap-x-2.5 only; the middle dot appears only in the footer hint copy.",
+    "Year select hard-codes two options (2025년, 2026년) rather than deriving from data.",
+    "Hero percentage uses total.percentage >= 100 while bars/rows use earned >= required via isMet — two parallel 'met' computations.",
+    "RequirementsSummary edit-mode header row is 'flex items-center justify-between mb-3' but contains only one child (no right-side action).",
+    "RequirementForm numeric grid is grid-cols-2 with no mobile breakpoint; at phone width each Input gets ~140px, tight for label '복수전공핵심 (최소)'.",
+    "Loading-state skeleton is a single h-4 bar that does not mirror the eventual card layout."
+  ]
+}

@@ -1,0 +1,483 @@
+/* ProfileCard (pattern) — hand-translated from src/app/(dashboard)/profile/page.tsx: the 672px profile column (gradient banner with the overlapping initial avatar, name and badge row), then the 기본 정보 / 전공 설정 / 계정 정보 / 위험 구역·계정 초기화 Cards with their key-value rows, major-type toggle pair, edit form and destructive Button. Card parts reuse .cp-card (Card.css), Buttons .cp-button (Button.css), text fields .cp-input (Input.css) and the department picker .cp-searchable-select (SearchableSelect.css); only the pattern's own rules live here. */
+
+/* Block = the page column <div className="max-w-2xl mx-auto space-y-6">. It inherits the body context from
+   globals.css (Arial 16px/1.5, foreground); the Cards inside reset color to gray-900 themselves (Card.css). */
+.cp-profile {
+  box-sizing: border-box;
+  max-width: var(--container-2xl, 672px);
+  margin-left: auto;
+  margin-right: auto;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.cp-profile *,
+.cp-profile *::before,
+.cp-profile *::after {
+  box-sizing: border-box;
+}
+/* space-y-6 between the page title block, the banner wrapper and each Card */
+.cp-profile > * + * {
+  margin-top: var(--space-6, 24px);
+}
+
+/* Page title block: <h1 className="text-2xl font-bold text-gray-900">프로필</h1><p className="text-gray-600 mt-1">개인 정보를 관리하세요.</p> */
+.cp-profile__title {
+  margin: 0;
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+.cp-profile__subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  color: var(--gray-600, #4a5565);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Banner (signed-in page only)
+   --------------------------------------------------------------------------------------------- */
+
+/* <div className="animate-fade-in"> — plain wrapper; the entrance is the --enter modifier below. */
+.cp-profile__banner-wrap {
+  display: block;
+}
+.cp-profile__banner-wrap--enter {
+  animation: cp-fade-in var(--duration-enter-long, 600ms) ease-out both;
+}
+
+/* h-32 rounded-xl bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] relative mb-16 */
+.cp-profile__banner {
+  position: relative;
+  height: var(--space-32, 128px);
+  margin-bottom: var(--space-16, 64px);
+  border-radius: var(--radius-xl, 12px);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+}
+
+/* absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3]
+   flex items-center justify-center ring-4 ring-white shadow-lg — v4 composes the ring before the shadow. */
+.cp-profile__avatar {
+  position: absolute;
+  bottom: calc(-1 * var(--space-10, 40px));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-20, 80px);
+  height: var(--space-20, 80px);
+  border-radius: var(--radius-full, 9999px);
+  background-image: linear-gradient(to bottom right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  box-shadow: 0 0 0 4px var(--white, #ffffff),
+    var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+}
+
+/* <span className="text-2xl font-bold text-white"> — the first letter of the name, uppercased, or U */
+.cp-profile__avatar-initial {
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--white, #ffffff);
+}
+
+/* <div className="text-center mt-2"> */
+.cp-profile__identity {
+  margin-top: var(--space-2, 8px);
+  text-align: center;
+}
+
+/* <h2 className="text-xl font-bold text-gray-900"> */
+.cp-profile__name {
+  margin: 0;
+  font: 700 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* <div className="flex items-center justify-center gap-2 mt-2 flex-wrap"> */
+.cp-profile__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-2, 8px);
+}
+
+/* <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium …"> */
+.cp-profile__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: var(--space-1, 4px) var(--space-3, 12px);
+  border-radius: var(--radius-full, 9999px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* bg-[#153974]/10 text-[#153974] */
+.cp-profile__badge--department {
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+}
+/* bg-[#00AACA]/10 text-[#00AACA] — 2.4:1 on the gray-50 frame in the source; kept. */
+.cp-profile__badge--year {
+  background-color: var(--yu-cyan-a10, #00aaca1a);
+  color: var(--yu-cyan, #00aaca);
+}
+/* majorType === 'double': bg-purple-100 text-purple-700 */
+.cp-profile__badge--double {
+  background-color: var(--dept-double-major-bg, #f3e8ff);
+  color: var(--dept-double-major-text, #8200db);
+}
+/* majorType === 'minor': bg-orange-100 text-orange-700 */
+.cp-profile__badge--minor {
+  background-color: var(--dept-minor-bg, #ffedd4);
+  color: var(--dept-minor-text, #ca3500);
+}
+/* Building2 / CalendarDays className="w-3 h-3" */
+.cp-profile__badge-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Cards — modifiers on .cp-card
+   --------------------------------------------------------------------------------------------- */
+
+/* 기본 정보: className="animate-fade-in-up relative z-10". 전공 설정: "animate-fade-in-up anim-delay-50 relative z-[5]".
+   Why the z-indexes: animate-fade-in-up ends with `transform: translateY(0)` held by fill-mode both, so every Card
+   becomes its own stacking context. The SearchableSelect dropdown (absolute z-50) inside an earlier Card would then
+   paint UNDER the next Card; z-10 > z-[5] > auto keeps each dropdown above the Card below it. */
+.cp-card.cp-profile__card--basic {
+  position: relative;
+  z-index: var(--z-sticky, 10);
+}
+.cp-card.cp-profile__card--major {
+  position: relative;
+  z-index: var(--z-raised, 5);
+}
+/* 위험 구역 / 계정 초기화: className="… border-red-200" — cn() swaps the bare hairline for red-200. */
+.cp-card.cp-profile__card--danger {
+  border-color: var(--red-200, #ffc9c9);
+}
+/* Entrance: .animate-fade-in-up (0.6s ease-out both) with .anim-delay-100 / .anim-delay-200 from globals.css.
+   anim-delay-50 (on 전공 설정) is not defined in globals.css, so that Card has no delay. */
+.cp-profile__card--enter {
+  animation: cp-fade-in-up var(--duration-enter-long, 600ms) ease-out both;
+}
+.cp-profile__card--delay-100 { animation-delay: 100ms; }
+.cp-profile__card--delay-200 { animation-delay: 200ms; }
+
+/* 기본 정보 header: CardHeader className="flex flex-row items-center justify-between". CardHeader's own space-y-1.5
+   still applies: Tailwind v4 writes it as 6px margin-block-end on :not(:last-child), i.e. on the title group,
+   so the title sits 3px above the centre line of the 36px ghost Button and the header is 84px tall. */
+.cp-card__header.cp-profile__card-header--split {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+.cp-card__header.cp-profile__card-header--split > * + * {
+  margin-top: 0;
+}
+.cp-card__header.cp-profile__card-header--split > :not(:last-child) {
+  margin-bottom: var(--space-1-5, 6px);
+}
+
+/* <div className="flex items-center gap-2"> around the icon and the CardTitle */
+.cp-profile__card-heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+/* User / Building2 / Shield className="w-5 h-5 text-gray-600"; Trash2 "w-5 h-5 text-red-500" */
+.cp-profile__card-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  color: var(--gray-600, #4a5565);
+}
+.cp-profile__card-icon--danger {
+  color: var(--red-500, #fb2c36);
+}
+/* CardTitle className="text-red-600" */
+.cp-card__title.cp-profile__card-title--danger {
+  color: var(--red-600, #e7000b);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Key-value rows (기본 정보 read-only, 계정 정보)
+   --------------------------------------------------------------------------------------------- */
+
+/* <div className="space-y-3"> */
+.cp-profile__rows > * + * {
+  margin-top: var(--space-3, 12px);
+}
+
+/* <div className="flex justify-between py-2 border-b"> — bare border-b is currentColor, i.e. the Card's gray-900.
+   No items-center: both sides are one 24px line. */
+.cp-profile__row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2, 8px) 0;
+  border-bottom: 1px solid var(--border-default, #101828);
+}
+/* The final row of each list is written without border-b (복수전공/부전공 in 기본 정보, 권한 and 데이터 저장 in 계정 정보). */
+.cp-profile__row--last {
+  border-bottom: 0;
+}
+
+/* <div className="flex items-center gap-2"> label group */
+.cp-profile__row-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+/* Mail / User / CalendarDays / Building2 / Chrome / Star className="w-4 h-4 text-gray-400" */
+.cp-profile__row-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--gray-400, #99a1af);
+}
+/* <span className="text-gray-600"> */
+.cp-profile__row-key {
+  color: var(--gray-600, #4a5565);
+}
+/* <span className="font-medium"> — the value at the inherited body size and Card color */
+.cp-profile__row-value {
+  font-weight: 500;
+}
+/* 계정 유형 / 권한: <div className="flex items-center gap-2 font-medium"> with a gray-400 icon before the text */
+.cp-profile__row-value--group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+/* Missing value: className="text-gray-400" replaces font-medium (미설정) — 2.6:1 on white in the source; kept. */
+.cp-profile__row-value--empty {
+  font-weight: 400;
+  color: var(--gray-400, #99a1af);
+}
+/* Guest 계정 유형: "font-medium text-amber-600" 게스트 모드 — 3.2:1 on white in the source; kept. */
+.cp-profile__row-value--amber {
+  color: var(--amber-600, #e17100);
+}
+/* Guest 데이터 저장: "font-medium text-gray-500" 이 브라우저에만 저장 */
+.cp-profile__row-value--muted {
+  color: var(--gray-500, #6a7282);
+}
+/* <span className="capitalize"> around the role (student / admin) */
+.cp-profile__row-role {
+  text-transform: capitalize;
+}
+
+/* Guest 계정 정보 CTA: <div className="mt-4"><Link><Button variant="outline" className="w-full"> */
+.cp-profile__cta {
+  margin-top: var(--space-4, 16px);
+}
+.cp-profile__cta .cp-button {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Edit form (기본 정보 while isEditing; the whole guest 기본 정보 Card)
+   --------------------------------------------------------------------------------------------- */
+
+/* <form className="space-y-4"> */
+.cp-profile__form > * + * {
+  margin-top: var(--space-4, 16px);
+}
+
+/* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1"> — no htmlFor, not wrapping. */
+.cp-profile__field-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-1, 4px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+/* User / CalendarDays / Building2 className="w-4 h-4 text-gray-400" inside the label */
+.cp-profile__field-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--gray-400, #99a1af);
+}
+
+/* Native <select className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"> — the Input
+   recipe without its hover, focus, disabled or transition classes (browser focus ring applies). Preflight facts kept:
+   font/color/letter-spacing inherit, no margin. */
+.cp-profile__select {
+  display: flex;
+  width: 100%;
+  height: var(--control-md, 40px);
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 1px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--white, #ffffff);
+  color: inherit;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+}
+
+/* <p className="text-xs text-gray-500 mt-1"> under the 커리큘럼 연도 select */
+.cp-profile__helper {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Mutation error <p className="text-sm text-red-500"> (전공 설정) — 3.8:1 on white in the source; kept.
+   In the 기본 정보 form it is "text-sm text-red-500 mt-2": v4's space-y-4 margin-block-end on the Button plus mt-2
+   puts it 24px below the Button. */
+.cp-profile__error {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-500, #fb2c36);
+}
+.cp-profile__error--spaced {
+  margin-top: calc(var(--space-4, 16px) + var(--space-2, 8px));
+}
+
+/* ---------------------------------------------------------------------------------------------
+   전공 설정 body — major-type toggle pair
+   --------------------------------------------------------------------------------------------- */
+
+/* <div className="space-y-4"> */
+.cp-profile__stack > * + * {
+  margin-top: var(--space-4, 16px);
+}
+
+/* <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>;
+   the 복수전공 학과 / 부전공 학과 label uses mb-1 (--tight). */
+.cp-profile__label {
+  display: block;
+  margin-bottom: var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+.cp-profile__label--tight {
+  margin-bottom: var(--space-1, 4px);
+}
+
+/* <div className="flex gap-2"> */
+.cp-profile__toggles {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+/* <button type="button" className="flex-1 px-3 py-2 text-sm rounded-lg border transition-all …"> — hand-rolled, not the
+   Button primitive. Preflight facts kept inside the block: font/color/letter-spacing inherit (text-sm sets size only,
+   so the weight stays 400), no margin, no pointer cursor. Rest recipe: bg-white text-gray-700 border-gray-300. */
+.cp-profile__toggle {
+  box-sizing: border-box;
+  flex: 1 1 0%;
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 1px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--white, #ffffff);
+  color: var(--gray-700, #364153);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-align: center;
+  appearance: button;
+  cursor: default;
+  transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* 복수전공 rest hover: hover:border-purple-400 hover:text-purple-600 */
+.cp-profile__toggle--double:hover,
+.cp-profile__toggle--double.is-hover {
+  border-color: var(--purple-400, #c27aff);
+  color: var(--purple-600, #9810fa);
+}
+/* 부전공 rest hover: hover:border-orange-400 hover:text-orange-600 — orange-600 is 3.6:1 on white; kept. */
+.cp-profile__toggle--minor:hover,
+.cp-profile__toggle--minor.is-hover {
+  border-color: var(--orange-400, #ff8904);
+  color: var(--orange-600, #f54900);
+}
+/* majorType === 'double': bg-purple-500 text-white border-purple-500 shadow-sm (no hover classes) — white on purple-500 is 4.1:1; kept. */
+.cp-profile__toggle--double.is-active,
+.cp-profile__toggle--double.is-active:hover {
+  background-color: var(--purple-500, #ad46ff);
+  border-color: var(--purple-500, #ad46ff);
+  color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+/* majorType === 'minor': bg-orange-500 text-white border-orange-500 shadow-sm (no hover classes) — white on orange-500 is 2.9:1; kept. */
+.cp-profile__toggle--minor.is-active,
+.cp-profile__toggle--minor.is-active:hover {
+  background-color: var(--orange-500, #ff6900);
+  border-color: var(--orange-500, #ff6900);
+  color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+/* 부전공 while 복수전공 is active: disabled, bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed, no hover classes. */
+.cp-profile__toggle:disabled,
+.cp-profile__toggle.is-disabled,
+.cp-profile__toggle:disabled:hover {
+  background-color: var(--gray-100, #f3f4f6);
+  border-color: var(--gray-200, #e5e7eb);
+  color: var(--gray-400, #99a1af);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* <span className="flex items-center justify-center gap-1.5"> — Check + 복수전공 / 부전공 when active, "+ … 추가" at rest */
+.cp-profile__toggle-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5, 6px);
+}
+/* Check className="w-4 h-4" */
+.cp-profile__toggle-icon {
+  display: block;
+  flex: none;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* <p className="text-xs text-gray-500 mt-1.5"> — rendered while majorType !== 'single' */
+.cp-profile__hint {
+  margin: var(--space-1-5, 6px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   위험 구역 / 계정 초기화 body
+   --------------------------------------------------------------------------------------------- */
+
+/* <p className="text-sm text-gray-600 mb-4"> */
+.cp-profile__danger-text {
+  margin: 0 0 var(--space-4, 16px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* Button variant="outline" className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400" — tailwind-merge
+   drops the outline variant's border-gray-300 and hover:bg-gray-50. red-600 on red-50 (hover) is 4.4:1; kept. */
+.cp-button.cp-profile__danger-button {
+  border-color: var(--red-300, #ffa2a2);
+  color: var(--red-600, #e7000b);
+}
+.cp-button.cp-profile__danger-button:hover,
+.cp-button.cp-profile__danger-button.is-hover {
+  background-color: var(--red-50, #fef2f2);
+  border-color: var(--red-400, #ff6467);
+}
+
+/* Entrance keyframes from globals.css (fadeIn / fadeInUp), prefixed. */
+@keyframes cp-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes cp-fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

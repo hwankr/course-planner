@@ -1,0 +1,86 @@
+<!-- @dsCard group="Primitives" height=270 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Input — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); }
+  .row { display: flex; gap: 16px; align-items: flex-start; }
+  .row + .row { margin-top: 24px; }
+  .cell { flex: 0 0 calc((100% - 48px) / 4); min-width: 0; }
+  .form-label { display: block; margin: 0 0 4px; font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-700, #364153); }
+  .form-label--slate { color: var(--slate-700, #314158); }
+  .form-label__req { color: var(--red-500, #fb2c36); }
+  .label { margin: 8px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+
+  <div class="cell">
+    <label class="form-label" for="in-default">이메일</label>
+    <div class="cp-input">
+      <input class="cp-input__field" id="in-default" type="email" placeholder="email@example.com" required>
+    </div>
+    <p class="label">default · gray-300 hairline</p>
+  </div>
+
+  <div class="cell">
+    <label class="form-label" for="in-hover">이름</label>
+    <div class="cp-input">
+      <input class="cp-input__field is-hover" id="in-hover" type="text" placeholder="홍길동" required>
+    </div>
+    <p class="label">hover (.is-hover) · gray-400 hairline</p>
+  </div>
+
+  <div class="cell">
+    <label class="form-label" for="in-focus">비밀번호</label>
+    <div class="cp-input">
+      <input class="cp-input__field is-focus" id="in-focus" type="password" value="Passw0rd" placeholder="••••••••" required>
+    </div>
+    <p class="label">focus (.is-focus) · 2px yu-cyan ring, border transparent</p>
+  </div>
+
+  <div class="cell">
+    <label class="form-label" for="in-error">졸업학점</label>
+    <div class="cp-input cp-input--error">
+      <input class="cp-input__field" id="in-error" type="number" value="0" placeholder="예: 130" min="1">
+      <p class="cp-input__error">1 이상의 학점을 입력하세요</p>
+    </div>
+    <p class="label">error · red-500 border and message</p>
+  </div>
+
+</div>
+
+<div class="row">
+
+  <div class="cell">
+    <label class="form-label" for="in-disabled">입학년도</label>
+    <div class="cp-input">
+      <input class="cp-input__field" id="in-disabled" type="number" value="2024" placeholder="2024" min="2000" max="2030" disabled>
+    </div>
+    <p class="label">disabled · opacity 0.5, not-allowed cursor</p>
+  </div>
+
+  <div class="cell">
+    <label class="form-label form-label--slate" for="in-soft">학과 코드 <span class="form-label__req">*</span></label>
+    <div class="cp-input cp-input--soft">
+      <input class="cp-input__field" id="in-soft" type="text" placeholder="예: CSE" required>
+    </div>
+    <p class="label">soft (.cp-input--soft) · slate-200 hairline, 8px radius</p>
+  </div>
+
+  <div class="cell">
+    <label class="form-label form-label--slate" for="in-soft-focus">학과명 <span class="form-label__req">*</span></label>
+    <div class="cp-input cp-input--soft">
+      <input class="cp-input__field is-focus" id="in-soft-focus" type="text" value="컴퓨터공학과" placeholder="예: 컴퓨터공학과" required>
+    </div>
+    <p class="label">soft · focus (.is-focus) · yu-cyan border, yu-cyan-a20 ring</p>
+  </div>
+
+</div>
+
+</body>
+</html>

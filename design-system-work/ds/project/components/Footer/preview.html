@@ -1,0 +1,85 @@
+<!-- @dsCard group="Primitives" height=580 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Footer — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .cell + .cell { margin-top: 16px; }
+  .strip { box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding: 16px; background: var(--footer-navy, #0d2654); font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif); }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="cell">
+  <footer class="cp-footer">
+    <div class="cp-footer__hairline"></div>
+    <div class="cp-footer__body">
+      <div class="cp-footer__container">
+        <div class="cp-footer__grid">
+          <div class="cp-footer__brand">
+            <a href="/" class="cp-footer__logo-link">
+              <img src="/_blob/15ae0ea0fd2d5e39f8bb5f2685bb207e" alt="영남대학교" width="120" height="48" class="cp-footer__logo">
+              <span class="cp-footer__wordmark">YU 수강 플래너</span>
+            </a>
+            <p class="cp-footer__blurb"></p>
+            <button type="button" class="cp-footer__copy-email" title="클릭하여 복사">Contact : fabronjeon@gmail.com</button>
+          </div>
+
+          <div class="cp-footer__col">
+            <h4 class="cp-footer__heading">Service</h4>
+            <ul class="cp-footer__list">
+              <li><a href="/planner" class="cp-footer__link">수강 계획</a></li>
+              <li><a href="/planner" class="cp-footer__link">졸업 요건 추적</a></li>
+              <li><a href="/statistics" class="cp-footer__link">학과 통계</a></li>
+              <li><a href="/help" class="cp-footer__link">도움말</a></li>
+            </ul>
+          </div>
+
+          <div class="cp-footer__col">
+            <h4 class="cp-footer__heading">Support</h4>
+            <ul class="cp-footer__list">
+              <li><a href="/help/feedback" class="cp-footer__link">문의 및 건의</a></li>
+              <li><a href="https://www.yu.ac.kr/main/index.do" target="_blank" rel="noreferrer" class="cp-footer__link">영남대학교 바로가기</a></li>
+            </ul>
+          </div>
+
+          <div class="cp-footer__col">
+            <h4 class="cp-footer__heading">Legal</h4>
+            <ul class="cp-footer__list">
+              <li><a href="/privacy" class="cp-footer__link">개인정보처리방침</a></li>
+              <li><a href="/terms" class="cp-footer__link">이용약관</a></li>
+            </ul>
+            <p class="cp-footer__disclaimer">이 서비스는 영남대학교 공식 서비스가 아닙니다</p>
+          </div>
+        </div>
+
+        <div class="cp-footer__bottom">
+          <p class="cp-footer__copyright">© 2026 YU 수강 플래너. All rights reserved.</p>
+          <div class="cp-footer__social">
+            <a href="mailto:fabronjeon@gmail.com" class="cp-footer__icon-link"><svg class="lucide lucide-mail cp-footer__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cp-footer__bar"></div>
+  </footer>
+  <p class="cap">Full footer, md layout at a 960px viewport: container 768px, four 154px columns · 1px via-yu-blue hairline · footer-navy body · bottom bar on a white-a10 hairline · 4px yu-navy → yu-blue → yu-cyan bar. The wordmark wraps inside the 154px brand column exactly as the source does between 768 and 1023px.</p>
+</div>
+
+<div class="cell">
+  <div class="strip">
+    <button type="button" class="cp-footer__copy-email" title="클릭하여 복사">Contact : fabronjeon@gmail.com</button>
+    <button type="button" class="cp-footer__copy-email is-hover" title="클릭하여 복사">Contact : fabronjeon@gmail.com</button>
+    <button type="button" class="cp-footer__copy-email" title="클릭하여 복사">Contact : fabronjeon@gmail.com<span class="cp-footer__copied">복사됨!</span></button>
+    <ul class="cp-footer__list"><li><a href="/planner" class="cp-footer__link is-hover">수강 계획</a></li></ul>
+    <a href="mailto:fabronjeon@gmail.com" class="cp-footer__icon-link is-hover"><svg class="lucide lucide-mail cp-footer__icon" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg></a>
+  </div>
+  <p class="cap">CopyEmail: default (gray-400) · hover (white) · 복사됨! for 2 s after a click (yu-cyan caption, ml-2) · link hover (yu-cyan) · mail link hover (white)</p>
+</div>
+
+</body>
+</html>

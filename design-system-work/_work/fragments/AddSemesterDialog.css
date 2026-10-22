@@ -1,0 +1,247 @@
+/* AddSemesterDialog — hand-translated from src/components/features/AddSemesterDialog.tsx, src/components/ui/Card.tsx, src/components/ui/Button.tsx */
+
+/* Overlay (block root): "fixed inset-0 z-50 flex items-center justify-center bg-black/50".
+   A click on the overlay itself (not the panel) calls onClose. No padding gutter, so on viewports
+   narrower than the panel's max-width the w-full panel touches the edges. */
+.cp-add-semester-dialog,
+.cp-add-semester-dialog *,
+.cp-add-semester-dialog *::before,
+.cp-add-semester-dialog *::after {
+  box-sizing: border-box;
+}
+.cp-add-semester-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--black-a50, #00000080);
+}
+/* Preview-only modifier: pin the overlay to a positioned stage instead of the viewport. */
+.cp-add-semester-dialog--staged {
+  position: absolute;
+}
+
+/* Panel = Card with className "w-full max-w-md bg-white":
+   rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300.
+   The bare `border` is currentColor under Tailwind v4, and the Card's text is gray-900, so the hairline is
+   border-default. Untyped text inside inherits the app body: 16px/24px Arial. No max-height, no scrolling. */
+.cp-add-semester-dialog__panel {
+  width: 100%;
+  max-width: var(--container-md, 448px);
+  border: 1px solid var(--border-default, #101828);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--white, #ffffff);
+  color: var(--gray-900, #101828);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  transition: box-shadow var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-add-semester-dialog__panel:hover,
+.cp-add-semester-dialog__panel.is-hover {
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+/* CardContent "p-6 pt-0" with className "pt-6": tailwind-merge keeps pt-6, so 24px on every side. */
+.cp-add-semester-dialog__content {
+  padding: var(--space-6, 24px);
+}
+
+/* Title <h2>: "text-2xl font-semibold mb-6" — heading-2 size at weight 600; color inherited (gray-900). */
+.cp-add-semester-dialog__title {
+  margin: 0 0 var(--space-6, 24px);
+  font: 600 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* <form class="space-y-6">: the field groups, the warning and the footer stack 24px apart. */
+.cp-add-semester-dialog__form {
+  margin: 0;
+}
+.cp-add-semester-dialog__form > * + * {
+  margin-top: var(--space-6, 24px);
+}
+
+/* Field label: "block text-sm font-medium text-gray-700 mb-2" — body-sm-medium in gray-700. No htmlFor. */
+.cp-add-semester-dialog__label {
+  display: block;
+  margin-bottom: var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+
+/* Grade grid: "grid grid-cols-5 gap-2" */
+.cp-add-semester-dialog__grade-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2, 8px);
+}
+
+/* Term grid: "grid grid-cols-2 gap-3" */
+.cp-add-semester-dialog__term-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3, 12px);
+}
+
+/* Segment button (both selectors), unselected recipe:
+   "rounded-md border-2 transition-colors font-medium border-gray-300 bg-white text-gray-700 hover:border-gray-400"
+   plus "cursor-pointer" while enabled. Preflight resets kept inside the block. */
+.cp-add-semester-dialog__segment {
+  appearance: button;
+  margin: 0;
+  border: 2px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--white, #ffffff);
+  color: var(--gray-700, #364153);
+  text-transform: none;
+  letter-spacing: inherit;
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* Grade: "py-2.5 px-2 text-sm whitespace-nowrap" — body-sm-medium, never wraps "1학년". */
+.cp-add-semester-dialog__segment--grade {
+  padding: var(--space-2-5, 10px) var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: nowrap;
+}
+/* Term: "py-3 px-4", no text-size class — inherits the Card's 16px/24px body at weight 500. */
+.cp-add-semester-dialog__segment--term {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  font: 500 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* Unselected hover: "hover:border-gray-400" (2.6:1 on white — source pair, flagged). */
+.cp-add-semester-dialog__segment:hover,
+.cp-add-semester-dialog__segment.is-hover {
+  border-color: var(--gray-400, #99a1af);
+}
+/* Selected (year === grade / term === value): "border-[#153974] bg-[#153974]/10 text-[#153974]".
+   This branch carries no hover class, so hovering a selected segment changes nothing. */
+.cp-add-semester-dialog__segment.is-selected,
+.cp-add-semester-dialog__segment.is-selected:hover,
+.cp-add-semester-dialog__segment.is-selected.is-hover {
+  border-color: var(--yu-navy, #153974);
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+}
+/* isLoading: every segment gets `disabled` and "opacity-50 cursor-not-allowed" replaces cursor-pointer. */
+.cp-add-semester-dialog__segment:disabled,
+.cp-add-semester-dialog__segment.is-loading {
+  opacity: var(--opacity-disabled, 0.5);
+  cursor: not-allowed;
+}
+
+/* Duplicate warning: "p-3 rounded-md bg-red-50 border border-red-200" — rendered only while isDuplicate. */
+.cp-add-semester-dialog__warning {
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--red-50, #fef2f2);
+}
+/* Warning text <p>: "text-sm text-red-700 font-medium" — body-sm-medium in red-700 (5.9:1 on red-50). */
+.cp-add-semester-dialog__warning-text {
+  margin: 0;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-700, #c10007);
+}
+
+/* Footer: "flex gap-3 pt-2" — 추가 (primary) on the LEFT, 취소 (outline) on the RIGHT, both className="flex-1". */
+.cp-add-semester-dialog__footer {
+  display: flex;
+  gap: var(--space-3, 12px);
+  padding-top: var(--space-2, 8px);
+}
+
+/* Button.tsx base at size default: inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm
+   font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2
+   focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2, plus flex-1.
+   The ring names no color, so Tailwind v4 draws it in currentColor. Preflight: no pointer cursor. */
+.cp-add-semester-dialog__button {
+  flex: 1 1 0%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: 0 solid;
+  background-color: transparent;
+  color: inherit;
+  appearance: button;
+  text-transform: none;
+  letter-spacing: inherit;
+  white-space: nowrap;
+  height: var(--control-md, 40px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-md, 6px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  transition: all var(--duration-base, 200ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-add-semester-dialog__button:active,
+.cp-add-semester-dialog__button.is-active {
+  transform: scale(0.98);
+}
+.cp-add-semester-dialog__button:focus-visible,
+.cp-add-semester-dialog__button.is-focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor;
+}
+/* disabled = isDuplicate || isLoading on 추가; isLoading on 취소. Hover and active cannot fire. */
+.cp-add-semester-dialog__button:disabled,
+.cp-add-semester-dialog__button.is-disabled {
+  pointer-events: none;
+  opacity: var(--opacity-disabled, 0.5);
+}
+
+/* 추가 — variant default: bg-gradient-to-r from-[#153974] to-[#3069B3] text-white shadow-sm
+   hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md */
+.cp-add-semester-dialog__button--primary {
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+.cp-add-semester-dialog__button--primary:hover,
+.cp-add-semester-dialog__button--primary.is-hover {
+  background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+.cp-add-semester-dialog__button--primary:focus-visible,
+.cp-add-semester-dialog__button--primary.is-focus {
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor,
+    var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+
+/* 취소 — variant outline: border border-gray-300 bg-white hover:bg-gray-50; label color inherited (gray-900 from the Card). */
+.cp-add-semester-dialog__button--outline {
+  border: 1px solid var(--gray-300, #d1d5dc);
+  background-color: var(--white, #ffffff);
+}
+.cp-add-semester-dialog__button--outline:hover,
+.cp-add-semester-dialog__button--outline.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* isLoading spinner inside 추가: "mr-2 h-4 w-4 animate-spin"; circle opacity-25, arc opacity-75; text 로딩중... follows. */
+.cp-add-semester-dialog__spinner {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  margin-right: var(--space-2, 8px);
+  animation: cp-spin 1s linear infinite;
+}
+.cp-add-semester-dialog__spinner-track {
+  opacity: var(--opacity-spinner-track, 0.25);
+}
+.cp-add-semester-dialog__spinner-head {
+  opacity: var(--opacity-spinner-head, 0.75);
+}
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.cp-add-semester-dialog__button--primary:hover:focus-visible,
+.cp-add-semester-dialog__button--primary.is-hover:focus-visible,
+.cp-add-semester-dialog__button--primary:hover.is-focus,
+.cp-add-semester-dialog__button--primary.is-hover.is-focus {
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor, var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}

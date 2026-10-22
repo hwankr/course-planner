@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+const key = process.argv[2];
+const r = JSON.parse(fs.readFileSync(`sweep/${key}.json`, 'utf8'));
+const show=(label,arr,fmt)=>"\n### "+label+" ("+(arr||[]).length+")\n"+(arr||[]).map(fmt).join("\n");
+let s="FILES: "+r.files_read.join(", ");
+s+=show("SEMANTIC MAPS", r.semantic_maps, m=>"- "+m.domain+" ["+(m.file||"")+"]\n"+m.entries.map(e=>"    "+e.key+(e.label?" ("+e.label+")":"")+": "+e.classes).join("\n"));
+s+=show("COMPONENTS", r.components, cp=>"- "+cp.name+" ["+cp.file+"]: "+cp.purpose+"\n  props: "+(cp.props||"")+"\n"+cp.elements.map(e=>"    • "+e.part+(e.tag?" <"+e.tag+">":"")+": "+e.classes+(e.inline_style?" | style: "+e.inline_style:"")+(e.text?" | text: "+e.text:"")+(e.states&&e.states.length?"\n"+e.states.map(x=>"        ["+x.state+"] "+x.classes).join("\n"):"")).join("\n")+(cp.notes?"\n  notes: "+cp.notes:""));
+s+=show("TYPOGRAPHY", r.typography, x=>"- "+x.role+": "+x.classes+(x.where?" @"+x.where:""));
+s+=show("LAYOUT", r.layout_patterns, x=>"- "+x.name+": "+x.description+(x.classes?" | "+x.classes:"")+(x.where?" @"+x.where:""));
+s+=show("COPY", r.copy_samples, x=>"- \""+x.text+"\" @"+x.where+(x.note?" — "+x.note:""));
+s+=show("MOTION", r.motion, x=>"- "+x.classes+(x.where?" @"+x.where:""));
+s+=show("ICONS", r.icons, x=>"- "+x.name+" "+(x.size_classes||"")+(x.where?" @"+x.where:""));
+s+=show("ODDITIES", r.oddities, x=>"- "+x);
+fs.writeFileSync(`sweep/${key}.txt`, s); console.log(key, s.length, 'chars');

@@ -1,0 +1,485 @@
+{
+  "files_read": [
+    "/home/user/course-planner/src/app/page.tsx",
+    "/home/user/course-planner/src/components/ui/Button.tsx",
+    "/home/user/course-planner/src/components/ui/index.ts",
+    "/home/user/course-planner/src/lib/utils.ts",
+    "/home/user/course-planner/src/app/globals.css (only the definitions of utilities referenced by page.tsx: lines 140-240, 250-350, 365-535)",
+    "/home/user/course-planner/public/yu-logo.svg",
+    "/home/user/course-planner/public/ (directory listing) and /home/user/course-planner/public/help/ (directory listing)"
+  ],
+  "components": [
+    {
+      "name": "LandingPage (Home) root",
+      "file": "src/app/page.tsx",
+      "purpose": "Marketing landing page. Client component; redirects authenticated users to /planner; runs a typing effect and an IntersectionObserver that adds .visible to .animate-on-scroll elements (threshold 0.1, honors prefers-reduced-motion by adding .visible to all immediately).",
+      "props": "none (default export, no props). Uses useSession().status, useGuestStore(s => s.enterGuestMode), useState typedText.",
+      "elements": [
+        { "part": "root", "tag": "main", "classes": "min-h-screen bg-white" }
+      ],
+      "notes": "Page order: sticky nav -> hero (min-h-screen, clip-hero-bottom) -> #overview (white, py-24) -> #flow (navy, clip-diagonal-both, py-32 md:py-40) -> #features CTA (pale blue gradient, py-24). No <footer> element; the ui/Footer component is NOT used on this page. handleGuestMode() calls enterGuestMode() then window.location.href = '/planner' (hard navigation, not router.push)."
+    },
+    {
+      "name": "StickyNav",
+      "file": "src/app/page.tsx",
+      "purpose": "Sticky glassmorphism top bar with logo + gradient wordmark, desktop-only anchor links, and a pill login/planner link.",
+      "elements": [
+        { "part": "root", "tag": "nav", "classes": "sticky top-0 z-50 glass border-b border-gray-200/50 animate-fade-in-down" },
+        { "part": "inner", "tag": "div", "classes": "container mx-auto px-4 py-4 flex justify-between items-center" },
+        { "part": "brand-group", "tag": "div", "classes": "flex items-center gap-2" },
+        { "part": "logo", "tag": "Image (next/image)", "classes": "h-6", "inline_style": "{ width: 'auto' }", "text": "src=\"/yu-logo.svg\" alt=\"영남대학교\" width={60} height={24}" },
+        { "part": "wordmark", "tag": "h1", "classes": "text-xl font-bold text-gradient", "text": "YU 수강 플래너" },
+        { "part": "right-group", "tag": "div", "classes": "flex items-center gap-6" },
+        { "part": "section-links-wrap", "tag": "div", "classes": "hidden md:flex items-center gap-5" },
+        { "part": "section-link", "tag": "a", "classes": "text-sm text-gray-500 hover:text-[#153974] transition-colors", "text": "서비스 소개 (href=#overview) / 이용 방법 (href=#flow) / 시작하기 (href=#features)" },
+        {
+          "part": "auth-pill",
+          "tag": "Link",
+          "classes": "rounded-full border border-[#153974]/20 bg-[#153974]/5 px-4 py-1.5 text-sm font-medium text-[#153974] hover:bg-[#153974]/10 transition-colors",
+          "text": "authenticated: 플래너로 이동 (href=/planner); otherwise: 로그인 (href=/login)",
+          "states": [
+            { "state": "status === 'authenticated'", "classes": "rounded-full border border-[#153974]/20 bg-[#153974]/5 px-4 py-1.5 text-sm font-medium text-[#153974] hover:bg-[#153974]/10 transition-colors (text: 플래너로 이동, href /planner)" },
+            { "state": "unauthenticated / loading", "classes": "rounded-full border border-[#153974]/20 bg-[#153974]/5 px-4 py-1.5 text-sm font-medium text-[#153974] hover:bg-[#153974]/10 transition-colors (text: 로그인, href /login)" }
+          ]
+        }
+      ],
+      "notes": ".glass = background rgba(255,255,255,0.7); backdrop-filter blur(12px); border 1px solid rgba(255,255,255,0.3). The nav wordmark is an <h1>, and the hero title is also an <h1> (two h1s). No mobile menu: section links simply disappear below md."
+    },
+    {
+      "name": "HeroSection ('The Opening Horizon')",
+      "file": "src/app/page.tsx",
+      "purpose": "Full-viewport dark navy hero with layered backgrounds: brand gradient, faint rotated product-screenshot mosaic, a second vertical gradient wash, decorative rings and blurred orbs; centered badge, typing headline, description, CTA pair and notice.",
+      "elements": [
+        { "part": "root", "tag": "section", "classes": "relative min-h-screen flex items-center overflow-hidden clip-hero-bottom" },
+        { "part": "bg-gradient", "tag": "div", "classes": "absolute inset-0 bg-gradient-to-br from-[#0a1e3d] via-[#153974] to-[#1a2f5a]" },
+        { "part": "mosaic-wrap", "tag": "div", "classes": "absolute inset-0 opacity-[0.08] pointer-events-none overflow-hidden" },
+        { "part": "mosaic-tile-1", "tag": "div", "classes": "absolute -top-10 -left-10 w-[45%] rotate-[-3deg]", "text": "Image /help/planner-semesters.png width 800 height 400 alt=\"\"" },
+        { "part": "mosaic-tile-2", "tag": "div", "classes": "absolute top-[15%] right-[-5%] w-[40%] rotate-[2deg]", "text": "Image /help/onboarding-screen.png 700x350" },
+        { "part": "mosaic-tile-3", "tag": "div", "classes": "absolute bottom-[10%] left-[5%] w-[35%] rotate-[1deg]", "text": "Image /help/statistics-overview.png 600x300" },
+        { "part": "mosaic-tile-4", "tag": "div", "classes": "absolute bottom-[-5%] right-[10%] w-[38%] rotate-[-2deg]", "text": "Image /help/requirements-widget.png 650x325" },
+        { "part": "mosaic-tile-5", "tag": "div", "classes": "absolute top-[50%] left-[30%] w-[30%] rotate-[3deg]", "text": "Image /help/course-catalog.png 500x250" },
+        { "part": "mosaic-image", "tag": "Image", "classes": "rounded-xl blur-[1px]" },
+        { "part": "bg-wash", "tag": "div", "classes": "absolute inset-0 bg-gradient-to-b from-[#0a1e3d]/60 via-[#153974]/30 to-[#0a1e3d]/80 pointer-events-none" },
+        { "part": "deco-wrap", "tag": "div", "classes": "absolute inset-0 pointer-events-none" },
+        { "part": "deco-ring-large", "tag": "div", "classes": "absolute top-20 -right-20 deco-ring deco-ring-lg opacity-30" },
+        { "part": "deco-ring-small", "tag": "div", "classes": "absolute bottom-40 -left-16 deco-ring deco-ring-sm opacity-20" },
+        { "part": "orb-blue", "tag": "div", "classes": "absolute top-1/3 right-1/4 w-96 h-96 bg-[#3069B3]/10 rounded-full blur-3xl" },
+        { "part": "orb-cyan", "tag": "div", "classes": "absolute bottom-1/4 left-1/4 w-72 h-72 bg-[#00AACA]/[0.08] rounded-full blur-3xl" },
+        { "part": "content-container", "tag": "div", "classes": "container mx-auto px-4 relative z-10 py-20 lg:py-32" },
+        { "part": "content-width", "tag": "div", "classes": "max-w-3xl mx-auto" },
+        { "part": "content-align", "tag": "div", "classes": "text-center" }
+      ],
+      "notes": "Gradient stack: base linear-gradient to bottom-right #0a1e3d -> #153974 -> #1a2f5a; over the mosaic a second linear-gradient to bottom rgba(#0a1e3d,.6) -> rgba(#153974,.3) -> rgba(#0a1e3d,.8). .clip-hero-bottom = clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%) (bottom edge slants down-left to right... i.e. right side higher at 88%). .deco-ring = border-radius 50%; border 2px solid rgba(0,170,202,0.15); -lg 400x400px, -sm 200x200px. Mosaic tiles use arbitrary negatives like right-[-5%] rather than -right-[5%]."
+    },
+    {
+      "name": "HeroBadge",
+      "file": "src/app/page.tsx",
+      "purpose": "Pill badge above the headline carrying the slogan.",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-8 animate-scale-in" },
+        { "part": "icon", "tag": "Sparkles (lucide)", "classes": "w-4 h-4 text-white/80" },
+        { "part": "label", "tag": "span", "classes": "text-sm font-medium text-white/80", "text": "YU the Future" }
+      ]
+    },
+    {
+      "name": "HeroTitle (typing headline)",
+      "file": "src/app/page.tsx",
+      "purpose": "Two-line display headline: fixed first line, second line typed/deleted character by character through three phrases with a blinking cursor and a skewed cyan highlight bar behind it.",
+      "elements": [
+        { "part": "root", "tag": "h1", "classes": "text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight animate-fade-in-up anim-delay-100" },
+        { "part": "line-1", "tag": "span", "classes": "block text-white/90", "text": "영남대학교 생활을" },
+        { "part": "line-2-wrap", "tag": "span", "classes": "relative block whitespace-nowrap" },
+        { "part": "typed-text", "tag": "span", "classes": "relative z-10 text-gradient-typing", "text": "{typedText} cycling: 스마트하게 설계하다. / 직관적으로 관리하다. / 아름답게 기록하다." },
+        { "part": "cursor", "tag": "span", "classes": "animate-cursor", "text": "|" },
+        { "part": "highlight-bar", "tag": "span", "classes": "absolute -bottom-2 left-0 w-full h-3 bg-[#00AACA]/30 -skew-x-12 -z-0 blur-sm" }
+      ],
+      "notes": "Typing JS: 100ms per char typing, 50ms per char deleting, 2000ms hold at full word, loops words array. .text-gradient-typing = linear-gradient(90deg, #4dd9f0, #60a5fa, #a78bfa, #4dd9f0), background-size 300% 100%, background-clip text, animation gradientFlow 4s ease infinite, filter drop-shadow(0 0 20px rgba(0,170,202,0.4)). .animate-cursor = cursorBlink 1s step-end infinite. '-z-0' is a negative-zero z-index utility (effectively z-0)."
+    },
+    {
+      "name": "HeroDescription + Notice",
+      "file": "src/app/page.tsx",
+      "purpose": "Supporting paragraph under the headline and a small disclaimer under the CTAs.",
+      "elements": [
+        { "part": "description", "tag": "p", "classes": "text-base lg:text-lg text-white/60 mb-6 leading-relaxed max-w-xl mx-auto animate-fade-in-up anim-delay-200", "text": "1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 다른 사람들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요." },
+        { "part": "notice", "tag": "p", "classes": "text-sm text-white/40 mt-4 animate-fade-in-up anim-delay-300 text-center", "text": "비회원은 데이터가 저장되지 않습니다" }
+      ]
+    },
+    {
+      "name": "HeroCTAs",
+      "file": "src/app/page.tsx",
+      "purpose": "Primary (white-on-navy) and ghost CTA pair in the hero.",
+      "elements": [
+        { "part": "root", "tag": "div", "classes": "flex flex-col sm:flex-row gap-4 justify-center items-center mt-10 animate-fade-in-up anim-delay-300" },
+        { "part": "primary-link", "tag": "Link", "classes": "", "text": "href=\"/login\" wrapping a <Button> (anchor containing button)" },
+        { "part": "primary-button", "tag": "Button size=lg variant=default", "classes": "bg-white text-[#153974] hover:bg-white/90 shadow-lg shadow-black/20 group", "text": "바로 시작하기",
+          "states": [
+            { "state": "resolved (cva base + default variant + lg + className, after twMerge)", "classes": "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-[#153974] to-[#3069B3] shadow-sm hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md h-11 px-8 bg-white text-[#153974] hover:bg-white/90 shadow-lg shadow-black/20 group (text-white and shadow-sm dropped by twMerge; bg-gradient-to-r/from/to are NOT dropped)" },
+            { "state": "hover", "classes": "hover:bg-white/90 hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md; arrow icon group-hover:translate-x-1" },
+            { "state": "active", "classes": "active:scale-[0.98]" },
+            { "state": "focus-visible", "classes": "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 (no ring color set)" }
+          ]
+        },
+        { "part": "primary-icon", "tag": "ArrowRight (lucide)", "classes": "ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" },
+        { "part": "ghost-button", "tag": "Button variant=ghost size=lg", "classes": "text-white/70 hover:text-white hover:bg-white/10", "text": "비회원으로 체험하기 (onClick=handleGuestMode)",
+          "states": [
+            { "state": "resolved (base + ghost + lg + className)", "classes": "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-11 px-8 text-white/70 hover:text-white hover:bg-white/10 (ghost's hover:bg-gray-100 replaced by hover:bg-white/10 via twMerge)" },
+            { "state": "hover", "classes": "hover:text-white hover:bg-white/10" }
+          ]
+        }
+      ],
+      "notes": "LIKELY BUG: cn() is twMerge(clsx()). bg-white is in tailwind-merge's bg-color group while bg-gradient-to-r is in the bg-image group, so the default variant's gradient background-image survives and paints over bg-white; combined with text-[#153974] the hero primary CTA likely renders navy-on-navy. Needs browser verification. The intended design is clearly a white button with navy text (shadow-lg shadow-black/20)."
+    },
+    {
+      "name": "ServiceOverviewSection (#overview)",
+      "file": "src/app/page.tsx",
+      "purpose": "White section introducing four features as alternating rows with giant outlined numerals.",
+      "elements": [
+        { "part": "root", "tag": "section", "classes": "relative py-24 bg-white scroll-mt-20", "text": "id=\"overview\"" },
+        { "part": "bg-wrap", "tag": "div", "classes": "absolute inset-0 pointer-events-none overflow-hidden" },
+        { "part": "bg-circle", "tag": "div", "classes": "absolute -left-64 top-20 w-[500px] h-[500px] rounded-full bg-[#00AACA]/5" },
+        { "part": "bg-dots", "tag": "div", "classes": "absolute right-0 bottom-0 w-64 h-64 bg-dots opacity-20" },
+        { "part": "container", "tag": "div", "classes": "container mx-auto px-4 relative z-10" },
+        { "part": "heading-block", "tag": "div", "classes": "text-center md:text-left max-w-3xl mb-20 animate-on-scroll" },
+        { "part": "eyebrow", "tag": "p", "classes": "text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3", "text": "SERVICE" },
+        { "part": "heading", "tag": "h2", "classes": "text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight", "text": "왜 YU 수강 플래너인가요?" },
+        { "part": "lead", "tag": "p", "classes": "text-gray-500 max-w-lg", "text": "학생들의 수강 계획을 체계적으로 관리할 수 있는 핵심 기능들" },
+        { "part": "rows-wrap", "tag": "div", "classes": "space-y-16 md:space-y-24 max-w-6xl mx-auto" }
+      ],
+      "notes": ".bg-dots = radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px) 24px grid. Section heading is left-aligned on desktop (text-center md:text-left), unlike the other two sections which are centered."
+    },
+    {
+      "name": "FeatureRow (x4, alternating)",
+      "file": "src/app/page.tsx",
+      "purpose": "Two-column row: huge outlined 'deco-number' on one side, cyan dot + h3 + paragraph on the other; odd rows number-left, even rows number-right via order utilities.",
+      "elements": [
+        { "part": "root (row 1)", "tag": "div", "classes": "grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-on-scroll scroll-delay-0" },
+        { "part": "root (row 2)", "tag": "div", "classes": "grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-on-scroll scroll-delay-100" },
+        { "part": "root (row 3)", "tag": "div", "classes": "grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-on-scroll scroll-delay-200" },
+        { "part": "root (row 4)", "tag": "div", "classes": "grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-on-scroll scroll-delay-300" },
+        { "part": "number-cell (number-left rows 1,3)", "tag": "div", "classes": "relative flex justify-center md:justify-end" },
+        { "part": "number-cell (number-right rows 2,4)", "tag": "div", "classes": "relative flex justify-center md:justify-start order-1 md:order-2" },
+        { "part": "text-cell (rows 2,4)", "tag": "div", "classes": "order-2 md:order-1" },
+        { "part": "text-cell (rows 1,3)", "tag": "div", "classes": "" },
+        { "part": "number", "tag": "span", "classes": "deco-number", "text": "01 / 02 / 03 / 04" },
+        { "part": "title-row", "tag": "div", "classes": "flex items-center gap-3 mb-3" },
+        { "part": "dot", "tag": "span", "classes": "deco-dot-accent" },
+        { "part": "title", "tag": "h3", "classes": "text-2xl font-bold text-gray-900", "text": "드래그앤드롭 플래너 / 졸업 요건 추적 / 다른 사람들의 수강 계획 참고 / 통계 기반 의사결정" },
+        { "part": "body", "tag": "p", "classes": "text-gray-600 leading-relaxed" }
+      ],
+      "notes": ".deco-number = font-size clamp(80px, 15vw, 160px); font-weight 800; line-height 1; color transparent; -webkit-text-stroke 1.5px rgba(21,57,116,0.08); pointer-events none; user-select none. .deco-dot-accent = 8x8px circle, background #00AACA, inline-block, flex-shrink 0. Rows are not cards: no border, radius or shadow; purely typographic."
+    },
+    {
+      "name": "UsageFlowSection (#flow)",
+      "file": "src/app/page.tsx",
+      "purpose": "Dark navy band with diagonal top and bottom edges presenting a 3-step flow; desktop horizontal with vertical gradient dividers, mobile stacked with horizontal dividers.",
+      "elements": [
+        { "part": "root", "tag": "section", "classes": "relative scroll-mt-20", "text": "id=\"flow\"" },
+        { "part": "band", "tag": "div", "classes": "relative bg-gradient-to-br from-[#0f2847] to-[#153974] clip-diagonal-both py-32 md:py-40" },
+        { "part": "bg-wrap", "tag": "div", "classes": "absolute inset-0 pointer-events-none overflow-hidden" },
+        { "part": "bg-grid", "tag": "div", "classes": "absolute inset-0 bg-grid opacity-5" },
+        { "part": "deco-ring", "tag": "div", "classes": "absolute top-10 right-10 deco-ring deco-ring-lg opacity-10" },
+        { "part": "container", "tag": "div", "classes": "container mx-auto px-4 relative z-10" },
+        { "part": "heading-block", "tag": "div", "classes": "text-center mb-16 animate-on-scroll" },
+        { "part": "eyebrow", "tag": "p", "classes": "text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3", "text": "HOW IT WORKS" },
+        { "part": "heading", "tag": "h2", "classes": "text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight", "text": "이렇게 사용하세요" },
+        { "part": "lead", "tag": "p", "classes": "text-white/60 max-w-lg mx-auto", "text": "3단계로 간단하게 나만의 수강 계획을 완성하세요" },
+        { "part": "desktop-steps-wrap", "tag": "div", "classes": "hidden md:flex items-start justify-center max-w-5xl mx-auto" },
+        { "part": "desktop-divider", "tag": "div", "classes": "divider-vertical-gradient self-stretch my-8" },
+        { "part": "mobile-steps-wrap", "tag": "div", "classes": "md:hidden space-y-0" },
+        { "part": "mobile-divider", "tag": "div", "classes": "divider-horizontal-gradient mx-auto w-3/4 my-2" }
+      ],
+      "notes": ".clip-diagonal-both = clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%). .bg-grid = two 1px rgba(0,0,0,0.03) lines on 40px cells (black lines on a navy bg at opacity-5 => nearly invisible). .divider-vertical-gradient = 1px wide, linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent). .divider-horizontal-gradient = 1px tall, linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent). Desktop and mobile step lists are fully duplicated in markup."
+    },
+    {
+      "name": "FlowStep (x3, desktop + mobile variants)",
+      "file": "src/app/page.tsx",
+      "purpose": "Centered step: faint outlined numeral, cyan lucide icon, bold white title, muted body.",
+      "elements": [
+        { "part": "root (desktop step 1)", "tag": "div", "classes": "flex-1 text-center px-8 animate-on-scroll scroll-delay-0" },
+        { "part": "root (desktop step 2)", "tag": "div", "classes": "flex-1 text-center px-8 animate-on-scroll scroll-delay-150" },
+        { "part": "root (desktop step 3)", "tag": "div", "classes": "flex-1 text-center px-8 animate-on-scroll scroll-delay-300" },
+        { "part": "root (mobile step 1)", "tag": "div", "classes": "text-center py-8 animate-on-scroll scroll-delay-0" },
+        { "part": "root (mobile step 2)", "tag": "div", "classes": "text-center py-8 animate-on-scroll scroll-delay-100" },
+        { "part": "root (mobile step 3)", "tag": "div", "classes": "text-center py-8 animate-on-scroll scroll-delay-200" },
+        { "part": "number (desktop)", "tag": "span", "classes": "deco-number deco-number-light block mb-4", "text": "01 / 02 / 03" },
+        { "part": "number (mobile)", "tag": "span", "classes": "deco-number deco-number-light block mb-4", "inline_style": "{ fontSize: '56px' }", "text": "01 / 02 / 03" },
+        { "part": "icon", "tag": "MousePointerClick / LayoutGrid / CheckCircle (lucide)", "classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4" },
+        { "part": "title", "tag": "h3", "classes": "text-xl font-bold text-white mb-3", "text": "가입 / 계획 / 완성" },
+        { "part": "body (desktop)", "tag": "p", "classes": "text-white/60 text-sm leading-relaxed" },
+        { "part": "body (mobile)", "tag": "p", "classes": "text-white/60 text-sm leading-relaxed max-w-xs mx-auto" }
+      ],
+      "notes": ".deco-number-light overrides stroke to 1.5px rgba(255,255,255,0.06). Mobile uses inline fontSize 56px to override the clamp(80px,15vw,160px). Desktop stagger is 0/150/300ms; mobile stagger is 0/100/200ms."
+    },
+    {
+      "name": "CTASection (#features, footer CTA)",
+      "file": "src/app/page.tsx",
+      "purpose": "Closing call-to-action on a pale blue vertical gradient with a centered cyan glow; repeats the hero CTA pair using the default gradient button.",
+      "elements": [
+        { "part": "root", "tag": "section", "classes": "relative py-24 scroll-mt-20 overflow-hidden", "text": "id=\"features\"" },
+        { "part": "bg-gradient", "tag": "div", "classes": "absolute inset-0 bg-gradient-to-b from-white via-[#f0f7ff] to-[#e8f4fd]" },
+        { "part": "glow-orb", "tag": "div", "classes": "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-[#00AACA]/[0.08] blur-3xl pointer-events-none" },
+        { "part": "container", "tag": "div", "classes": "container mx-auto px-4 relative z-10" },
+        { "part": "content", "tag": "div", "classes": "max-w-2xl mx-auto text-center animate-on-scroll" },
+        { "part": "eyebrow", "tag": "p", "classes": "text-sm uppercase tracking-widest text-[#00AACA] font-medium mb-4", "text": "지금이 가장 빠릅니다" },
+        { "part": "heading", "tag": "h2", "classes": "text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight", "text": "수강 계획을 시작하세요" },
+        { "part": "lead", "tag": "p", "classes": "text-gray-500 mb-10 leading-relaxed", "text": "체계적인 수강 계획으로 졸업까지의 여정을 한눈에 관리하세요." },
+        { "part": "cta-row", "tag": "div", "classes": "flex flex-col sm:flex-row gap-4 justify-center items-center mb-8" },
+        { "part": "primary-button", "tag": "Button size=lg (default variant)", "classes": "group shadow-glow", "text": "바로 시작하기 (inside <Link href=/login>)",
+          "states": [
+            { "state": "resolved", "classes": "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white shadow-sm hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md h-11 rounded-md px-8 group shadow-glow" },
+            { "state": "hover", "classes": "hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md; icon group-hover:translate-x-1" }
+          ]
+        },
+        { "part": "primary-icon", "tag": "ArrowRight (lucide)", "classes": "ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" },
+        { "part": "ghost-button", "tag": "Button variant=ghost size=lg", "classes": "", "text": "비회원으로 체험하기 (onClick=handleGuestMode)",
+          "states": [
+            { "state": "resolved", "classes": "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-100 h-11 rounded-md px-8 (no explicit text color; inherits)" }
+          ]
+        },
+        { "part": "footnote", "tag": "p", "classes": "text-sm text-gray-400", "text": "가입 없이 바로 체험 가능" }
+      ],
+      "notes": ".shadow-glow = box-shadow 0 4px 24px rgba(21,57,116,0.2), 0 0 48px rgba(0,170,202,0.08). shadow-glow is a custom class, so twMerge does not drop the variant's shadow-sm; both apply (later CSS wins). The section id is 'features' but it contains no feature list; nav labels it '시작하기'."
+    },
+    {
+      "name": "Button (resolved dependency)",
+      "file": "src/components/ui/Button.tsx",
+      "purpose": "cva-based button used for all landing CTAs; exports Button and buttonVariants. Shows an inline SVG spinner and '로딩중...' when isLoading.",
+      "props": "export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> { isLoading?: boolean } ; defaultVariants: { variant: 'default', size: 'default' }",
+      "elements": [
+        { "part": "root (base)", "tag": "button", "classes": "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+          "states": [
+            { "state": "variant=default", "classes": "bg-gradient-to-r from-[#153974] to-[#3069B3] text-white shadow-sm hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md" },
+            { "state": "variant=destructive", "classes": "bg-red-600 text-white hover:bg-red-700" },
+            { "state": "variant=outline", "classes": "border border-gray-300 bg-white hover:bg-gray-50" },
+            { "state": "variant=secondary", "classes": "bg-gray-100 text-gray-900 hover:bg-gray-200" },
+            { "state": "variant=ghost", "classes": "hover:bg-gray-100" },
+            { "state": "variant=link", "classes": "text-[#153974] underline-offset-4 hover:underline" },
+            { "state": "size=default", "classes": "h-10 px-4 py-2" },
+            { "state": "size=sm", "classes": "h-9 rounded-md px-3" },
+            { "state": "size=lg", "classes": "h-11 rounded-md px-8" },
+            { "state": "size=icon", "classes": "h-10 w-10" },
+            { "state": "isLoading", "classes": "disabled={disabled || isLoading}; renders spinner + 로딩중..." }
+          ]
+        },
+        { "part": "spinner", "tag": "svg (inline)", "classes": "mr-2 h-4 w-4 animate-spin", "text": "viewBox 0 0 24 24; circle className=\"opacity-25\" stroke=currentColor strokeWidth=4; path className=\"opacity-75\" fill=currentColor" },
+        { "part": "loading-label", "tag": "text", "classes": "", "text": "로딩중..." }
+      ],
+      "notes": "focus-visible:ring-2 has no ring color class, so the ring falls back to Tailwind v4's default ring color (currentColor). Hover on default variant shifts the gradient to #003E7E -> #153974, where #003E7E is outside the brand trio."
+    }
+  ],
+  "semantic_maps": [
+    {
+      "domain": "Button variants (cva buttonVariants)",
+      "file": "src/components/ui/Button.tsx",
+      "entries": [
+        { "key": "variant.default", "label": "primary gradient", "classes": "bg-gradient-to-r from-[#153974] to-[#3069B3] text-white shadow-sm hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md" },
+        { "key": "variant.destructive", "label": "danger", "classes": "bg-red-600 text-white hover:bg-red-700" },
+        { "key": "variant.outline", "label": "outline", "classes": "border border-gray-300 bg-white hover:bg-gray-50" },
+        { "key": "variant.secondary", "label": "secondary", "classes": "bg-gray-100 text-gray-900 hover:bg-gray-200" },
+        { "key": "variant.ghost", "label": "ghost", "classes": "hover:bg-gray-100" },
+        { "key": "variant.link", "label": "link", "classes": "text-[#153974] underline-offset-4 hover:underline" },
+        { "key": "size.default", "label": "md", "classes": "h-10 px-4 py-2" },
+        { "key": "size.sm", "label": "sm", "classes": "h-9 rounded-md px-3" },
+        { "key": "size.lg", "label": "lg", "classes": "h-11 rounded-md px-8" },
+        { "key": "size.icon", "label": "icon", "classes": "h-10 w-10" }
+      ]
+    },
+    {
+      "domain": "Landing nav anchors (label -> section id)",
+      "file": "src/app/page.tsx",
+      "entries": [
+        { "key": "#overview", "label": "서비스 소개", "classes": "text-sm text-gray-500 hover:text-[#153974] transition-colors" },
+        { "key": "#flow", "label": "이용 방법", "classes": "text-sm text-gray-500 hover:text-[#153974] transition-colors" },
+        { "key": "#features", "label": "시작하기", "classes": "text-sm text-gray-500 hover:text-[#153974] transition-colors" }
+      ]
+    },
+    {
+      "domain": "Section surface themes (light vs dark) on landing",
+      "file": "src/app/page.tsx",
+      "entries": [
+        { "key": "hero (dark)", "label": "eyebrow n/a; title text-white/90 + text-gradient-typing; body text-white/60; muted text-white/40", "classes": "bg-gradient-to-br from-[#0a1e3d] via-[#153974] to-[#1a2f5a]" },
+        { "key": "overview (light)", "label": "eyebrow text-[#00AACA]; h2 text-gray-900; lead text-gray-500; body text-gray-600", "classes": "bg-white" },
+        { "key": "flow (dark)", "label": "eyebrow text-[#00AACA]; h2 text-white; lead/body text-white/60", "classes": "bg-gradient-to-br from-[#0f2847] to-[#153974]" },
+        { "key": "cta (light tint)", "label": "eyebrow text-[#00AACA]; h2 text-gray-900; lead text-gray-500; footnote text-gray-400", "classes": "bg-gradient-to-b from-white via-[#f0f7ff] to-[#e8f4fd]" }
+      ]
+    }
+  ],
+  "color_classes_seen": [
+    "bg-white",
+    "bg-white/10",
+    "bg-white/90",
+    "border-white/20",
+    "text-white",
+    "text-white/90",
+    "text-white/80",
+    "text-white/70",
+    "text-white/60",
+    "text-white/40",
+    "shadow-black/20",
+    "border-gray-200/50",
+    "border-gray-300",
+    "bg-gray-50",
+    "bg-gray-100",
+    "bg-gray-200",
+    "text-gray-400",
+    "text-gray-500",
+    "text-gray-600",
+    "text-gray-900",
+    "bg-red-600",
+    "bg-red-700",
+    "text-[#153974]",
+    "border-[#153974]/20",
+    "bg-[#153974]/5",
+    "bg-[#153974]/10",
+    "from-[#153974]",
+    "to-[#153974]",
+    "via-[#153974]",
+    "via-[#153974]/30",
+    "to-[#3069B3]",
+    "bg-[#3069B3]/10",
+    "from-[#003E7E]",
+    "text-[#00AACA]",
+    "bg-[#00AACA]/5",
+    "bg-[#00AACA]/[0.08]",
+    "bg-[#00AACA]/30",
+    "from-[#0a1e3d]",
+    "from-[#0a1e3d]/60",
+    "to-[#0a1e3d]/80",
+    "to-[#1a2f5a]",
+    "from-[#0f2847]",
+    "from-white",
+    "via-[#f0f7ff]",
+    "to-[#e8f4fd]"
+  ],
+  "typography": [
+    { "role": "nav wordmark", "classes": "text-xl font-bold text-gradient", "where": "nav h1 'YU 수강 플래너' (text-gradient = linear-gradient(135deg, #153974, #3069B3, #00AACA) clipped to text)" },
+    { "role": "nav link", "classes": "text-sm text-gray-500 hover:text-[#153974] transition-colors", "where": "nav anchor links" },
+    { "role": "nav pill label", "classes": "text-sm font-medium text-[#153974]", "where": "nav login/planner pill" },
+    { "role": "badge label", "classes": "text-sm font-medium text-white/80", "where": "hero badge 'YU the Future'" },
+    { "role": "display / hero h1", "classes": "text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight", "where": "hero title (36px -> 60px -> 72px)" },
+    { "role": "hero h1 line 1", "classes": "block text-white/90", "where": "'영남대학교 생활을'" },
+    { "role": "hero h1 line 2 (animated gradient)", "classes": "relative z-10 text-gradient-typing", "where": "typed phrase; gradient 90deg #4dd9f0 -> #60a5fa -> #a78bfa -> #4dd9f0, drop-shadow cyan" },
+    { "role": "hero lead paragraph", "classes": "text-base lg:text-lg text-white/60 mb-6 leading-relaxed max-w-xl mx-auto", "where": "hero description" },
+    { "role": "hero footnote", "classes": "text-sm text-white/40 mt-4 text-center", "where": "'비회원은 데이터가 저장되지 않습니다'" },
+    { "role": "section eyebrow (standard)", "classes": "text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3", "where": "#overview 'SERVICE', #flow 'HOW IT WORKS'" },
+    { "role": "section eyebrow (CTA variant)", "classes": "text-sm uppercase tracking-widest text-[#00AACA] font-medium mb-4", "where": "#features '지금이 가장 빠릅니다'" },
+    { "role": "section h2 (light bg)", "classes": "text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight", "where": "#overview" },
+    { "role": "section h2 (dark bg)", "classes": "text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight", "where": "#flow" },
+    { "role": "section h2 (CTA, larger)", "classes": "text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight", "where": "#features" },
+    { "role": "section lead (light)", "classes": "text-gray-500 max-w-lg", "where": "#overview lead" },
+    { "role": "section lead (dark)", "classes": "text-white/60 max-w-lg mx-auto", "where": "#flow lead" },
+    { "role": "section lead (CTA)", "classes": "text-gray-500 mb-10 leading-relaxed", "where": "#features lead" },
+    { "role": "feature h3", "classes": "text-2xl font-bold text-gray-900", "where": "#overview feature rows" },
+    { "role": "feature body", "classes": "text-gray-600 leading-relaxed", "where": "#overview feature rows" },
+    { "role": "step h3", "classes": "text-xl font-bold text-white mb-3", "where": "#flow steps" },
+    { "role": "step body", "classes": "text-white/60 text-sm leading-relaxed", "where": "#flow steps (mobile adds max-w-xs mx-auto)" },
+    { "role": "decorative numeral", "classes": "deco-number (font-size clamp(80px, 15vw, 160px); font-weight 800; line-height 1; transparent fill; 1.5px stroke rgba(21,57,116,0.08)) / deco-number-light (stroke rgba(255,255,255,0.06)); mobile inline fontSize 56px", "where": "#overview and #flow numerals 01-04" },
+    { "role": "CTA footnote", "classes": "text-sm text-gray-400", "where": "#features '가입 없이 바로 체험 가능'" },
+    { "role": "button label", "classes": "text-sm font-medium whitespace-nowrap", "where": "Button base (all sizes, including lg h-11 px-8)" }
+  ],
+  "layout_patterns": [
+    { "name": "Page container", "description": "Every section uses Tailwind's container centered with 16px gutters; content relative z-10 above absolute backgrounds.", "classes": "container mx-auto px-4 relative z-10", "where": "all sections and nav" },
+    { "name": "Section vertical rhythm", "description": "Light sections py-24 (96px); dark flow band py-32 md:py-40 (128/160px) to leave room for the diagonal clip; hero is min-h-screen with inner py-20 lg:py-32. Anchored sections get scroll-mt-20 (80px) to clear the sticky nav.", "classes": "py-24 scroll-mt-20 | py-32 md:py-40 | min-h-screen ... py-20 lg:py-32", "where": "#overview, #features | #flow | hero" },
+    { "name": "Content max-widths", "description": "Hero and overview heading max-w-3xl; hero paragraph max-w-xl; section leads max-w-lg; feature rows max-w-6xl; flow steps max-w-5xl; CTA block max-w-2xl; mobile step body max-w-xs.", "classes": "max-w-3xl mx-auto | max-w-xl mx-auto | max-w-lg | max-w-6xl mx-auto | max-w-5xl mx-auto | max-w-2xl mx-auto | max-w-xs mx-auto", "where": "hero / overview / flow / cta" },
+    { "name": "Section heading block spacing", "description": "Eyebrow mb-3, h2 mb-4, heading block mb-20 (overview) or mb-16 (flow); CTA lead mb-10, CTA row mb-8.", "classes": "mb-3 / mb-4 / mb-20 / mb-16 / mb-10 / mb-8", "where": "section headers" },
+    { "name": "Alternating feature rows", "description": "Two-column grid collapsing to one column; even rows swap sides with order utilities; rows spaced 64px -> 96px.", "classes": "space-y-16 md:space-y-24 max-w-6xl mx-auto > grid grid-cols-1 md:grid-cols-2 gap-8 items-center ; swap: order-2 md:order-1 / order-1 md:order-2 ; number cell: relative flex justify-center md:justify-end | md:justify-start", "where": "#overview" },
+    { "name": "Three-step flow (desktop)", "description": "Horizontal flex with equal-width centered columns separated by 1px vertical gradient dividers that stretch to the row height.", "classes": "hidden md:flex items-start justify-center max-w-5xl mx-auto > flex-1 text-center px-8 ; divider-vertical-gradient self-stretch my-8", "where": "#flow" },
+    { "name": "Three-step flow (mobile)", "description": "Duplicate markup stacked vertically with 1px horizontal gradient dividers at 75% width.", "classes": "md:hidden space-y-0 > text-center py-8 ; divider-horizontal-gradient mx-auto w-3/4 my-2", "where": "#flow" },
+    { "name": "CTA button pair", "description": "Stacked on mobile, inline from sm; 16px gap; primary first then ghost.", "classes": "flex flex-col sm:flex-row gap-4 justify-center items-center (hero adds mt-10; CTA section adds mb-8)", "where": "hero, #features" },
+    { "name": "Layered absolute background stack", "description": "Backgrounds are separate absolute inset-0 layers (gradient, mosaic, wash, decorations) marked pointer-events-none and clipped by overflow-hidden; content sits in a relative z-10 container.", "classes": "absolute inset-0 pointer-events-none overflow-hidden", "where": "hero, #overview, #flow, #features" },
+    { "name": "Blurred color orbs", "description": "Large rounded-full divs with brand tints at 5-10% and blur-3xl used as ambient glows.", "classes": "w-96 h-96 bg-[#3069B3]/10 rounded-full blur-3xl | w-72 h-72 bg-[#00AACA]/[0.08] rounded-full blur-3xl | w-[500px] h-[500px] rounded-full bg-[#00AACA]/5 | w-[600px] h-[600px] rounded-full bg-[#00AACA]/[0.08] blur-3xl (centered via top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2)", "where": "hero, #overview, #features" },
+    { "name": "Hero screenshot mosaic", "description": "Five rotated, slightly blurred product screenshots at 8% opacity scattered with percentage offsets.", "classes": "absolute inset-0 opacity-[0.08] pointer-events-none overflow-hidden > absolute -top-10 -left-10 w-[45%] rotate-[-3deg] | top-[15%] right-[-5%] w-[40%] rotate-[2deg] | bottom-[10%] left-[5%] w-[35%] rotate-[1deg] | bottom-[-5%] right-[10%] w-[38%] rotate-[-2deg] | top-[50%] left-[30%] w-[30%] rotate-[3deg] ; img rounded-xl blur-[1px]", "where": "hero" },
+    { "name": "Diagonal section edges", "description": "Clip-path utilities give the hero a slanted bottom (88%->100%) and the flow band slanted top and bottom (6% / 94%).", "classes": "clip-hero-bottom | clip-diagonal-both", "where": "hero, #flow" },
+    { "name": "Sticky glass nav", "description": "Sticky translucent blurred bar with hairline bottom border; brand left, links + pill right; links hidden below md.", "classes": "sticky top-0 z-50 glass border-b border-gray-200/50 > container mx-auto px-4 py-4 flex justify-between items-center ; flex items-center gap-2 | flex items-center gap-6 | hidden md:flex items-center gap-5", "where": "nav" },
+    { "name": "Pill link", "description": "Rounded-full tinted navy pill used for the nav auth link.", "classes": "rounded-full border border-[#153974]/20 bg-[#153974]/5 px-4 py-1.5 text-sm font-medium text-[#153974] hover:bg-[#153974]/10 transition-colors", "where": "nav" },
+    { "name": "Badge pill (dark)", "description": "Translucent white pill with icon + label.", "classes": "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20", "where": "hero badge" },
+    { "name": "Dot + heading lockup", "description": "8px cyan dot inline before each feature h3.", "classes": "flex items-center gap-3 mb-3 > span.deco-dot-accent + h3", "where": "#overview" }
+  ],
+  "copy_samples": [
+    { "text": "YU 수강 플래너", "where": "nav wordmark (h1)", "note": "Product name: Latin 'YU' + Korean; no particle." },
+    { "text": "서비스 소개 / 이용 방법 / 시작하기", "where": "nav section links", "note": "Terse noun phrases." },
+    { "text": "로그인 / 플래너로 이동", "where": "nav pill (unauth / auth)", "note": "Noun / imperative noun phrase." },
+    { "text": "YU the Future", "where": "hero badge", "note": "English slogan with Sparkles icon." },
+    { "text": "영남대학교 생활을", "where": "hero h1 line 1", "note": "Object phrase completed by the typed verb line." },
+    { "text": "스마트하게 설계하다.", "where": "hero typing phrase 1", "note": "Literary infinitive '-하다' with trailing full stop; copy-deck style." },
+    { "text": "직관적으로 관리하다.", "where": "hero typing phrase 2", "note": "Same pattern." },
+    { "text": "아름답게 기록하다.", "where": "hero typing phrase 3", "note": "Same pattern." },
+    { "text": "1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 다른 사람들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요.", "where": "hero description", "note": "해요체 polite imperative '-세요'; two sentences, full stops, commas." },
+    { "text": "바로 시작하기", "where": "primary CTA (hero + footer CTA)", "note": "Nominalized '-하기' button label." },
+    { "text": "비회원으로 체험하기", "where": "ghost CTA (hero + footer CTA)", "note": "Nominalized '-하기' button label." },
+    { "text": "비회원은 데이터가 저장되지 않습니다", "where": "hero footnote", "note": "합니다체 declarative, no terminal period." },
+    { "text": "SERVICE", "where": "#overview eyebrow", "note": "English uppercase eyebrow." },
+    { "text": "왜 YU 수강 플래너인가요?", "where": "#overview h2", "note": "Rhetorical question in 해요체 with question mark; only punctuated heading." },
+    { "text": "학생들의 수강 계획을 체계적으로 관리할 수 있는 핵심 기능들", "where": "#overview lead", "note": "Noun phrase, no period." },
+    { "text": "드래그앤드롭 플래너 / 졸업 요건 추적 / 다른 사람들의 수강 계획 참고 / 통계 기반 의사결정", "where": "#overview feature h3s", "note": "Noun-phrase titles; loanword '드래그앤드롭' written without spaces." },
+    { "text": "직관적인 드래그앤드롭으로 학기별 과목을 손쉽게 배치하세요. 마우스 하나로 과목을 원하는 학기에 끌어놓기만 하면 됩니다.", "where": "#overview feature 01 body", "note": "Mixes '-세요' imperative with '-합니다' declarative in one paragraph." },
+    { "text": "전공필수, 교양, 자유선택 등 모든 졸업 요건을 한눈에 확인하세요.", "where": "#overview feature 02 body", "note": "Domain terms: 전공필수/교양/자유선택." },
+    { "text": "같은 학과 학생들의 수강 계획을 참고하여 나만의 최적 로드맵을 설계하세요.", "where": "#overview feature 03 body" },
+    { "text": "학과별 인기 과목, 학기별 수강 통계를 확인하고 데이터에 기반한 수강 결정을 내리세요.", "where": "#overview feature 04 body" },
+    { "text": "HOW IT WORKS", "where": "#flow eyebrow", "note": "English uppercase eyebrow." },
+    { "text": "이렇게 사용하세요", "where": "#flow h2", "note": "해요체 imperative, no period." },
+    { "text": "3단계로 간단하게 나만의 수강 계획을 완성하세요", "where": "#flow lead", "note": "No terminal period (inconsistent with hero paragraph)." },
+    { "text": "가입 / 계획 / 완성", "where": "#flow step titles", "note": "Two-syllable nouns." },
+    { "text": "구글 계정으로 간편하게 가입하거나, 비회원으로 바로 체험해보세요.", "where": "#flow step 1 body", "note": "'체험해보세요' spelled without space." },
+    { "text": "과목을 검색하고 드래그앤드롭으로 학기별로 배치하세요.", "where": "#flow step 2 body" },
+    { "text": "졸업 요건 달성률을 확인하고 최적의 로드맵을 완성하세요.", "where": "#flow step 3 body" },
+    { "text": "지금이 가장 빠릅니다", "where": "#features eyebrow", "note": "Korean 합니다체 eyebrow (the other two eyebrows are English); styled uppercase has no effect on Hangul." },
+    { "text": "수강 계획을 시작하세요", "where": "#features h2" },
+    { "text": "체계적인 수강 계획으로 졸업까지의 여정을 한눈에 관리하세요.", "where": "#features lead", "note": "'한눈에' recurs 4 times across the page as a brand phrase." },
+    { "text": "가입 없이 바로 체험 가능", "where": "#features footnote", "note": "Clipped noun phrase, no period." },
+    { "text": "로딩중...", "where": "Button isLoading label (Button.tsx)", "note": "Three ASCII periods, no space." },
+    { "text": "영남대학교", "where": "logo alt text", "note": "Institution name in Korean." }
+  ],
+  "motion": [
+    { "classes": "animate-fade-in-down", "where": "nav (fadeInDown 0.5s ease-out both)" },
+    { "classes": "animate-scale-in", "where": "hero badge (scaleIn 0.3s ease-out both)" },
+    { "classes": "animate-fade-in-up anim-delay-100", "where": "hero h1 (fadeInUp 0.6s ease-out both, 100ms delay)" },
+    { "classes": "animate-fade-in-up anim-delay-200", "where": "hero description" },
+    { "classes": "animate-fade-in-up anim-delay-300", "where": "hero CTA row and hero footnote (same delay)" },
+    { "classes": "animate-cursor", "where": "typing cursor '|' (cursorBlink 1s step-end infinite)" },
+    { "classes": "text-gradient-typing", "where": "typed headline: gradientFlow 4s ease infinite over 300% background-size + drop-shadow(0 0 20px rgba(0,170,202,0.4))" },
+    { "classes": "JS typing effect (setTimeout): 100ms/char typing, 50ms/char deleting, 2000ms hold; words ['스마트하게 설계하다.','직관적으로 관리하다.','아름답게 기록하다.']", "where": "hero h1 line 2" },
+    { "classes": "animate-on-scroll (+ .visible added by IntersectionObserver threshold 0.1; opacity 0 -> 1, translateY(24px) -> 0, 0.7s cubic-bezier(0.4,0,0.2,1); prefers-reduced-motion => all made visible immediately)", "where": "section heading blocks, feature rows, flow steps, CTA block" },
+    { "classes": "scroll-delay-0 / scroll-delay-100 / scroll-delay-200 / scroll-delay-300", "where": "#overview feature rows 1-4 and mobile flow steps (0/100/200); transition-delay" },
+    { "classes": "scroll-delay-0 / scroll-delay-150 / scroll-delay-300", "where": "#flow desktop steps 1-3" },
+    { "classes": "transition-colors", "where": "nav links (hover:text-[#153974]) and nav pill (hover:bg-[#153974]/10)" },
+    { "classes": "group + group-hover:translate-x-1 transition-transform", "where": "ArrowRight icon inside both primary CTAs" },
+    { "classes": "transition-all duration-200 active:scale-[0.98]", "where": "Button base (all CTAs)" },
+    { "classes": "hover:bg-white/90 | hover:text-white hover:bg-white/10 | hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md", "where": "hero primary / hero ghost / CTA primary hover states" },
+    { "classes": "animate-spin", "where": "Button loading spinner svg (mr-2 h-4 w-4 animate-spin)" }
+  ],
+  "icons": [
+    { "name": "Sparkles", "size_classes": "w-4 h-4 text-white/80", "where": "hero badge" },
+    { "name": "ArrowRight", "size_classes": "ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform", "where": "primary CTA buttons (hero and #features)" },
+    { "name": "MousePointerClick", "size_classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4", "where": "#flow step 1 가입 (desktop + mobile)" },
+    { "name": "LayoutGrid", "size_classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4", "where": "#flow step 2 계획 (desktop + mobile)" },
+    { "name": "CheckCircle", "size_classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4", "where": "#flow step 3 완성 (desktop + mobile)" },
+    { "name": "inline SVG spinner (Button.tsx)", "size_classes": "mr-2 h-4 w-4 animate-spin; circle opacity-25 strokeWidth 4; path opacity-75", "where": "Button isLoading state (not triggered on landing)" },
+    { "name": "/yu-logo.svg (next/image)", "size_classes": "h-6 width={60} height={24} style width:auto; viewBox 0 0 297.4 57.3; fills .cls-1 #0d3f7a and .cls-2 #00b5d1", "where": "nav brand; alt 영남대학교. /yu-logo-white.svg exists in public/ but is not used on this page." }
+  ],
+  "oddities": [
+    "LIKELY VISUAL BUG: hero primary CTA passes className 'bg-white text-[#153974] hover:bg-white/90' to Button, but cn() = twMerge(clsx()). twMerge treats bg-white (bg-color) and the default variant's bg-gradient-to-r from-[#153974] to-[#3069B3] (bg-image / gradient stops) as different groups, so the navy gradient background-image survives and paints over the white background-color. Result would be navy gradient with navy text. Verify in a browser; fix by passing variant='outline'/'ghost' or adding bg-none.",
+    "Hex values outside the brand trio #153974 / #3069B3 / #00AACA: #0a1e3d and #1a2f5a (hero gradient stops), #0f2847 (flow gradient start), #f0f7ff and #e8f4fd (CTA background), #003E7E (Button default hover gradient start), #4dd9f0 / #60a5fa (Tailwind blue-400) / #a78bfa (Tailwind violet-400) in .text-gradient-typing - the violet is off-brand. The logo SVG itself uses #0d3f7a and #00b5d1, which are close to but not equal to #153974 / #00AACA.",
+    "Two different 'dark navy' gradients: hero uses from-[#0a1e3d] via-[#153974] to-[#1a2f5a] (to-br) while the flow band uses from-[#0f2847] to-[#153974] (to-br). No shared token.",
+    "Eyebrow style drifts in the CTA section: 'text-sm uppercase tracking-widest text-[#00AACA] font-medium mb-4' vs the standard 'text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3' (tracking-widest = 0.1em). It is also the only Korean eyebrow ('지금이 가장 빠릅니다') while the others are English ('SERVICE', 'HOW IT WORKS'); uppercase has no effect on Hangul.",
+    "CTA h2 scales to md:text-5xl whereas the other two section h2s use md:text-4xl.",
+    "Opacity notation is mixed: bg-[#00AACA]/[0.08] (bracketed decimal) alongside bg-[#3069B3]/10, bg-[#00AACA]/5, bg-[#00AACA]/30, and a wrapper using opacity-[0.08]. Also rotate-[-3deg] / right-[-5%] / bottom-[-5%] instead of -rotate-3 / -right-[5%].",
+    "Two <h1> elements on the page: the nav wordmark 'YU 수강 플래너' and the hero title. The nav one should be a div/span or the hero should be the sole h1.",
+    "Primary CTAs are a <Link href='/login'> wrapping a <Button> (anchor containing a button) - nested interactive elements; the inner button has no type and no onClick.",
+    "Contrast concerns: text-white/40 on #153974 (hero footnote) is roughly 3:1 - below AA for 14px text; text-gray-400 (#9ca3af) on the #e8f4fd CTA background is roughly 2.3:1; text-white/60 body copy on navy is around 5:1 (passes). The text-gradient-typing headline relies on a drop-shadow for legibility.",
+    "The ghost CTA in #features has no explicit text color (inherits body color) and hovers to bg-gray-100 on a pale blue gradient; the hero ghost explicitly sets text-white/70 hover:text-white hover:bg-white/10. Ghost variant has no default text color token.",
+    "Button focus ring: focus-visible:ring-2 focus-visible:ring-offset-2 with no ring color class, so it falls back to Tailwind v4's default (currentColor) - on the white hero button that would be navy, on the gradient button white-ish; not a consistent brand focus style.",
+    "Mobile flow steps override .deco-number's clamp(80px,15vw,160px) with inline style={{ fontSize: '56px' }} - the only inline style besides the logo's width:auto. Desktop/mobile step markup is fully duplicated rather than responsive.",
+    "Stagger timings are inconsistent: feature rows and mobile steps use 0/100/200(/300)ms, desktop steps use 0/150/300ms; hero CTA row and hero footnote share anim-delay-300 so they appear simultaneously.",
+    "Section id 'features' holds the final CTA, not a feature list (features live under #overview); the nav labels it '시작하기'. Section anchors use scroll-mt-20 (80px) as an approximation of the nav height (py-4 + 24px logo + border).",
+    "Mobile nav drops the section links (hidden md:flex) with no hamburger/menu fallback.",
+    ".glass sets its own 1px rgba(255,255,255,0.3) border, then the nav adds border-b border-gray-200/50 - border-gray-200/50 recolors all four sides, so which color wins depends on cascade order between the custom class and utilities.",
+    "Hero typed line is whitespace-nowrap at text-4xl (36px) on phones; '직관적으로 관리하다.' (11 glyphs) is ~400px wide and may overflow or clip on 320-360px viewports (section is overflow-hidden).",
+    "Hero mosaic reuses help-doc screenshots (/help/*.png) with alt='' and hard-coded width/height props (800x400 etc.) that are unlikely to match the real PNG aspect ratios; at opacity 0.08 + blur-[1px] this is purely textural.",
+    ".bg-grid draws black 3%-alpha lines and is then set to opacity-5 on a navy background - effectively invisible (0.15% alpha). Similarly .deco-number stroke rgba(21,57,116,0.08) on white and deco-number-light rgba(255,255,255,0.06) on navy are extremely faint by design.",
+    "Reduced motion: scroll reveals and CSS keyframes are disabled under prefers-reduced-motion (JS + CSS), but the JS typing effect keeps mutating the headline text every 50-100ms.",
+    "Brand voice: body copy is 해요체 polite imperative ('-세요') with occasional 합니다체 ('됩니다', '않습니다', '빠릅니다'); hero taglines use the literary '-하다.' infinitive with a trailing period; headings carry no punctuation except one question mark; lead paragraphs inconsistently end with or without a period; zero emoji anywhere; English used only for the slogan 'YU the Future' and section eyebrows; the phrase '한눈에' recurs four times as a brand motif.",
+    "No <footer> on the landing page - the ui/Footer component exists (src/components/ui/Footer.tsx) but is not rendered here; the page ends with the #features CTA section.",
+    "Legacy v3 gradient utilities (bg-gradient-to-br / bg-gradient-to-b / bg-gradient-to-r) are used throughout rather than Tailwind v4's bg-linear-to-* names (still supported, but a naming inconsistency to be aware of in a new design system)."
+  ]
+}

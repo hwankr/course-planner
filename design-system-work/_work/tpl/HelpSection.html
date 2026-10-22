@@ -1,0 +1,132 @@
+<!-- @dsCard group="Patterns" height=2400 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>HelpSection — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); }
+  .cap { margin: 8px 0 24px; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+  .states { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; padding: 16px; background: var(--white, #ffffff); }
+</style>
+</head>
+<body>
+
+<div class="cp-help">
+  <div class="cp-help__inner">
+    <div class="cp-help__card">
+      <a class="cp-help__link cp-help__link--back" href="#">{{icon:arrow-left|cp-help__link-icon}}플래너로 돌아가기</a>
+      <div><span class="cp-help__eyebrow">{{icon:help-circle|cp-help__eyebrow-icon}}도움말 가이드</span></div>
+      <h1 class="cp-help__title">YU 수강 플래너 사용 가이드</h1>
+      <p class="cp-help__lead">수강 플래너의 주요 기능을 빠르게 알아보세요</p>
+    </div>
+
+    <div class="cp-help__card">
+      <div class="cp-help__heading">
+        <div class="cp-help__tile cp-help__tile--navy">{{icon:rocket|cp-help__tile-icon}}</div>
+        <h2 class="cp-help__h2">시작하기</h2>
+      </div>
+      <p class="cp-help__p">YU 수강 플래너는 비회원으로도 바로 사용할 수 있습니다. 비회원 모드에서는 데이터가 브라우저에 저장되며, 회원 가입 시 어디서든 접속 가능하고 학과 통계에 기여할 수 있습니다.</p>
+      <div class="cp-help__compare">
+        <div class="cp-help__box">
+          <h3 class="cp-help__box-title">비회원</h3>
+          <ul class="cp-help__list"><li>• 바로 사용 가능</li><li>• 브라우저 저장</li><li>• 통계 공유 불가</li></ul>
+        </div>
+        <div class="cp-help__box cp-help__box--accent">
+          <h3 class="cp-help__box-title">회원</h3>
+          <ul class="cp-help__list"><li>• Google 로그인</li><li>• 데이터 동기화</li><li>• 통계 공유 가능</li></ul>
+        </div>
+      </div>
+      <p class="cp-help__p">처음 사용 시 학과 선택과 졸업요건 입력 과정을 안내합니다. 졸업요건은 언제든 수정할 수 있으니 정확하지 않아도 괜찮습니다.</p>
+      <div class="cp-help__figure"><img src="/_blob/51c326220433694693ed8a28d66ee148" alt="온보딩 화면 - 학과 선택과 졸업요건 설정" width="1080" height="400"></div>
+    </div>
+
+    <div class="cp-help__card">
+      <div class="cp-help__heading">
+        <div class="cp-help__tile cp-help__tile--blue">{{icon:calendar|cp-help__tile-icon}}</div>
+        <h2 class="cp-help__h2">수강 계획 세우기</h2>
+      </div>
+      <p class="cp-help__p">수강 플래너에서는 학기를 추가하고, 과목을 배치하여 졸업까지의 수강 계획을 세울 수 있습니다.</p>
+      <div class="cp-help__steps">
+        <div class="cp-help__step"><span class="cp-help__step-num">1.</span> <span class="cp-help__step-text">학기 추가: 화면 하단의 + 버튼으로 새 학기를 추가합니다</span></div>
+        <div class="cp-help__step"><span class="cp-help__step-num">2.</span> <span class="cp-help__step-text">과목 추가: 학기를 클릭하여 선택한 뒤, 과목 리스트에서 + 버튼을 누르거나 드래그하여 추가합니다</span></div>
+        <div class="cp-help__step"><span class="cp-help__step-num">3.</span> <span class="cp-help__step-text">과목 이동: 과목을 다른 학기로 드래그하여 옮길 수 있습니다</span></div>
+        <div class="cp-help__step"><span class="cp-help__step-num">4.</span> <span class="cp-help__step-text">과목 제거: 과목의 X 버튼을 누르거나 카탈로그 영역으로 드래그합니다</span></div>
+        <div class="cp-help__step"><span class="cp-help__step-num">5.</span> <span class="cp-help__step-text">이수 상태: 과목 카드의 상태 버튼으로 예정/이수 중/이수 완료를 전환합니다</span></div>
+      </div>
+      <p class="cp-help__p cp-help__p--last">목록에 없는 과목은 커스텀 과목 추가 기능으로 직접 등록할 수 있습니다.</p>
+    </div>
+
+    <div class="cp-help__card">
+      <div class="cp-help__heading">
+        <div class="cp-help__tile cp-help__tile--cyan">{{icon:graduation-cap|cp-help__tile-icon}}</div>
+        <h2 class="cp-help__h2">졸업요건 추적</h2>
+      </div>
+      <p class="cp-help__p">졸업요건 수정이 필요하면 위젯의 연필 아이콘을 클릭하여 기준 학점을 변경할 수 있습니다.</p>
+      <a class="cp-help__link-card" href="#">{{icon:external-link|cp-help__link-card-icon}}영남대학교 포털에서 졸업요건 조회하는 방법 →</a>
+      <a class="cp-help__link-card is-hover" href="#" style="margin-bottom:0">{{icon:external-link|cp-help__link-card-icon}}영남대학교 포털에서 졸업요건 조회하는 방법 → <span style="font-weight:400;color:var(--slate-500,#62748e)">(hover)</span></a>
+    </div>
+
+    <div class="cp-help__contact">
+      <p class="cp-help__contact-text">궁금한 점이나 오류를 발견하셨나요?</p>
+      <a class="cp-help__cta" href="#">문의 및 피드백 보내기{{icon:external-link|cp-help__link-icon}}</a>
+    </div>
+
+    <div class="cp-help__nav">
+      <a class="cp-help__link" href="#">{{icon:arrow-left|cp-help__link-icon}}플래너로 이동</a>
+      <a class="cp-help__link is-hover" href="#">졸업요건 조회 가이드{{icon:external-link|cp-help__link-icon}}</a>
+    </div>
+  </div>
+</div>
+<p class="cap">help/page.tsx at md · slate-50 → white → slate-100 shell · header card (yu-cyan back link 2.8:1 — flagged, slate-100 eyebrow, yu-navy h1 36px, slate-500 lead) · section cards rounded-2xl slate-200 p-7 with navy / blue / cyan icon tiles · 비회원 / 회원 boxes (slate-50 vs yu-cyan-a5 + yu-cyan-a30) · numbered slate-50 rows · image frame rounded-xl · guide link card at rest and hover · contact block with the yu-navy CTA · bottom nav, second link hovered</p>
+
+<div class="cp-help">
+  <div class="cp-help__inner" style="padding-bottom:24px">
+    <div class="cp-help__card cp-help__card--flush cp-help__card--roomy">
+      <a class="cp-help__link cp-help__link--back cp-help__link--muted" href="#">{{icon:arrow-left|cp-help__link-icon}}플래너로 돌아가기</a>
+      <div><span class="cp-help__eyebrow cp-help__eyebrow--navy cp-help__eyebrow--flush">{{icon:graduation-cap|cp-help__eyebrow-icon}}졸업 정보 가이드</span></div>
+      <h1 class="cp-help__title cp-help__title--tight">영남대학교 졸업기준·취득학점 확인 방법</h1>
+    </div>
+
+    <div class="cp-help__stack">
+      <section class="cp-help__pane">
+        <div class="cp-help__pane-grid is-lg">
+          <div class="cp-help__pane-text">
+            <span class="cp-help__eyebrow cp-help__eyebrow--flush">STEP 1</span>
+            <h2 class="cp-help__h2 cp-help__h2--pane"><span class="cp-help__tile cp-help__tile--navy">{{icon:search|cp-help__tile-icon}}</span>홈페이지 로그인 후 포털 이동</h2>
+            <p class="cp-help__pane-desc"></p>
+            <ol class="cp-help__ol">
+              <li class="cp-help__ol-item"><span class="cp-help__ol-num">1</span><span class="cp-help__ol-text">홈페이지 접속: https://www.yu.ac.kr/main/index.do</span></li>
+              <li class="cp-help__ol-item"><span class="cp-help__ol-num">2</span><span class="cp-help__ol-text">로그인 후 상단 포털 버튼 클릭</span></li>
+              <li class="cp-help__ol-item"><span class="cp-help__ol-num">3</span><span class="cp-help__ol-text">포털 페이지 진입</span></li>
+            </ol>
+          </div>
+          <div class="cp-help__pane-media">
+            <button type="button" class="cp-help__zoom is-hover" aria-label="홈페이지 로그인 후 포털 이동 이미지 확대 보기">
+              <img class="cp-help__zoom-img" src="/_blob/be29c96dfcbdab3f41c4a8514677b0d8" alt="영남대학교 홈페이지 포털 버튼 강조 화면">
+              <span class="cp-help__zoom-hint">클릭하여 확대</span>
+            </button>
+            <p class="cp-help__pane-caption"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="cp-help__card cp-help__card--flush">
+        <h2 class="cp-help__h2 cp-help__h2--pane" style="margin-top:0"><span class="cp-help__tile cp-help__tile--purple">{{icon:file-text|cp-help__tile-icon}}</span>STEP 3. 졸업모의사정에서 확인할 항목</h2>
+        <p class="cp-help__pane-desc">졸업모의사정 화면에서 기준값과 취득값을 동시에 보며 항목별 충족 여부를 점검하세요.</p>
+        <div class="cp-help__audit">
+          <article class="cp-help__box"><h3 class="cp-help__audit-title">졸업기준 학점</h3><p class="cp-help__audit-text">총 졸업학점, 전공학점, 교양학점 등 기준값을 먼저 확인합니다.</p></article>
+          <article class="cp-help__box"><h3 class="cp-help__audit-title">취득 학점</h3><p class="cp-help__audit-text">현재까지 실제 이수한 학점을 확인하고 기준값과 비교합니다.</p></article>
+        </div>
+      </section>
+    </div>
+
+    <nav class="cp-help__nav cp-help__nav--spaced" aria-label="페이지 내 이동">
+      <a class="cp-help__link" href="#">{{icon:arrow-left|cp-help__link-icon}}플래너로 돌아가기</a>
+    </nav>
+  </div>
+</div>
+<p class="cap" style="margin-bottom:0">help/graduation-guide/page.tsx · header md:p-8 with the muted slate-600 back link (hover yu-cyan), yu-navy-a5 eyebrow and tracking-tight title · STEP 1 two-pane section in its lg layout (.is-lg mirror; it stacks below 1024px) — empty description paragraph and empty 45px caption strip as in the source, zoom hint shown in hover · purple FileText section with two of the four audit boxes · one-link bottom nav</p>
+
+</body>
+</html>

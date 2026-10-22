@@ -1,0 +1,197 @@
+<!-- @dsCard group="Patterns" height=1020 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AppHeader — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .cell { display: flex; flex-direction: column; gap: 8px; }
+  .cell + .cell { margin-top: 16px; }
+  /* The shell spans the viewport in the app; the card bleeds it to the frame edge and lifts the Tailwind container cap (768px at a 960px viewport) so the row is not truncated. */
+  .bleed { margin-left: -16px; margin-right: -16px; }
+  .bleed .cp-app-header__container { max-width: none; }
+  .stage { box-sizing: border-box; display: flex; align-items: flex-start; gap: 32px; padding: 16px; }
+  .slot { position: relative; display: flex; justify-content: flex-end; flex: none; }
+  .slot--more { width: 176px; }
+  .slot--notifications { width: 320px; }
+  .slot--user { width: 192px; }
+  .slot--empty { width: 320px; }
+  .bells { display: flex; align-items: center; gap: 12px; }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="cell">
+  <div class="cp-app-header bleed">
+    <div class="cp-app-header__accent"></div>
+    <header class="cp-app-header__bar">
+      <div class="cp-app-header__container">
+        <div class="cp-app-header__row">
+          <div class="cp-app-header__left">
+            <a href="/planner" class="cp-app-header__brand">
+              <img src="/_blob/b491302b30a400f943b531324607b6d5" alt="영남대학교" width="60" height="24" class="cp-app-header__logo">
+              <span class="cp-app-header__wordmark">YU 수강 플래너</span>
+            </a>
+            <nav class="cp-app-header__nav">
+              <a href="/planner" class="cp-app-header__nav-link is-current"><svg class="lucide lucide-calendar cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>수강 계획</a>
+              <a href="/calendar" class="cp-app-header__nav-link is-hover"><svg class="lucide lucide-calendar-days cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>학사 일정</a>
+              <a href="/statistics" class="cp-app-header__nav-link"><svg class="lucide lucide-bar-chart-3 cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>학과 통계</a>
+              <div class="cp-app-header__menu-wrap">
+                <button class="cp-app-header__nav-link cp-app-header__nav-link--more" aria-expanded="false" aria-haspopup="true">더보기<svg class="lucide lucide-chevron-down cp-app-header__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+              </div>
+            </nav>
+          </div>
+          <div class="cp-app-header__right">
+            <div class="cp-app-header__menu-wrap">
+              <button class="cp-app-header__bell" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="lucide lucide-bell cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-app-header__badge">3</span></button>
+            </div>
+            <div class="cp-app-header__menu-wrap">
+              <button class="cp-app-header__user" aria-expanded="false" aria-haspopup="true"><div class="cp-app-header__avatar">홍</div><span class="cp-app-header__user-name">홍길동</span><svg class="lucide lucide-chevron-down cp-app-header__chevron cp-app-header__user-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+  </div>
+  <p class="cap">Student on /planner: 4px yu-navy → yu-blue → yu-cyan accent · 64px white bar, shadow-sm, 1px foreground hairline (bare border-b) · 24px colour logo + 135° gradient wordmark · 수강 계획 current (yu-navy-a10 / yu-navy, 600) · 학사 일정 hover mirror (gray-50 / gray-900) · 학과 통계 at rest (gray-600) · 더보기 + 14px chevron · gray-700 bell with the red-500 badge · gradient avatar initial, name, gray-400 chevron.</p>
+</div>
+
+<div class="cell">
+  <div class="cp-app-header">
+  <div class="stage" style="height: 328px;">
+    <div class="slot slot--more">
+      <div class="cp-app-header__menu-wrap">
+        <button class="cp-app-header__nav-link cp-app-header__nav-link--more is-current is-open" aria-expanded="true" aria-haspopup="true">더보기<svg class="lucide lucide-chevron-down cp-app-header__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="cp-app-header__dropdown cp-app-header__dropdown--more" role="menu">
+          <a href="/help" class="cp-app-header__dropdown-item" role="menuitem"><svg class="lucide lucide-help-circle cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>도움말</a>
+          <a href="/help/feedback" class="cp-app-header__dropdown-item is-hover" role="menuitem"><svg class="lucide lucide-message-square-text cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>문의 및 건의</a>
+          <a href="/patch-notes" class="cp-app-header__dropdown-item is-current" role="menuitem"><svg class="lucide lucide-megaphone cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>업데이트 소식</a>
+        </div>
+      </div>
+    </div>
+    <div class="slot slot--notifications">
+      <div class="cp-app-header__menu-wrap">
+        <button class="cp-app-header__bell" title="알림" aria-expanded="true" aria-haspopup="true"><svg class="lucide lucide-bell cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-app-header__badge">3</span></button>
+        <div class="cp-app-header__dropdown cp-app-header__dropdown--notifications" role="menu">
+          <div class="cp-app-header__panel-head">
+            <span class="cp-app-header__panel-title">알림</span>
+            <button type="button" class="cp-app-header__mark-read"><svg class="lucide lucide-check-check cp-app-header__mark-read-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>모두 읽음</button>
+          </div>
+          <div class="cp-app-header__panel-list">
+          <a href="#" class="cp-app-header__notice" role="menuitem">
+            <div class="cp-app-header__notice-icon-wrap"><div class="cp-app-header__notice-chip cp-app-header__notice-chip--patch-note"><svg class="lucide lucide-megaphone cp-app-header__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></div></div>
+            <div class="cp-app-header__notice-body">
+              <p class="cp-app-header__notice-text">새로운 업데이트: 학과 통계 페이지 개편</p>
+              <p class="cp-app-header__notice-time">방금 전</p>
+            </div>
+          </a>
+          <a href="#" class="cp-app-header__notice is-hover" role="menuitem">
+            <div class="cp-app-header__notice-icon-wrap"><div class="cp-app-header__notice-chip"><svg class="lucide lucide-message-square-text cp-app-header__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></div></div>
+            <div class="cp-app-header__notice-body">
+              <p class="cp-app-header__notice-text">문의에 답변이 달렸습니다.</p>
+              <p class="cp-app-header__notice-time">2시간 전</p>
+            </div>
+          </a>
+          <a href="#" class="cp-app-header__notice" role="menuitem">
+            <div class="cp-app-header__notice-icon-wrap"><div class="cp-app-header__notice-chip cp-app-header__notice-chip--feedback-new"><svg class="lucide lucide-message-square-text cp-app-header__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></div></div>
+            <div class="cp-app-header__notice-body">
+              <p class="cp-app-header__notice-text">새로운 피드백이 등록되었습니다.</p>
+              <p class="cp-app-header__notice-time">3일 전</p>
+            </div>
+          </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="slot slot--user">
+      <div class="cp-app-header__menu-wrap">
+        <button class="cp-app-header__user is-open" aria-expanded="true" aria-haspopup="true"><div class="cp-app-header__avatar">홍</div><span class="cp-app-header__user-name">홍길동</span><svg class="lucide lucide-chevron-down cp-app-header__chevron cp-app-header__user-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="cp-app-header__dropdown cp-app-header__dropdown--user" role="menu">
+          <div class="cp-app-header__user-head"><p class="cp-app-header__user-head-name">홍길동</p></div>
+          <a href="/profile" class="cp-app-header__dropdown-item" role="menuitem"><svg class="lucide lucide-user cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>프로필</a>
+          <button class="cp-app-header__dropdown-item is-hover" role="menuitem"><svg class="lucide lucide-log-out cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>로그아웃</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+  <p class="cap">Menus open as static panels on the shell's gray-50 grid ground (absolute right-0 mt-1, white, radius-lg, shadow-lg, 1px foreground border): 더보기 on /patch-notes (button current, chevron rotated; w-44; 문의 및 건의 hover mirror, 업데이트 소식 current) · 알림 (sm:w-80; yu-cyan 모두 읽음; the three type chips — purple-100 patch-note, blue-100 feedback-reply with the hover mirror, yellow-100 feedback-new, admins only) · user menu (w-48; name head, 프로필, 로그아웃 hover mirror).</p>
+</div>
+
+<div class="cell">
+  <div class="stage" style="height: 212px; padding-left: 0; padding-right: 0;">
+    <nav class="cp-app-header__nav">
+      <a href="/admin" class="cp-app-header__nav-link cp-app-header__nav-link--admin is-current"><svg class="lucide lucide-shield cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>관리자</a>
+      <a href="/admin" class="cp-app-header__nav-link cp-app-header__nav-link--admin"><svg class="lucide lucide-shield cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>관리자</a>
+    </nav>
+    <div class="bells">
+      <button class="cp-app-header__bell" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="lucide lucide-bell cp-app-header__bell-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg></button>
+      <button class="cp-app-header__bell" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="lucide lucide-bell cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-app-header__badge cp-app-header__badge--admin">12</span></button>
+      <button class="cp-app-header__bell" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="lucide lucide-bell cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-app-header__badge">99+</span></button>
+      <button class="cp-app-header__bell is-hover" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="lucide lucide-bell cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-app-header__badge">5</span></button>
+    </div>
+    <button class="cp-app-header__user is-hover" aria-expanded="false" aria-haspopup="true"><div class="cp-app-header__avatar">홍</div><span class="cp-app-header__user-name">홍길동</span><svg class="lucide lucide-chevron-down cp-app-header__chevron cp-app-header__user-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="slot slot--empty">
+      <div class="cp-app-header__dropdown cp-app-header__dropdown--notifications" role="menu">
+        <div class="cp-app-header__panel-head">
+          <span class="cp-app-header__panel-title">알림</span>
+        </div>
+        <div class="cp-app-header__panel-list">
+          <div class="cp-app-header__empty">
+            <svg class="lucide lucide-bell cp-app-header__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+            <p class="cp-app-header__empty-text">알림이 없습니다.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">Variants on the white header ground: 관리자 current (purple-50 / purple-600, weight stays 500) and at rest · bell at zero unread (gray-400, no badge) · admin badge (yellow-400 / yellow-900) · 99+ cap · bell hover mirror (gray-100 circle) · user button hover mirror (gray-50 pill) · empty 알림 panel (gray-300 bell, 알림이 없습니다.; 모두 읽음 hidden at zero unread).</p>
+</div>
+
+<div class="cell">
+  <div class="cp-app-header bleed">
+    <div class="cp-app-header__accent"></div>
+    <header class="cp-app-header__bar">
+      <div class="cp-app-header__container">
+        <div class="cp-app-header__row">
+          <div class="cp-app-header__left">
+            <a href="/planner" class="cp-app-header__brand">
+              <img src="/_blob/b491302b30a400f943b531324607b6d5" alt="영남대학교" width="60" height="24" class="cp-app-header__logo">
+              <span class="cp-app-header__wordmark">YU 수강 플래너</span>
+            </a>
+            <nav class="cp-app-header__nav">
+              <a href="/planner" class="cp-app-header__nav-link is-current"><svg class="lucide lucide-calendar cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>수강 계획</a>
+              <a href="/calendar" class="cp-app-header__nav-link"><svg class="lucide lucide-calendar-days cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>학사 일정</a>
+              <a href="/statistics" class="cp-app-header__nav-link"><svg class="lucide lucide-bar-chart-3 cp-app-header__nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>학과 통계</a>
+              <div class="cp-app-header__menu-wrap">
+                <button class="cp-app-header__nav-link cp-app-header__nav-link--more" aria-expanded="false" aria-haspopup="true">더보기<svg class="lucide lucide-chevron-down cp-app-header__chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+              </div>
+            </nav>
+          </div>
+          <div class="cp-app-header__right">
+            <button class="cp-button cp-button--ghost cp-button--sm cp-app-header__guest-button">구글 로그인</button>
+            <a href="/register" class="cp-app-header__register-link"><button class="cp-button cp-button--default cp-button--sm cp-app-header__guest-button">회원가입</button></a>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="cp-app-header__guest-banner">
+      <div class="cp-app-header__container cp-app-header__guest-inner">
+        <div class="cp-app-header__guest-message">
+          <svg class="lucide lucide-alert-triangle cp-app-header__guest-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <p class="cp-app-header__guest-text">비회원 모드입니다. 데이터가 이 브라우저에만 저장됩니다.</p>
+        </div>
+        <div class="cp-app-header__guest-actions">
+          <button class="cp-app-header__guest-link">구글로 로그인</button>
+          <a href="/register" class="cp-app-header__guest-link is-hover">회원가입하기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">Guest on /planner: no bell or user menu — Button ghost sm 구글 로그인 and Button default sm 회원가입 (className text-xs sm:text-sm whitespace-nowrap; the second inside a bare Link) · the amber-50 banner under the header: 1px amber-200 hairline, alert-triangle and text in amber-800, underlined amber-900 links (회원가입하기 shows the amber-700 hover mirror).</p>
+</div>
+
+</body>
+</html>

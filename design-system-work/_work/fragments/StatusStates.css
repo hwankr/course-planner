@@ -1,0 +1,354 @@
+/* StatusStates — pattern hand-translated from src/app/(dashboard)/loading.tsx, src/app/(dashboard)/error.tsx, src/app/not-found.tsx, src/app/global-error.tsx, src/components/providers/OnboardingGuard.tsx, src/app/(dashboard)/statistics/page.tsx, src/app/(dashboard)/admin/courses/page.tsx, src/components/features/AllPlansModal.tsx (plus the sibling recipes in src/components/features/RequirementsSummary.tsx, src/app/(dashboard)/planner/page.tsx, src/app/(dashboard)/calendar/page.tsx); .cp-card from Card.css is reused, not redefined */
+
+/* Block = a neutral root for any status piece. The app renders these directly inside the dashboard
+   <main> (body font 16px/1.5 Arial, color `foreground`), so the root restates that inheritance. */
+.cp-status {
+  box-sizing: border-box;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+}
+.cp-status *,
+.cp-status *::before,
+.cp-status *::after {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------- Centering roots
+   "flex items-center justify-center" plus each source's own minimum height. */
+.cp-status__center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cp-status__center--min-400 { min-height: 400px; }                 /* loading.tsx, planner/page.tsx, statistics loading: min-h-[400px] — arbitrary, no size token */
+.cp-status__center--min-half { min-height: 50vh; }                 /* OnboardingGuard: min-h-[50vh] */
+.cp-status__center--py-12 { padding: var(--space-12, 48px) 0; }    /* AllPlansModal, statistics plans: py-12 */
+
+/* ---------------------------------------------------------------- Spinner 1: loading.tsx
+   <div class="flex flex-col items-center gap-3"> ring + <p class="text-sm text-gray-500">로딩 중...</p> */
+.cp-status__loading-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+/* h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#153974] */
+.cp-status__ring {
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  border: 4px solid var(--gray-200, #e5e7eb);
+  border-top-color: var(--yu-navy, #153974);
+  border-radius: var(--radius-full, 9999px);
+  animation: cp-spin 1s linear infinite;
+}
+.cp-status__loading-label {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* ---------------------------------------------------------------- Spinner 2: OnboardingGuard (and CourseCatalog, planner)
+   animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3] — preflight leaves every side at 0,
+   border-b-2 opens a single 2px arc; no track, no label. */
+.cp-status__arc {
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  border: 0 solid var(--yu-blue, #3069b3);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-full, 9999px);
+  animation: cp-spin 1s linear infinite;
+}
+/* planner/page.tsx plan loading: h-12 w-12 */
+.cp-status__arc--lg {
+  width: var(--avatar, 48px);
+  height: var(--avatar, 48px);
+}
+
+/* ---------------------------------------------------------------- Spinner 3: Lucide Loader2
+   statistics: <Loader2 class="w-8 h-8 animate-spin mx-auto mb-4 text-[#3069B3]"> inside <div class="text-center">
+   with <p class="text-gray-600">통계를 불러오는 중...</p>; AllPlansModal / statistics plans: the bare icon
+   "w-8 h-8 animate-spin text-[#3069B3]" in a py-12 centering root. */
+.cp-status__loader {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  color: var(--yu-blue, #3069b3);
+  animation: cp-spin 1s linear infinite;
+}
+.cp-status__loader--stacked { margin: 0 auto var(--space-4, 16px); }  /* mx-auto mb-4 */
+.cp-status__loading-copy { text-align: center; }
+.cp-status__loading-text {
+  margin: 0;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* ---------------------------------------------------------------- Skeletons (animate-pulse) */
+.cp-status__skeleton { animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+/* RequirementsSummary: h-4 bg-gray-200 rounded */
+.cp-status__skeleton--bar {
+  height: var(--space-4, 16px);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--gray-200, #e5e7eb);
+}
+/* The bar sits in <CardContent className="py-3"> — cn() merges p-6 pt-0 py-3 to 12px 24px. */
+.cp-card .cp-status__skeleton-host { padding: var(--space-3, 12px) var(--space-6, 24px); }
+/* admin pages, auth guard: h-8 w-48 rounded-lg bg-slate-200 (w-48 = 192px, no size token) */
+.cp-status__skeleton--title {
+  width: 192px;
+  height: var(--space-8, 32px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--slate-200, #e2e8f0);
+}
+/* admin list loading: h-24 rounded-2xl bg-slate-200, three in a space-y-4 stack */
+.cp-status__skeleton--block {
+  height: var(--space-24, 96px);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--slate-200, #e2e8f0);
+}
+/* admin auth guard second block: h-64 (256px, no size token) */
+.cp-status__skeleton--block-lg {
+  height: 256px;
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--slate-200, #e2e8f0);
+}
+/* calendar grid: min-h-[90px] md:aspect-square bg-gray-100 border border-gray-200 md:rounded-lg */
+.cp-status__skeleton--cell {
+  min-height: 90px;
+  border: 1px solid var(--gray-200, #e5e7eb);
+  background-color: var(--gray-100, #f3f4f6);
+}
+@media (min-width: 48rem) {
+  .cp-status__skeleton--cell {
+    aspect-ratio: 1 / 1;
+    border-radius: var(--radius-lg, 8px);
+  }
+}
+/* space-y-4 */
+.cp-status__skeleton-stack > * + * { margin-top: var(--space-4, 16px); }
+
+/* ---------------------------------------------------------------- Page column: error.tsx, global-error.tsx, not-found.tsx
+   flex flex-col items-center justify-center gap-4 p-8 text-center (+ min-h-[400px] or min-h-screen) */
+.cp-status__page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4, 16px);
+  padding: var(--space-8, 32px);
+  text-align: center;
+}
+.cp-status__page--min-400 { min-height: 400px; }   /* (dashboard)/error.tsx */
+.cp-status__page--screen { min-height: 100vh; }    /* not-found.tsx, global-error.tsx: min-h-screen */
+
+/* Icon well: rounded-full p-3 — a 56px disc around the 32px glyph */
+.cp-status__well {
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-full, 9999px);
+}
+.cp-status__well--danger { background-color: var(--red-100, #ffe2e2); }   /* error, global-error */
+.cp-status__well--info   { background-color: var(--blue-100, #dbeafe); }  /* not-found */
+
+/* Glyph: inline heroicons-v1 outline, h-8 w-8, stroke currentColor width 2, fill none */
+.cp-status__glyph {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+}
+.cp-status__glyph--danger { color: var(--red-600, #e7000b); }   /* exclamation-triangle: 3.9:1 on red-100 */
+.cp-status__glyph--brand  { color: var(--yu-navy, #153974); }   /* emoji-sad: 9.2:1 on blue-100 */
+
+/* Text block: space-y-2 (error.tsx, not-found.tsx). global-error.tsx has no wrapper — heading and body
+   are direct children of the gap-4 column, so they sit 16px apart. */
+.cp-status__text > * + * { margin-top: var(--space-2, 8px); }
+.cp-status__title {
+  margin: 0;
+  font: 600 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+.cp-status__body {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+/* Development-only <details class="mt-4 text-left"> in (dashboard)/error.tsx */
+.cp-status__details {
+  margin: var(--space-4, 16px) 0 0;
+  text-align: left;
+}
+.cp-status__summary {
+  cursor: pointer;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+.cp-status__pre {
+  margin: var(--space-2, 8px) 0 0;
+  padding: var(--space-2, 8px);
+  overflow: auto;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--gray-100, #f3f4f6);
+  font: 400 12px/16px var(--font-mono, "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--gray-700, #364153);
+}
+
+/* Action: a hand-rolled <button> (error pages) or next/link <a> (not-found), not the Button primitive.
+   rounded-md bg-[#153974] px-4 py-2 text-sm font-medium text-white hover:bg-[#003E7E] — no transition,
+   no height class (36px), no pointer cursor on the <button> (preflight); the <a> keeps the UA pointer. */
+.cp-status__action {
+  display: inline-block;
+  margin: 0;
+  border: 0 solid;
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-align: center;
+  text-decoration: none;
+  appearance: none;
+}
+.cp-status__action:hover,
+.cp-status__action.is-hover { background-color: var(--yu-navy-hover, #003e7e); }
+/* focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:ring-offset-2 — on any focus (error.tsx, not-found.tsx).
+   yu-cyan is 2.8:1 against the white offset — source pair, kept, flagged. */
+.cp-status__action:focus,
+.cp-status__action.is-focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px var(--yu-cyan, #00aaca);
+}
+/* global-error.tsx: no focus classes at all — only the UA focus ring. */
+.cp-status__action--plain:focus,
+.cp-status__action--plain.is-focus {
+  outline: revert;
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------- Statistics centered state Card
+   <Card className="max-w-2xl mx-auto p-8 text-center"> — .cp-card gives the hairline, white fill, shadow-sm,
+   gray-900 text and 16px/24px body; this modifier adds the page's classes. */
+.cp-card.cp-status__stat {
+  max-width: var(--container-2xl, 672px);
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--space-8, 32px);
+  text-align: center;
+}
+/* Lucide w-16 h-16 mx-auto mb-4 */
+.cp-status__stat-icon {
+  display: block;
+  width: var(--space-16, 64px);
+  height: var(--space-16, 64px);
+  margin: 0 auto var(--space-4, 16px);
+}
+.cp-status__stat-icon--muted  { color: var(--gray-400, #99a1af); }  /* BarChart3 — 2.6:1 on white, source pair, flagged */
+.cp-status__stat-icon--danger { color: var(--red-500, #fb2c36); }   /* AlertCircle */
+/* DEPARTMENT_NOT_SET: w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4 + Info w-8 h-8 text-[#3069B3] */
+.cp-status__stat-well {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-16, 64px);
+  height: var(--space-16, 64px);
+  margin: 0 auto var(--space-4, 16px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--blue-100, #dbeafe);
+}
+.cp-status__stat-well-icon {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  color: var(--yu-blue, #3069b3);
+}
+/* h2 text-2xl font-bold mb-2 — color inherited from the Card (gray-900) */
+.cp-status__stat-title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* p text-gray-600, then mb-4 (no data), mb-6 (department not set) or nothing (error) */
+.cp-status__stat-body {
+  margin: 0;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+.cp-status__stat-body--mb-4 { margin-bottom: var(--space-4, 16px); }
+.cp-status__stat-body--mb-6 { margin-bottom: var(--space-6, 24px); }
+/* <Link> inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg
+   hover:opacity-90 transition-opacity — no text class: inherits the Card's 16px/24px at 400, so 48px tall */
+.cp-status__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px) var(--space-6, 24px);
+  border-radius: var(--radius-lg, 8px);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  text-decoration: none;
+  transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-status__cta:hover,
+.cp-status__cta.is-hover { opacity: var(--opacity-hover-wash, 0.9); }
+.cp-status__cta-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+
+/* ---------------------------------------------------------------- Admin empty box (admin/courses)
+   rounded-2xl border border-slate-200 bg-white p-12 text-center */
+.cp-status__empty-box {
+  padding: var(--space-12, 48px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  text-align: center;
+}
+/* BookOpen mx-auto h-12 w-12 text-slate-300 — 1.5:1 on white, source pair, flagged */
+.cp-status__empty-box-icon {
+  display: block;
+  width: var(--avatar, 48px);
+  height: var(--avatar, 48px);
+  margin: 0 auto;
+  color: var(--slate-300, #cad5e2);
+}
+.cp-status__empty-box-text {
+  margin: var(--space-4, 16px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+
+/* ---------------------------------------------------------------- List empty, two lines (AllPlansModal, statistics)
+   text-center py-12 text-gray-500 (AllPlansModal, statistics plans) or p-8 text-center text-gray-500 (statistics courses) */
+.cp-status__list-empty {
+  padding: var(--space-12, 48px) 0;
+  text-align: center;
+  color: var(--gray-500, #6a7282);
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-status__list-empty--p-8 { padding: var(--space-8, 32px); }
+/* <p class="font-medium mb-1"> */
+.cp-status__list-empty-title {
+  margin: 0 0 var(--space-1, 4px);
+  font: 500 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* <p class="text-sm"> */
+.cp-status__list-empty-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* ---------------------------------------------------------------- Admin error banner (admin/courses)
+   rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600 — 4.4:1, source pair, flagged */
+.cp-status__banner {
+  padding: var(--space-6, 24px);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--red-50, #fef2f2);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-600, #e7000b);
+  text-align: center;
+}
+
+@keyframes cp-spin { to { transform: rotate(360deg); } }
+@keyframes cp-pulse { 50% { opacity: 0.5; } }

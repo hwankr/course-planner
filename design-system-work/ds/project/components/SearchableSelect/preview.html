@@ -1,0 +1,140 @@
+<!-- @dsCard group="Primitives" height=476 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>SearchableSelect — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-900, #101828); }
+  .row { display: flex; gap: 16px; align-items: flex-start; }
+  .row + .row { margin-top: 24px; }
+  .cell { flex: 0 0 calc((100% - 48px) / 4); min-width: 0; }
+  .row--open .cell { flex-basis: calc((100% - 32px) / 3); }
+  .room { min-height: 284px; }
+  .form-label { display: block; margin: 0 0 4px; font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-700, #364153); }
+  .label { margin: 8px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+
+  <div class="cell">
+    <span class="form-label">학과</span>
+    <div class="cp-searchable-select">
+      <div class="cp-searchable-select__control">
+        <input class="cp-searchable-select__input" type="text" value="" placeholder="학과를 검색하세요">
+      </div>
+    </div>
+    <p class="label">default · preflight placeholder</p>
+  </div>
+
+  <div class="cell">
+    <span class="form-label">학과</span>
+    <div class="cp-searchable-select">
+      <div class="cp-searchable-select__control">
+        <input class="cp-searchable-select__input" type="text" value="컴퓨터공학과" placeholder="학과를 검색하세요">
+        <button class="cp-searchable-select__clear" type="button">
+          <svg class="cp-searchable-select__clear-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="label">selected · gray-400 clear X</p>
+  </div>
+
+  <div class="cell">
+    <span class="form-label">복수전공 학과</span>
+    <div class="cp-searchable-select">
+      <div class="cp-searchable-select__control">
+        <input class="cp-searchable-select__input" type="text" value="소프트웨어융합전공" placeholder="학과를 검색하세요">
+        <button class="cp-searchable-select__clear is-hover" type="button">
+          <svg class="cp-searchable-select__clear-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="label">clear X hover (.is-hover) · gray-600</p>
+  </div>
+
+  <div class="cell">
+    <span class="form-label">학과</span>
+    <div class="cp-searchable-select">
+      <div class="cp-searchable-select__control">
+        <input class="cp-searchable-select__input" type="text" value="" placeholder="불러오는 중..." disabled>
+      </div>
+    </div>
+    <p class="label">disabled (loading) · opacity 0.5</p>
+  </div>
+
+</div>
+
+<div class="row row--open">
+
+  <div class="cell">
+    <span class="form-label">학과</span>
+    <div class="room">
+      <div class="cp-searchable-select">
+        <div class="cp-searchable-select__control">
+          <input class="cp-searchable-select__input is-focus" type="text" value="" placeholder="학과를 검색하세요">
+          <button class="cp-searchable-select__clear" type="button">
+            <svg class="cp-searchable-select__clear-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="cp-searchable-select__menu">
+          <div class="cp-searchable-select__group">
+            <div class="cp-searchable-select__group-label">공과대학</div>
+            <button class="cp-searchable-select__option is-selected" type="button">컴퓨터공학과</button>
+            <button class="cp-searchable-select__option is-hover" type="button">전자공학과</button>
+            <button class="cp-searchable-select__option" type="button">기계공학과</button>
+            <button class="cp-searchable-select__option" type="button">화학공학과</button>
+          </div>
+          <div class="cp-searchable-select__group">
+            <div class="cp-searchable-select__group-label">인문대학</div>
+            <button class="cp-searchable-select__option" type="button">국어국문학과</button>
+            <button class="cp-searchable-select__option" type="button">영어영문학과</button>
+            <button class="cp-searchable-select__option" type="button">사학과</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="label">open · grouped · selected, hover, scroll</p>
+  </div>
+
+  <div class="cell">
+    <span class="form-label">학과</span>
+    <div class="room">
+      <div class="cp-searchable-select">
+        <div class="cp-searchable-select__control">
+          <input class="cp-searchable-select__input is-focus" type="text" value="공" placeholder="학과를 검색하세요">
+          <button class="cp-searchable-select__clear" type="button">
+            <svg class="cp-searchable-select__clear-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="cp-searchable-select__menu">
+          <button class="cp-searchable-select__option is-selected" type="button">컴퓨터공학과</button>
+          <button class="cp-searchable-select__option" type="button">전자공학과</button>
+          <button class="cp-searchable-select__option" type="button">기계공학과</button>
+        </div>
+      </div>
+    </div>
+    <p class="label">open · typed 공 · ungrouped (profile)</p>
+  </div>
+
+  <div class="cell">
+    <span class="form-label">부전공 학과</span>
+    <div class="room">
+      <div class="cp-searchable-select">
+        <div class="cp-searchable-select__control">
+          <input class="cp-searchable-select__input is-focus" type="text" value="경영" placeholder="학과를 검색하세요">
+        </div>
+        <div class="cp-searchable-select__menu">
+          <div class="cp-searchable-select__empty">검색 결과가 없습니다.</div>
+        </div>
+      </div>
+    </div>
+    <p class="label">open · no match · empty state</p>
+  </div>
+
+</div>
+
+</body>
+</html>

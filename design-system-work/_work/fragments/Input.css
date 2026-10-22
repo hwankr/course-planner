@@ -1,0 +1,113 @@
+/* Input — hand-translated from src/components/ui/Input.tsx (wrapper <div className="w-full">, the <input>, the error <p>); .cp-input--soft = the inline recipe repeated 43× on bare <input>/<select>/<textarea> in the admin pages and the help feedback form */
+
+/* Block = the wrapper <div className="w-full">. It only sets width; the field inside fills it. */
+.cp-input {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+}
+
+/* Element = the <input>. Tailwind v4 preflight facts kept inside the block: font, letter-spacing and
+   color inherit from the container (body `foreground` #171717, or `gray-900` inside a Card); no margin.
+   Source classes: flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm
+   placeholder:text-gray-400 transition-all duration-200 — `flex` only makes the <input> block-level. */
+.cp-input__field {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: var(--control-md, 40px);
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 1px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--white, #ffffff);
+  color: inherit;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  transition: all var(--duration-base, 200ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* placeholder:text-gray-400 (preflight sets ::placeholder opacity to 1). */
+.cp-input__field::placeholder {
+  color: var(--gray-400, #99a1af);
+  opacity: 1;
+}
+
+/* error prop: border-red-500 on the field (the ring color changes below). Declared BEFORE hover on
+   purpose — in the source, hover:border-gray-400 is a variant and so wins over border-red-500. */
+.cp-input--error .cp-input__field {
+  border-color: var(--red-500, #fb2c36);
+}
+
+/* hover:border-gray-400 — applies to error and disabled fields too (no pointer-events-none here). */
+.cp-input__field:hover,
+.cp-input__field.is-hover {
+  border-color: var(--gray-400, #99a1af);
+}
+
+/* focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:border-transparent — plain focus:, so any
+   focus (mouse or keyboard) shows the ring; the 1px border stays in the layout but turns transparent. */
+.cp-input__field:focus,
+.cp-input__field.is-focus {
+  outline: none;
+  border-color: var(--transparent, #00000000);
+  box-shadow: 0 0 0 2px var(--yu-cyan, #00aaca);
+}
+
+/* error + focus: focus:ring-red-500 replaces focus:ring-[#00AACA] (tailwind-merge keeps the last). */
+.cp-input--error .cp-input__field:focus,
+.cp-input--error .cp-input__field.is-focus {
+  box-shadow: 0 0 0 2px var(--red-500, #fb2c36);
+}
+
+/* disabled:cursor-not-allowed disabled:opacity-50 — the whole field (text, border, placeholder) fades. */
+.cp-input__field:disabled,
+.cp-input__field.is-disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled, 0.5);
+}
+
+/* Element = the error message <p className="mt-1 text-sm text-red-500">, rendered only when error is set. */
+.cp-input__error {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-500, #fb2c36);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Variant: soft — NOT a React component. The class string
+   `w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA]
+    focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20`
+   written inline on bare controls (23 <input>, 16 <select>, 4 <textarea>). In the app there is no
+   wrapper; here the neutral .cp-input block (width 100%) stands in for the parent <div>.
+   No height class (38px = 20 line + 16 padding + 2 border), no background class (preflight:
+   transparent), no placeholder class (preflight: currentColor at 50%), no hover, no transition,
+   no disabled styling. Each override below neutralises the matching base rule above. */
+.cp-input--soft .cp-input__field {
+  display: inline-block;
+  height: auto;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--transparent, #00000000);
+  color: var(--slate-700, #314158);
+  transition: none;
+}
+.cp-input--soft .cp-input__field::placeholder {
+  color: color-mix(in oklab, currentColor 50%, transparent);
+}
+.cp-input--soft .cp-input__field:hover,
+.cp-input--soft .cp-input__field.is-hover {
+  border-color: var(--slate-200, #e2e8f0);
+}
+/* focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20 */
+.cp-input--soft .cp-input__field:focus,
+.cp-input--soft .cp-input__field.is-focus {
+  outline: none;
+  border-color: var(--yu-cyan, #00aaca);
+  box-shadow: 0 0 0 2px var(--yu-cyan-a20, #00aaca33);
+}
+.cp-input--soft .cp-input__field:disabled,
+.cp-input--soft .cp-input__field.is-disabled {
+  cursor: default;
+  opacity: 1;
+}

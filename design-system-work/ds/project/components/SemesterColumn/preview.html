@@ -1,0 +1,139 @@
+<!-- @dsCard group="Planner" height=304 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>SemesterColumn — preview</title>
+<style>
+  body { margin: 16px; background: var(--gray-50, #f9fafb); color: var(--foreground, #171717); font-family: Arial, Helvetica, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .stage { display: flex; align-items: flex-start; gap: 12px; }
+  .col { flex: 0 0 300px; width: 300px; }
+  .cap { margin: 8px 0 0; font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); text-align: center; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="col">
+    <div class="cp-semester-column cp-semester-column--compact">
+      <div class="cp-semester-column__header">
+        <div class="cp-semester-column__header-row">
+          <div>
+            <h3 class="cp-semester-column__title">1학년 1학기</h3>
+            <p class="cp-semester-column__credits">10학점<span class="cp-semester-column__breakdown">(교필10)</span></p>
+          </div>
+          <div class="cp-semester-column__actions">
+            <button class="cp-semester-column__icon-btn cp-semester-column__icon-btn--clear" aria-label="학기 초기화"><svg xmlns="http://www.w3.org/2000/svg" class="cp-semester-column__icon cp-semester-column__icon--clear" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path></svg></button>
+            <button class="cp-semester-column__icon-btn cp-semester-column__icon-btn--delete" aria-label="학기 삭제"><svg xmlns="http://www.w3.org/2000/svg" class="cp-semester-column__icon cp-semester-column__icon--delete" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="cp-semester-column__body">
+        <div class="cp-semester-column__list is-collapsed">
+          <div class="cp-semester-column__item" role="button" tabindex="0" aria-roledescription="draggable">
+            <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+              <div class="cp-course-card__row">
+                <div class="cp-course-card__content">
+                  <button class="cp-course-card__pill cp-course-card__pill--planned" aria-label="상태 변경: 계획" title="클릭하여 상태 변경: 예정 ↔ 이수">예정</button>
+                  <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+                  <span class="cp-course-card__name">대학글쓰기</span>
+                  <span class="cp-course-card__credits">2학점</span>
+                </div>
+                <button class="cp-course-card__remove" aria-label="과목 제거"><svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="cp-semester-column__item" role="button" tabindex="0" aria-roledescription="draggable">
+            <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+              <div class="cp-course-card__row">
+                <div class="cp-course-card__content">
+                  <button class="cp-course-card__pill cp-course-card__pill--planned" aria-label="상태 변경: 계획" title="클릭하여 상태 변경: 예정 ↔ 이수">예정</button>
+                  <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+                  <span class="cp-course-card__name">실용영어</span>
+                  <span class="cp-course-card__credits">2학점</span>
+                </div>
+                <button class="cp-course-card__remove" aria-label="과목 제거"><svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="cp-semester-column__item" role="button" tabindex="0" aria-roledescription="draggable">
+            <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+              <div class="cp-course-card__row">
+                <div class="cp-course-card__content">
+                  <button class="cp-course-card__pill cp-course-card__pill--planned" aria-label="상태 변경: 계획" title="클릭하여 상태 변경: 예정 ↔ 이수">예정</button>
+                  <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+                  <span class="cp-course-card__name">컴퓨팅사고와데이터</span>
+                  <span class="cp-course-card__credits">2학점</span>
+                </div>
+                <button class="cp-course-card__remove" aria-label="과목 제거"><svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+              </div>
+            </div>
+          </div>
+          <div class="cp-semester-column__item" role="button" tabindex="0" aria-roledescription="draggable">
+            <div class="cp-course-card cp-course-card--compact cp-course-card--planned">
+              <div class="cp-course-card__row">
+                <div class="cp-course-card__content">
+                  <button class="cp-course-card__pill cp-course-card__pill--planned" aria-label="상태 변경: 계획" title="클릭하여 상태 변경: 예정 ↔ 이수">예정</button>
+                  <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+                  <span class="cp-course-card__name">인간과사회</span>
+                  <span class="cp-course-card__credits">2학점</span>
+                </div>
+                <button class="cp-course-card__remove" aria-label="과목 제거"><svg xmlns="http://www.w3.org/2000/svg" class="cp-course-card__remove-icon" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg></button>
+              </div>
+            </div>
+          </div>
+          <button class="cp-semester-column__more">+2개 더 보기</button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">default · compact · 6과목 중 4개 표시</p>
+  </div>
+
+  <div class="col">
+    <div class="cp-semester-column cp-semester-column--compact is-focus">
+      <div class="cp-semester-column__header">
+        <div class="cp-semester-column__header-row">
+          <div>
+            <h3 class="cp-semester-column__title">1학년 2학기</h3>
+            <p class="cp-semester-column__credits">0학점</p>
+          </div>
+          <div class="cp-semester-column__actions">
+            <button class="cp-semester-column__icon-btn cp-semester-column__icon-btn--delete" aria-label="학기 삭제"><svg xmlns="http://www.w3.org/2000/svg" class="cp-semester-column__icon cp-semester-column__icon--delete" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
+            <span class="cp-semester-column__badge">Focus</span>
+          </div>
+        </div>
+      </div>
+      <div class="cp-semester-column__body">
+        <div class="cp-semester-column__empty">
+          <p class="cp-semester-column__empty-text">과목 리스트에서 + 버튼으로 과목을 추가하세요</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">isFocused · empty</p>
+  </div>
+
+  <div class="col">
+    <div class="cp-semester-column cp-semester-column--compact is-over">
+      <div class="cp-semester-column__header">
+        <div class="cp-semester-column__header-row">
+          <div>
+            <h3 class="cp-semester-column__title">2학년 1학기</h3>
+            <p class="cp-semester-column__credits">0학점</p>
+          </div>
+          <div class="cp-semester-column__actions">
+            <button class="cp-semester-column__icon-btn cp-semester-column__icon-btn--delete" aria-label="학기 삭제"><svg xmlns="http://www.w3.org/2000/svg" class="cp-semester-column__icon cp-semester-column__icon--delete" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg></button>
+          </div>
+        </div>
+      </div>
+      <div class="cp-semester-column__body">
+        <div class="cp-semester-column__empty">
+          <p class="cp-semester-column__empty-text">과목을 드래그하세요</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">isOver · drop target · empty</p>
+  </div>
+
+</div>
+</body>
+</html>

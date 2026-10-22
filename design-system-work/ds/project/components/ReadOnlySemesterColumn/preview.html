@@ -1,0 +1,131 @@
+<!-- @dsCard group="Planner" height=387 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>ReadOnlySemesterColumn — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); }
+  .row { display: flex; gap: 16px; align-items: flex-start; }
+  .col { flex: 1 1 0; min-width: 0; }
+  .cap { margin: 8px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+<div class="row">
+
+  <div class="col">
+    <div class="cp-read-only-semester-column">
+      <div class="cp-read-only-semester-column__header">
+        <div class="cp-read-only-semester-column__header-row">
+          <div>
+            <h4 class="cp-read-only-semester-column__title">1학년 1학기</h4>
+            <p class="cp-read-only-semester-column__credits">11학점 · 4과목<span class="cp-read-only-semester-column__breakdown">(전핵6 · 교필2 · 교선3)</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="cp-read-only-semester-column__list">
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--major-required">전핵</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">자료구조</p>
+            <p class="cp-read-only-semester-column__code">CSE2010</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">3학점</span>
+        </div>
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--major-required">전핵</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">알고리즘</p>
+            <p class="cp-read-only-semester-column__code">CSE2020</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">3학점</span>
+        </div>
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--general-required">교필</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">대학글쓰기</p>
+            <p class="cp-read-only-semester-column__code">GEN1001</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">2학점</span>
+        </div>
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--general-elective">교선</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">AI기반빅데이터분석을통한지역재생정보활용</p>
+            <p class="cp-read-only-semester-column__code">GEN2045</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">3학점</span>
+        </div>
+      </div>
+    </div>
+    <p class="cap">default · 전핵 · 교필 · 교선 · truncated name</p>
+  </div>
+
+  <div class="col">
+    <div class="cp-read-only-semester-column cp-read-only-semester-column--compact">
+      <div class="cp-read-only-semester-column__header">
+        <div class="cp-read-only-semester-column__header-row">
+          <div>
+            <h4 class="cp-read-only-semester-column__title">1학년 2학기</h4>
+            <p class="cp-read-only-semester-column__credits">11학점 · 4과목<span class="cp-read-only-semester-column__breakdown">(전필3 · 전선3 · 교직2 · 자선3)</span></p>
+          </div>
+          <button class="cp-read-only-semester-column__toggle">접기</button>
+        </div>
+      </div>
+      <div class="cp-read-only-semester-column__list">
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--major-compulsory">전필</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">운영체제</p>
+            <p class="cp-read-only-semester-column__code">CSE3030</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">3학점</span>
+        </div>
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--major-elective">전선</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">데이터베이스</p>
+            <p class="cp-read-only-semester-column__code">CSE3040</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">3학점</span>
+        </div>
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--teaching">교직</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">교육심리학</p>
+            <p class="cp-read-only-semester-column__code">EDU1002</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">2학점</span>
+        </div>
+        <div class="cp-read-only-semester-column__row">
+          <span class="cp-read-only-semester-column__chip cp-read-only-semester-column__chip--free-elective">자선</span>
+          <div class="cp-read-only-semester-column__content">
+            <p class="cp-read-only-semester-column__name">경영학원론</p>
+            <p class="cp-read-only-semester-column__code">BUS1001</p>
+          </div>
+          <span class="cp-read-only-semester-column__course-credits">3학점</span>
+        </div>
+      </div>
+    </div>
+    <p class="cap">compact · expanded · 접기 · 전필 · 전선 · 교직 · 자선</p>
+  </div>
+
+  <div class="col">
+    <div class="cp-read-only-semester-column cp-read-only-semester-column--compact is-hover">
+      <div class="cp-read-only-semester-column__header">
+        <div class="cp-read-only-semester-column__header-row">
+          <div>
+            <h4 class="cp-read-only-semester-column__title">2학년 1학기</h4>
+            <p class="cp-read-only-semester-column__credits">9학점 · 3과목<span class="cp-read-only-semester-column__breakdown">(전핵3 · 교필3 · 자선3)</span></p>
+          </div>
+          <button class="cp-read-only-semester-column__toggle">펼치기</button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">compact · collapsed · 펼치기 · is-hover (shadow-md)</p>
+  </div>
+
+</div>
+</body>
+</html>

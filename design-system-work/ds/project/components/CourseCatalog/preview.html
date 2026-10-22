@@ -1,0 +1,286 @@
+<!-- @dsCard group="Planner" height=736 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>CourseCatalog — preview</title>
+<style>
+  body { margin: 16px; background: var(--gray-50, #f9fafb); color: #171717; font-family: Arial, Helvetica, sans-serif; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .section + .section { margin-top: 24px; }
+  .label { margin: 0 0 8px; font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); }
+  .row { display: flex; align-items: flex-start; gap: 12px; }
+  .col { flex: 0 0 280px; width: 280px; }
+  .grow { flex: 1 1 auto; min-width: 0; }
+  .stack { display: flex; flex-direction: column; gap: 6px; }
+  .swatches { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .cap { margin: 8px 0 0; font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="section">
+  <div class="cp-course-catalog">
+
+    <div class="cp-course-catalog__header">
+      <div class="cp-course-catalog__title-row">
+        <div class="cp-course-catalog__heading">
+          <h2 class="cp-course-catalog__title">과목 리스트</h2>
+          <div class="cp-course-catalog__subtitle-row">
+            <span class="cp-course-catalog__year">2026</span>
+            <p class="cp-course-catalog__subtitle">컴퓨터공학과 커리큘럼</p>
+            <button type="button" class="cp-course-catalog__help" aria-label="커리큘럼 안내">
+              <svg class="cp-course-catalog__icon cp-course-catalog__icon--sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="cp-course-catalog__actions">
+          <span class="cp-course-catalog__count">9개</span>
+          <div class="cp-course-catalog__view">
+            <button type="button" class="cp-course-catalog__view-btn" aria-label="카드 뷰">
+              <svg class="cp-course-catalog__icon cp-course-catalog__icon--sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+            </button>
+            <button type="button" class="cp-course-catalog__view-btn is-active" aria-label="리스트 뷰">
+              <svg class="cp-course-catalog__icon cp-course-catalog__icon--sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h.01"/><path d="M3 12h.01"/><path d="M3 19h.01"/><path d="M8 5h13"/><path d="M8 12h13"/><path d="M8 19h13"/></svg>
+            </button>
+          </div>
+          <button type="button" class="cp-course-catalog__add">+ 추가</button>
+          <button type="button" class="cp-course-catalog__collapse" aria-label="접기">
+            <svg class="cp-course-catalog__chevron" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="cp-course-catalog__search">
+        <div class="cp-input"><input class="cp-input__field" type="text" placeholder="과목명 또는 코드 검색..." value=""></div>
+        <span class="cp-course-catalog__count cp-course-catalog__count--mobile">9개</span>
+      </div>
+
+      <div class="cp-course-catalog__filters">
+        <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--dept">
+          <span class="cp-course-catalog__filter-label">학과</span>
+          <button type="button" class="cp-course-catalog__chip is-active">주전공</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--purple">복수전공</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--indigo">공통</button>
+        </div>
+        <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--year-sem">
+          <div class="cp-course-catalog__filter-group">
+            <span class="cp-course-catalog__filter-label cp-course-catalog__filter-label--fixed">학년</span>
+            <button type="button" class="cp-course-catalog__chip is-active">전체</button>
+            <button type="button" class="cp-course-catalog__chip">1</button>
+            <button type="button" class="cp-course-catalog__chip is-hover">2</button>
+            <button type="button" class="cp-course-catalog__chip">3</button>
+            <button type="button" class="cp-course-catalog__chip">4</button>
+            <button type="button" class="cp-course-catalog__chip">5</button>
+            <button type="button" class="cp-course-catalog__chip">6</button>
+          </div>
+          <div class="cp-course-catalog__divider"></div>
+          <div class="cp-course-catalog__filter-group">
+            <span class="cp-course-catalog__filter-label cp-course-catalog__filter-label--fixed">학기</span>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald is-active">전체</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald">1학기</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald">2학기</button>
+          </div>
+        </div>
+        <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--category">
+          <span class="cp-course-catalog__filter-label">이수</span>
+          <button type="button" class="cp-course-catalog__chip is-active">전체</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--red">전공핵심</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--rose">전공필수</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--orange">전공선택</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--blue">교양필수</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--green">교양선택</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--violet">교직</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--gray">자유선택</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cp-course-catalog__banner cp-course-catalog__banner--focus"><span class="cp-course-catalog__banner-strong">1학년 1학기</span>에 추가 중 — + 버튼을 클릭하세요</div>
+
+    <div class="cp-course-catalog__content">
+      <div class="cp-course-catalog__groups">
+
+        <div class="cp-course-catalog__group">
+          <div class="cp-course-catalog__group-header">
+            <div class="cp-course-catalog__group-title">1학년 1학기</div>
+            <div class="cp-course-catalog__group-meta">4과목 · 10학점</div>
+          </div>
+          <div class="cp-course-catalog__group-list cp-course-catalog__group-list--list">
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--general-required">교필</span>
+                <span class="cp-course-catalog__name">대학글쓰기</span>
+                <span class="cp-course-catalog__credits">2학점</span>
+                <button type="button" class="cp-course-catalog__add-btn" aria-label="대학글쓰기 추가">+</button>
+              </div>
+            </div>
+            <div class="cp-course-catalog__item is-in-plan">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--general-required">교필</span>
+                <span class="cp-course-catalog__name">영어회화</span>
+                <span class="cp-course-catalog__credits">2학점</span>
+                <span class="cp-course-catalog__tag--in-plan">추가됨</span>
+              </div>
+            </div>
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row is-hover">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--major-required">전핵</span>
+                <span class="cp-course-catalog__name">컴퓨터프로그래밍</span>
+                <span class="cp-course-catalog__credits">3학점</span>
+                <button type="button" class="cp-course-catalog__add-btn is-hover" aria-label="컴퓨터프로그래밍 추가">+</button>
+              </div>
+            </div>
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--general-elective">교선</span>
+                <span class="cp-course-catalog__name">미적분학</span>
+                <span class="cp-course-catalog__credits">3학점</span>
+                <button type="button" class="cp-course-catalog__add-btn" aria-label="미적분학 추가">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-course-catalog__group">
+          <div class="cp-course-catalog__group-header">
+            <div class="cp-course-catalog__group-title">1학년 2학기</div>
+            <div class="cp-course-catalog__group-meta">3과목 · 8학점</div>
+          </div>
+          <div class="cp-course-catalog__group-list cp-course-catalog__group-list--list">
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--major-compulsory">전필</span>
+                <span class="cp-course-catalog__name">이산수학</span>
+                <span class="cp-course-catalog__credits">3학점</span>
+                <button type="button" class="cp-course-catalog__add-btn" disabled aria-label="이산수학 추가">+</button>
+              </div>
+            </div>
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--major-elective">전선</span>
+                <span class="cp-course-catalog__name">소프트웨어공학및실습프로젝트</span>
+                <span class="cp-course-catalog__credits">3학점</span>
+                <button type="button" class="cp-course-catalog__add-btn" aria-label="소프트웨어공학및실습프로젝트 추가">+</button>
+              </div>
+            </div>
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--teaching">교직</span>
+                <span class="cp-course-catalog__name">교육학개론</span>
+                <span class="cp-course-catalog__credits">2학점</span>
+                <button type="button" class="cp-course-catalog__add-btn" aria-label="교육학개론 추가">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-course-catalog__group">
+          <div class="cp-course-catalog__group-header">
+            <div class="cp-course-catalog__group-title">기타</div>
+            <div class="cp-course-catalog__group-meta">2과목 · 6학점</div>
+          </div>
+          <div class="cp-course-catalog__group-list cp-course-catalog__group-list--list">
+            <div class="cp-course-catalog__item">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--free-elective">자선</span>
+                <span class="cp-course-catalog__name">창업과 경영</span>
+                <span class="cp-course-catalog__credits">3학점</span>
+                <span class="cp-course-catalog__tag--custom">커스텀</span>
+                <button type="button" class="cp-course-catalog__add-btn" aria-label="창업과 경영 추가">+</button>
+              </div>
+            </div>
+            <div class="cp-course-catalog__item is-in-plan">
+              <div class="cp-course-catalog__row">
+                <span class="cp-course-catalog__badge cp-course-catalog__badge--major-required">전핵</span>
+                <span class="cp-course-catalog__name">자료구조</span>
+                <span class="cp-course-catalog__credits">3학점</span>
+                <span class="cp-course-catalog__tag--in-plan">추가됨</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <p class="cap">list view · grouped (no filter) · 1학년 1학기 focused · row hover + add hover · 추가됨 rows at opacity-50 · disabled + while adding (shown on one row; in the app every + grays out together) · 학년 2 chip hover</p>
+</div>
+
+<div class="section">
+  <p class="label">Card view items (CourseCard default mode inside the draggable wrapper) · filter-chip and row-badge states that cannot co-exist above</p>
+  <div class="row">
+
+    <div class="col">
+      <div class="cp-course-catalog__item">
+        <div class="cp-course-card cp-course-card--planned">
+          <div class="cp-course-card__row">
+            <div class="cp-course-card__content">
+              <div class="cp-course-card__chips">
+                <span class="cp-course-card__chip cp-course-card__chip--free-elective">자유선택</span>
+              </div>
+              <p class="cp-course-card__name">창업과 경영</p>
+              <p class="cp-course-card__credits">3학점</p>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="cp-course-catalog__add-btn cp-course-catalog__add-btn--card" aria-label="창업과 경영을(를) 학기에 추가">+</button>
+        <div class="cp-course-catalog__ribbon cp-course-catalog__ribbon--custom">커스텀</div>
+      </div>
+      <p class="cap">card view · 커스텀 ribbon · w-6 add button</p>
+    </div>
+
+    <div class="col">
+      <div class="cp-course-catalog__item is-in-plan">
+        <div class="cp-course-card cp-course-card--planned cp-course-card--disabled">
+          <div class="cp-course-card__row">
+            <div class="cp-course-card__content">
+              <div class="cp-course-card__chips">
+                <span class="cp-course-card__chip cp-course-card__chip--general-required">교양필수</span>
+              </div>
+              <p class="cp-course-card__name">대학글쓰기</p>
+              <p class="cp-course-card__credits">2학점</p>
+            </div>
+          </div>
+        </div>
+        <div class="cp-course-catalog__ribbon cp-course-catalog__ribbon--in-plan">추가됨</div>
+      </div>
+      <p class="cap">card view · in plan: 추가됨 ribbon, opacity-50 wrapper, no add button</p>
+    </div>
+
+    <div class="grow">
+      <div class="stack">
+        <div class="swatches">
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--red is-active">전공핵심</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--rose is-active">전공필수</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--orange is-active">전공선택</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--blue is-active">교양필수</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--green is-active">교양선택</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--violet is-active">교직</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--gray is-active">자유선택</button>
+        </div>
+        <div class="swatches">
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--purple is-active">복수전공</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--orange is-active">부전공</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--orange">부전공</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--indigo is-active">공통</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald is-hover">1학기</button>
+          <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--red is-hover">전공핵심</button>
+        </div>
+        <div class="swatches">
+          <span class="cp-course-catalog__badge cp-course-catalog__badge--double-major">복수</span>
+          <span class="cp-course-catalog__badge cp-course-catalog__badge--minor">부전</span>
+          <span class="cp-course-catalog__badge cp-course-catalog__badge--common">공통</span>
+          <button type="button" class="cp-course-catalog__view-btn is-hover" aria-label="카드 뷰">
+            <svg class="cp-course-catalog__icon cp-course-catalog__icon--sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+          </button>
+          <button type="button" class="cp-course-catalog__add is-hover">+ 추가</button>
+        </div>
+      </div>
+      <p class="cap">이수 chips active · 복수전공/부전공/공통 active, 부전공 inactive, 1학기 + 전공핵심 hover · row badges 복수/부전/공통 · view toggle hover · + 추가 hover</p>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,385 @@
+{
+ "Logos": {
+  "yu-logo.svg": {
+   "blob": "b491302b30a400f943b531324607b6d5",
+   "size": 6689,
+   "type": "image/svg+xml"
+  },
+  "yu-logo-white.svg": {
+   "blob": "15ae0ea0fd2d5e39f8bb5f2685bb207e",
+   "size": 7783,
+   "type": "image/svg+xml"
+  }
+ },
+ "App Icons": {
+  "icon-192x192.png": {
+   "blob": "da9342c609739c34cb5f876cf0179dd7",
+   "size": 50831,
+   "type": "image/png"
+  },
+  "icon-512x512.png": {
+   "blob": "6b9e9a0ef727691111a8ec334d9ebec7",
+   "size": 334628,
+   "type": "image/png"
+  },
+  "icon-maskable-192.png": {
+   "blob": "4434c1d6866a3d333a8006fd96478f82",
+   "size": 27154,
+   "type": "image/png"
+  },
+  "icon-maskable-512.png": {
+   "blob": "a6cf3a7edd910b2921c8f73305260e52",
+   "size": 171469,
+   "type": "image/png"
+  },
+  "apple-icon.png": {
+   "blob": "5326e18161b563bc51c0ada731432f15",
+   "size": 44006,
+   "type": "image/png"
+  },
+  "opengraph-image.png": {
+   "blob": "800201c983e428145826b5a013b69ebb",
+   "size": 237575,
+   "type": "image/png"
+  }
+ },
+ "Screenshots": {
+  "course-catalog.png": {
+   "blob": "58e51571359dc26c39a36548c4c554d6",
+   "size": 102762,
+   "type": "image/png"
+  },
+  "onboarding-screen.png": {
+   "blob": "51c326220433694693ed8a28d66ee148",
+   "size": 184988,
+   "type": "image/png"
+  },
+  "planner-semesters.png": {
+   "blob": "4670e8e9d25cd50cac4623e5e2264f6f",
+   "size": 91546,
+   "type": "image/png"
+  },
+  "requirements-widget.png": {
+   "blob": "de32a3bd91c6d88d536d8129f4ff0575",
+   "size": 20995,
+   "type": "image/png"
+  },
+  "statistics-anonymous-plan.png": {
+   "blob": "0665777944c6f07b67cebbc40ae20258",
+   "size": 138524,
+   "type": "image/png"
+  },
+  "statistics-overview.png": {
+   "blob": "66af649b0aed09c9a485e1e26a436601",
+   "size": 49244,
+   "type": "image/png"
+  },
+  "statistics-ranking.png": {
+   "blob": "9f309914963d36a559720721938b3154",
+   "size": 106170,
+   "type": "image/png"
+  },
+  "yu-graduation-audit-highlight.png": {
+   "blob": "a1e3c1cce841c0d79d27123e5c445d64",
+   "size": 199854,
+   "type": "image/png"
+  },
+  "yu-portal-highlight.png": {
+   "blob": "be29c96dfcbdab3f41c4a8514677b0d8",
+   "size": 461604,
+   "type": "image/png"
+  },
+  "yu-portal-system-highlight.png": {
+   "blob": "274ee7985f4635a173ad82d96e12f1df",
+   "size": 283930,
+   "type": "image/png"
+  }
+ },
+ "Icons": {
+  "x.svg": {
+   "blob": "1584905add813a3ab4a211fa78ec3235",
+   "size": 274,
+   "type": "image/svg+xml"
+  },
+  "arrow-left.svg": {
+   "blob": "e7a22737e1fb0127529528f7a8cbc638",
+   "size": 285,
+   "type": "image/svg+xml"
+  },
+  "trash-2.svg": {
+   "blob": "d38d314a90e3e32dd18927e98920aebe",
+   "size": 424,
+   "type": "image/svg+xml"
+  },
+  "loader-2.svg": {
+   "blob": "f82e2a85a18dada913e4c1558f61bd8d",
+   "size": 267,
+   "type": "image/svg+xml"
+  },
+  "search.svg": {
+   "blob": "4a5bd1a7837896c66c744f69cf3ac640",
+   "size": 296,
+   "type": "image/svg+xml"
+  },
+  "plus.svg": {
+   "blob": "ebe81654e2e30b5dbd3f52b7fb614505",
+   "size": 273,
+   "type": "image/svg+xml"
+  },
+  "pencil.svg": {
+   "blob": "2b7f67b46690e11f64aa3d369b05c115",
+   "size": 396,
+   "type": "image/svg+xml"
+  },
+  "megaphone.svg": {
+   "blob": "4c7ce9b6490074348acfff596e7484e3",
+   "size": 458,
+   "type": "image/svg+xml"
+  },
+  "info.svg": {
+   "blob": "bdef179956e15f613194d300a684ffe1",
+   "size": 318,
+   "type": "image/svg+xml"
+  },
+  "message-square.svg": {
+   "blob": "28814b8f7e9ef780418e641b29fc3d95",
+   "size": 361,
+   "type": "image/svg+xml"
+  },
+  "mail.svg": {
+   "blob": "441199103fe3b28cbd3f46dba30c36a0",
+   "size": 333,
+   "type": "image/svg+xml"
+  },
+  "help-circle.svg": {
+   "blob": "b57b5fe0f723fac37c484f04a4be2379",
+   "size": 353,
+   "type": "image/svg+xml"
+  },
+  "clock.svg": {
+   "blob": "dd69b3aedede8cad98a7d299bffe8812",
+   "size": 291,
+   "type": "image/svg+xml"
+  },
+  "chevron-right.svg": {
+   "blob": "bf9d941f5a0099b15058ab997799aec2",
+   "size": 258,
+   "type": "image/svg+xml"
+  },
+  "check-circle-2.svg": {
+   "blob": "1051315cd2df2ee0b018c8490a0a28cb",
+   "size": 302,
+   "type": "image/svg+xml"
+  },
+  "check-circle.svg": {
+   "blob": "65322c7490e6e35c4733ef87c90b6274",
+   "size": 310,
+   "type": "image/svg+xml"
+  },
+  "book-open.svg": {
+   "blob": "eca4d8a74e9ec1720ed57447b99ebd44",
+   "size": 400,
+   "type": "image/svg+xml"
+  },
+  "alert-circle.svg": {
+   "blob": "bbeedca1f16e2ee1ab4bc5a43fa658d3",
+   "size": 364,
+   "type": "image/svg+xml"
+  },
+  "zoom-in.svg": {
+   "blob": "7211c09904551eab5eacd27983b576e4",
+   "size": 408,
+   "type": "image/svg+xml"
+  },
+  "users.svg": {
+   "blob": "1ab919444295f910d913c63a6f86e958",
+   "size": 413,
+   "type": "image/svg+xml"
+  },
+  "send.svg": {
+   "blob": "bc9ffc00542a68d257cd8143445479e1",
+   "size": 410,
+   "type": "image/svg+xml"
+  },
+  "reply.svg": {
+   "blob": "77a00fd83fa5dbd8706a64c9c8ada96f",
+   "size": 296,
+   "type": "image/svg+xml"
+  },
+  "message-square-text.svg": {
+   "blob": "341f55b354993d6a43ee098450bff0d6",
+   "size": 450,
+   "type": "image/svg+xml"
+  },
+  "log-in.svg": {
+   "blob": "73140d995ad4d3002c951349e78df03b",
+   "size": 343,
+   "type": "image/svg+xml"
+  },
+  "list.svg": {
+   "blob": "c7dcea03dfbeed8660c97b3e598b6575",
+   "size": 390,
+   "type": "image/svg+xml"
+  },
+  "layout-grid.svg": {
+   "blob": "2b3cfd2848aab11cf5c3a03e1a49f497",
+   "size": 450,
+   "type": "image/svg+xml"
+  },
+  "eye.svg": {
+   "blob": "bfad0cc8bde86295f1f2351d425b709e",
+   "size": 378,
+   "type": "image/svg+xml"
+  },
+  "download.svg": {
+   "blob": "51306595b5df07b89b24c8e00015529e",
+   "size": 344,
+   "type": "image/svg+xml"
+  },
+  "copy.svg": {
+   "blob": "6945628ad1b9a1b46e616a01a8e18b50",
+   "size": 356,
+   "type": "image/svg+xml"
+  },
+  "chevron-up.svg": {
+   "blob": "f4416d6fe030a89b467c22f018b1001b",
+   "size": 256,
+   "type": "image/svg+xml"
+  },
+  "chevron-down.svg": {
+   "blob": "ac6978860f265ad770fc3d7b28fb0d6c",
+   "size": 256,
+   "type": "image/svg+xml"
+  },
+  "check.svg": {
+   "blob": "2fb3dc10a99c6ebeaac03748cf14b390",
+   "size": 252,
+   "type": "image/svg+xml"
+  },
+  "bar-chart-3.svg": {
+   "blob": "aeca20b9f262debed3fd758912c05ec5",
+   "size": 354,
+   "type": "image/svg+xml"
+  },
+  "arrow-right.svg": {
+   "blob": "acdba358eeff173b758d3c8e569e7d23",
+   "size": 285,
+   "type": "image/svg+xml"
+  },
+  "graduation-cap.svg": {
+   "blob": "522c55e23e49ef948b8ca016d4b9c1ca",
+   "size": 444,
+   "type": "image/svg+xml"
+  },
+  "user.svg": {
+   "blob": "092d5a40408e16fbc24b2c998f50e416",
+   "size": 318,
+   "type": "image/svg+xml"
+  },
+  "shield.svg": {
+   "blob": "00a3774af98a5a7b2f66086abc35558f",
+   "size": 400,
+   "type": "image/svg+xml"
+  },
+  "calendar-days.svg": {
+   "blob": "4accfdc04690d35ce1c5e72f41688b75",
+   "size": 550,
+   "type": "image/svg+xml"
+  },
+  "calendar.svg": {
+   "blob": "ce2468d7b20fc80e90cddc7cf9ea0e92",
+   "size": 361,
+   "type": "image/svg+xml"
+  },
+  "file-text.svg": {
+   "blob": "12c4ebc8d789fa49a836e46e6822c740",
+   "size": 481,
+   "type": "image/svg+xml"
+  },
+  "alert-triangle.svg": {
+   "blob": "adec43a4b6b52ce3b371aa39f7898c5a",
+   "size": 377,
+   "type": "image/svg+xml"
+  },
+  "user-cog.svg": {
+   "blob": "9fcf9cbdf0127656ca0302fd0af40475",
+   "size": 698,
+   "type": "image/svg+xml"
+  },
+  "star.svg": {
+   "blob": "f03978a712500f2e0526da736313d5a4",
+   "size": 600,
+   "type": "image/svg+xml"
+  },
+  "sparkles.svg": {
+   "blob": "0ff61704667be3671fb565cee3f15c12",
+   "size": 600,
+   "type": "image/svg+xml"
+  },
+  "school.svg": {
+   "blob": "f6770f20e437e689d179647e37feb73c",
+   "size": 537,
+   "type": "image/svg+xml"
+  },
+  "rocket.svg": {
+   "blob": "17aa001c70f9063ba442b9ff3f05e994",
+   "size": 562,
+   "type": "image/svg+xml"
+  },
+  "mouse-pointer-click.svg": {
+   "blob": "b1331c85247b17c8bb56f2f4032d3610",
+   "size": 510,
+   "type": "image/svg+xml"
+  },
+  "menu.svg": {
+   "blob": "50404fa8f453b8b639e8e11dc03cb366",
+   "size": 301,
+   "type": "image/svg+xml"
+  },
+  "log-out.svg": {
+   "blob": "de899e16a393e0e503a4a5d3658c6d0a",
+   "size": 342,
+   "type": "image/svg+xml"
+  },
+  "eye-off.svg": {
+   "blob": "5d87c838eda79f860deb846d42fba0da",
+   "size": 534,
+   "type": "image/svg+xml"
+  },
+  "external-link.svg": {
+   "blob": "27b7ec781b421dd669ececff533bf1e2",
+   "size": 363,
+   "type": "image/svg+xml"
+  },
+  "chrome.svg": {
+   "blob": "ef7f3c4bf060bae5a7f66fb9ba0a3559",
+   "size": 415,
+   "type": "image/svg+xml"
+  },
+  "chevron-left.svg": {
+   "blob": "7094089770df4e134043af8fc906f6de",
+   "size": 258,
+   "type": "image/svg+xml"
+  },
+  "check-check.svg": {
+   "blob": "496d7e2d30db6e556a957ea803acf272",
+   "size": 299,
+   "type": "image/svg+xml"
+  },
+  "building-2.svg": {
+   "blob": "c4fa974de7365a2c7d1ab079cd43729d",
+   "size": 479,
+   "type": "image/svg+xml"
+  },
+  "bell.svg": {
+   "blob": "1493b7a2b7f8038e6a239eee7c3a3594",
+   "size": 410,
+   "type": "image/svg+xml"
+  },
+  "award.svg": {
+   "blob": "7558d9bfab6467de8de576f2d3831cfa",
+   "size": 396,
+   "type": "image/svg+xml"
+  }
+ }
+}

@@ -1,0 +1,76 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<title>Course Planner</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--white, #ffffff); color: var(--gray-900, #101828); font-family: var(--font-body, Arial, Helvetica, sans-serif); overflow: hidden; -webkit-font-smoothing: antialiased; }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; }
+  /* the composition: a 480-wide box on the right half of the 960 layout, clear of the name */
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; overflow: hidden; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .navy { fill: var(--yu-navy, #153974); }
+  .blue { fill: var(--yu-blue, #3069b3); }
+  .cyan { fill: var(--yu-cyan, #00aaca); }
+  .deep { fill: var(--yu-navy-deepest, #0a1e3d); }
+  .tint { fill: var(--yu-tint-ice, #e8f4fd); }
+  .blk { rx: var(--radius-lg, 8px); }
+  /* course-row tiles: space-8 × space-3, radius-sm; cut from the slab in the ground, laid on the tint in yu-blue */
+  .tile { rx: var(--radius-sm, 4px); }
+  .tile.cut { fill: var(--white, #ffffff); }
+  .tile.row { fill: var(--yu-blue, #3069b3); }
+  /* name and tagline, pinned bottom-left on the ground */
+  .words { position: absolute; left: var(--space-6, 24px); right: auto; bottom: var(--space-6, 24px); max-width: 440px; }
+  .name { margin: 0; font-size: 100px; line-height: .95; font-weight: 700; letter-spacing: -0.025em; color: var(--gray-900, #101828); }
+  .tag { margin: var(--space-2, 8px) 0 0 4px; font-size: 14px; line-height: 20px; color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      yu-navy 176×216 bled off the top, first in the box (the primary) · yu-blue 128×176 · yu-cyan 128×64 bled off the bottom (the accent stays small, as the UI spends it) · yu-navy-deepest 160 wide bleeding off the right edge (the landing hero's dark ground) · yu-tint-ice 176×80 bled off the bottom (the tint) — about 45% of 960×288
+  arrangement a flush modular grid like the planner's semester columns: one tall navy slab with satellites, space-4 gutters, the deepest navy as the right-hand edge
+  pattern     tiles, from "geometric, modular, dense UI": course-row tiles space-8 × space-3 at a space-6 pitch, some merged two-wide (80 = space-8 + space-4 + space-8) like a compact course card, cut from the slab in the ground and laid on the tint in yu-blue
+  scales      sides in space-4 multiples (176 = 11×16, 128 = 8×16, 216 = 13.5×16 → 208+8 bleed); gutters space-4; pitch space-6; corners radius-lg, tiles radius-sm
+-->
+<rect class="navy blk" x="16" y="-8" width="176" height="216" rx="8"/>
+<rect class="blue blk" x="208" y="48" width="128" height="176" rx="8"/>
+<rect class="cyan blk" x="208" y="240" width="128" height="64" rx="8"/>
+<rect class="deep blk" x="352" y="-8" width="160" height="304" rx="8"/>
+<rect class="tint blk" x="16" y="224" width="176" height="80" rx="8"/>
+<!-- tiles cut from the navy slab: seven course rows at a space-6 pitch -->
+<rect class="tile cut" x="32" y="24" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="80" y="24" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="128" y="24" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="32" y="48" width="80" height="12" rx="4"/>
+<rect class="tile cut" x="128" y="48" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="32" y="72" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="80" y="72" width="80" height="12" rx="4"/>
+<rect class="tile cut" x="32" y="96" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="80" y="96" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="32" y="120" width="80" height="12" rx="4"/>
+<rect class="tile cut" x="128" y="120" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="32" y="144" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="80" y="144" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="128" y="144" width="32" height="12" rx="4"/>
+<rect class="tile cut" x="32" y="168" width="80" height="12" rx="4"/>
+<!-- tiles laid on the tint in yu-blue: three rows, the last bleeding off -->
+<rect class="tile row" x="32" y="240" width="32" height="12" rx="4"/>
+<rect class="tile row" x="80" y="240" width="80" height="12" rx="4"/>
+<rect class="tile row" x="32" y="264" width="80" height="12" rx="4"/>
+<rect class="tile row" x="128" y="264" width="32" height="12" rx="4"/>
+<rect class="tile row" x="32" y="288" width="32" height="12" rx="4"/>
+<rect class="tile row" x="80" y="288" width="32" height="12" rx="4"/>
+</svg>
+</div>
+<div class="words">
+  <h1 class="name">Course<br>Planner</h1>
+  <p class="tag">영남대학교 학생을 위한 학기별 수강 계획 · 졸업 요건 추적</p>
+</div>
+</div>
+</body>
+</html>

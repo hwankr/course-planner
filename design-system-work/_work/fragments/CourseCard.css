@@ -1,0 +1,298 @@
+/* CourseCard — hand-translated from src/components/features/CourseCard.tsx (Card base from src/components/ui/Card.tsx) */
+
+/* Root. Card base: rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300.
+   Default mode adds mb-2 p-3 cursor-move and the status bg/border, which twMerge lets win over bg-white. */
+.cp-course-card,
+.cp-course-card * {
+  box-sizing: border-box;
+}
+
+.cp-course-card {
+  margin: 0 0 var(--space-2, 8px);
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--status-planned-border, #15397433);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--status-planned-bg, #1539740d);
+  color: var(--gray-900, #101828);
+  font-family: var(--font-body, Arial, Helvetica, sans-serif);
+  line-height: 1.5;
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  transition: box-shadow var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+  cursor: move;
+}
+
+.cp-course-card:hover,
+.cp-course-card.is-hover {
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+/* Status surfaces (statusColors). planned is the default when course.status is missing. */
+.cp-course-card--planned {
+  background-color: var(--status-planned-bg, #1539740d);
+  border-color: var(--status-planned-border, #15397433);
+}
+
+.cp-course-card--enrolled {
+  background-color: var(--status-enrolled-bg, #f0fdf4);
+  border-color: var(--status-enrolled-border, #b9f8cf);
+}
+
+.cp-course-card--completed {
+  background-color: var(--status-completed-bg, #f9fafb);
+  border-color: var(--status-completed-border, #e5e7eb);
+}
+
+.cp-course-card--failed {
+  background-color: var(--status-failed-bg, #fef2f2);
+  border-color: var(--status-failed-border, #ffc9c9);
+}
+
+/* isDragDisabled: opacity-60 cursor-not-allowed (no opacity token at 0.6 — literal kept) */
+.cp-course-card--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Compact mode root: mb-1 px-2 py-1.5 */
+.cp-course-card--compact {
+  margin-bottom: var(--space-1, 4px);
+  padding: var(--space-1-5, 6px) var(--space-2, 8px);
+}
+
+/* Layout */
+.cp-course-card__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.cp-course-card--compact .cp-course-card__row {
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+.cp-course-card__content {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.cp-course-card--compact .cp-course-card__content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+}
+
+.cp-course-card__chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  margin-bottom: var(--space-1, 4px);
+}
+
+/* Category / department chip: text-xs px-1.5 py-0.5 rounded font-medium (fallback = free_elective colors) */
+.cp-course-card__chip {
+  padding: var(--space-0-5, 2px) var(--space-1-5, 6px);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--category-free-elective-bg, #f3f4f6);
+  color: var(--category-free-elective-text, #4a5565);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+.cp-course-card--compact .cp-course-card__chip {
+  padding: var(--space-0-5, 2px) var(--space-1, 4px);
+  font: 500 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: nowrap;
+}
+
+.cp-course-card__chip--major-required {
+  background-color: var(--category-major-required-bg, #ffe2e2);
+  color: var(--category-major-required-text, #c10007);
+}
+
+.cp-course-card__chip--major-compulsory {
+  background-color: var(--category-major-compulsory-bg, #ffe4e6);
+  color: var(--category-major-compulsory-text, #c70036);
+}
+
+.cp-course-card__chip--major-elective {
+  background-color: var(--category-major-elective-bg, #ffedd4);
+  color: var(--category-major-elective-text, #ca3500);
+}
+
+.cp-course-card__chip--general-required {
+  background-color: var(--category-general-required-bg, #dbeafe);
+  color: var(--category-general-required-text, #1447e6);
+}
+
+.cp-course-card__chip--general-elective {
+  background-color: var(--category-general-elective-bg, #dcfce7);
+  color: var(--category-general-elective-text, #008236);
+}
+
+.cp-course-card__chip--teaching {
+  background-color: var(--category-teaching-bg, #ede9fe);
+  color: var(--category-teaching-text, #7008e7);
+}
+
+.cp-course-card__chip--free-elective {
+  background-color: var(--category-free-elective-bg, #f3f4f6);
+  color: var(--category-free-elective-text, #4a5565);
+}
+
+.cp-course-card__chip--double-major {
+  background-color: var(--dept-double-major-bg, #f3e8ff);
+  color: var(--dept-double-major-text, #8200db);
+}
+
+.cp-course-card__chip--minor {
+  background-color: var(--dept-minor-bg, #ffedd4);
+  color: var(--dept-minor-text, #ca3500);
+}
+
+/* Default-mode status pill: text-xs px-2 py-0.5 rounded-full bg-white border.
+   Bare `border` under Tailwind v4 is 1px solid currentColor = the Card's gray-900. */
+.cp-course-card__status {
+  appearance: none;
+  margin: 0;
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  border: 1px solid var(--border-default, #101828);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--white, #ffffff);
+  color: inherit;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Toggle button variant: hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer */
+.cp-course-card__status--button {
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.cp-course-card__status--button:hover,
+.cp-course-card__status--button.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+  border-color: var(--gray-400, #99a1af);
+}
+
+/* Compact filled status pill: px-1.5 py-0.5 rounded text-[9px] font-medium flex-shrink-0 cursor-pointer transition-all */
+.cp-course-card__pill {
+  appearance: none;
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--space-0-5, 2px) var(--space-1-5, 6px);
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--pill-planned-bg, #dbeafe);
+  color: var(--pill-planned-text, #1447e6);
+  font: 500 9px/13.5px var(--font-body, Arial, Helvetica, sans-serif);
+  cursor: pointer;
+  transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.cp-course-card__pill--planned {
+  background-color: var(--pill-planned-bg, #dbeafe);
+  color: var(--pill-planned-text, #1447e6);
+}
+
+.cp-course-card__pill--enrolled {
+  background-color: var(--pill-enrolled-bg, #dcfce7);
+  color: var(--pill-enrolled-text, #008236);
+}
+
+.cp-course-card__pill--completed {
+  background-color: var(--pill-completed-bg, #d0fae5);
+  color: var(--pill-completed-text, #007a55);
+}
+
+.cp-course-card__pill--failed {
+  background-color: var(--pill-failed-bg, #ffe2e2);
+  color: var(--pill-failed-text, #c10007);
+}
+
+/* First-visit hint on a planned pill: animate-pulse ring-2 ring-blue-300/50 */
+.cp-course-card__pill--hint {
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--blue-300, #8ec5ff) 50%, transparent);
+  animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 (offset color is Tailwind's default white) */
+.cp-course-card__pill:hover,
+.cp-course-card__pill.is-hover {
+  box-shadow: 0 0 0 1px var(--white, #ffffff), 0 0 0 3px var(--gray-300, #d1d5dc);
+}
+
+/* Name and credits */
+.cp-course-card__name {
+  margin: 0;
+  color: var(--gray-800, #1e2939);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-course-card--compact .cp-course-card__name {
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+.cp-course-card__credits {
+  margin: var(--space-1, 4px) 0 0;
+  color: var(--gray-500, #6a7282);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+.cp-course-card--compact .cp-course-card__credits {
+  margin: 0;
+  font: 400 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: nowrap;
+}
+
+/* Remove X: ml-2 p-1 hover:bg-white rounded-full transition-colors (compact: p-0.5 flex-shrink-0, no margin) */
+.cp-course-card__remove {
+  appearance: none;
+  margin: 0 0 0 var(--space-2, 8px);
+  padding: var(--space-1, 4px);
+  border: 0;
+  border-radius: var(--radius-full, 9999px);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.cp-course-card__remove:hover,
+.cp-course-card__remove.is-hover {
+  background-color: var(--white, #ffffff);
+}
+
+.cp-course-card--compact .cp-course-card__remove {
+  flex-shrink: 0;
+  margin-left: 0;
+  padding: var(--space-0-5, 2px);
+}
+
+/* The icon itself carries hover:text-red-500 (no transition on the svg in the source) */
+.cp-course-card__remove-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--gray-400, #99a1af);
+}
+
+.cp-course-card__remove-icon:hover,
+.cp-course-card__remove-icon.is-hover {
+  color: var(--red-500, #fb2c36);
+}
+
+.cp-course-card--compact .cp-course-card__remove-icon {
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+}
+
+@keyframes cp-pulse {
+  50% { opacity: 0.5; }
+}

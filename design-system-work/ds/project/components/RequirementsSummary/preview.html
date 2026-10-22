@@ -1,0 +1,150 @@
+<!-- @dsCard group="Planner" height=528 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>RequirementsSummary — preview</title>
+<style>
+  body { margin: 16px; background: var(--gray-50, #f9fafb); font-family: Arial, Helvetica, sans-serif; }
+  .stage { display: flex; flex-direction: column; gap: 16px; }
+  .row { display: flex; gap: 16px; align-items: flex-start; }
+  .row > .cell { flex: 1 1 0; min-width: 0; }
+  .cap { margin: 4px 0 0; font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ready -->
+  <div class="cell">
+    <div class="cp-requirements-summary">
+      <div class="cp-requirements-summary__content">
+        <div class="cp-requirements-summary__header">
+          <div class="cp-requirements-summary__title-group">
+            <span class="cp-requirements-summary__title">졸업 요건</span>
+            <span class="cp-requirements-summary__year">2025년 기준</span>
+          </div>
+          <div class="cp-requirements-summary__percent-group">
+            <span class="cp-requirements-summary__percent">13%</span>
+            <span class="cp-requirements-summary__projected">→ 계획 반영 시 31%</span>
+          </div>
+        </div>
+
+        <div class="cp-requirements-summary__hero">
+          <div class="cp-requirements-summary__bar cp-requirements-summary__bar--lg">
+            <div class="cp-requirements-summary__seg cp-requirements-summary__seg--earned" style="width: 13.076923%"></div>
+            <div class="cp-requirements-summary__seg cp-requirements-summary__seg--enrolled" style="width: 6.923077%"></div>
+            <div class="cp-requirements-summary__seg cp-requirements-summary__seg--planned" style="width: 10.769231%"></div>
+          </div>
+          <span class="cp-requirements-summary__hero-value"><span class="cp-requirements-summary__hero-earned">17</span>/130학점</span>
+        </div>
+        <p class="cp-requirements-summary__legend cp-requirements-summary__legend--hero">
+          <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--earned"></span>이수 17 (기이수 12 포함)</span>
+          <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--enrolled"></span>수강중 9</span>
+          <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--planned"></span>예정 14</span>
+          <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--unplanned"></span>미계획 90</span>
+        </p>
+
+        <div class="cp-requirements-summary__details">
+          <div class="cp-requirements-summary__track">
+            <div class="cp-requirements-summary__track-row">
+              <span class="cp-requirements-summary__track-label">전공</span>
+              <div class="cp-requirements-summary__bar">
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--earned" style="width: 13.636364%"></div>
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--enrolled" style="width: 9.090909%"></div>
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--planned" style="width: 13.636364%"></div>
+              </div>
+              <span class="cp-requirements-summary__track-value"><span class="cp-requirements-summary__track-earned">9</span>/66</span>
+            </div>
+            <p class="cp-requirements-summary__legend cp-requirements-summary__legend--track">
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--earned"></span>이수 9 (기이수 6 포함)</span>
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--enrolled"></span>수강중 6</span>
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--planned"></span>예정 9</span>
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--unplanned"></span>미계획 42</span>
+            </p>
+          </div>
+
+          <div class="cp-requirements-summary__track">
+            <div class="cp-requirements-summary__track-row">
+              <span class="cp-requirements-summary__track-label cp-requirements-summary__track-label--sub">└ 핵심</span>
+              <div class="cp-requirements-summary__bar cp-requirements-summary__bar--sm">
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--earned is-met" style="width: 100%"></div>
+              </div>
+              <span class="cp-requirements-summary__track-value cp-requirements-summary__track-value--sub is-met">✓ <span class="cp-requirements-summary__track-earned">9</span>/9</span>
+            </div>
+            <p class="cp-requirements-summary__legend cp-requirements-summary__legend--track is-met">요건 충족</p>
+          </div>
+
+          <div class="cp-requirements-summary__track">
+            <div class="cp-requirements-summary__track-row">
+              <span class="cp-requirements-summary__track-label">교양</span>
+              <div class="cp-requirements-summary__bar">
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--earned" style="width: 26.666667%"></div>
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--enrolled" style="width: 10%"></div>
+                <div class="cp-requirements-summary__seg cp-requirements-summary__seg--planned" style="width: 16.666667%"></div>
+              </div>
+              <span class="cp-requirements-summary__track-value"><span class="cp-requirements-summary__track-earned">8</span>/30</span>
+            </div>
+            <p class="cp-requirements-summary__legend cp-requirements-summary__legend--track">
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--earned"></span>이수 8 (기이수 6 포함)</span>
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--enrolled"></span>수강중 3</span>
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--planned"></span>예정 5</span>
+              <span class="cp-requirements-summary__legend-item"><span class="cp-requirements-summary__swatch cp-requirements-summary__swatch--unplanned"></span>미계획 14</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="cp-requirements-summary__footer">
+          <span class="cp-requirements-summary__hint">과목 카드의 상태(예정·수강중·이수)를 바꾸면 바로 반영됩니다.</span>
+          <button type="button" class="cp-requirements-summary__edit">
+            <svg class="cp-requirements-summary__edit-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            요건 수정
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">ready · 2025년 기준, 13% → 계획 반영 시 31% · └ 핵심 met (emerald, 요건 충족)</p>
+  </div>
+
+  <!-- loading -->
+  <div class="cell">
+    <div class="cp-requirements-summary">
+      <div class="cp-requirements-summary__content cp-requirements-summary__content--skeleton">
+        <div class="cp-requirements-summary__skeleton"></div>
+      </div>
+    </div>
+    <p class="cap">loading · h-4 gray-200 skeleton, animate-pulse</p>
+  </div>
+
+  <div class="row">
+    <!-- error -->
+    <div class="cell">
+      <div class="cp-requirements-summary cp-requirements-summary--error" role="alert">
+        <div class="cp-requirements-summary__content cp-requirements-summary__content--error">
+          <p class="cp-requirements-summary__message">졸업요건 정보를 불러오지 못했습니다.</p>
+          <button type="button" class="cp-button cp-button--outline cp-button--sm">다시 시도</button>
+        </div>
+      </div>
+      <p class="cap">error · role="alert", border red-200, outline sm Button</p>
+    </div>
+
+    <!-- empty -->
+    <div class="cell">
+      <div class="cp-requirements-summary cp-requirements-summary--empty">
+        <div class="cp-requirements-summary__content cp-requirements-summary__content--empty">
+          <div class="cp-requirements-summary__empty-row">
+            <p class="cp-requirements-summary__prompt">졸업 요건을 설정하세요</p>
+            <div class="cp-requirements-summary__actions">
+              <button type="button" class="cp-button cp-button--outline cp-button--sm">직접 입력</button>
+              <button type="button" class="cp-button cp-button--default cp-button--sm">기본 요건 생성</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="cap">empty · border-dashed, outline + default sm Buttons</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

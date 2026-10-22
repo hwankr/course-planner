@@ -1,0 +1,85 @@
+<!-- @dsCard group="Planner" height=636 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AddSemesterDialog — preview</title>
+<style>
+  /* Layout only. The stage stands in for the planner page (the gray-50 app frame) under the fixed overlay. */
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .stage { position: relative; height: 500px; overflow: hidden; border-radius: 8px; background: var(--gray-50, #f9fafb); }
+  .cap { margin: 4px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); white-space: nowrap; }
+  /* Detail strip: the selector grids and footer at rest, in the Card's text color (gray-900) as inside the panel. */
+  .strip { display: flex; gap: 16px; align-items: flex-start; margin-top: 12px; color: var(--gray-900, #101828); }
+  .cell { display: flex; flex-direction: column; flex: none; }
+  .cell--grade { width: 380px; }
+  .cell--term { width: 220px; }
+  .cell--footer { width: 280px; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="cp-add-semester-dialog cp-add-semester-dialog--staged">
+    <div class="cp-add-semester-dialog__panel">
+      <div class="cp-add-semester-dialog__content">
+        <h2 class="cp-add-semester-dialog__title">학기 추가</h2>
+        <form class="cp-add-semester-dialog__form">
+          <div>
+            <label class="cp-add-semester-dialog__label">학년</label>
+            <div class="cp-add-semester-dialog__grade-grid">
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade">1학년</button>
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade is-selected">2학년</button>
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade">3학년</button>
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade">4학년</button>
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade">5학년</button>
+            </div>
+          </div>
+          <div>
+            <label class="cp-add-semester-dialog__label">학기</label>
+            <div class="cp-add-semester-dialog__term-grid">
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--term is-selected">1학기</button>
+              <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--term">2학기</button>
+            </div>
+          </div>
+          <div class="cp-add-semester-dialog__warning">
+            <p class="cp-add-semester-dialog__warning-text">2학년 1학기는 이미 추가되어 있습니다.</p>
+          </div>
+          <div class="cp-add-semester-dialog__footer">
+            <button type="submit" class="cp-add-semester-dialog__button cp-add-semester-dialog__button--primary" disabled>추가</button>
+            <button type="button" class="cp-add-semester-dialog__button cp-add-semester-dialog__button--outline">취소</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap">duplicate · 2학년 1학기 is already in the plan · 추가 disabled · black/50 overlay over the gray-50 planner page</p>
+
+<div class="strip">
+  <div class="cell cell--grade">
+    <div class="cp-add-semester-dialog__grade-grid">
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade">1학년</button>
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade is-hover">2학년</button>
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade is-selected">3학년</button>
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade" disabled>4학년</button>
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--grade is-selected" disabled>5학년</button>
+    </div>
+    <p class="cap">학년 · default · hover · selected · isLoading · selected + isLoading</p>
+  </div>
+  <div class="cell cell--term">
+    <div class="cp-add-semester-dialog__term-grid">
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--term is-hover">1학기</button>
+      <button type="button" class="cp-add-semester-dialog__segment cp-add-semester-dialog__segment--term is-selected">2학기</button>
+    </div>
+    <p class="cap">학기 · hover · selected (16px label)</p>
+  </div>
+  <div class="cell cell--footer">
+    <div class="cp-add-semester-dialog__footer">
+      <button type="button" class="cp-add-semester-dialog__button cp-add-semester-dialog__button--primary" disabled><svg class="cp-add-semester-dialog__spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="cp-add-semester-dialog__spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="cp-add-semester-dialog__spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>로딩중...</button>
+      <button type="button" class="cp-add-semester-dialog__button cp-add-semester-dialog__button--outline" disabled>취소</button>
+    </div>
+    <p class="cap">footer · isLoading (추가 spinner, 취소 disabled)</p>
+  </div>
+</div>
+</body>
+</html>

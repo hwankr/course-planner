@@ -1,0 +1,403 @@
+/* Callout (pattern) — hand-translated from the inline banner markup in src/app/(dashboard)/statistics/page.tsx, src/app/(dashboard)/layout.tsx, src/app/(auth)/login/page.tsx, src/app/(dashboard)/admin/courses/page.tsx, src/app/(dashboard)/help/feedback/page.tsx, src/components/features/CustomCourseForm.tsx, src/components/features/RequirementForm.tsx (icons: lucide LogIn, Info, AlertTriangle, HelpCircle) */
+
+/* Block = the banner's outer element: a <div>, or the <p> itself for the two CustomCourseForm strips. Eleven recipes,
+   one modifier each, named by source file. The margins the pages put AROUND them (statistics mb-6, login mt-4,
+   feedback mt-3, RequirementForm mb-3) are page rhythm and are not in the block. No recipe sets a text color on
+   its root unless the source does; nothing here depends on the inherited body color. */
+.cp-callout {
+  box-sizing: border-box;
+  margin: 0;
+  font-family: var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-callout *,
+.cp-callout *::before,
+.cp-callout *::after {
+  box-sizing: border-box;
+}
+
+/* ---- Shared elements. Tailwind v4 preflight facts kept inside the block: <p> has no margin; <button> inherits
+   font, color and letter-spacing, has no border, no fill and NO pointer cursor (no recipe sets cursor-pointer);
+   <a> inherits color and text-decoration; <strong> is `bolder` (700 next to the 400 body). ---- */
+
+/* flex items-start gap-3 (statistics, both callouts) */
+.cp-callout__row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+}
+/* flex items-center gap-2 (layout strip message group) */
+.cp-callout__message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+/* flex items-center gap-3 (statistics guest actions, layout strip actions) */
+.cp-callout__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+/* Lucide SVG, always flex-shrink-0; size and color per recipe below. */
+.cp-callout__icon {
+  display: block;
+  flex-shrink: 0;
+}
+.cp-callout__title,
+.cp-callout__text {
+  margin: 0;
+}
+/* <strong> in the statistics info body; <span className="font-bold"> in the login iOS hint */
+.cp-callout__strong {
+  font-weight: 700;
+}
+/* <span className="font-medium"> around "{year}학년 {n}학기" in the CustomCourseForm info strip */
+.cp-callout__medium {
+  font-weight: 500;
+}
+/* Raw <button> reset (none of these buttons is the Button primitive). Recipes add box, type and color. */
+.cp-callout__button {
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  background-color: var(--transparent, #00000000);
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: none;
+  appearance: button;
+  cursor: default;
+}
+
+/* ================================================================ statistics/page.tsx — guest login callout
+   <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg"> (isGuest only) */
+.cp-callout--stat-guest {
+  padding: var(--space-4, 16px);
+  background-color: var(--amber-50, #fffbeb);
+  border: 1px solid var(--amber-200, #fee685);
+  border-radius: var(--radius-lg, 8px);
+}
+/* LogIn: w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0 — 3.1:1 on amber-50, passes the 3:1 icon bar just */
+.cp-callout--stat-guest .cp-callout__icon {
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  margin-top: var(--space-0-5, 2px);
+  color: var(--amber-600, #e17100);
+}
+/* <div class="flex-1"> */
+.cp-callout--stat-guest .cp-callout__body {
+  flex: 1 1 0%;
+}
+/* <p class="text-sm font-medium text-amber-900 mb-1"> (8.7:1) */
+.cp-callout--stat-guest .cp-callout__title {
+  margin-bottom: var(--space-1, 4px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-900, #7b3306);
+}
+/* <p class="text-sm text-amber-800 mb-3"> (6.8:1) */
+.cp-callout--stat-guest .cp-callout__text {
+  margin-bottom: var(--space-3, 12px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+}
+/* <button onClick={loginWithGoogle} class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg
+   hover:bg-amber-700 transition-colors text-sm font-medium"> — white on amber-600 is 3.2:1 in the source, kept, flagged;
+   hover amber-700 reaches 5.0:1. No type attribute, no focus class, no pointer. */
+.cp-callout--stat-guest .cp-callout__button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  background-color: var(--amber-600, #e17100);
+  color: var(--white, #ffffff);
+  border-radius: var(--radius-lg, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-callout--stat-guest .cp-callout__button:hover,
+.cp-callout--stat-guest .cp-callout__button.is-hover {
+  background-color: var(--amber-700, #bb4d00);
+}
+
+/* Underlined amber link — statistics <Link href="/register"> and BOTH strip actions (a <button> and a <Link> share the
+   string): "text-sm font-medium text-amber-900 hover:text-amber-700 underline". No transition in the source.
+   The button reset is repeated here so the strip's <button> renders exactly like its sibling <a>. */
+.cp-callout--stat-guest .cp-callout__link,
+.cp-callout--guest-strip .cp-callout__link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  background-color: var(--transparent, #00000000);
+  appearance: button;
+  letter-spacing: inherit;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-900, #7b3306);
+  text-decoration-line: underline;
+}
+.cp-callout--stat-guest .cp-callout__link:hover,
+.cp-callout--stat-guest .cp-callout__link.is-hover,
+.cp-callout--guest-strip .cp-callout__link:hover,
+.cp-callout--guest-strip .cp-callout__link.is-hover {
+  color: var(--amber-700, #bb4d00);
+}
+
+/* ================================================================ statistics/page.tsx — data-scope info callout
+   <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"> (always rendered) */
+.cp-callout--stat-info {
+  padding: var(--space-4, 16px);
+  background-color: var(--blue-50, #eff6ff);
+  border: 1px solid var(--blue-200, #bedbff);
+  border-radius: var(--radius-lg, 8px);
+}
+/* Info: w-5 h-5 text-[#3069B3] mt-0.5 flex-shrink-0 (5.1:1) */
+.cp-callout--stat-info .cp-callout__icon {
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  margin-top: var(--space-0-5, 2px);
+  color: var(--yu-blue, #3069b3);
+}
+/* <div class="text-sm text-gray-700 space-y-1"> (9.5:1) — no flex-1 here, unlike the guest callout */
+.cp-callout--stat-info .cp-callout__body {
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+.cp-callout--stat-info .cp-callout__body > * + * {
+  margin-top: var(--space-1, 4px);
+}
+/* <p class="font-medium text-gray-900"> — size inherited (16.3:1) */
+.cp-callout--stat-info .cp-callout__title {
+  font-weight: 500;
+  color: var(--gray-900, #101828);
+}
+
+/* ================================================================ (auth)/login/page.tsx — inline form error
+   <div class="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm"> (rendered while `error` is set)
+   red-600 on red-50 is 4.4:1 in the source — kept, flagged */
+.cp-callout--login-error {
+  padding: var(--space-3, 12px);
+  background-color: var(--red-50, #fef2f2);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-md, 6px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-600, #e7000b);
+}
+
+/* ================================================================ admin/courses/page.tsx — list error banner
+   <div class="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600"> (4.4:1, kept, flagged) */
+.cp-callout--admin-error {
+  padding: var(--space-6, 24px);
+  background-color: var(--red-50, #fef2f2);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-2xl, 16px);
+  text-align: center;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-600, #e7000b);
+}
+
+/* ================================================================ (dashboard)/layout.tsx — full-width guest strip
+   <div class="bg-amber-50 border-b border-amber-200"> directly under the header (isGuest only); no radius, no side borders */
+.cp-callout--guest-strip {
+  background-color: var(--amber-50, #fffbeb);
+  border-bottom: 1px solid var(--amber-200, #fee685);
+}
+/* Inner <div class="container mx-auto px-4 py-2 flex items-center justify-between gap-2 flex-wrap"> — Tailwind's
+   `container`: width 100% capped at each viewport breakpoint (the breakpoint widths are layout constants, not tokens). */
+.cp-callout__strip-inner {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+@media (min-width: 640px)  { .cp-callout__strip-inner { max-width: 640px; } }
+@media (min-width: 768px)  { .cp-callout__strip-inner { max-width: 768px; } }
+@media (min-width: 1024px) { .cp-callout__strip-inner { max-width: 1024px; } }
+@media (min-width: 1280px) { .cp-callout__strip-inner { max-width: 1280px; } }
+@media (min-width: 1536px) { .cp-callout__strip-inner { max-width: 1536px; } }
+/* AlertTriangle: w-4 h-4 text-amber-800 (6.8:1) */
+.cp-callout--guest-strip .cp-callout__icon {
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--amber-800, #973c00);
+}
+/* <p class="text-xs sm:text-sm text-amber-800"> — caption below 640px, body-sm from there */
+.cp-callout--guest-strip .cp-callout__text {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+}
+@media (min-width: 640px) {
+  .cp-callout--guest-strip .cp-callout__text {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+/* ================================================================ CustomCourseForm.tsx — focused-semester strips
+   The block IS the <p>. Either/or on focusedSemester:
+   info:    <p class="text-sm text-blue-600 bg-blue-50 rounded-md px-3 py-2">   (4.8:1)
+   warning: <p class="text-sm text-amber-600 bg-amber-50 rounded-md px-3 py-2"> (3.1:1 in the source — kept, flagged)
+   No border on either. */
+.cp-callout--form-info,
+.cp-callout--form-warning {
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-callout--form-info {
+  color: var(--blue-600, #155dfc);
+  background-color: var(--blue-50, #eff6ff);
+}
+.cp-callout--form-warning {
+  color: var(--amber-600, #e17100);
+  background-color: var(--amber-50, #fffbeb);
+}
+
+/* ================================================================ RequirementForm.tsx — help banner
+   <div class="flex items-center gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
+   gray-500 on blue-50 is 4.4:1 at 12px in the source — kept, flagged */
+.cp-callout--req-help {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background-color: var(--blue-50, #eff6ff);
+  border: 1px solid var(--blue-100, #dbeafe);
+  border-radius: var(--radius-md, 6px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* HelpCircle: w-3.5 h-3.5 text-[#00AACA] flex-shrink-0 (2.5:1 on blue-50 — misses the 3:1 icon bar, kept, flagged) */
+.cp-callout--req-help .cp-callout__icon {
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+  color: var(--yu-cyan, #00aaca);
+}
+/* <Link href="/help/graduation-guide" class="text-[#00AACA] hover:text-[#153974] underline"> — size inherited;
+   yu-cyan on blue-50 is 2.5:1 in the source (kept, flagged); hover yu-navy 10.3:1. No transition. */
+.cp-callout--req-help .cp-callout__link {
+  color: var(--yu-cyan, #00aaca);
+  text-decoration-line: underline;
+}
+.cp-callout--req-help .cp-callout__link:hover,
+.cp-callout--req-help .cp-callout__link.is-hover {
+  color: var(--yu-navy, #153974);
+}
+
+/* ================================================================ RequirementForm.tsx — cutoff suggestion box
+   <div class="mb-3 text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2"> (showCutoffSuggestion only) */
+.cp-callout--req-suggest {
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background-color: var(--amber-50, #fffbeb);
+  border: 1px solid var(--amber-200, #fee685);
+  border-radius: var(--radius-md, 6px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* <p class="text-amber-800"> (6.8:1) */
+.cp-callout--req-suggest .cp-callout__text {
+  color: var(--amber-800, #973c00);
+}
+/* <button type="button" class="mt-1.5 inline-flex items-center px-2 py-1 text-xs font-medium text-amber-800 bg-amber-100
+   hover:bg-amber-200 border border-amber-300 rounded transition-colors"> — 6.4:1 at rest, 5.7:1 on hover */
+.cp-callout--req-suggest .cp-callout__button {
+  display: inline-flex;
+  align-items: center;
+  margin-top: var(--space-1-5, 6px);
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  background-color: var(--amber-100, #fef3c6);
+  border: 1px solid var(--amber-300, #ffd230);
+  border-radius: var(--radius-sm, 4px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-callout--req-suggest .cp-callout__button:hover,
+.cp-callout--req-suggest .cp-callout__button.is-hover {
+  background-color: var(--amber-200, #fee685);
+}
+
+/* ================================================================ help/feedback/page.tsx — admin reply box
+   <div class="mt-3 rounded-lg bg-white border border-green-200 p-3"> (fb.adminReply only). The fill is WHITE in this
+   source; the green-50/30 tint belongs to the parent feedback item, not to the box. */
+.cp-callout--reply {
+  padding: var(--space-3, 12px);
+  background-color: var(--white, #ffffff);
+  border: 1px solid var(--green-200, #b9f8cf);
+  border-radius: var(--radius-lg, 8px);
+}
+/* <div class="flex items-center gap-1.5 mb-1.5"> */
+.cp-callout__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  margin-bottom: var(--space-1-5, 6px);
+}
+/* 관리자 답변 <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700"> (4.5:1) */
+.cp-callout__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  background-color: var(--green-100, #dcfce7);
+  border-radius: var(--radius-full, 9999px);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--green-700, #008236);
+}
+/* adminReplyAt <span class="text-xs text-slate-400"> — 2.6:1 on white in the source, kept, flagged */
+.cp-callout__meta {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+/* <p class="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed"> (10.4:1) */
+.cp-callout--reply .cp-callout__text {
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-700, #314158);
+  white-space: pre-wrap;
+}
+
+/* ================================================================ (auth)/login/page.tsx — in-app browser notice
+   <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg"> (replaces the Google Button when inAppInfo.isInApp) */
+.cp-callout--inapp {
+  padding: var(--space-4, 16px);
+  background-color: var(--amber-50, #fffbeb);
+  border: 1px solid var(--amber-200, #fee685);
+  border-radius: var(--radius-lg, 8px);
+}
+/* <p class="text-sm font-medium text-amber-800 mb-2"> (6.8:1) */
+.cp-callout--inapp .cp-callout__title {
+  margin-bottom: var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+}
+/* iOS: <p class="text-xs text-amber-700"> with font-bold runs (4.9:1) */
+.cp-callout--inapp .cp-callout__text {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-700, #bb4d00);
+}
+/* Android: <button type="button" class="w-full mt-1 text-sm font-medium text-amber-900 bg-amber-100 hover:bg-amber-200
+   transition-colors rounded-md py-2"> — 36px tall (no height class), 8.1:1 at rest, 7.3:1 on hover */
+.cp-callout--inapp .cp-callout__button {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-1, 4px);
+  padding: var(--space-2, 8px) 0;
+  background-color: var(--amber-100, #fef3c6);
+  border-radius: var(--radius-md, 6px);
+  text-align: center;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-900, #7b3306);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-callout--inapp .cp-callout__button:hover,
+.cp-callout--inapp .cp-callout__button.is-hover {
+  background-color: var(--amber-200, #fee685);
+}

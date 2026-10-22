@@ -1,0 +1,195 @@
+<!-- @dsCard group="Planner" height=1296 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>AllPlansModal — preview</title>
+<style>
+  /* Layout only. The modal opens over the statistics page (gray-50); each stage stands in for that page and is a size
+     container so the panel's 85vh clamp (85cqh under the staged modifier) measures the stage. */
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .stage { position: relative; overflow: hidden; border-radius: 8px; background: var(--gray-50, #f9fafb); container-type: size; }
+  .stage--main { height: 680px; }
+  .stage--half { height: 440px; }
+  .row { display: flex; gap: 16px; align-items: flex-start; margin-top: 16px; }
+  .cell { flex: 1 1 0; min-width: 0; }
+  .strip { display: flex; gap: 24px; align-items: flex-start; margin-top: 16px; }
+  .strip .cell { flex: none; }
+  .strip-row { display: flex; gap: 12px; align-items: center; }
+  .cap { margin: 4px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="stage stage--main">
+  <div class="cp-all-plans-modal cp-all-plans-modal--staged" role="dialog" aria-modal="true" aria-label="익명 수강계획 전체 보기">
+    <div class="cp-all-plans-modal__panel" tabindex="-1">
+      <div class="cp-all-plans-modal__header">
+        <div>
+          <h2 class="cp-all-plans-modal__title">익명 수강계획 전체 보기</h2>
+          <p class="cp-all-plans-modal__count">총 13개의 수강계획</p>
+        </div>
+        <button type="button" class="cp-all-plans-modal__close" aria-label="닫기">
+          <svg aria-hidden="true" class="cp-all-plans-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+        </button>
+      </div>
+      <div class="cp-all-plans-modal__content">
+        <div class="cp-all-plans-modal__grid">
+          <button type="button" class="cp-all-plans-modal__plan">
+            <div class="cp-all-plans-modal__plan-head">
+              <div class="cp-all-plans-modal__plan-letter">A</div>
+              <span class="cp-all-plans-modal__plan-name">계획 A</span>
+            </div>
+            <div class="cp-all-plans-modal__plan-meta">
+              <p class="cp-all-plans-modal__plan-line">8개 학기</p>
+              <p class="cp-all-plans-modal__plan-line">42개 과목 · 126학점</p>
+            </div>
+          </button>
+          <button type="button" class="cp-all-plans-modal__plan is-hover">
+            <div class="cp-all-plans-modal__plan-head">
+              <div class="cp-all-plans-modal__plan-letter">B</div>
+              <span class="cp-all-plans-modal__plan-name">계획 B</span>
+            </div>
+            <div class="cp-all-plans-modal__plan-meta">
+              <p class="cp-all-plans-modal__plan-line">7개 학기</p>
+              <p class="cp-all-plans-modal__plan-line">39개 과목 · 117학점</p>
+            </div>
+          </button>
+          <button type="button" class="cp-all-plans-modal__plan">
+            <div class="cp-all-plans-modal__plan-head">
+              <div class="cp-all-plans-modal__plan-letter">C</div>
+              <span class="cp-all-plans-modal__plan-name">계획 C</span>
+            </div>
+            <div class="cp-all-plans-modal__plan-meta">
+              <p class="cp-all-plans-modal__plan-line">8개 학기</p>
+              <p class="cp-all-plans-modal__plan-line">45개 과목 · 130학점</p>
+            </div>
+          </button>
+          <button type="button" class="cp-all-plans-modal__plan">
+            <div class="cp-all-plans-modal__plan-head">
+              <div class="cp-all-plans-modal__plan-letter">D</div>
+              <span class="cp-all-plans-modal__plan-name">계획 D</span>
+            </div>
+            <div class="cp-all-plans-modal__plan-meta">
+              <p class="cp-all-plans-modal__plan-line">6개 학기</p>
+              <p class="cp-all-plans-modal__plan-line">36개 과목 · 108학점</p>
+            </div>
+          </button>
+        </div>
+        <p class="cp-all-plans-modal__note">
+          <svg aria-hidden="true" class="cp-all-plans-modal__note-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          모든 계획은 익명으로 표시됩니다
+        </p>
+        <div class="cp-all-plans-modal__more">
+          <button type="button" class="cp-all-plans-modal__more-button">
+            더 보기
+            <svg aria-hidden="true" class="cp-all-plans-modal__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+        </div>
+      </div>
+      <div class="cp-all-plans-modal__footer">
+        <div class="cp-all-plans-modal__notice">
+          <svg aria-hidden="true" class="cp-all-plans-modal__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          <p class="cp-all-plans-modal__notice-text">이 계획은 익명으로 공유되며, 작성자의 개인정보는 포함되지 않습니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="cap">loaded · 총 13개 · 4 of 9 cards shown · 계획 B is-hover (yu-blue border, shadow-md) · 더 보기 at rest · 2 columns at 960px (md), 3 from lg</p>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage stage--half">
+      <div class="cp-all-plans-modal cp-all-plans-modal--staged" role="dialog" aria-modal="true" aria-label="익명 수강계획 전체 보기">
+        <div class="cp-all-plans-modal__panel" tabindex="-1">
+          <div class="cp-all-plans-modal__header">
+            <div>
+              <h2 class="cp-all-plans-modal__title">익명 수강계획 전체 보기</h2>
+            </div>
+            <button type="button" class="cp-all-plans-modal__close is-hover" aria-label="닫기">
+              <svg aria-hidden="true" class="cp-all-plans-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            </button>
+          </div>
+          <div class="cp-all-plans-modal__content">
+            <div class="cp-all-plans-modal__loading">
+              <svg aria-hidden="true" class="cp-all-plans-modal__spinner" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+            </div>
+          </div>
+          <div class="cp-all-plans-modal__footer">
+            <div class="cp-all-plans-modal__notice">
+              <svg aria-hidden="true" class="cp-all-plans-modal__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+              <p class="cp-all-plans-modal__notice-text">이 계획은 익명으로 공유되며, 작성자의 개인정보는 포함되지 않습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">first-page loading · no count line · yu-blue Loader2 · 닫기 is-hover</p>
+  </div>
+  <div class="cell">
+    <div class="stage stage--half">
+      <div class="cp-all-plans-modal cp-all-plans-modal--staged" role="dialog" aria-modal="true" aria-label="익명 수강계획 전체 보기">
+        <div class="cp-all-plans-modal__panel" tabindex="-1">
+          <div class="cp-all-plans-modal__header">
+            <div>
+              <h2 class="cp-all-plans-modal__title">익명 수강계획 전체 보기</h2>
+              <p class="cp-all-plans-modal__count">총 0개의 수강계획</p>
+            </div>
+            <button type="button" class="cp-all-plans-modal__close" aria-label="닫기">
+              <svg aria-hidden="true" class="cp-all-plans-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+            </button>
+          </div>
+          <div class="cp-all-plans-modal__content">
+            <div class="cp-all-plans-modal__grid"></div>
+            <div class="cp-all-plans-modal__empty">
+              <p class="cp-all-plans-modal__empty-title">아직 공개된 수강 계획이 없습니다</p>
+              <p class="cp-all-plans-modal__empty-text">학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다</p>
+            </div>
+          </div>
+          <div class="cp-all-plans-modal__footer">
+            <div class="cp-all-plans-modal__notice">
+              <svg aria-hidden="true" class="cp-all-plans-modal__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+              <p class="cp-all-plans-modal__notice-text">이 계획은 익명으로 공유되며, 작성자의 개인정보는 포함되지 않습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">empty · 총 0개 · empty grid keeps its mb-6 · no note, no 더 보기</p>
+  </div>
+</div>
+
+<div class="strip">
+  <div class="cell">
+    <div class="strip-row">
+      <button type="button" class="cp-all-plans-modal__more-button">
+        더 보기
+        <svg aria-hidden="true" class="cp-all-plans-modal__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+      <button type="button" class="cp-all-plans-modal__more-button is-hover">
+        더 보기
+        <svg aria-hidden="true" class="cp-all-plans-modal__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+      </button>
+      <button type="button" class="cp-all-plans-modal__more-button" disabled>
+        <svg aria-hidden="true" class="cp-all-plans-modal__more-icon cp-all-plans-modal__more-icon--spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+        로딩 중...
+      </button>
+    </div>
+    <p class="cap">더 보기 · default · hover · next-page loading (disabled, 로딩 중...)</p>
+  </div>
+  <div class="cell">
+    <div class="strip-row">
+      <button type="button" class="cp-all-plans-modal__close" aria-label="닫기">
+        <svg aria-hidden="true" class="cp-all-plans-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+      </button>
+      <button type="button" class="cp-all-plans-modal__close is-hover" aria-label="닫기">
+        <svg aria-hidden="true" class="cp-all-plans-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+      </button>
+    </div>
+    <p class="cap">닫기 · default · hover</p>
+  </div>
+</div>
+
+</body>
+</html>

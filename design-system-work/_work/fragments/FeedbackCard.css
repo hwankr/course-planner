@@ -1,0 +1,560 @@
+/* FeedbackCard — pattern hand-translated from src/app/(dashboard)/help/feedback/page.tsx (빠른 문의 form card, 내 문의 내역 list) and src/app/(dashboard)/admin/feedback/page.tsx (admin item inside Card); no component exists in the source */
+
+/* Block = one rounded-2xl section card of the help page:
+   "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 md:p-12". Padding is the md value
+   (the frame is 960px wide). No text color class: the card inherits the body `foreground`. */
+.cp-feedback {
+  box-sizing: border-box;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  padding: var(--space-12, 48px);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  color: var(--foreground, #171717);
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-feedback *,
+.cp-feedback *::before,
+.cp-feedback *::after,
+[class*="cp-feedback__"],
+[class*="cp-feedback__"] * {
+  box-sizing: border-box;
+}
+
+/* Eyebrow pill: "mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" + a color pair. */
+.cp-feedback__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0 0 var(--space-3, 12px);
+  padding: var(--space-1, 4px) var(--space-3, 12px);
+  border-radius: var(--radius-full, 9999px);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* 빠른 문의: bg-[#00AACA]/10 text-[#00AACA] */
+.cp-feedback__eyebrow--cyan {
+  background-color: var(--yu-cyan-a10, #00aaca1a);
+  color: var(--yu-cyan, #00aaca);
+}
+/* 내 문의 내역: bg-purple-50 text-purple-600 */
+.cp-feedback__eyebrow--purple {
+  background-color: var(--purple-50, #faf5ff);
+  color: var(--purple-600, #9810fa);
+}
+.cp-feedback__eyebrow-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+}
+
+/* Title <h2>: text-xl font-bold text-[#153974] sm:text-2xl → sm value 24px/32px. */
+.cp-feedback__title {
+  margin: 0;
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-navy, #153974);
+}
+/* Lead <p>: mt-2 text-sm text-slate-600 leading-relaxed */
+.cp-feedback__lead {
+  margin: var(--space-2, 8px) 0 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+
+/* Form wrapper: mt-5 */
+.cp-feedback__form {
+  margin-top: var(--space-5, 20px);
+}
+
+/* Textarea (bare <textarea rows=4>, NOT the Input component):
+   "w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900
+    placeholder:text-slate-400 transition-colors focus:border-[#00AACA] focus:bg-white focus:outline-none
+    focus:ring-2 focus:ring-[#00AACA]/20". disabled={isPending} has no disabled: class → no visual change. */
+.cp-feedback__textarea {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--slate-50, #f8fafc);
+  color: var(--slate-900, #0f172b);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  resize: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-feedback__textarea::placeholder {
+  color: var(--slate-400, #90a1b9);
+  opacity: 1;
+}
+.cp-feedback__textarea:focus,
+.cp-feedback__textarea.is-focus {
+  outline: none;
+  border-color: var(--yu-cyan, #00aaca);
+  background-color: var(--white, #ffffff);
+  box-shadow: 0 0 0 2px var(--yu-cyan-a20, #00aaca33);
+}
+/* Admin reply recipe (admin/feedback/page.tsx, rows=2): same chain with rounded-lg px-3 py-2. */
+.cp-feedback__textarea--sm {
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+}
+
+/* Counter row under the textarea: mt-2 flex items-center justify-between */
+.cp-feedback__form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-2, 8px);
+}
+/* {n}/2000: text-xs text-slate-400 */
+.cp-feedback__counter {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+
+/* Submit <button> and the 로그인하기 <Link> share one recipe:
+   "inline-flex items-center gap-1.5 rounded-lg bg-[#153974] px-4 py-2 text-sm font-medium text-white
+    transition-colors hover:bg-[#1a4a8f]"; the button adds disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer. */
+.cp-feedback__submit,
+.cp-feedback__gate-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  margin: 0;
+  border: 0;
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-feedback__submit {
+  appearance: button;
+  cursor: pointer;
+}
+.cp-feedback__submit:hover,
+.cp-feedback__submit.is-hover,
+.cp-feedback__gate-link:hover,
+.cp-feedback__gate-link.is-hover {
+  background-color: var(--yu-blue-dark, #1a4a8f);
+}
+/* No pointer-events-none: a disabled button still takes the hover fill in the source. */
+.cp-feedback__submit:disabled,
+.cp-feedback__submit.is-disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled, 0.5);
+}
+.cp-feedback__submit-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+/* Loader2 animate-spin while isPending */
+.cp-feedback__spin {
+  animation: cp-spin 1s linear infinite;
+}
+@keyframes cp-spin { to { transform: rotate(360deg); } }
+
+/* Signed-out branch of the form card: "mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center" */
+.cp-feedback__gate {
+  margin-top: var(--space-5, 20px);
+  padding: var(--space-6, 24px);
+  border: 1px dashed var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--slate-50, #f8fafc);
+  text-align: center;
+}
+.cp-feedback__gate-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+.cp-feedback__gate-link {
+  margin-top: var(--space-3, 12px);
+}
+
+/* Loading skeletons: user list "h-24 animate-pulse rounded-xl bg-slate-100"; admin "h-32 animate-pulse rounded-2xl bg-slate-200" */
+.cp-feedback__skeleton {
+  height: var(--space-24, 96px);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--slate-100, #f1f5f9);
+  animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+.cp-feedback__skeleton--admin {
+  height: var(--space-32, 128px);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--slate-200, #e2e8f0);
+}
+@keyframes cp-pulse { 50% { opacity: 0.5; } }
+
+/* Empty list (user): "mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center" */
+.cp-feedback__empty {
+  margin-top: var(--space-5, 20px);
+  padding: var(--space-8, 32px);
+  border: 1px dashed var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--slate-50, #f8fafc);
+  text-align: center;
+}
+.cp-feedback__empty-icon {
+  display: block;
+  margin: 0 auto;
+  width: var(--space-10, 40px);
+  height: var(--space-10, 40px);
+  color: var(--slate-300, #cad5e2);
+}
+.cp-feedback__empty-text {
+  margin: var(--space-3, 12px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+
+/* List: mt-5 space-y-3 (also wraps the skeletons) */
+.cp-feedback__list {
+  margin-top: var(--space-5, 20px);
+}
+.cp-feedback__list > * + * {
+  margin-top: var(--space-3, 12px);
+}
+
+/* Item: "rounded-xl border p-4 transition-colors" + border-slate-200 bg-white;
+   with adminReply: border-l-4 border-l-green-400 border-slate-200 bg-green-50/30 */
+.cp-feedback__item {
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--white, #ffffff);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-feedback__item--replied {
+  border-left-width: 4px;
+  border-left-color: var(--green-400, #05df72);
+  background-color: var(--green-50-a30, #f0fdf44d);
+}
+.cp-feedback__item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cp-feedback__item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+/* Status pill: "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium" (both pages) */
+.cp-feedback__status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: var(--space-0-5, 2px) var(--space-2-5, 10px);
+  border-radius: var(--radius-full, 9999px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-feedback__status--pending {
+  background-color: var(--yellow-100, #fef9c2);
+  color: var(--yellow-700, #a65f00);
+}
+.cp-feedback__status--resolved {
+  background-color: var(--green-100, #dcfce7);
+  color: var(--green-700, #008236);
+}
+.cp-feedback__status-icon,
+.cp-feedback__reply-pill-icon,
+.cp-feedback__more-icon,
+.cp-feedback__send-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+}
+/* Timestamps: text-xs text-slate-400 */
+.cp-feedback__date {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+
+/* Delete icon button (both pages): "rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50
+   hover:text-red-500 disabled:opacity-50 cursor-pointer" */
+.cp-feedback__delete {
+  display: inline-flex;
+  margin: 0;
+  border: 0;
+  padding: var(--space-1-5, 6px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--transparent, transparent);
+  color: var(--slate-400, #90a1b9);
+  appearance: button;
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-feedback__delete:hover,
+.cp-feedback__delete.is-hover {
+  background-color: var(--red-50, #fef2f2);
+  color: var(--red-500, #fb2c36);
+}
+.cp-feedback__delete:disabled,
+.cp-feedback__delete.is-disabled {
+  opacity: var(--opacity-disabled, 0.5);
+}
+.cp-feedback__delete-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* Message: "mt-2 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed"; the admin page wraps it in an
+   mt-3 div with no own margin (--admin) and clamps long ones to three lines (--clamped = line-clamp-3). */
+.cp-feedback__message {
+  margin: var(--space-2, 8px) 0 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-700, #314158);
+  white-space: pre-wrap;
+}
+.cp-feedback__message--admin {
+  margin-top: 0;
+}
+.cp-feedback__message--clamped {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+/* Admin reply box. User page: "mt-3 rounded-lg bg-white border border-green-200 p-3";
+   admin page (--admin): bg-green-50 instead of white. */
+.cp-feedback__reply {
+  margin-top: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--green-200, #b9f8cf);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--white, #ffffff);
+}
+.cp-feedback__reply--admin {
+  background-color: var(--green-50, #f0fdf4);
+}
+.cp-feedback__reply-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  margin-bottom: var(--space-1-5, 6px);
+}
+/* 관리자 답변 pill: "inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700" */
+.cp-feedback__reply-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--green-100, #dcfce7);
+  color: var(--green-700, #008236);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-feedback__reply-text {
+  margin: 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-700, #314158);
+  white-space: pre-wrap;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Admin recipe (admin/feedback/page.tsx): each item is <Card className="overflow-hidden"> with
+   <CardContent className="p-4 sm:p-5"> — reuse .cp-card / .cp-card__content from Card.css. tailwind-merge
+   drops CardContent's p-6 pt-0, so padding is 20px on every side at ≥640px. */
+.cp-feedback__admin.cp-card {
+  overflow: hidden;
+}
+.cp-feedback__admin .cp-card__content {
+  padding: var(--space-5, 20px);
+}
+/* "flex flex-wrap items-start justify-between gap-2" */
+.cp-feedback__admin-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+}
+.cp-feedback__admin-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+.cp-feedback__admin-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+/* Category pill: "inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold" + CATEGORY_COLORS */
+.cp-feedback__category {
+  display: inline-flex;
+  padding: var(--space-0-5, 2px) var(--space-2-5, 10px);
+  border-radius: var(--radius-full, 9999px);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-feedback__category--bug        { background-color: var(--red-100, #ffe2e2);    color: var(--red-700, #c10007); }
+.cp-feedback__category--feature    { background-color: var(--blue-100, #dbeafe);   color: var(--blue-700, #1447e6); }
+.cp-feedback__category--data-error { background-color: var(--orange-100, #ffedd4); color: var(--orange-700, #ca3500); }
+.cp-feedback__category--other      { background-color: var(--gray-100, #f3f4f6);   color: var(--gray-700, #364153); }
+.cp-feedback__category--contact    { background-color: var(--teal-100, #cbfbf1);   color: var(--teal-700, #00786f); }
+
+/* Status toggle: "rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer" +
+   pending → bg-green-600 text-white hover:bg-green-700 (답변 없이 해결);
+   resolved → bg-slate-200 text-slate-600 hover:bg-slate-300 (대기로 변경). */
+.cp-feedback__toggle,
+.cp-feedback__cancel,
+.cp-feedback__send {
+  margin: 0;
+  border: 0;
+  padding: var(--space-1-5, 6px) var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  appearance: button;
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-feedback__toggle--resolve {
+  background-color: var(--green-600, #00a63e);
+  color: var(--white, #ffffff);
+}
+.cp-feedback__toggle--resolve:hover,
+.cp-feedback__toggle--resolve.is-hover {
+  background-color: var(--green-700, #008236);
+}
+.cp-feedback__toggle--reopen {
+  background-color: var(--slate-200, #e2e8f0);
+  color: var(--slate-600, #45556c);
+}
+.cp-feedback__toggle--reopen:hover,
+.cp-feedback__toggle--reopen.is-hover {
+  background-color: var(--slate-300, #cad5e2);
+}
+
+/* Message block: mt-3 wrapper; 더보기 / 접기 toggle "mt-1 inline-flex items-center gap-0.5 text-xs font-medium
+   text-[#00AACA] hover:text-[#153974] cursor-pointer" (no transition in the source). */
+.cp-feedback__admin-body {
+  margin-top: var(--space-3, 12px);
+}
+.cp-feedback__more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-0-5, 2px);
+  margin: var(--space-1, 4px) 0 0;
+  border: 0;
+  padding: 0;
+  background-color: var(--transparent, transparent);
+  color: var(--yu-cyan, #00aaca);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  appearance: button;
+  cursor: pointer;
+}
+.cp-feedback__more:hover,
+.cp-feedback__more.is-hover {
+  color: var(--yu-navy, #153974);
+}
+
+/* Reply form (no adminReply yet): "mt-3 space-y-2"; the footer row appears only while typing. */
+.cp-feedback__reply-form {
+  margin-top: var(--space-3, 12px);
+}
+.cp-feedback__reply-form > * + * {
+  margin-top: var(--space-2, 8px);
+}
+.cp-feedback__reply-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cp-feedback__reply-actions {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+/* 취소: "rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer";
+   disabled={isReplying} has no disabled: class. */
+.cp-feedback__cancel {
+  background-color: var(--transparent, transparent);
+  color: var(--slate-600, #45556c);
+}
+.cp-feedback__cancel:hover,
+.cp-feedback__cancel.is-hover {
+  background-color: var(--slate-100, #f1f5f9);
+}
+/* 답변 및 해결 처리: "inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white
+   transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer" */
+.cp-feedback__send {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  background-color: var(--green-600, #00a63e);
+  color: var(--white, #ffffff);
+}
+.cp-feedback__send:hover,
+.cp-feedback__send.is-hover {
+  background-color: var(--green-700, #008236);
+}
+.cp-feedback__send:disabled,
+.cp-feedback__send.is-disabled {
+  cursor: not-allowed;
+  opacity: var(--opacity-disabled, 0.5);
+}
+
+/* Meta line: "mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-400" */
+.cp-feedback__admin-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-3, 12px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+
+/* Admin empty: "rounded-2xl border border-slate-200 bg-white p-12 text-center" + MessageSquare h-12 w-12 text-slate-300 */
+.cp-feedback__admin-empty {
+  padding: var(--space-12, 48px);
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--white, #ffffff);
+  text-align: center;
+}
+.cp-feedback__admin-empty-icon {
+  display: block;
+  margin: 0 auto;
+  width: var(--space-12, 48px);
+  height: var(--space-12, 48px);
+  color: var(--slate-300, #cad5e2);
+}
+.cp-feedback__admin-empty-text {
+  margin: var(--space-4, 16px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+/* Admin error: "rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600" */
+.cp-feedback__admin-error {
+  padding: var(--space-6, 24px);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--red-50, #fef2f2);
+  text-align: center;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-600, #e7000b);
+}

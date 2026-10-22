@@ -1,0 +1,382 @@
+/* AuthLayout — PATTERN hand-translated from src/app/(auth)/login/page.tsx and src/app/(auth)/register/page.tsx (split-screen: gradient brand panel + white form panel). Reuses .cp-button (src/components/ui/Button.tsx) and .cp-input (src/components/ui/Input.tsx); only the pages' own inline markup is styled here. */
+
+/* Block = the page root. Login: <div className="min-h-screen flex">. Register: <div className="flex-1 flex">
+   (it grows inside RootLayout's flex column instead of forcing viewport height). The root sits on RootLayout's
+   bg-gray-50 wrapper, but the two panels cover it entirely, so no background is set. It inherits the body
+   context from globals.css (Arial 16px/1.5, foreground #171717, antialiased); every colored text sets its own. */
+.cp-auth-layout {
+  box-sizing: border-box;
+  display: flex;
+  min-height: 100vh;
+  margin: 0;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.cp-auth-layout *,
+.cp-auth-layout *::before,
+.cp-auth-layout *::after {
+  box-sizing: border-box;
+}
+/* register root: flex-1 flex — no min-h-screen */
+.cp-auth-layout--register {
+  min-height: 0;
+  flex: 1 1 0%;
+}
+/* preview only: the stage gives the frame its height instead of the viewport */
+.cp-auth-layout--staged {
+  min-height: 0;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   LEFT — brand panel: "hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-[#003E7E] via-[#153974]
+   to-[#3069B3] animate-gradient relative overflow-hidden". The panel is a flex row with no justify-content,
+   so the hero wrap sits at its left edge and stretches to full height.
+   .animate-gradient (background-size 200% 200% + gradientShift 8s) is NOT reproduced: the static panel shows
+   the whole three-stop ramp at once; in the app the ramp is twice the panel width and pans. */
+.cp-auth-layout__brand {
+  position: relative;
+  display: none;
+  width: 50%;
+  overflow: hidden;
+  background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+}
+@media (min-width: 768px) {
+  .cp-auth-layout__brand { display: flex; }
+}
+@media (min-width: 1024px) {
+  .cp-auth-layout__brand { width: 60%; }
+}
+
+/* Mesh overlay: "absolute inset-0 bg-mesh opacity-30". The five radial stops come from globals.css .bg-mesh
+   (yu-navy-a15, yu-blue-a12, yu-cyan-a10, yu-blue-a8, yu-cyan-a6), then the whole layer sits at 30%. */
+.cp-auth-layout__mesh {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  background-image:
+    radial-gradient(at 40% 20%, var(--yu-navy-a15, #15397426) 0px, var(--transparent, transparent) 50%),
+    radial-gradient(at 80% 0%, var(--yu-blue-a12, #3069b31f) 0px, var(--transparent, transparent) 50%),
+    radial-gradient(at 0% 50%, var(--yu-cyan-a10, #00aaca1a) 0px, var(--transparent, transparent) 50%),
+    radial-gradient(at 80% 50%, var(--yu-blue-a8, #3069b314) 0px, var(--transparent, transparent) 50%),
+    radial-gradient(at 0% 100%, var(--yu-cyan-a6, #00aaca0f) 0px, var(--transparent, transparent) 50%);
+}
+
+/* Floating discs: "absolute … bg-white/20 rounded-full blur-xl animate-float". blur-xl = blur(24px).
+   .animate-float (translateY 0 → -10px → 0 over 3s, staggered by anim-delay-*) is NOT reproduced; the discs
+   rest at their 0% keyframe. Disc sizes are arbitrary w-* steps (no size token). */
+.cp-auth-layout__orb {
+  position: absolute;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--white-a20, #ffffff33);
+  filter: blur(24px);
+}
+/* login: top-20 left-20 w-32 · bottom-32 right-32 w-40 · top-1/2 right-20 w-24 */
+.cp-auth-layout__orb--1 { top: var(--space-20, 80px); left: var(--space-20, 80px); width: 128px; height: 128px; }
+.cp-auth-layout__orb--2 { right: var(--space-32, 128px); bottom: var(--space-32, 128px); width: 160px; height: 160px; }
+.cp-auth-layout__orb--3 { top: 50%; right: var(--space-20, 80px); width: 96px; height: 96px; }
+/* register: top-24 right-24 w-36 · bottom-40 left-32 w-44 · top-1/3 left-24 w-28 */
+.cp-auth-layout--register .cp-auth-layout__orb--1 { top: var(--space-24, 96px); right: var(--space-24, 96px); left: auto; width: 144px; height: 144px; }
+.cp-auth-layout--register .cp-auth-layout__orb--2 { right: auto; bottom: 160px; left: var(--space-32, 128px); width: 176px; height: 176px; }
+.cp-auth-layout--register .cp-auth-layout__orb--3 { top: 33.333333%; right: auto; left: var(--space-24, 96px); width: 112px; height: 112px; }
+
+/* Hero wrap: "relative z-10 flex items-center justify-center p-12 animate-fade-in" (z-10 = the z-sticky step).
+   The 0.6s fadeIn entrance is NOT reproduced. */
+.cp-auth-layout__hero {
+  position: relative;
+  z-index: var(--z-sticky, 10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12, 48px);
+}
+/* "max-w-lg text-white" */
+.cp-auth-layout__hero-content {
+  max-width: var(--container-lg, 512px);
+  color: var(--white, #ffffff);
+}
+/* next/image yu-logo-white.svg: className "h-12 mb-6", style width:auto, width={120} height={48}.
+   The SVG viewBox is 297.4×57.3, so at 48px tall it renders about 249px wide. */
+.cp-auth-layout__hero-logo {
+  display: block;
+  height: var(--space-12, 48px);
+  width: auto;
+  max-width: 100%;
+  margin: 0 0 var(--space-6, 24px);
+}
+/* <h1 className="text-4xl lg:text-5xl font-bold mb-8 leading-tight whitespace-pre-line"> — leading-tight (1.25)
+   wins over the text-4xl/5xl line-height. 36px at md, 48px from lg. */
+.cp-auth-layout__headline {
+  margin: 0 0 var(--space-8, 32px);
+  font: 700 36px/1.25 var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: pre-line;
+}
+@media (min-width: 1024px) {
+  .cp-auth-layout__headline { font-size: 48px; }
+}
+/* "space-y-6" */
+.cp-auth-layout__features > * + * {
+  margin-top: var(--space-6, 24px);
+}
+/* feature row: "flex items-start gap-4" */
+.cp-auth-layout__feature {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4, 16px);
+}
+/* lucide CheckCircle2: "w-6 h-6 mt-1 flex-shrink-0", stroke currentColor (white) */
+.cp-auth-layout__feature-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-xl, 24px);
+  height: var(--icon-xl, 24px);
+  margin-top: var(--space-1, 4px);
+}
+/* <h3 className="text-xl font-semibold mb-1"> — heading-3 */
+.cp-auth-layout__feature-title {
+  margin: 0 0 var(--space-1, 4px);
+  font: 600 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* <p className="text-blue-100"> — body in blue-100 (4.5:1 on the yu-blue end of the ramp) */
+.cp-auth-layout__feature-desc {
+  margin: 0;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--blue-100, #dbeafe);
+}
+
+/* ------------------------------------------------------------------------------------------------
+   RIGHT — form panel: "w-full md:w-1/2 lg:w-2/5 flex items-center justify-center p-8 bg-white" */
+.cp-auth-layout__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--space-8, 32px);
+  background-color: var(--white, #ffffff);
+}
+@media (min-width: 768px) {
+  .cp-auth-layout__panel { width: 50%; }
+}
+@media (min-width: 1024px) {
+  .cp-auth-layout__panel { width: 40%; }
+}
+/* "max-w-md w-full animate-fade-in-up" — the 0.6s fadeInUp entrance is NOT reproduced */
+.cp-auth-layout__form-box {
+  width: 100%;
+  max-width: var(--container-md, 448px);
+}
+
+/* Brand row: "flex items-center gap-2 mb-8" */
+.cp-auth-layout__brand-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-8, 32px);
+}
+/* next/image yu-logo.svg: className "h-6", style width:auto, width={60} height={24} → about 125px wide */
+.cp-auth-layout__brand-logo {
+  display: block;
+  height: var(--space-6, 24px);
+  width: auto;
+  max-width: 100%;
+}
+/* <h2 className="text-2xl font-bold text-gradient"> — heading-2 filled by globals.css .text-gradient:
+   linear-gradient(135deg, yu-navy, yu-blue, yu-cyan) clipped to the glyphs (plain CSS gradient, no oklab). */
+.cp-auth-layout__wordmark {
+  margin: 0;
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  background-image: linear-gradient(135deg, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Title block: "mb-8" › <h1 className="text-2xl font-bold text-gray-900 mb-2"> + <p className="text-gray-500"> */
+.cp-auth-layout__title-block {
+  margin-bottom: var(--space-8, 32px);
+}
+.cp-auth-layout__title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+.cp-auth-layout__subtitle {
+  margin: 0;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* <form className="space-y-4"> */
+.cp-auth-layout__form {
+  margin: 0;
+}
+.cp-auth-layout__form > * + * {
+  margin-top: var(--space-4, 16px);
+}
+/* Error alert, rendered only while `error` is set:
+   "p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm" (red-600 on red-50 is 4.4:1 — kept) */
+.cp-auth-layout__alert {
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--red-50, #fef2f2);
+  color: var(--red-600, #e7000b);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* Field wrapper is a bare <div>; the <Input> inside is .cp-input (no className passed). */
+.cp-auth-layout__field {
+  display: block;
+}
+/* <label className="block text-sm font-medium text-gray-700 mb-1"> — body-sm-medium */
+.cp-auth-layout__label {
+  display: block;
+  margin-bottom: var(--space-1, 4px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+/* register only, under 비밀번호: <p className="mt-1 text-xs text-gray-500"> — caption */
+.cp-auth-layout__hint {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* <Button type="submit" className="w-full" isLoading> → .cp-button.cp-button--default plus w-full */
+.cp-auth-layout__submit {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------------------------------------
+   Alternatives block (login only): <div className="mt-6"> holding the divider, the Google button (or the
+   in-app notice) and the guest button. */
+.cp-auth-layout__alt {
+  margin-top: var(--space-6, 24px);
+}
+/* Divider: relative › absolute inset-0 flex items-center › w-full border-t border-gray-300 ;
+   relative flex justify-center text-sm › span px-2 bg-white text-gray-500 */
+.cp-auth-layout__divider {
+  position: relative;
+}
+.cp-auth-layout__divider-rule {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+}
+.cp-auth-layout__divider-line {
+  width: 100%;
+  border-top: 1px solid var(--gray-300, #d1d5dc);
+}
+.cp-auth-layout__divider-label-row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-auth-layout__divider-label {
+  padding: 0 var(--space-2, 8px);
+  background-color: var(--white, #ffffff);
+  color: var(--gray-500, #6a7282);
+}
+/* <Button variant="outline" className="w-full mt-4"> → .cp-button.cp-button--outline plus w-full mt-4.
+   The label inherits the panel's foreground color (no text-* class). */
+.cp-auth-layout__google {
+  width: 100%;
+  margin-top: var(--space-4, 16px);
+}
+/* inline monochrome Google "G": <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24"> with four fill="currentColor" paths */
+.cp-auth-layout__google-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  margin-right: var(--space-2, 8px);
+}
+/* Guest button, a bare <button type="button">:
+   "w-full mt-3 text-sm text-gray-500 hover:text-[#153974] transition-colors py-2" (no cursor-pointer) */
+.cp-auth-layout__guest {
+  display: block;
+  width: 100%;
+  margin: var(--space-3, 12px) 0 0;
+  padding: var(--space-2, 8px) 0;
+  border: 0 solid;
+  border-radius: 0;
+  background-color: transparent;
+  appearance: button;
+  text-align: center;
+  letter-spacing: inherit;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-auth-layout__guest:hover,
+.cp-auth-layout__guest.is-hover {
+  color: var(--yu-navy, #153974);
+}
+
+/* In-app browser notice (replaces the Google button when inAppInfo.isInApp):
+   "mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg" */
+.cp-auth-layout__inapp {
+  margin-top: var(--space-4, 16px);
+  padding: var(--space-4, 16px);
+  border: 1px solid var(--amber-200, #fee685);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--amber-50, #fffbeb);
+}
+/* <p className="text-sm font-medium text-amber-800 mb-2"> */
+.cp-auth-layout__inapp-title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+}
+/* iOS: <p className="text-xs text-amber-700"> with <span className="font-bold"> runs */
+.cp-auth-layout__inapp-hint {
+  margin: 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-700, #bb4d00);
+}
+.cp-auth-layout__inapp-bold {
+  font-weight: 700;
+}
+/* Android: <button type="button" className="w-full mt-1 text-sm font-medium text-amber-900 bg-amber-100
+   hover:bg-amber-200 transition-colors rounded-md py-2"> (no cursor-pointer, no explicit height: 36px) */
+.cp-auth-layout__inapp-button {
+  display: block;
+  width: 100%;
+  margin: var(--space-1, 4px) 0 0;
+  padding: var(--space-2, 8px) 0;
+  border: 0 solid;
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--amber-100, #fef3c6);
+  appearance: button;
+  text-align: center;
+  letter-spacing: inherit;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-900, #7b3306);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-auth-layout__inapp-button:hover,
+.cp-auth-layout__inapp-button.is-hover {
+  background-color: var(--amber-200, #fee685);
+}
+
+/* Footer line: <p className="mt-6 text-center text-sm text-gray-600"> with
+   <Link className="text-[#153974] hover:underline font-medium"> */
+.cp-auth-layout__footer {
+  margin: var(--space-6, 24px) 0 0;
+  text-align: center;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+.cp-auth-layout__footer-link {
+  color: var(--yu-navy, #153974);
+  font-weight: 500;
+  text-decoration: none;
+}
+.cp-auth-layout__footer-link:hover,
+.cp-auth-layout__footer-link.is-hover {
+  text-decoration-line: underline;
+}

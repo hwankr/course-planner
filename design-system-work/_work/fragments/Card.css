@@ -1,0 +1,58 @@
+/* Source: src/components/ui/Card.tsx — Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter (Tailwind v4 classes hand-translated) */
+
+/* Card: "rounded-lg border bg-white text-gray-900 shadow-sm hover:shadow-md transition-shadow duration-300" */
+.cp-card {
+  box-sizing: border-box;
+  border-radius: var(--radius-lg, 8px);
+  /* bare `border` under v4 = 1px solid currentColor, and currentColor here is text-gray-900 */
+  border: 1px solid var(--border-default, #101828);
+  background: var(--white, #ffffff);
+  color: var(--gray-900, #101828);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  transition: box-shadow var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-card *,
+.cp-card *::before,
+.cp-card *::after {
+  box-sizing: border-box;
+}
+.cp-card:hover,
+.cp-card.is-hover {
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+/* CardHeader: "flex flex-col space-y-1.5 p-6" */
+.cp-card__header {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6, 24px);
+}
+.cp-card__header > * + * {
+  margin-top: var(--space-1-5, 6px);
+}
+
+/* CardTitle (<h3>): "text-2xl font-semibold leading-none tracking-tight" — heading-2 size at 600 */
+.cp-card__title {
+  margin: 0;
+  font: 600 24px/1 var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: -0.025em;
+}
+
+/* CardDescription (<p>): "text-sm text-gray-500" — body-sm in gray-500 */
+.cp-card__description {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* CardContent: "p-6 pt-0" */
+.cp-card__content {
+  padding: 0 var(--space-6, 24px) var(--space-6, 24px);
+}
+
+/* CardFooter: "flex items-center p-6 pt-0" */
+.cp-card__footer {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-6, 24px) var(--space-6, 24px);
+}

@@ -1,0 +1,671 @@
+/* CourseCatalog — hand-translated from src/components/features/CourseCatalog.tsx (search field = src/components/ui/Input.tsx → .cp-input; card-view items wrap src/components/features/CourseCard.tsx → .cp-course-card) */
+
+.cp-course-catalog,
+.cp-course-catalog *,
+.cp-course-catalog *::before,
+.cp-course-catalog *::after { box-sizing: border-box; }
+
+/* Root: bg-white border border-gray-200 rounded-lg shadow-sm transition-opacity duration-200.
+   No text color class in the source — the panel inherits the page `foreground`; pinned here so the
+   bare `border` on the view toggle below resolves to the same currentColor as in the app. */
+.cp-course-catalog {
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--white, #ffffff);
+  color: var(--foreground, #171717);
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  transition: opacity var(--duration-base, 200ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* ---------- Header: px-3 sm:px-4 py-3 border-b border-gray-200 space-y-2.5 ---------- */
+.cp-course-catalog__header {
+  padding: var(--space-3, 12px);
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+.cp-course-catalog__header > * + * { margin-top: var(--space-2-5, 10px); }
+
+/* Row 1: flex items-center justify-between gap-2 */
+.cp-course-catalog__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+}
+.cp-course-catalog__heading { min-width: 0; }
+
+/* h2: text-base font-semibold text-gray-900 */
+.cp-course-catalog__title {
+  margin: 0;
+  color: var(--gray-900, #101828);
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* flex items-center gap-1 */
+.cp-course-catalog__subtitle-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+/* Curriculum-year badge: inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-[#00AACA]/10 text-[#00AACA] flex-shrink-0 */
+.cp-course-catalog__year {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: var(--space-0-5, 2px) var(--space-1-5, 6px);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--yu-cyan-a10, #00aaca1a);
+  color: var(--yu-cyan, #00aaca);
+  font: 500 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* p: text-xs text-gray-400 truncate */
+.cp-course-catalog__subtitle {
+  margin: 0;
+  color: var(--gray-400, #99a1af);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Help toggle: flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors (HelpCircle w-3.5 h-3.5) */
+.cp-course-catalog__help {
+  appearance: none;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gray-300, #d1d5dc);
+  font: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__help:hover,
+.cp-course-catalog__help.is-hover { color: var(--gray-500, #6a7282); }
+
+/* Lucide / heroicons svgs: preflight makes svg display:block */
+.cp-course-catalog__icon { display: block; }
+.cp-course-catalog__icon--sm { width: var(--icon-sm, 14px); height: var(--icon-sm, 14px); }
+.cp-course-catalog__icon--lg { width: var(--icon-lg, 20px); height: var(--icon-lg, 20px); }
+
+/* showCurriculumInfo note: text-[11px] text-amber-600 bg-amber-50 rounded px-2 py-1 mt-1 */
+.cp-course-catalog__note {
+  margin: calc(var(--space-3, 12px) + var(--space-1, 4px)) 0 0; /* space-y-3 (12px) + mt-1 */
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--amber-50, #fffbeb);
+  color: var(--amber-600, #e17100);
+  font: 400 11px/16.5px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Actions cluster: flex items-center gap-1.5 flex-shrink-0 */
+.cp-course-catalog__actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--space-1-5, 6px);
+}
+
+/* Count: text-xs text-gray-500 hidden sm:inline; the mobile twin in the search row is sm:hidden flex-shrink-0 */
+.cp-course-catalog__count {
+  display: none;
+  color: var(--gray-500, #6a7282);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__count--mobile { display: inline; flex-shrink: 0; }
+
+/* View toggle group: flex items-center border rounded-md overflow-hidden — bare `border` is currentColor (= foreground) */
+.cp-course-catalog__view {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--foreground, #171717);
+  border-radius: var(--radius-md, 6px);
+  overflow: hidden;
+}
+
+/* View button: p-1 transition-colors; inactive bg-gray-100 text-gray-500 hover:bg-gray-200; active bg-[#153974] text-white */
+.cp-course-catalog__view-btn {
+  appearance: none;
+  margin: 0;
+  padding: var(--space-1, 4px);
+  border: 0;
+  background-color: var(--gray-100, #f3f4f6);
+  color: var(--gray-500, #6a7282);
+  font: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__view-btn:hover,
+.cp-course-catalog__view-btn.is-hover { background-color: var(--gray-200, #e5e7eb); }
+.cp-course-catalog__view-btn.is-active {
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+}
+
+/* "+ 추가": px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-500 text-white hover:bg-emerald-600 transition-colors */
+.cp-course-catalog__add {
+  appearance: none;
+  margin: 0;
+  padding: var(--space-1, 4px) var(--space-2-5, 10px);
+  border: 0;
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--emerald-500, #00bc7d);
+  color: var(--white, #ffffff);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__add:hover,
+.cp-course-catalog__add.is-hover { background-color: var(--emerald-600, #009966); }
+
+/* Collapse: p-1 hover:bg-gray-100 rounded transition-colors */
+.cp-course-catalog__collapse {
+  appearance: none;
+  margin: 0;
+  padding: var(--space-1, 4px);
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__collapse:hover,
+.cp-course-catalog__collapse.is-hover { background-color: var(--gray-100, #f3f4f6); }
+
+/* Chevron (heroicons v1 solid chevron-down): w-5 h-5 text-gray-600 transition-transform, rotate-180 when collapsed */
+.cp-course-catalog__chevron {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  color: var(--gray-600, #4a5565);
+  transition-property: transform, translate, scale, rotate;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__chevron.is-collapsed { rotate: 180deg; }
+
+/* Row 2: flex items-center gap-2 — holds the ui/Input (.cp-input, width 100%) and the mobile count */
+.cp-course-catalog__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+/* ---------- Row 3: filters (space-y-1.5) ---------- */
+.cp-course-catalog__filters > * + * { margin-top: var(--space-1-5, 6px); }
+
+/* Rows: flex items-center gap-1 (dept: pb-1; year/semester: gap-x-3 gap-y-1 flex-wrap; category: flex-wrap) */
+.cp-course-catalog__filter-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+.cp-course-catalog__filter-row--dept { padding-bottom: var(--space-1, 4px); }
+.cp-course-catalog__filter-row--year-sem {
+  flex-wrap: wrap;
+  column-gap: var(--space-3, 12px);
+  row-gap: var(--space-1, 4px);
+}
+.cp-course-catalog__filter-row--category { flex-wrap: wrap; }
+.cp-course-catalog__filter-row--category .cp-course-catalog__chip { white-space: nowrap; }
+
+/* Inner group inside the year/semester row: flex items-center gap-1 */
+.cp-course-catalog__filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+}
+
+/* Row label: text-[11px] font-medium text-gray-400 (+ w-7 on 학년/학기) */
+.cp-course-catalog__filter-label {
+  color: var(--gray-400, #99a1af);
+  font: 500 11px/16.5px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__filter-label--fixed { width: var(--space-7, 28px); }
+
+/* Vertical divider: w-px h-4 bg-gray-200 */
+.cp-course-catalog__divider {
+  width: 1px;
+  height: var(--space-4, 16px);
+  background-color: var(--gray-200, #e5e7eb);
+}
+
+/* Filter chip base: px-2 py-0.5 text-xs rounded-full font-medium transition-colors.
+   Default palette (dept primary, 학년, every 전체): inactive bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20; active bg-[#153974] text-white.
+   Active chips carry no hover class in the source, so .is-active is declared after :hover and wins. */
+.cp-course-catalog__chip {
+  appearance: none;
+  margin: 0;
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  border: 0;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__chip:hover,
+.cp-course-catalog__chip.is-hover { background-color: var(--yu-navy-a20, #15397433); }
+.cp-course-catalog__chip.is-active {
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+}
+
+/* 복수전공 (deptFilter secondary, majorType double): purple-50 / purple-600 / hover purple-100 / active purple-500 */
+.cp-course-catalog__chip--purple { background-color: var(--purple-50, #faf5ff); color: var(--purple-600, #9810fa); }
+.cp-course-catalog__chip--purple:hover,
+.cp-course-catalog__chip--purple.is-hover { background-color: var(--purple-100, #f3e8ff); }
+.cp-course-catalog__chip--purple.is-active { background-color: var(--purple-500, #ad46ff); color: var(--white, #ffffff); }
+
+/* 부전공 (minor) and 전공선택: orange-50 / orange-600 / hover orange-100 / active orange-500 */
+.cp-course-catalog__chip--orange { background-color: var(--orange-50, #fff7ed); color: var(--orange-600, #f54900); }
+.cp-course-catalog__chip--orange:hover,
+.cp-course-catalog__chip--orange.is-hover { background-color: var(--orange-100, #ffedd4); }
+.cp-course-catalog__chip--orange.is-active { background-color: var(--orange-500, #ff6900); color: var(--white, #ffffff); }
+
+/* 공통: indigo-50 / indigo-600 / hover indigo-100 / active indigo-500 */
+.cp-course-catalog__chip--indigo { background-color: var(--indigo-50, #eef2ff); color: var(--indigo-600, #4f39f6); }
+.cp-course-catalog__chip--indigo:hover,
+.cp-course-catalog__chip--indigo.is-hover { background-color: var(--indigo-100, #e0e7ff); }
+.cp-course-catalog__chip--indigo.is-active { background-color: var(--indigo-500, #615fff); color: var(--white, #ffffff); }
+
+/* 학기 chips: emerald-50 / emerald-600 / hover emerald-100 / active emerald-500 */
+.cp-course-catalog__chip--emerald { background-color: var(--emerald-50, #ecfdf5); color: var(--emerald-600, #009966); }
+.cp-course-catalog__chip--emerald:hover,
+.cp-course-catalog__chip--emerald.is-hover { background-color: var(--emerald-100, #d0fae5); }
+.cp-course-catalog__chip--emerald.is-active { background-color: var(--emerald-500, #00bc7d); color: var(--white, #ffffff); }
+
+/* 이수 category chips (chipColors): 전공핵심 red, 전공필수 rose, 전공선택 orange (above), 교양필수 blue, 교양선택 green, 교직 violet, 자유선택 gray */
+.cp-course-catalog__chip--red { background-color: var(--red-50, #fef2f2); color: var(--red-600, #e7000b); }
+.cp-course-catalog__chip--red:hover,
+.cp-course-catalog__chip--red.is-hover { background-color: var(--red-100, #ffe2e2); }
+.cp-course-catalog__chip--red.is-active { background-color: var(--red-500, #fb2c36); color: var(--white, #ffffff); }
+
+.cp-course-catalog__chip--rose { background-color: var(--rose-50, #fff1f2); color: var(--rose-600, #ec003f); }
+.cp-course-catalog__chip--rose:hover,
+.cp-course-catalog__chip--rose.is-hover { background-color: var(--rose-100, #ffe4e6); }
+.cp-course-catalog__chip--rose.is-active { background-color: var(--rose-500, #ff2056); color: var(--white, #ffffff); }
+
+.cp-course-catalog__chip--blue { background-color: var(--blue-50, #eff6ff); color: var(--blue-600, #155dfc); }
+.cp-course-catalog__chip--blue:hover,
+.cp-course-catalog__chip--blue.is-hover { background-color: var(--blue-100, #dbeafe); }
+.cp-course-catalog__chip--blue.is-active { background-color: var(--blue-500, #2b7fff); color: var(--white, #ffffff); }
+
+.cp-course-catalog__chip--green { background-color: var(--green-50, #f0fdf4); color: var(--green-600, #00a63e); }
+.cp-course-catalog__chip--green:hover,
+.cp-course-catalog__chip--green.is-hover { background-color: var(--green-100, #dcfce7); }
+.cp-course-catalog__chip--green.is-active { background-color: var(--green-500, #00c950); color: var(--white, #ffffff); }
+
+.cp-course-catalog__chip--violet { background-color: var(--violet-50, #f5f3ff); color: var(--violet-600, #7f22fe); }
+.cp-course-catalog__chip--violet:hover,
+.cp-course-catalog__chip--violet.is-hover { background-color: var(--violet-100, #ede9fe); }
+.cp-course-catalog__chip--violet.is-active { background-color: var(--violet-500, #8e51ff); color: var(--white, #ffffff); }
+
+.cp-course-catalog__chip--gray { background-color: var(--gray-100, #f3f4f6); color: var(--gray-600, #4a5565); }
+.cp-course-catalog__chip--gray:hover,
+.cp-course-catalog__chip--gray.is-hover { background-color: var(--gray-200, #e5e7eb); }
+.cp-course-catalog__chip--gray.is-active { background-color: var(--gray-500, #6a7282); color: var(--white, #ffffff); }
+
+/* ---------- Banners (full-width strips under the header) ---------- */
+/* No department: px-4 py-3 bg-amber-50 border-b border-amber-200 text-sm text-amber-700 */
+.cp-course-catalog__banner {
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--amber-200, #fee685);
+  background-color: var(--amber-50, #fffbeb);
+  color: var(--amber-700, #bb4d00);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* <a href="/profile"> font-medium underline hover:text-amber-800 */
+.cp-course-catalog__banner-link {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+}
+.cp-course-catalog__banner-link:hover,
+.cp-course-catalog__banner-link.is-hover { color: var(--amber-800, #973c00); }
+
+/* Focus banner: px-4 py-2 bg-[#153974]/5 border-b border-[#153974]/20 text-xs text-[#153974]; the semester name is font-medium */
+.cp-course-catalog__banner--focus {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--yu-navy-a20, #15397433);
+  background-color: var(--yu-navy-a5, #1539740d);
+  color: var(--yu-navy, #153974);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__banner-strong { font-weight: 500; }
+
+/* ---------- Content: max-h-[350px] sm:max-h-[400px] overflow-y-auto p-3 sm:p-4 ---------- */
+.cp-course-catalog__content {
+  max-height: 350px;
+  overflow-y: auto;
+  padding: var(--space-3, 12px);
+}
+
+/* Loading: flex items-center justify-center h-32 › animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3] */
+.cp-course-catalog__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--space-32, 128px);
+}
+.cp-course-catalog__spinner {
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  border: 0 solid var(--yu-blue, #3069b3);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-full, 9999px);
+  animation: cp-spin 1s linear infinite;
+}
+
+/* Error / empty: text-center p-4 — 16px body size inherited; error text-red-500, empty text-gray-500 */
+.cp-course-catalog__message {
+  padding: var(--space-4, 16px);
+  color: var(--gray-500, #6a7282);
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  text-align: center;
+}
+.cp-course-catalog__message--error { color: var(--red-500, #fb2c36); }
+
+/* Grouped view (no search/filter): flex gap-4 overflow-x-auto pb-2 › columns flex-shrink-0 w-56 sm:w-64 flex flex-col */
+.cp-course-catalog__groups {
+  display: flex;
+  gap: var(--space-4, 16px);
+  overflow-x: auto;
+  padding-bottom: var(--space-2, 8px);
+}
+.cp-course-catalog__group {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 224px;
+}
+
+/* Group header: bg-gray-100 px-3 py-2 rounded-t-md border-b-2 border-gray-300 sticky top-0 z-10 */
+.cp-course-catalog__group-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky, 10);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-bottom: 2px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-md, 6px) var(--radius-md, 6px) 0 0;
+  background-color: var(--gray-100, #f3f4f6);
+}
+.cp-course-catalog__group-title {
+  color: var(--gray-800, #1e2939);
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__group-meta {
+  margin-top: var(--space-0-5, 2px);
+  color: var(--gray-500, #6a7282);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Group list: flex-1 overflow-y-auto max-h-[320px] pt-2 + space-y-0.5 (list) | space-y-2 (card) */
+.cp-course-catalog__group-list {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  max-height: 320px;
+  padding-top: var(--space-2, 8px);
+}
+.cp-course-catalog__group-list--list > * + * { margin-top: var(--space-0-5, 2px); }
+.cp-course-catalog__group-list--card > * + * { margin-top: var(--space-2, 8px); }
+
+/* Flat view (search or any filter active): space-y-0.5 (list) | flex flex-wrap gap-3 (card) */
+.cp-course-catalog__flat--list > * + * { margin-top: var(--space-0-5, 2px); }
+.cp-course-catalog__flat--card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+}
+/* Card item width in the flat grid: w-full sm:w-[calc(50%-6px)] md:w-[calc(33.333%-8px)] lg:w-[calc(25%-9px)] xl:w-[calc(20%-9.6px)] */
+.cp-course-catalog__flat-card-item { width: 100%; }
+
+/* ---------- CatalogCourseItem ---------- */
+/* Draggable wrapper: relative, opacity-50 when in plan or while dragging; inline style touchAction: none */
+.cp-course-catalog__item {
+  position: relative;
+  touch-action: none;
+}
+.cp-course-catalog__item.is-in-plan,
+.cp-course-catalog__item.is-dragging { opacity: var(--opacity-disabled, 0.5); }
+
+/* List row: flex items-center gap-1.5 px-2 py-1 hover:bg-gray-50 rounded text-xs */
+.cp-course-catalog__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  border-radius: var(--radius-sm, 4px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__row:hover,
+.cp-course-catalog__row.is-hover { background-color: var(--gray-50, #f9fafb); }
+
+/* Row badge: text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap; colors = CourseCard's categoryColors (fallback gray-100/gray-600) */
+.cp-course-catalog__badge {
+  padding: var(--space-0-5, 2px) var(--space-1, 4px);
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--category-free-elective-bg, #f3f4f6);
+  color: var(--category-free-elective-text, #4a5565);
+  font: 500 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: nowrap;
+}
+.cp-course-catalog__badge--major-required { background-color: var(--category-major-required-bg, #ffe2e2); color: var(--category-major-required-text, #c10007); }
+.cp-course-catalog__badge--major-compulsory { background-color: var(--category-major-compulsory-bg, #ffe4e6); color: var(--category-major-compulsory-text, #c70036); }
+.cp-course-catalog__badge--major-elective { background-color: var(--category-major-elective-bg, #ffedd4); color: var(--category-major-elective-text, #ca3500); }
+.cp-course-catalog__badge--general-required { background-color: var(--category-general-required-bg, #dbeafe); color: var(--category-general-required-text, #1447e6); }
+.cp-course-catalog__badge--general-elective { background-color: var(--category-general-elective-bg, #dcfce7); color: var(--category-general-elective-text, #008236); }
+.cp-course-catalog__badge--teaching { background-color: var(--category-teaching-bg, #ede9fe); color: var(--category-teaching-text, #7008e7); }
+.cp-course-catalog__badge--free-elective { background-color: var(--category-free-elective-bg, #f3f4f6); color: var(--category-free-elective-text, #4a5565); }
+/* 복수 / 부전 (deptFilter secondary) and 공통 (deptFilter common) */
+.cp-course-catalog__badge--double-major { background-color: var(--dept-double-major-bg, #f3e8ff); color: var(--dept-double-major-text, #8200db); }
+.cp-course-catalog__badge--minor { background-color: var(--dept-minor-bg, #ffedd4); color: var(--dept-minor-text, #ca3500); }
+.cp-course-catalog__badge--common { background-color: var(--indigo-100, #e0e7ff); color: var(--indigo-700, #432dd7); }
+
+/* Name: flex-1 truncate text-gray-800 font-medium (size inherited from the row) */
+.cp-course-catalog__name {
+  flex: 1 1 0%;
+  color: var(--gray-800, #1e2939);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Credits: text-[10px] text-gray-500 whitespace-nowrap */
+.cp-course-catalog__credits {
+  color: var(--gray-500, #6a7282);
+  font: 400 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: nowrap;
+}
+
+/* 커스텀: text-[10px] text-emerald-600 font-medium · 추가됨: text-[10px] text-[#153974]/60 */
+.cp-course-catalog__tag--custom {
+  color: var(--emerald-600, #009966);
+  font: 500 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__tag--in-plan {
+  color: var(--yu-navy-a60, #15397499);
+  font: 400 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Row add button: w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0;
+   bg-[#153974] text-white hover:bg-[#003E7E]; while isAddingCourse (disabled): bg-gray-300 text-gray-500. No transition, no cursor class. */
+.cp-course-catalog__add-btn {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--yu-navy, #153974);
+  color: var(--white, #ffffff);
+  font: 700 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__add-btn:hover,
+.cp-course-catalog__add-btn.is-hover { background-color: var(--yu-navy-hover, #003e7e); }
+.cp-course-catalog__add-btn:disabled,
+.cp-course-catalog__add-btn.is-adding {
+  background-color: var(--gray-300, #d1d5dc);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Card-view add button: absolute top-2 right-2 w-6 h-6 text-sm font-bold transition-colors shadow-sm z-10; adding adds cursor-not-allowed and reads "..." */
+.cp-course-catalog__add-btn--card {
+  position: absolute;
+  top: var(--space-2, 8px);
+  right: var(--space-2, 8px);
+  z-index: var(--z-sticky, 10);
+  width: var(--icon-xl, 24px);
+  height: var(--icon-xl, 24px);
+  font: 700 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__add-btn--card:disabled,
+.cp-course-catalog__add-btn--card.is-adding { cursor: not-allowed; }
+
+/* Card-view corner ribbons: absolute top-0, text-[10px] px-1.5 py-0.5.
+   커스텀 left: bg-emerald-500 text-white rounded-br-md rounded-tl-md · 공통 left (when !createdBy): bg-indigo-500 · 추가됨 right: bg-[#153974]/10 text-[#153974] rounded-bl-md rounded-tr-md */
+.cp-course-catalog__ribbon {
+  position: absolute;
+  top: 0;
+  padding: var(--space-0-5, 2px) var(--space-1-5, 6px);
+  color: var(--white, #ffffff);
+  font: 400 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__ribbon--custom {
+  left: 0;
+  border-radius: var(--radius-md, 6px) 0 var(--radius-md, 6px) 0;
+  background-color: var(--emerald-500, #00bc7d);
+}
+.cp-course-catalog__ribbon--common {
+  left: 0;
+  border-radius: var(--radius-md, 6px) 0 var(--radius-md, 6px) 0;
+  background-color: var(--indigo-500, #615fff);
+}
+.cp-course-catalog__ribbon--in-plan {
+  right: 0;
+  border-radius: 0 var(--radius-md, 6px) 0 var(--radius-md, 6px);
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+}
+
+/* ---------- 공통 tab: quick-add grid (documented, not in the preview) ---------- */
+.cp-course-catalog__quick > * + * { margin-top: var(--space-3, 12px); }
+/* !focusedSemester warning: text-center text-sm text-amber-600 bg-amber-50 rounded-lg p-3 */
+.cp-course-catalog__quick-warning {
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--amber-50, #fffbeb);
+  color: var(--amber-600, #e17100);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  text-align: center;
+}
+.cp-course-catalog__quick-hint {
+  margin: 0;
+  color: var(--gray-500, #6a7282);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* grid grid-cols-2 gap-3 › border rounded-lg p-3 {borderColor} {lightBg} */
+.cp-course-catalog__quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3, 12px);
+}
+.cp-course-catalog__quick-card {
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--gray-50, #f9fafb);
+}
+.cp-course-catalog__quick-title {
+  margin-bottom: var(--space-2-5, 10px);
+  color: var(--gray-700, #364153);
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-course-catalog__quick-buttons { display: flex; gap: var(--space-1-5, 6px); }
+/* credit button: flex-1 py-1.5 rounded text-sm font-medium transition-colors {bgColor} {hoverColor} text-white cursor-pointer */
+.cp-course-catalog__quick-btn {
+  appearance: none;
+  flex: 1 1 0%;
+  margin: 0;
+  padding: var(--space-1-5, 6px) 0;
+  border: 0;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--gray-500, #6a7282);
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-course-catalog__quick-btn:hover,
+.cp-course-catalog__quick-btn.is-hover { background-color: var(--gray-600, #4a5565); }
+/* 교양필수 blue · 교양선택 green · 자유선택 gray (base above) · 교직 violet */
+.cp-course-catalog__quick-card--general-required { border-color: var(--blue-200, #bedbff); background-color: var(--blue-50, #eff6ff); }
+.cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-title { color: var(--blue-700, #1447e6); }
+.cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn { background-color: var(--blue-500, #2b7fff); }
+.cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn:hover,
+.cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn.is-hover { background-color: var(--blue-600, #155dfc); }
+.cp-course-catalog__quick-card--general-elective { border-color: var(--green-200, #b9f8cf); background-color: var(--green-50, #f0fdf4); }
+.cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-title { color: var(--green-700, #008236); }
+.cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn { background-color: var(--green-500, #00c950); }
+.cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn:hover,
+.cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn.is-hover { background-color: var(--green-600, #00a63e); }
+.cp-course-catalog__quick-card--teaching { border-color: var(--violet-200, #ddd6ff); background-color: var(--violet-50, #f5f3ff); }
+.cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-title { color: var(--violet-700, #7008e7); }
+.cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn { background-color: var(--violet-500, #8e51ff); }
+.cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn:hover,
+.cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn.is-hover { background-color: var(--violet-600, #7f22fe); }
+/* !focusedSemester: bg-gray-200 text-gray-400 cursor-not-allowed · isCreating: bg-gray-300 text-gray-500 cursor-wait, label "..." */
+/* the source styles these states by class (no disabled: variant), so :disabled itself carries no styling */
+.cp-course-catalog__quick-card .cp-course-catalog__quick-btn.is-disabled {
+  background-color: var(--gray-200, #e5e7eb);
+  color: var(--gray-400, #99a1af);
+  cursor: not-allowed;
+}
+.cp-course-catalog__quick-card .cp-course-catalog__quick-btn.is-creating {
+  background-color: var(--gray-300, #d1d5dc);
+  color: var(--gray-500, #6a7282);
+  cursor: wait;
+}
+.cp-course-catalog__quick-footnote {
+  margin: calc(var(--space-3, 12px) + var(--space-1, 4px)) 0 0; /* space-y-3 (12px) + mt-1 */
+  color: var(--gray-400, #99a1af);
+  font: 400 11px/16.5px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* ---------- Breakpoints (Tailwind v4 sm 640 · md 768 · lg 1024 · xl 1280) ---------- */
+@media (min-width: 640px) {
+  .cp-course-catalog__header { padding: var(--space-3, 12px) var(--space-4, 16px); }
+  .cp-course-catalog__count { display: inline; }
+  .cp-course-catalog__count--mobile { display: none; }
+  .cp-course-catalog__content { max-height: 400px; padding: var(--space-4, 16px); }
+  .cp-course-catalog__group { width: 256px; }
+  .cp-course-catalog__flat-card-item { width: calc(50% - 6px); }
+}
+@media (min-width: 768px) { .cp-course-catalog__flat-card-item { width: calc(33.333% - 8px); } }
+@media (min-width: 1024px) { .cp-course-catalog__flat-card-item { width: calc(25% - 9px); } }
+@media (min-width: 1280px) { .cp-course-catalog__flat-card-item { width: calc(20% - 9.6px); } }
+
+@keyframes cp-spin { to { transform: rotate(360deg); } }

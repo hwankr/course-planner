@@ -1,0 +1,116 @@
+<!-- @dsCard group="Patterns" height=534 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Badge — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); line-height: 1.5; color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: grid; grid-template-columns: 244px 1fr; gap: 16px; align-items: center; min-height: 32px; }
+  .row + .row { margin-top: 10px; }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+  .cells { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .cells--wide { gap: 12px; }
+  .stage { background: var(--gray-50, #f9fafb); padding: 8px; }
+  .sep { font: 400 10px/15px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-400, #99a1af); }
+  .sep--ml { margin-left: 2px; }
+  .legend { display: flex; align-items: center; gap: 4px; }
+  .group { display: flex; align-items: center; gap: 8px; }
+  .group + .group { margin-left: 16px; }
+</style>
+</head>
+<body>
+
+<div class="row">
+  <p class="cap">Role · admin/users · semibold, 12px Lucide icon</p>
+  <div class="cells">
+    <span class="cp-badge cp-badge--admin"><svg class="cp-badge__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>관리자</span>
+    <span class="cp-badge cp-badge--student"><svg class="cp-badge__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>학생</span>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">Status · admin/feedback, help/feedback · medium; 관리자 답변 px-2 semibold</p>
+  <div class="cells">
+    <span class="cp-badge cp-badge--pending"><svg class="cp-badge__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>대기중</span>
+    <span class="cp-badge cp-badge--resolved"><svg class="cp-badge__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>해결됨</span>
+    <span class="cp-badge cp-badge--reply"><svg class="cp-badge__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 18v-2a4 4 0 0 0-4-4H4"/><path d="m9 17-5-5 5-5"/></svg>관리자 답변</span>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">Text-only status · admin/patch-notes semibold · provider, admin/users medium</p>
+  <div class="cells">
+    <span class="cp-badge cp-badge--draft">초안</span>
+    <span class="cp-badge cp-badge--published">발행됨</span>
+    <span class="cp-badge cp-badge--google">Google</span>
+    <span class="cp-badge cp-badge--email">이메일</span>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">Identity · departments code · patch-notes version · users 학번 · courses 학점</p>
+  <div class="cells">
+    <span class="cp-badge cp-badge--dept-code">CSE</span>
+    <span class="cp-badge cp-badge--version">v2.1.0</span>
+    <span class="cp-badge cp-badge--student-id">2021123456</span>
+    <span class="cp-badge cp-badge--credits">3학점</span>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">Planner header · planner/page.tsx · medium, on gray-50</p>
+  <div class="cells stage">
+    <span class="cp-badge cp-badge--department">컴퓨터공학과</span>
+    <span class="cp-badge cp-badge--double">복수전공: 경영학과</span>
+    <span class="cp-badge cp-badge--minor">부전공: 통계학과</span>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">Eyebrow · help, help/feedback, graduation-guide · px-3 py-1 semibold</p>
+  <div class="cells">
+    <div class="cp-badge cp-badge--eyebrow cp-badge--eyebrow-slate"><svg class="cp-badge__icon cp-badge__icon--eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>도움말 가이드</div>
+    <div class="cp-badge cp-badge--eyebrow cp-badge--eyebrow-slate"><svg class="cp-badge__icon cp-badge__icon--eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>Contact</div>
+    <div class="cp-badge cp-badge--eyebrow cp-badge--eyebrow-cyan"><svg class="cp-badge__icon cp-badge__icon--eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>빠른 문의</div>
+    <div class="cp-badge cp-badge--eyebrow cp-badge--eyebrow-purple"><svg class="cp-badge__icon cp-badge__icon--eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>내 문의 내역</div>
+    <p class="cp-badge cp-badge--eyebrow cp-badge--eyebrow-navy"><svg class="cp-badge__icon cp-badge__icon--eyebrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>졸업 정보 가이드</p>
+    <p class="cp-badge cp-badge--eyebrow cp-badge--eyebrow-slate">STEP 1</p>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">Bell count + notification circles · layout.tsx · student red, admin yellow</p>
+  <div class="cells cells--wide">
+    <div class="group">
+      <button class="cp-app-header__bell" type="button" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-badge cp-badge--count">3</span></button>
+      <button class="cp-app-header__bell" type="button" title="알림" aria-expanded="false" aria-haspopup="true"><svg class="cp-app-header__bell-icon cp-app-header__bell-icon--unread" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg><span class="cp-badge cp-badge--count cp-badge--count-admin">99+</span></button>
+    </div>
+    <div class="group">
+      <div class="cp-badge cp-badge--chip cp-badge--chip-patch-note"><svg class="cp-badge__icon cp-badge__icon--chip" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg></div>
+      <div class="cp-badge cp-badge--chip cp-badge--chip-feedback-new"><svg class="cp-badge__icon cp-badge__icon--chip" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></div>
+      <div class="cp-badge cp-badge--chip"><svg class="cp-badge__icon cp-badge__icon--chip" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg></div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <p class="cap">10px pills · admin/users plan rows · planner legend (rounded 4px)</p>
+  <div class="cells cells--wide">
+    <div class="group">
+      <span class="cp-badge cp-badge--mini cp-badge--mini-completed">이수</span>
+      <span class="cp-badge cp-badge--mini cp-badge--mini-enrolled">수강중</span>
+      <span class="cp-badge cp-badge--mini cp-badge--mini-failed">미이수</span>
+      <span class="cp-badge cp-badge--mini cp-badge--mini-planned">계획</span>
+    </div>
+    <span class="legend group">
+      <span class="cp-badge cp-badge--legend cp-badge--legend-planned">예정</span>
+      <span class="sep">↔</span>
+      <span class="cp-badge cp-badge--legend cp-badge--legend-completed">이수</span>
+      <span class="sep sep--ml">클릭하여 변경</span>
+    </span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,400 @@
+/* ModalShell (pattern) — the overlay + panel shells hand-translated from src/components/features/CustomCourseForm.tsx, src/components/features/AddSemesterDialog.tsx, src/components/features/AllPlansModal.tsx, src/app/(dashboard)/admin/courses/page.tsx, src/app/(dashboard)/admin/departments/page.tsx, src/app/(dashboard)/calendar/page.tsx. Footers compose existing classes: .cp-button (Button.css), .cp-card (Card.css), .cp-admin__btn (AdminList.css), .cp-calendar__cancel / .cp-calendar__submit (CalendarGrid.css). */
+
+.cp-modal,
+.cp-modal *,
+.cp-modal *::before,
+.cp-modal *::after {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Overlay (block root). Common to all six shells: "fixed inset-0 flex items-center justify-center
+   bg-black/50" at z-50. No text color or font class exists on any shell, so text inside inherits
+   the app body: foreground #171717, 16px/24px Arial (the two Card panels re-set gray-900).
+   --------------------------------------------------------------------------------------------- */
+.cp-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--black-a50, #00000080);
+  color: var(--foreground, #171717);
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* p-4 gutter: CustomCourseForm, AllPlansModal, calendar. AddSemesterDialog and both admin pages have
+   none, so below the panel's max-width the w-full panel touches the viewport edges. */
+.cp-modal--gutter {
+  padding: var(--space-4, 16px);
+}
+
+/* AllPlansModal only: z-40, so its AnonymousPlanModal detail (z-50) can stack above it. */
+.cp-modal--under {
+  z-index: var(--z-overlay, 40);
+}
+
+/* calendar/page.tsx: "bg-black bg-opacity-50". bg-opacity-* was removed in Tailwind v4 (the v4 spelling
+   is bg-black/50), so nothing lowers the alpha and the overlay renders OPAQUE black. Kept exact, flagged. */
+.cp-modal--opaque {
+  background-color: var(--black, #000000);
+}
+
+/* Preview-only modifier (not in the source): pin the overlay to a position: relative stage instead of the
+   viewport. The vh clamps on the panels become cqh when the stage declares container-type: size. */
+.cp-modal--staged {
+  position: absolute;
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Panels — one modifier per source recipe. Every panel is w-full; the four plain <div> panels set
+   bg-white themselves, the two Card panels take it from .cp-card (AddSemesterDialog also writes bg-white).
+   --------------------------------------------------------------------------------------------- */
+.cp-modal__panel {
+  width: 100%;
+  background-color: var(--white, #ffffff);
+}
+
+/* CustomCourseForm.tsx: "bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto" (+ --scroll) */
+.cp-modal__panel--custom-course {
+  max-width: var(--container-md, 448px);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1));
+}
+
+/* AddSemesterDialog.tsx: <Card className="w-full max-w-md bg-white"> — .cp-card supplies rounded-lg, the
+   border-default hairline (bare `border` = currentColor = text-gray-900), shadow-sm → shadow-md on hover
+   and the gray-900 text. No max-height, no scrolling. */
+.cp-modal__panel--add-semester {
+  max-width: var(--container-md, 448px);
+}
+
+/* AllPlansModal.tsx: "bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex
+   flex-col outline-none" — tabIndex={-1}, focused on open; outline-none hides that focus ring. */
+.cp-modal__panel--all-plans {
+  display: flex;
+  flex-direction: column;
+  max-width: var(--container-4xl, 896px);
+  max-height: 85vh;
+  overflow: hidden;
+  border-radius: var(--radius-xl, 12px);
+  box-shadow: var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.25));
+  outline: none;
+}
+
+/* admin/courses and admin/departments form: "w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+   (courses adds max-h-[90vh] overflow-y-auto → --scroll; departments does not). */
+.cp-modal__panel--admin-form {
+  max-width: var(--container-lg, 512px);
+  padding: var(--space-6, 24px);
+  border-radius: var(--radius-2xl, 16px);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1));
+}
+
+/* admin/departments delete confirm: "w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" */
+.cp-modal__panel--admin-confirm {
+  max-width: var(--container-sm, 384px);
+  padding: var(--space-6, 24px);
+  border-radius: var(--radius-2xl, 16px);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1));
+}
+
+/* calendar/page.tsx: <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto"> (+ --scroll) */
+.cp-modal__panel--calendar-event {
+  max-width: var(--container-lg, 512px);
+}
+
+/* max-h-[90vh] overflow-y-auto — CustomCourseForm, admin/courses, calendar. */
+.cp-modal__panel--scroll {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.cp-modal--staged .cp-modal__panel--scroll {
+  max-height: 90cqh;
+}
+.cp-modal--staged .cp-modal__panel--all-plans {
+  max-height: 85cqh;
+}
+
+/* CardContent inside the two Card panels: cn("p-6 pt-0", "pt-6") (AddSemesterDialog) and
+   cn("p-6 pt-0", "p-6") (calendar) both resolve to 24px on every side. */
+.cp-card__content.cp-modal__card-body {
+  padding: var(--space-6, 24px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Headers
+   --------------------------------------------------------------------------------------------- */
+
+/* CustomCourseForm: "px-6 py-4 border-b border-gray-200" — the only header with an explicit hairline color. */
+.cp-modal__header--custom-course {
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+
+/* AllPlansModal: "flex items-center justify-between px-6 py-4 border-b bg-gray-50" — the bare border-b is
+   1px currentColor, i.e. the inherited foreground, not gray-200. */
+.cp-modal__header--all-plans {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+  border-bottom: 1px solid var(--foreground, #171717);
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* admin/courses: "mb-5 flex items-center justify-between" inside the p-6 panel (departments has no header
+   row: the <h2> sits alone and the form takes mt-4). */
+.cp-modal__header--admin-courses {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5, 20px);
+}
+
+/* calendar: "flex items-center justify-between mb-4" inside CardContent p-6 */
+.cp-modal__header--calendar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-4, 16px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Titles and text
+   --------------------------------------------------------------------------------------------- */
+
+/* CustomCourseForm <h3 className="text-lg font-semibold text-gray-900"> — heading-4. Preflight: no margin. */
+.cp-modal__title {
+  margin: 0;
+  font: 600 18px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* AllPlansModal, admin/courses, admin/departments <h2 className="text-lg font-bold text-gray-900"> */
+.cp-modal__title--bold {
+  font-weight: 700;
+}
+
+/* AddSemesterDialog <h2 className="text-2xl font-semibold mb-6"> — heading-2 size at 600; no color class,
+   inherits the Card's gray-900. */
+.cp-modal__title--2xl {
+  margin-bottom: var(--space-6, 24px);
+  font: 600 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: inherit;
+}
+
+/* calendar <h3 className="text-xl font-semibold" style={{ color: '#153974' }}> — heading-3 in yu-navy (inline style). */
+.cp-modal__title--navy {
+  font: 600 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-navy, #153974);
+}
+
+/* CustomCourseForm <p className="text-sm text-gray-500 mt-1"> */
+.cp-modal__subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* AllPlansModal <p className="text-sm text-gray-500 mt-0.5"> (rendered only once plansData has loaded) */
+.cp-modal__subtitle--tight {
+  margin-top: var(--space-0-5, 2px);
+}
+
+/* admin/departments confirm <p className="mt-2 text-sm text-slate-600"> */
+.cp-modal__text {
+  margin: var(--space-2, 8px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Close buttons — three hand-rolled <button>s (CustomCourseForm, AddSemesterDialog and the departments
+   dialogs have none). Shared preflight reset: no border, transparent, inherits font and color, no pointer
+   cursor unless the source sets cursor-pointer.
+   --------------------------------------------------------------------------------------------- */
+.cp-modal__close {
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  appearance: button;
+  cursor: default;
+}
+
+/* AllPlansModal: "p-2 rounded-lg hover:bg-gray-200 transition-colors" aria-label="닫기" */
+.cp-modal__close--all-plans {
+  padding: var(--space-2, 8px);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-modal__close--all-plans:hover,
+.cp-modal__close--all-plans.is-hover {
+  background-color: var(--gray-200, #e5e7eb);
+}
+
+/* admin/courses: "rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer" — no
+   transition, no aria-label. slate-400 on white is 2.6:1 (misses 3:1 for an icon that carries meaning) — kept, flagged. */
+.cp-modal__close--admin {
+  padding: var(--space-1, 4px);
+  color: var(--slate-400, #90a1b9);
+  cursor: pointer;
+}
+.cp-modal__close--admin:hover,
+.cp-modal__close--admin.is-hover {
+  background-color: var(--slate-100, #f1f5f9);
+  color: var(--slate-600, #45556c);
+}
+
+/* calendar: "p-2 rounded-lg hover:bg-gray-100 transition-colors" — the X inherits the Card's gray-900. */
+.cp-modal__close--calendar {
+  padding: var(--space-2, 8px);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-modal__close--calendar:hover,
+.cp-modal__close--calendar.is-hover {
+  background-color: var(--gray-100, #f3f4f6);
+}
+
+/* Lucide X "w-5 h-5" (icon-lg); AllPlansModal colors it text-gray-500 (the others inherit). */
+.cp-modal__close-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+.cp-modal__close-icon--muted {
+  color: var(--gray-500, #6a7282);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Bodies — the inner fields are not part of the shell. Spacing only.
+   CustomCourseForm <form className="p-6 space-y-4">; admin/courses <form className="space-y-4">;
+   admin/departments <form className="mt-4 space-y-4">; AddSemesterDialog <form className="space-y-6">;
+   calendar <form className="space-y-4">; AllPlansModal content <div className="flex-1 overflow-y-auto px-6 py-4">.
+   --------------------------------------------------------------------------------------------- */
+.cp-modal__body--custom-course {
+  padding: var(--space-6, 24px);
+}
+.cp-modal__body--admin-departments {
+  margin-top: var(--space-4, 16px);
+}
+.cp-modal__body--custom-course > * + *,
+.cp-modal__body--admin-courses > * + *,
+.cp-modal__body--admin-departments > * + *,
+.cp-modal__body--calendar > * + * {
+  margin-top: var(--space-4, 16px);
+}
+.cp-modal__body--add-semester > * + * {
+  margin-top: var(--space-6, 24px);
+}
+.cp-modal__content {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Footers / action rows — one per source recipe.
+   --------------------------------------------------------------------------------------------- */
+.cp-modal__actions {
+  display: flex;
+}
+
+/* CustomCourseForm and AddSemesterDialog: "flex gap-3 pt-2", each <Button className="flex-1"> */
+.cp-modal__actions--split {
+  gap: var(--space-3, 12px);
+  padding-top: var(--space-2, 8px);
+}
+.cp-modal__actions--split > * {
+  flex: 1 1 0%;
+}
+
+/* admin/courses: "flex justify-end gap-2 pt-2" */
+.cp-modal__actions--admin-courses {
+  justify-content: flex-end;
+  gap: var(--space-2, 8px);
+  padding-top: var(--space-2, 8px);
+}
+
+/* admin/departments form: "flex items-center justify-end gap-3 pt-2" */
+.cp-modal__actions--admin-departments {
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3, 12px);
+  padding-top: var(--space-2, 8px);
+}
+
+/* admin/departments confirm: "mt-4 flex items-center justify-end gap-3" */
+.cp-modal__actions--admin-confirm {
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3, 12px);
+  margin-top: var(--space-4, 16px);
+}
+
+/* calendar: "flex gap-3 pt-4" — the flex-1 sits on .cp-calendar__cancel / .cp-calendar__submit themselves. */
+.cp-modal__actions--calendar {
+  gap: var(--space-3, 12px);
+  padding-top: var(--space-4, 16px);
+}
+
+/* admin submit (hand-rolled, mixed onto the .cp-admin__btn reset): "rounded-lg bg-[#00AACA] px-4 py-2 text-sm
+   font-medium text-white hover:bg-[#153974] disabled:opacity-50 cursor-pointer". departments adds
+   transition-colors (--admin-departments); courses has none. white on yu-cyan is 2.8:1 — kept, flagged. */
+.cp-modal__submit--admin {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--yu-cyan, #00aaca);
+  color: var(--white, #ffffff);
+}
+.cp-modal__submit--admin:hover,
+.cp-modal__submit--admin.is-hover {
+  background-color: var(--yu-navy, #153974);
+}
+.cp-modal__submit--admin:disabled,
+.cp-modal__submit--admin.is-disabled {
+  opacity: var(--opacity-disabled, 0.5);
+}
+.cp-modal__submit--admin-departments {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* AllPlansModal footer: "px-6 py-3 border-t bg-gray-50" — bare border-t = 1px currentColor (foreground). */
+.cp-modal__footer--all-plans {
+  padding: var(--space-3, 12px) var(--space-6, 24px);
+  border-top: 1px solid var(--foreground, #171717);
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* Footer notice <div className="flex items-start gap-2 text-xs text-gray-400"> — caption in gray-400,
+   2.5:1 on gray-50 in the source: kept, flagged. */
+.cp-modal__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2, 8px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+.cp-modal__notice-text {
+  margin: 0;
+}
+
+/* Lucide Info "w-3.5 h-3.5 mt-0.5 flex-shrink-0" (icon-sm) */
+.cp-modal__notice-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+  margin-top: var(--space-0-5, 2px);
+}

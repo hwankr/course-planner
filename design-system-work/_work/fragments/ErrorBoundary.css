@@ -1,0 +1,121 @@
+/* ErrorBoundary — hand-translated from src/components/ErrorBoundary.tsx (the built-in fallback card rendered when hasError is true and no `fallback` prop is given) */
+
+/* Block = the fallback card: flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-lg
+   border border-gray-200 bg-gray-50 p-8 text-center. min-h-[400px] is an arbitrary value with no size token. */
+.cp-error-boundary {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4, 16px);
+  min-height: 400px;
+  margin: 0;
+  padding: var(--space-8, 32px);
+  border: 1px solid var(--gray-200, #e5e7eb);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--gray-50, #f9fafb);
+  color: inherit;
+  text-align: center;
+}
+
+/* Icon well: rounded-full bg-red-100 p-3 — a 56px disc around the 32px glyph */
+.cp-error-boundary__icon-well {
+  box-sizing: border-box;
+  padding: var(--space-3, 12px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--red-100, #ffe2e2);
+}
+
+/* Glyph: the inline heroicons-v1 exclamation-triangle, h-8 w-8 text-red-600, stroke currentColor,
+   fill none; preflight makes svg display:block. red-600 on red-100 reads 3.9:1. */
+.cp-error-boundary__icon {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  color: var(--red-600, #e7000b);
+}
+
+/* Text block: space-y-2 — 8px between heading, body and details */
+.cp-error-boundary__text > * + * {
+  margin-top: var(--space-2, 8px);
+}
+
+/* Heading: text-xl font-semibold text-gray-900 (preflight zeroes h2 margin and font) */
+.cp-error-boundary__title {
+  margin: 0;
+  font: 600 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* Body: text-sm text-gray-600 */
+.cp-error-boundary__body {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* Dev-only details: mt-4 text-left. Declared after the space-y rule at equal specificity so the
+   16px top margin wins over the 8px sibling margin, as it does in the source. */
+.cp-error-boundary__details {
+  margin-top: var(--space-4, 16px);
+  text-align: left;
+}
+
+/* Summary: cursor-pointer text-sm text-gray-500 hover:text-gray-700; preflight keeps display:list-item */
+.cp-error-boundary__summary {
+  display: list-item;
+  cursor: pointer;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+.cp-error-boundary__summary:hover,
+.cp-error-boundary__summary.is-hover {
+  color: var(--gray-700, #364153);
+}
+
+/* Stack dump: mt-2 overflow-auto rounded bg-gray-100 p-2 text-xs text-gray-700. Preflight gives <pre>
+   margin 0 and the theme mono stack (--font-mono → Geist Mono); white-space stays pre.
+   Content is error.message, a blank line, then error.stack. */
+.cp-error-boundary__stack {
+  box-sizing: border-box;
+  margin: var(--space-2, 8px) 0 0;
+  padding: var(--space-2, 8px);
+  overflow: auto;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--gray-100, #f3f4f6);
+  font: 400 12px/16px var(--font-mono, "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--gray-700, #364153);
+  white-space: pre;
+}
+
+/* Retry button: a hand-rolled <button>, not the Button primitive — rounded-md bg-[#153974] px-4 py-2
+   text-sm font-medium text-white transition-colors hover:bg-[#003E7E]
+   focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:ring-offset-2.
+   Preflight resets: border 0, font and color inherit, no pointer cursor. No explicit height: 20px line + 2 × 8px = 36px. */
+.cp-error-boundary__retry {
+  box-sizing: border-box;
+  display: inline-block;
+  margin: 0;
+  border: 0 solid;
+  appearance: button;
+  letter-spacing: inherit;
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--yu-navy, #153974);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--white, #ffffff);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-error-boundary__retry:hover,
+.cp-error-boundary__retry.is-hover {
+  background-color: var(--yu-navy-hover, #003e7e);
+}
+/* focus: (any focus, not focus-visible) — 2px yu-cyan ring outside a 2px white offset (Tailwind's default offset color) */
+.cp-error-boundary__retry:focus,
+.cp-error-boundary__retry.is-focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px var(--yu-cyan, #00aaca);
+}

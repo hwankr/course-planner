@@ -1,0 +1,170 @@
+<!-- @dsCard group="Planner" height=976 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>RequirementForm — preview</title>
+<style>
+  /* Layout only. The form lives inside Card (bg-white text-gray-900): white stage, gray-900 inherited color. */
+  body { margin: 16px; background: var(--white, #ffffff); }
+  .row { display: flex; gap: 16px; align-items: flex-start; color: var(--gray-900, #101828); }
+  .main { width: 640px; flex: none; }
+  .aside { box-sizing: border-box; width: 272px; flex: none; display: flex; flex-direction: column; gap: 20px; padding: 16px; border-radius: 8px; background: var(--gray-50, #f9fafb); }
+  .sample { display: flex; flex-direction: column; gap: 8px; }
+  .hrow { display: flex; gap: 8px; align-items: center; }
+  .hrow--wrap { flex-wrap: wrap; }
+  .cap { font: 400 12px/16px Arial, Helvetica, sans-serif; color: var(--gray-500, #6a7282); margin: 8px 0 0; }
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="main">
+    <form class="cp-requirement-form" action="#" onsubmit="return false">
+      <div class="cp-requirement-form__help">
+        <svg class="cp-requirement-form__help-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg>
+        <span>졸업 기준과 취득 학점을 잘 모르시나요? <a class="cp-requirement-form__link" href="#">확인 방법 보기</a></span>
+      </div>
+
+      <div class="cp-requirement-form__section--first">
+        <p class="cp-requirement-form__heading cp-requirement-form__heading--rule">전공 유형</p>
+        <div class="cp-requirement-form__radios">
+          <label class="cp-requirement-form__radio"><input class="cp-requirement-form__radio-input" type="radio" name="majorType" value="single" checked><span class="cp-requirement-form__radio-text">단일전공</span></label>
+          <label class="cp-requirement-form__radio"><input class="cp-requirement-form__radio-input" type="radio" name="majorType" value="double"><span class="cp-requirement-form__radio-text">복수전공</span></label>
+          <label class="cp-requirement-form__radio"><input class="cp-requirement-form__radio-input" type="radio" name="majorType" value="minor"><span class="cp-requirement-form__radio-text">부전공</span></label>
+        </div>
+        <div class="cp-requirement-form__load">
+          <div class="cp-requirement-form__load-row">
+            <button type="button" class="cp-requirement-form__button cp-requirement-form__button--outline cp-requirement-form__button--sm">학과 기준표에서 불러오기</button>
+            <select class="cp-requirement-form__select cp-requirement-form__select--year">
+              <option value="2025">2025년</option>
+              <option value="2026" selected>2026년</option>
+            </select>
+          </div>
+          <p class="cp-requirement-form__load-message">학과 기준표에서 불러왔습니다. 수정할 수 있습니다.</p>
+        </div>
+      </div>
+
+      <div class="cp-requirement-form__section--ruled">
+        <p class="cp-requirement-form__heading cp-requirement-form__heading--rule cp-requirement-form__heading--spaced">졸업 기준</p>
+        <div class="cp-requirement-form__grid">
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">졸업학점</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="1" placeholder="예: 130" value="130"></div>
+          </div>
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">교양학점</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="예: 30" value="30"></div>
+          </div>
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">전공학점</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="예: 60" value="60"></div>
+          </div>
+          <div class="cp-requirement-form__field cp-requirement-form__field--error">
+            <label class="cp-requirement-form__label">전공핵심 (최소)</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="예: 24" value="66"></div>
+            <p class="cp-requirement-form__error">전공핵심은 전공학점 이하여야 합니다</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="cp-requirement-form__section--ruled">
+        <div>
+          <p class="cp-requirement-form__heading">기이수 학점</p>
+          <p class="cp-requirement-form__subheading">성적표 기준으로 이미 이수한 학점</p>
+        </div>
+        <div class="cp-requirement-form__suggest">
+          <p class="cp-requirement-form__suggest-text">계획에 ‘이수’ 과목이 있습니다. 해당 학기가 기이수(성적표)에 이미 반영되어 있다면, 기준 학기를 설정해야 중복 합산되지 않습니다.</p>
+          <button type="button" class="cp-requirement-form__suggest-button">2학년 2학기까지로 설정</button>
+        </div>
+        <div class="cp-requirement-form__cutoff">
+          <label class="cp-requirement-form__label">기이수에 반영된 마지막 학기</label>
+          <select class="cp-requirement-form__select cp-requirement-form__select--cutoff">
+            <option value="" selected>선택 안 함 — 계획의 이수 과목을 모두 합산</option>
+            <option value="1-spring">1학년 1학기까지 기이수에 반영됨</option>
+            <option value="1-fall">1학년 2학기까지 기이수에 반영됨</option>
+            <option value="2-spring">2학년 1학기까지 기이수에 반영됨</option>
+            <option value="2-fall">2학년 2학기까지 기이수에 반영됨</option>
+          </select>
+          <p class="cp-requirement-form__hint">선택한 학기까지 계획에 ‘이수’로 표시한 과목은 기이수 학점에 이미 포함된 것으로 보고 중복 합산하지 않습니다.</p>
+        </div>
+        <div class="cp-requirement-form__grid">
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">졸업학점</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="0" value="45"></div>
+            <p class="cp-requirement-form__hint">이미 이수한 총 학점 (전공+교양+기타 포함)</p>
+          </div>
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">교양</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="0" value="18"></div>
+          </div>
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">전공</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="0" value="24"></div>
+          </div>
+          <div class="cp-requirement-form__field">
+            <label class="cp-requirement-form__label">전공핵심</label>
+            <div class="cp-input"><input class="cp-input__field" type="number" min="0" placeholder="0" value="12"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cp-requirement-form__footer">
+        <button type="submit" class="cp-requirement-form__button cp-requirement-form__button--primary cp-requirement-form__button--md cp-requirement-form__button--grow">저장</button>
+        <button type="button" class="cp-requirement-form__button cp-requirement-form__button--outline cp-requirement-form__button--md">취소</button>
+      </div>
+    </form>
+    <p class="cap">640px · 단일전공 · 전공핵심 (최소) in error · suggestion banner · load message shown</p>
+  </div>
+
+  <div class="aside">
+    <div class="sample">
+      <div class="hrow"><button type="button" class="cp-requirement-form__button cp-requirement-form__button--primary cp-requirement-form__button--md cp-requirement-form__button--grow">저장</button></div>
+      <div class="hrow"><button type="button" class="cp-requirement-form__button cp-requirement-form__button--primary cp-requirement-form__button--md cp-requirement-form__button--grow is-hover">저장</button></div>
+      <div class="hrow"><button type="button" class="cp-requirement-form__button cp-requirement-form__button--primary cp-requirement-form__button--md cp-requirement-form__button--grow" disabled><svg class="cp-requirement-form__spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true"><circle class="cp-requirement-form__spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="cp-requirement-form__spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>로딩중...</button></div>
+      <div class="hrow"><button type="button" class="cp-requirement-form__button cp-requirement-form__button--primary cp-requirement-form__button--md cp-requirement-form__button--grow">수정</button></div>
+      <p class="cap">저장 · hover · isLoading · 수정 (initialData)</p>
+    </div>
+    <div class="sample">
+      <div class="hrow">
+        <button type="button" class="cp-requirement-form__button cp-requirement-form__button--outline cp-requirement-form__button--md">취소</button>
+        <button type="button" class="cp-requirement-form__button cp-requirement-form__button--outline cp-requirement-form__button--md is-hover">취소</button>
+        <button type="button" class="cp-requirement-form__button cp-requirement-form__button--outline cp-requirement-form__button--md is-focus">취소</button>
+      </div>
+      <p class="cap">취소 · hover · focus-visible (ring is currentColor)</p>
+    </div>
+    <div class="sample">
+      <div class="hrow hrow--wrap">
+        <button type="button" class="cp-requirement-form__button cp-requirement-form__button--outline cp-requirement-form__button--sm is-hover">학과 기준표에서 불러오기</button>
+        <select class="cp-requirement-form__select cp-requirement-form__select--year is-focus"><option>2025년</option><option selected>2026년</option></select>
+      </div>
+      <p class="cap">outline sm hover · year select focus (1px blue-500)</p>
+    </div>
+    <div class="sample">
+      <div class="cp-requirement-form__grid">
+        <div class="cp-requirement-form__field">
+          <label class="cp-requirement-form__label">전공학점</label>
+          <div class="cp-input"><input class="cp-input__field is-hover" type="number" placeholder="예: 60"></div>
+        </div>
+        <div class="cp-requirement-form__field">
+          <label class="cp-requirement-form__label">교양학점</label>
+          <div class="cp-input"><input class="cp-input__field is-focus" type="number" placeholder="예: 30" value="30"></div>
+        </div>
+      </div>
+      <p class="cap">Input hover (gray-400) · focus (2px yu-cyan ring)</p>
+    </div>
+    <div class="sample">
+      <select class="cp-requirement-form__select cp-requirement-form__select--cutoff is-focus"><option selected>2학년 2학기까지 기이수에 반영됨</option></select>
+      <p class="cap">cutoff select focus</p>
+    </div>
+    <div class="sample">
+      <div class="hrow"><button type="button" class="cp-requirement-form__suggest-button is-hover">2학년 2학기까지로 설정</button></div>
+      <p class="cap">suggestion button hover (amber-200)</p>
+    </div>
+    <div class="sample">
+      <p class="cp-requirement-form__notice">단일전공으로 설정되어 있습니다. <a class="cp-requirement-form__link is-hover" href="#">복수전공/부전공은 프로필에서 변경하세요.</a></p>
+      <p class="cap">userMajorType="single" notice · link hover (yu-navy)</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

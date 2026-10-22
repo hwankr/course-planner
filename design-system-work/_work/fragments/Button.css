@@ -1,0 +1,161 @@
+/* Button — hand-translated from src/components/ui/Button.tsx (cva buttonVariants, sizes, isLoading spinner) */
+
+/* Block = the <button>. cva base classes plus the Tailwind v4 preflight resets a <button> would get,
+   kept inside the block. Bare .cp-button carries the default *size* (h-10 px-4 py-2); the default
+   *variant* (gradient) is the explicit modifier .cp-button--default, like cva's variant key. */
+.cp-button {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  border: 0 solid;
+  background-color: transparent;
+  color: inherit;
+  appearance: button;
+  text-transform: none;
+  letter-spacing: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  border-radius: var(--radius-md, 6px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  height: var(--control-md, 40px);
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  transition: all var(--duration-base, 200ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* Sizes (size prop). sm/lg restate rounded-md as the source does; icon is a 40px square. */
+.cp-button--sm {
+  height: var(--control-sm, 36px);
+  padding: 0 var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+}
+.cp-button--lg {
+  height: var(--control-lg, 44px);
+  padding: 0 var(--space-8, 32px);
+  border-radius: var(--radius-md, 6px);
+}
+.cp-button--icon {
+  width: var(--control-md, 40px);
+  height: var(--control-md, 40px);
+  padding: 0;
+}
+
+/* Variant: default — gradient yu-navy → yu-blue, white label, shadow-sm; hover shifts the gradient and lifts to shadow-md. */
+.cp-button--default {
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+.cp-button--default:hover,
+.cp-button--default.is-hover {
+  background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+/* Variant: destructive */
+.cp-button--destructive {
+  background-color: var(--red-600, #e7000b);
+  color: var(--white, #ffffff);
+}
+.cp-button--destructive:hover,
+.cp-button--destructive.is-hover {
+  background-color: var(--red-700, #c10007);
+}
+
+/* Variant: outline — label color is inherited (no text-* class in the source). */
+.cp-button--outline {
+  border: 1px solid var(--gray-300, #d1d5dc);
+  background-color: var(--white, #ffffff);
+}
+.cp-button--outline:hover,
+.cp-button--outline.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* Variant: secondary */
+.cp-button--secondary {
+  background-color: var(--gray-100, #f3f4f6);
+  color: var(--gray-900, #101828);
+}
+.cp-button--secondary:hover,
+.cp-button--secondary.is-hover {
+  background-color: var(--gray-200, #e5e7eb);
+}
+
+/* Variant: ghost — transparent at rest, label color inherited. */
+.cp-button--ghost:hover,
+.cp-button--ghost.is-hover {
+  background-color: var(--gray-100, #f3f4f6);
+}
+
+/* Variant: link — keeps the button box; underline-offset-4 = 4px. */
+.cp-button--link {
+  color: var(--yu-navy, #153974);
+  text-underline-offset: 4px;
+}
+.cp-button--link:hover,
+.cp-button--link.is-hover {
+  text-decoration-line: underline;
+}
+
+/* Press: active:scale-[0.98] */
+.cp-button:active,
+.cp-button.is-active {
+  transform: scale(0.98);
+}
+
+/* Keyboard focus: focus-visible:outline-none ring-2 ring-offset-2. The source names no ring color, so
+   Tailwind v4 uses currentColor: white on default/destructive (invisible on a white page), inherited
+   text color on the others. Offset color is Tailwind's default #fff. */
+.cp-button:focus-visible,
+.cp-button.is-focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor;
+}
+.cp-button--default:focus-visible,
+.cp-button--default.is-focus {
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor,
+    var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+.cp-button--default:hover:focus-visible,
+.cp-button--default.is-hover:focus-visible,
+.cp-button--default:hover.is-focus,
+.cp-button--default.is-hover.is-focus {
+  box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor,
+    var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+/* Disabled (also set while isLoading): disabled:pointer-events-none disabled:opacity-50 — hover and active cannot fire. */
+.cp-button:disabled,
+.cp-button.is-disabled {
+  pointer-events: none;
+  opacity: var(--opacity-disabled, 0.5);
+}
+
+/* isLoading spinner: the inline SVG (mr-2 h-4 w-4 animate-spin) rendered before the text 로딩중... */
+.cp-button__spinner {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  margin-right: var(--space-2, 8px);
+  animation: cp-spin 1s linear infinite;
+}
+.cp-button__spinner-track { opacity: var(--opacity-spinner-track, 0.25); } /* circle, opacity-25 */
+.cp-button__spinner-head  { opacity: var(--opacity-spinner-head, 0.75); }  /* path, opacity-75 */
+@keyframes cp-spin { to { transform: rotate(360deg); } }
+
+/* Consumer-side icons (not part of Button.tsx): the app passes lucide icons sized h-4 w-4, or
+   h-5 w-5 ml-2 after the label on the landing CTA. */
+.cp-button__icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+.cp-button__icon--lg {
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+.cp-button__icon--after {
+  margin-left: var(--space-2, 8px);
+}

@@ -1,0 +1,148 @@
+<!-- @dsCard group="Patterns" height=1004 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>PatchNotes — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: flex; align-items: flex-start; gap: 24px; }
+  .row + .row { margin-top: 24px; }
+  .cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .cell--page { flex: 0 0 704px; }
+  .cell--side { flex: 1 1 0; }
+  .stage { box-sizing: border-box; padding: 16px; background: var(--gray-50, #f9fafb); }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+  <div class="cell cell--page">
+    <div class="stage">
+      <div class="cp-patch-notes">
+        <div class="cp-patch-notes__header">
+          <div class="cp-patch-notes__tile">
+            <svg class="cp-patch-notes__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+          </div>
+          <h1 class="cp-patch-notes__title">업데이트 소식</h1>
+        </div>
+        <div class="cp-patch-notes__list">
+          <a class="cp-patch-notes__link" href="#">
+            <div class="cp-card cp-patch-notes__card">
+              <div class="cp-patch-notes__card-content">
+                <div class="cp-patch-notes__row">
+                  <div class="cp-patch-notes__lead">
+                    <div class="cp-patch-notes__tile cp-patch-notes__tile--sm">
+                      <svg class="cp-patch-notes__icon cp-patch-notes__icon--sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+                    </div>
+                    <div class="cp-patch-notes__text">
+                      <div class="cp-patch-notes__title-row">
+                        <span class="cp-patch-notes__item-title">졸업요건 자동 계산 기능 추가</span>
+                        <span class="cp-patch-notes__version">v2.1.0</span>
+                      </div>
+                      <p class="cp-patch-notes__date">2026년 10월 15일</p>
+                      <p class="cp-patch-notes__excerpt">이제 수강 계획에 과목을 추가하면 졸업요건 충족 여부가 자동으로 계산됩니다. 주요 변경 사항 - 요건별 이수 학점과 남은 학점을 요약 카드에 표시 - 전공필수 미이수 과목 강조 ...</p>
+                    </div>
+                  </div>
+                  <svg class="cp-patch-notes__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+              </div>
+            </div>
+          </a>
+          <a class="cp-patch-notes__link" href="#">
+            <div class="cp-card cp-patch-notes__card is-hover">
+              <div class="cp-patch-notes__card-content">
+                <div class="cp-patch-notes__row">
+                  <div class="cp-patch-notes__lead">
+                    <div class="cp-patch-notes__tile cp-patch-notes__tile--sm">
+                      <svg class="cp-patch-notes__icon cp-patch-notes__icon--sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+                    </div>
+                    <div class="cp-patch-notes__text">
+                      <div class="cp-patch-notes__title-row">
+                        <span class="cp-patch-notes__item-title">학사일정 캘린더 오픈</span>
+                        <span class="cp-patch-notes__version">v2.0.5</span>
+                      </div>
+                      <p class="cp-patch-notes__date">2026년 9월 30일</p>
+                      <p class="cp-patch-notes__excerpt">수강신청, 시험, 공휴일 등 학사일정을 캘린더에서 확인할 수 있습니다. 관리자가 등록한 일정은 실시간으로 반영됩니다.</p>
+                    </div>
+                  </div>
+                  <svg class="cp-patch-notes__arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+    <p class="cap">page.tsx · 업데이트 소식 at max-w-2xl on the gray-50 frame · each row is a Link around a Card (second row in hover: shadow-md) · version pill blue-100 / blue-700 · date slate-400 · excerpt = truncate(content, 100)</p>
+  </div>
+  <div class="cell cell--side">
+    <div class="stage">
+      <div class="cp-patch-notes">
+        <div class="cp-patch-notes__skeleton-title"></div>
+        <div class="cp-patch-notes__skeleton-block"></div>
+        <div class="cp-patch-notes__skeleton-block"></div>
+        <div class="cp-patch-notes__skeleton-block"></div>
+      </div>
+    </div>
+    <p class="cap">Loading · h-8 w-40 rounded-lg title + h-24 rounded-2xl slate-200 blocks (four in the source), animate-pulse · the detail page uses h-6 w-32 + one h-64 block</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell cell--page">
+    <div class="stage">
+      <div class="cp-patch-notes">
+        <a class="cp-patch-notes__back" href="#">
+          <svg class="cp-patch-notes__back-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          목록으로
+        </a>
+        <div class="cp-card">
+          <div class="cp-patch-notes__detail-content">
+            <div class="cp-patch-notes__header cp-patch-notes__header--detail">
+              <div class="cp-patch-notes__tile">
+                <svg class="cp-patch-notes__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+              </div>
+              <div>
+                <h1 class="cp-patch-notes__detail-title">졸업요건 자동 계산 기능 추가</h1>
+                <div class="cp-patch-notes__meta">
+                  <span class="cp-patch-notes__version">v2.1.0</span>
+                  <span class="cp-patch-notes__meta-date">2026년 10월 15일</span>
+                </div>
+              </div>
+            </div>
+            <div class="cp-patch-notes__body">
+              <p class="cp-patch-notes__content">이제 수강 계획에 과목을 추가하면 졸업요건 충족 여부가 자동으로 계산됩니다.
+
+주요 변경 사항
+- 요건별 이수 학점과 남은 학점을 요약 카드에 표시
+- 전공필수 미이수 과목 강조 표시
+- 복수전공 요건 동시 계산 지원
+
+문의사항은 도움말 &gt; 문의하기에서 남겨주세요.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">[id]/page.tsx · 목록으로 back link yu-cyan → yu-navy on hover · CardContent p-6 · bare border-t divider (gray-900) · body whitespace-pre-wrap leading-relaxed in slate-700</p>
+  </div>
+  <div class="cell cell--side">
+    <div class="stage">
+      <div class="cp-patch-notes">
+        <div class="cp-patch-notes__empty">
+          <svg class="cp-patch-notes__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+          <p class="cp-patch-notes__empty-text">등록된 업데이트 소식이 없습니다.</p>
+        </div>
+        <div class="cp-patch-notes__error">
+          <p class="cp-patch-notes__error-text">업데이트 소식을 불러오는 중 오류가 발생했습니다.</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">Empty state (slate-50 box, shown under the header) · error banner (replaces the page; the detail page reads 업데이트 소식을 찾을 수 없습니다. above a 목록으로 link)</p>
+  </div>
+</div>
+
+</body>
+</html>

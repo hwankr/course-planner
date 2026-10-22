@@ -1,0 +1,207 @@
+/* AnonymousPlanModal — hand-translated from src/components/features/AnonymousPlanModal.tsx (semester cards reuse .cp-read-only-semester-column from src/components/features/ReadOnlySemesterColumn.tsx; icons: lucide X, Loader2, AlertCircle, Info) */
+
+.cp-anonymous-plan-modal,
+.cp-anonymous-plan-modal *,
+.cp-anonymous-plan-modal *::before,
+.cp-anonymous-plan-modal *::after { box-sizing: border-box; }
+
+/* Overlay (block root): "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" with role="dialog"
+   aria-modal="true" aria-label="익명 수강계획". A click on the overlay itself (not the panel) closes. It stacks above
+   AllPlansModal (z-40). No text color class exists on the shell, so text and the two hairlines inherit the app body
+   color (foreground #171717) and the body type (16px Arial, line-height 1.5). */
+.cp-anonymous-plan-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 16px);
+  background-color: var(--black-a50, #00000080);
+  color: var(--foreground, #171717);
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Panel: "bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col outline-none".
+   tabIndex={-1}; the component focuses it on open, and outline-none hides the resulting focus ring. */
+.cp-anonymous-plan-modal__panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: var(--container-4xl, 896px);
+  max-height: 85vh;
+  overflow: hidden;
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--white, #ffffff);
+  box-shadow: var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.25));
+  outline: none;
+}
+
+/* Preview-only modifier (not in the source): the same overlay pinned to a position: relative stage. The 85vh clamp
+   becomes 85cqh so it measures the stage when the stage declares container-type: size. */
+.cp-anonymous-plan-modal--staged { position: absolute; }
+.cp-anonymous-plan-modal--staged .cp-anonymous-plan-modal__panel { max-height: 85cqh; }
+
+/* Header: "flex items-center justify-between px-6 py-4 border-b bg-gray-50". The bare border-b is 1px currentColor,
+   i.e. the inherited foreground — not gray-200. */
+.cp-anonymous-plan-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+  border-bottom: 1px solid var(--foreground, #171717);
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* <h2> "text-lg font-bold text-gray-900" — 익명 수강계획. */
+.cp-anonymous-plan-modal__title {
+  margin: 0;
+  font: 700 18px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* <p> "text-sm text-gray-500 mt-0.5" — "총 {totalCredits}학점 · {n}과목"; rendered only once data exists
+   (absent while loading and in the error state). */
+.cp-anonymous-plan-modal__subtitle {
+  margin: var(--space-0-5, 2px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Close <button aria-label="닫기">: "p-2 rounded-lg hover:bg-gray-200 transition-colors". Preflight: transparent fill,
+   no border, inherited font and color, no pointer cursor. 20px icon + 8px padding = a 36px square. */
+.cp-anonymous-plan-modal__close {
+  appearance: button;
+  margin: 0;
+  padding: var(--space-2, 8px);
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-anonymous-plan-modal__close:hover,
+.cp-anonymous-plan-modal__close.is-hover {
+  background-color: var(--gray-200, #e5e7eb);
+}
+/* X "w-5 h-5 text-gray-500" (4.6:1 on gray-50; 3.9:1 on the gray-200 hover fill — source pair, kept, flagged). */
+.cp-anonymous-plan-modal__close-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Content: "flex-1 overflow-y-auto px-6 py-4" — the only scrolling region; header and footer stay in place. */
+.cp-anonymous-plan-modal__content {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+}
+
+/* Loading (isLoading): "flex flex-col items-center justify-center py-16 text-gray-400". The text inherits gray-400:
+   2.6:1 on white — source pair, kept, flagged. */
+.cp-anonymous-plan-modal__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16, 64px) 0;
+  color: var(--gray-400, #99a1af);
+}
+/* Loader2 "w-8 h-8 animate-spin mb-3" */
+.cp-anonymous-plan-modal__spinner {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  margin-bottom: var(--space-3, 12px);
+  animation: cp-spin 1s linear infinite;
+}
+/* <p> "text-sm" — 계획을 불러오는 중... (color inherited) */
+.cp-anonymous-plan-modal__loading-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* Error (isError, e.g. a 404 for a stale anonymousId; onClose fires 2s later): "flex flex-col items-center
+   justify-center py-16 text-amber-600" — a soft amber notice, not a red error. amber-600 on white is 3.2:1:
+   the 32px icon clears the 3:1 icon floor, the 14px title misses 4.5:1 — source pair, kept, flagged. */
+.cp-anonymous-plan-modal__error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-16, 64px) 0;
+  color: var(--amber-600, #e17100);
+}
+/* AlertCircle "w-8 h-8 mb-3" */
+.cp-anonymous-plan-modal__error-icon {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  margin-bottom: var(--space-3, 12px);
+}
+/* <p> "text-sm font-medium" — 이 계획 정보가 갱신되었습니다. (color inherited) */
+.cp-anonymous-plan-modal__error-title {
+  margin: 0;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* <p> "text-xs text-gray-400 mt-1" — 목록을 새로고침합니다... (2.6:1 on white — source pair, kept, flagged) */
+.cp-anonymous-plan-modal__error-text {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+
+/* Loaded (data): year groups "space-y-6"; each group is an unclassed <div> holding the heading and the grid. */
+.cp-anonymous-plan-modal__years > * + * { margin-top: var(--space-6, 24px); }
+
+/* <h3> "text-sm font-semibold text-gray-600 mb-2" — "{year}학년" (7.6:1 on white) */
+.cp-anonymous-plan-modal__year-title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* Semester grid: "grid grid-cols-1 sm:grid-cols-2 gap-3" — one <ReadOnlySemesterColumn> (.cp-read-only-semester-column,
+   default mode) per semester, spring first. Viewport breakpoint sm = 40rem. Items stretch to the taller card of the row. */
+.cp-anonymous-plan-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-3, 12px);
+}
+@media (min-width: 40rem) {
+  .cp-anonymous-plan-modal__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Footer: "px-6 py-3 border-t bg-gray-50" — border-t is 1px currentColor = foreground. */
+.cp-anonymous-plan-modal__footer {
+  padding: var(--space-3, 12px) var(--space-6, 24px);
+  border-top: 1px solid var(--foreground, #171717);
+  background-color: var(--gray-50, #f9fafb);
+}
+/* Notice: "flex items-start gap-2 text-xs text-gray-400" with Info "w-3.5 h-3.5 mt-0.5 flex-shrink-0".
+   gray-400 on gray-50 is 2.5:1 — source pair, kept, flagged. */
+.cp-anonymous-plan-modal__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2, 8px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+.cp-anonymous-plan-modal__notice-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+  margin-top: var(--space-0-5, 2px);
+}
+.cp-anonymous-plan-modal__notice-text { margin: 0; }
+
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}

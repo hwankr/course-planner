@@ -1,0 +1,154 @@
+<!-- @dsCard group="Patterns" height=796 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>PageHeader — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); line-height: 1.5; color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: flex; align-items: flex-start; gap: 12px; margin-top: 12px; }
+  .row:first-child { margin-top: 0; }
+  .cell { flex: 1 1 0; min-width: 0; }
+  .cell--narrow { flex: 0 0 280px; }
+  .stage { box-sizing: border-box; padding: 16px; background: var(--gray-50, #f9fafb); }
+  .stage--menu-room { padding-bottom: 84px; }
+  .cap { margin: 6px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage stage--menu-room">
+      <div class="cp-page-header cp-page-header--planner">
+        <div class="cp-page-header__title-block">
+          <h1 class="cp-page-header__title">수강 계획</h1>
+          <div class="cp-page-header__badges">
+            <span class="cp-page-header__badge cp-page-header__badge--department">컴퓨터공학과</span>
+            <span class="cp-page-header__badge cp-page-header__badge--double">복수전공: 경영학과</span>
+          </div>
+          <p class="cp-page-header__subtitle" data-export-ignore>학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
+        </div>
+        <div class="cp-page-header__actions">
+          <div class="cp-page-header__export">
+            <button class="cp-button cp-button--outline">
+              <span class="cp-page-header__button-label">
+                <svg class="cp-page-header__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+                내보내기
+              </span>
+            </button>
+            <div class="cp-page-header__menu">
+              <button class="cp-page-header__menu-item is-hover">PNG 이미지</button>
+              <button class="cp-page-header__menu-item">PDF 문서</button>
+            </div>
+          </div>
+          <button class="cp-button cp-button--outline cp-page-header__reset">초기화</button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">planner/page.tsx · 수강 계획 + department badge (yu-navy-a10) + 복수전공 badge (purple-100) + instruction line · 내보내기 outline Button with the export menu open (PNG 이미지 hovered) · 초기화 red-tinted outline Button at rest</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-page-header cp-page-header--planner">
+        <div class="cp-page-header__title-block">
+          <h1 class="cp-page-header__title">수강 계획</h1>
+          <div class="cp-page-header__badges">
+            <span class="cp-page-header__badge cp-page-header__badge--department">컴퓨터공학과</span>
+            <span class="cp-page-header__badge cp-page-header__badge--minor">부전공: 통계학과</span>
+          </div>
+          <p class="cp-page-header__subtitle" data-export-ignore>학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
+        </div>
+        <div class="cp-page-header__actions">
+          <div class="cp-page-header__export">
+            <button class="cp-button cp-button--outline" disabled>
+              <span class="cp-page-header__button-label">
+                <span class="cp-page-header__mini-spinner"></span>
+                내보내는 중...
+              </span>
+            </button>
+          </div>
+          <button class="cp-button cp-button--outline cp-page-header__reset" disabled>
+            <svg class="cp-button__spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="cp-button__spinner-track" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="cp-button__spinner-head" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+            로딩중...
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">planner/page.tsx · 부전공 badge (orange-100) · exporting: 내보내기 disabled with the 12px gray-600 arc + 내보내는 중... · 초기화 isLoading: Button's own spinner + 로딩중..., disabled</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-page-header cp-page-header--planner">
+        <div class="cp-page-header__title-block">
+          <h1 class="cp-page-header__title">수강 계획</h1>
+          <div class="cp-page-header__badges">
+            <a class="cp-page-header__dept-link" href="/profile">학과를 설정해주세요</a>
+          </div>
+          <p class="cp-page-header__subtitle" data-export-ignore>학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
+        </div>
+        <div class="cp-page-header__actions"></div>
+      </div>
+    </div>
+    <p class="cap">planner/page.tsx · no department: 학과를 설정해주세요 link (gray-400, underline; yu-navy on hover) · actions hidden while the plan has no semesters</p>
+  </div>
+  <div class="cell cell--narrow">
+    <div class="stage">
+      <div class="cp-page-header cp-page-header--export-only">
+        <h1 class="cp-page-header__title">수강 계획</h1>
+        <div class="cp-page-header__badges">
+          <span class="cp-page-header__badge cp-page-header__badge--department">컴퓨터공학과</span>
+        </div>
+      </div>
+    </div>
+    <p class="cap">planner/page.tsx · export-only header (isExporting): pb-2, text-xl title, badges only</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-page-header cp-page-header--statistics">
+        <h1 class="cp-page-header__title"><span class="cp-page-header__title-gradient">학과 수강 통계</span></h1>
+        <p class="cp-page-header__subtitle">컴퓨터공학과 학생들이 많이 듣는 과목</p>
+        <div class="cp-page-header__meta">
+          <svg class="cp-page-header__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><path d="M16 3.128a4 4 0 0 1 0 7.744"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><circle cx="9" cy="7" r="4"/></svg>
+          <span>128명의 학생 데이터 기반</span>
+          <span>·</span>
+          <span>3시간 전 갱신</span>
+        </div>
+      </div>
+    </div>
+    <p class="cap">statistics/page.tsx · .text-gradient 학과 수강 통계 (text-3xl) · text-xl gray-700 lead · gray-500 meta row with Users icon and · separator · mb-8 below</p>
+  </div>
+  <div class="cell">
+    <div class="stage">
+      <div class="cp-page-header cp-page-header--admin">
+        <a class="cp-page-header__back" href="/admin">
+          <svg class="cp-page-header__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          관리자 대시보드로 돌아가기
+        </a>
+        <div class="cp-page-header__row">
+          <div>
+            <h1 class="cp-page-header__title">과목 관리</h1>
+            <p class="cp-page-header__subtitle">등록된 과목을 관리합니다. (142건)</p>
+          </div>
+          <button type="button" class="cp-page-header__primary">
+            <svg class="cp-page-header__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            과목 추가
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">admin/courses/page.tsx · back link (yu-cyan, yu-navy on hover) · 과목 관리 + count line · 과목 추가 yu-cyan button, yu-navy on hover</p>
+  </div>
+</div>
+
+</body>
+</html>

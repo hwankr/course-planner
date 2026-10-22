@@ -1,0 +1,542 @@
+/* Onboarding — pattern hand-translated from src/app/(dashboard)/onboarding/page.tsx (header, two-step stepper, step-1 and step-2 Cards, the 복수전공/부전공 toggles) and the profile banner in src/app/(dashboard)/profile/page.tsx; .cp-card (Card.css), .cp-input (Input.css), .cp-button (Button.css) and .cp-searchable-select (SearchableSelect.css) are reused, not redefined */
+
+/* Block = a neutral root for any piece of the pattern. The app renders the page inside the dashboard <main>
+   on the gray-50 frame (body font 16px/1.5 Arial, color `foreground`), so the root restates that inheritance. */
+.cp-onboarding {
+  box-sizing: border-box;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+}
+.cp-onboarding *,
+.cp-onboarding *::before,
+.cp-onboarding *::after {
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------------- Page frame
+   <div class="min-h-[60vh] flex items-center justify-center px-4"> around
+   <div class="w-full max-w-2xl mx-auto space-y-8">. 60vh has no size token; the literal is kept. */
+.cp-onboarding__frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 0 var(--space-4, 16px);
+}
+.cp-onboarding__stack {
+  width: 100%;
+  max-width: var(--container-2xl, 672px);
+  margin: 0 auto;
+}
+/* space-y-8 under Tailwind v4: margin-bottom on every child but the last (`:where(& > :not(:last-child))`). */
+.cp-onboarding__stack > :not(:last-child) {
+  margin-bottom: var(--space-8, 32px);
+}
+
+/* ---------------------------------------------------------------- Header
+   <div class="text-center animate-fade-in-down"> — the 0.5s fadeInDown entrance is NOT reproduced. */
+.cp-onboarding__header {
+  text-align: center;
+}
+/* <h1 class="text-3xl font-bold text-gradient"> — .text-gradient is the globals.css utility:
+   linear-gradient(135deg, #153974, #3069B3, #00AACA) clipped to the glyphs (plain CSS, no oklab). */
+.cp-onboarding__title {
+  margin: 0;
+  font: 700 30px/36px var(--font-body, Arial, Helvetica, sans-serif);
+  background: linear-gradient(135deg, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* <p class="text-gray-600 mt-2"> — inherits the 16px/24px body size. */
+.cp-onboarding__lead {
+  margin: var(--space-2, 8px) 0 0;
+  color: var(--gray-600, #4a5565);
+}
+/* <p class="text-sm text-gray-400 mt-1"> — 2.6:1 on white / gray-50 in the source, kept. */
+.cp-onboarding__caption {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+
+/* ---------------------------------------------------------------- Stepper
+   <div class="space-y-2"> wrapping the circle row and the label row. */
+.cp-onboarding__stepper > :not(:last-child) {
+  margin-bottom: var(--space-2, 8px);
+}
+/* <div class="flex items-center justify-center gap-0 w-full max-w-xs mx-auto"> */
+.cp-onboarding__steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 100%;
+  max-width: var(--container-xs, 320px);
+  margin: 0 auto;
+}
+/* Circle: "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300" */
+.cp-onboarding__step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-md, 40px);
+  height: var(--control-md, 40px);
+  border-radius: var(--radius-full, 9999px);
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  transition: all var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* current: bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30 —
+   shadow-lg's two layers recolored to yu-navy-a30. */
+.cp-onboarding__step--current {
+  background-image: linear-gradient(to bottom right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+  box-shadow: 0 10px 15px -3px var(--yu-navy-a30, #1539744d), 0 4px 6px -4px var(--yu-navy-a30, #1539744d);
+}
+/* completed (step 1 once step > 1): bg-emerald-500 text-white, with the Check icon instead of the numeral.
+   white on emerald-500 is 2.5:1 in the source, kept. */
+.cp-onboarding__step--done {
+  background-color: var(--emerald-500, #00bc7d);
+  color: var(--white, #ffffff);
+}
+/* upcoming (step 2 while step < 2): bg-gray-200 text-gray-500 — 3.9:1 in the source, kept. */
+.cp-onboarding__step--upcoming {
+  background-color: var(--gray-200, #e5e7eb);
+  color: var(--gray-500, #6a7282);
+}
+/* <Check className="w-5 h-5" /> */
+.cp-onboarding__step-check {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+/* Track: "flex-1 h-1 mx-2 rounded-full bg-gray-200 overflow-hidden" */
+.cp-onboarding__connector {
+  flex: 1 1 0%;
+  height: var(--progress-track-sm, 4px);
+  margin: 0 var(--space-2, 8px);
+  overflow: hidden;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--gray-200, #e5e7eb);
+}
+/* Fill: "h-full rounded-full transition-all duration-500" + w-0 | w-full bg-gradient-to-r from-[#153974] to-[#3069B3] */
+.cp-onboarding__connector-fill {
+  width: 0;
+  height: 100%;
+  border-radius: var(--radius-full, 9999px);
+  transition: all var(--duration-enter, 500ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-onboarding__connector-fill--filled,
+.cp-onboarding__connector-fill.is-filled {
+  width: 100%;
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+}
+/* Labels row: "flex justify-between w-full max-w-xs mx-auto mt-2 px-0". The wrapper is a plain block, so the
+   circle row's 8px space-y margin-bottom and this 8px mt-2 collapse: the labels sit 8px under the circles. */
+.cp-onboarding__step-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: var(--container-xs, 320px);
+  margin: var(--space-2, 8px) auto 0;
+  padding: 0;
+}
+/* <span class="text-xs font-medium transition-colors duration-300"> — gray-400 until reached (2.6:1, kept), then yu-navy. */
+.cp-onboarding__step-label {
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-slow, 300ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-onboarding__step-label--reached,
+.cp-onboarding__step-label.is-reached {
+  color: var(--yu-navy, #153974);
+}
+
+/* ---------------------------------------------------------------- Step Cards
+   <Card className="border-t-4 border-[#3069B3] animate-fade-in-up"> and <Card className="border-t-4 border-emerald-500 …">.
+   cn() keeps the base `border` (1px) and adds the 4px top; the color utility recolors ALL FOUR sides, so the
+   gray-900 hairline of a bare Card becomes yu-blue / emerald-500 here. The 0.6s fadeInUp entrance is NOT reproduced. */
+.cp-onboarding__card--step1 {
+  border-color: var(--yu-blue, #3069b3);
+  border-top-width: 4px;
+}
+.cp-onboarding__card--step2 {
+  border-color: var(--emerald-500, #00bc7d);
+  border-top-width: 4px;
+}
+/* Title row inside CardHeader: <div class="flex items-center gap-2"> icon + <CardTitle> */
+.cp-onboarding__card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+/* Step 2 wraps that row with the year picker: <div class="flex items-center justify-between"> */
+.cp-onboarding__card-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+/* CardHeader is flex-col with space-y-1.5: the row carries margin-bottom 6px when the help line follows (v4). */
+.cp-card__header > .cp-onboarding__card-head-row:not(:last-child) {
+  margin-bottom: var(--space-1-5, 6px);
+}
+/* <School className="w-5 h-5 text-[#153974]" /> · <GraduationCap className="w-5 h-5 text-emerald-600" /> (3.7:1 on white) */
+.cp-onboarding__card-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+.cp-onboarding__card-icon--brand { color: var(--yu-navy, #153974); }
+.cp-onboarding__card-icon--emerald { color: var(--emerald-600, #009966); }
+
+/* 기준 연도 picker: <div class="flex items-center gap-1.5"> label + <select> */
+.cp-onboarding__year {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+}
+/* <label class="text-xs text-gray-500 whitespace-nowrap"> (inline, not `block`) */
+.cp-onboarding__year-label {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+  white-space: nowrap;
+}
+/* <select class="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1
+   focus:ring-[#153974] focus:border-[#153974]"> — preflight: inherited font/color, no margin; native arrow kept
+   (v4 sets no appearance on <select>). 26px tall: 16 line + 8 padding + 2 border. */
+.cp-onboarding__year-select {
+  margin: 0;
+  padding: var(--space-1, 4px) var(--space-2, 8px);
+  border: 1px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--white, #ffffff);
+  color: inherit;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+}
+.cp-onboarding__year-select:focus,
+.cp-onboarding__year-select.is-focus {
+  outline: none;
+  border-color: var(--yu-navy, #153974);
+  box-shadow: 0 0 0 1px var(--yu-navy, #153974);
+}
+/* Help line under the title row: <p class="text-xs text-gray-500 mt-1"> — Card.css gives header children a 6px
+   margin-top (its space-y-1.5 emulation); the source's mt-1 replaces it with 4px, and the row's 6px margin-bottom
+   above still applies (flex column: no collapsing), so the line sits 10px under the row as in the app. */
+.cp-onboarding__help,
+.cp-card__header > .cp-onboarding__help {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* <Link class="text-[#00AACA] hover:text-[#153974] underline"> — yu-cyan is 2.8:1 on white in the source, kept. */
+.cp-onboarding__help-link {
+  color: var(--yu-cyan, #00aaca);
+  text-decoration-line: underline;
+}
+.cp-onboarding__help-link:hover,
+.cp-onboarding__help-link.is-hover {
+  color: var(--yu-navy, #153974);
+}
+
+/* CardContent className="space-y-4" (step 1) / "space-y-6" (step 2): block children, margin-bottom on all but the last. */
+.cp-onboarding__content--gap-4 > :not(:last-child) { margin-bottom: var(--space-4, 16px); }
+.cp-onboarding__content--gap-6 > :not(:last-child) { margin-bottom: var(--space-6, 24px); }
+
+/* ---------------------------------------------------------------- Fields */
+/* <label class="block text-sm font-medium text-gray-700 mb-1"> — the step-1 labels (학과, 입학연도, 복수전공 학과). */
+.cp-onboarding__label {
+  display: block;
+  margin: 0 0 var(--space-1, 4px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+/* mb-2 on the 복수전공 / 부전공 label */
+.cp-onboarding__label--mb-2 {
+  margin-bottom: var(--space-2, 8px);
+}
+/* <label class="block text-xs text-gray-600 mb-1"> — every numeric field label in step 2 (7.6:1). */
+.cp-onboarding__label--xs {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+/* <p class="text-xs text-gray-500 mt-1"> — 입학한 연도를 입력하세요. (4.8:1) */
+.cp-onboarding__hint {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* mt-1.5 on the toggle hint (…을 선택했습니다. 해제하려면 다시 클릭하세요.) */
+.cp-onboarding__hint--tight {
+  margin-top: var(--space-1-5, 6px);
+}
+/* <p class="text-xs text-gray-400 mt-0.5"> — step-2 field helpers; 2.6:1 in the source, kept. */
+.cp-onboarding__hint--faint {
+  margin-top: var(--space-0-5, 2px);
+  color: var(--gray-400, #99a1af);
+}
+
+/* ---------------------------------------------------------------- 복수전공 / 부전공 toggles
+   <div class="flex gap-2"> of two <button type="button" class="flex-1 px-3 py-2 text-sm rounded-lg border transition-all …">.
+   The same recipe is repeated in profile/page.tsx (전공 설정 card, guest and authenticated). */
+.cp-onboarding__toggles {
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+/* Off: bg-white text-gray-700 border-gray-300. Preflight kept inside the block: inherited font (text-sm keeps the
+   card's 400 weight), no margin, appearance button, no pointer cursor. 38px tall: 20 line + 16 padding + 2 border. */
+.cp-onboarding__toggle {
+  flex: 1 1 0%;
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 1px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--white, #ffffff);
+  color: var(--gray-700, #364153);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-align: center;
+  appearance: button;
+  cursor: default;
+  transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* <span class="flex items-center justify-center gap-1.5"> — the label row inside the button */
+.cp-onboarding__toggle-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5, 6px);
+}
+/* <Check className="w-4 h-4" /> shown only while on */
+.cp-onboarding__toggle-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+/* Off + hover: hover:border-purple-400 hover:text-purple-600 / hover:border-orange-400 hover:text-orange-600.
+   Only the off class string carries hover: utilities, so on and disabled toggles do not react. */
+.cp-onboarding__toggle--double:not(.is-on):not(:disabled):not(.is-disabled):hover,
+.cp-onboarding__toggle--double:not(.is-on):not(:disabled):not(.is-disabled).is-hover {
+  border-color: var(--purple-400, #c27aff);
+  color: var(--purple-600, #9810fa);
+}
+.cp-onboarding__toggle--minor:not(.is-on):not(:disabled):not(.is-disabled):hover,
+.cp-onboarding__toggle--minor:not(.is-on):not(:disabled):not(.is-disabled).is-hover {
+  border-color: var(--orange-400, #ff8904);
+  color: var(--orange-600, #f54900);
+}
+/* On: bg-purple-500 text-white border-purple-500 shadow-sm (4.1:1, kept) / bg-orange-500 … (2.9:1, kept) */
+.cp-onboarding__toggle--double.is-on {
+  border-color: var(--purple-500, #ad46ff);
+  background-color: var(--purple-500, #ad46ff);
+  color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+.cp-onboarding__toggle--minor.is-on {
+  border-color: var(--orange-500, #ff6900);
+  background-color: var(--orange-500, #ff6900);
+  color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+}
+/* Disabled (부전공 while 복수전공 is on): bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed — a class swap,
+   not disabled: variants, so the look is identical with or without the HTML attribute. 2.4:1, kept. */
+.cp-onboarding__toggle:disabled,
+.cp-onboarding__toggle.is-disabled {
+  border-color: var(--gray-200, #e5e7eb);
+  background-color: var(--gray-100, #f3f4f6);
+  color: var(--gray-400, #99a1af);
+  cursor: not-allowed;
+}
+
+/* ---------------------------------------------------------------- Step 2: two-column requirement grid
+   <div class="grid grid-cols-1 md:grid-cols-2 gap-6"> — md = 48rem viewport. */
+.cp-onboarding__grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-6, 24px);
+}
+@media (min-width: 48rem) {
+  .cp-onboarding__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* <div class="space-y-4"> column */
+.cp-onboarding__column > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
+}
+/* <div class="flex items-center gap-1.5 border-b pb-2"> — bare border-b is currentColor, i.e. the Card's gray-900. */
+.cp-onboarding__column-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5, 6px);
+  padding-bottom: var(--space-2, 8px);
+  border-bottom: 1px solid var(--border-default, #101828);
+}
+/* <BookOpen className="w-4 h-4 text-gray-500" /> / <Award …> — purple-500 on the 복수전공 columns, orange-500 on 부전공. */
+.cp-onboarding__column-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--gray-500, #6a7282);
+}
+.cp-onboarding__column-icon--purple { color: var(--purple-500, #ad46ff); }
+.cp-onboarding__column-icon--orange { color: var(--orange-500, #ff6900); }
+/* <h3 class="text-sm font-semibold text-gray-900"> */
+.cp-onboarding__column-title {
+  margin: 0;
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* Multi-major warning: <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2"> */
+.cp-onboarding__warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2, 8px);
+  padding: var(--space-3, 12px);
+  border: 1px solid var(--amber-200, #fee685);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--amber-50, #fffbeb);
+}
+/* <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" /> */
+.cp-onboarding__warning-icon {
+  display: block;
+  flex-shrink: 0;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  margin-top: var(--space-0-5, 2px);
+  color: var(--amber-500, #fe9a00);
+}
+/* <p class="text-sm font-medium text-amber-800"> (6.8:1) · <p class="text-xs text-amber-600 mt-1"> (3.1:1, kept) */
+.cp-onboarding__warning-title {
+  margin: 0;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+}
+.cp-onboarding__warning-body {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-600, #e17100);
+}
+
+/* Autofill notice: <p class="text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md"> — 3.5:1 in the source, kept. */
+.cp-onboarding__notice {
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--emerald-50, #ecfdf5);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--emerald-600, #009966);
+}
+/* Validation error: <p class="text-sm text-red-500"> — 3.8:1 in the source, kept. */
+.cp-onboarding__error {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-500, #fb2c36);
+}
+
+/* Footer: <div class="flex justify-end pt-2"> (step 1) / <div class="flex justify-between pt-2"> (step 2) */
+.cp-onboarding__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: var(--space-2, 8px);
+}
+.cp-onboarding__actions--between {
+  justify-content: space-between;
+}
+/* Button icons: <ArrowRight className="w-4 h-4 ml-1" /> · <ArrowLeft className="w-4 h-4 mr-1" /> · <CheckCircle className="w-4 h-4 ml-1" />
+   — 4px, not Button.css's 8px .cp-button__icon--after; add these on top of .cp-button__icon. */
+.cp-onboarding__btn-icon--after { margin-left: var(--space-1, 4px); }
+.cp-onboarding__btn-icon--before { margin-right: var(--space-1, 4px); }
+
+/* ---------------------------------------------------------------- Profile banner (profile/page.tsx)
+   <div class="animate-fade-in"> — the 0.6s fadeIn entrance is NOT reproduced; a plain block, so the banner's
+   mb-16 and the body's mt-2 collapse to 64px as in the app. */
+.cp-onboarding__profile {
+  display: block;
+}
+/* <div class="h-32 rounded-xl bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] relative mb-16"> */
+.cp-onboarding__banner {
+  position: relative;
+  height: var(--space-32, 128px);
+  margin-bottom: var(--space-16, 64px);
+  border-radius: var(--radius-xl, 12px);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+}
+/* <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#153974]
+   to-[#3069B3] flex items-center justify-center ring-4 ring-white shadow-lg"> — ring layer first, then shadow-lg. */
+.cp-onboarding__avatar {
+  position: absolute;
+  bottom: calc(-1 * var(--space-10, 40px));
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-20, 80px);
+  height: var(--space-20, 80px);
+  border-radius: var(--radius-full, 9999px);
+  background-image: linear-gradient(to bottom right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  box-shadow: 0 0 0 4px var(--white, #ffffff), var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+  transform: translateX(-50%);
+}
+/* <span class="text-2xl font-bold text-white"> — the uppercased first letter of the name, 'U' when there is none. */
+.cp-onboarding__avatar-initial {
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--white, #ffffff);
+}
+/* <div class="text-center mt-2"> */
+.cp-onboarding__profile-body {
+  margin-top: var(--space-2, 8px);
+  text-align: center;
+}
+/* <h2 class="text-xl font-bold text-gray-900"> */
+.cp-onboarding__profile-name {
+  margin: 0;
+  font: 700 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* <div class="flex items-center justify-center gap-2 mt-2 flex-wrap"> */
+.cp-onboarding__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-2, 8px);
+}
+/* <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium …"> — 24px tall pills. */
+.cp-onboarding__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  padding: var(--space-1, 4px) var(--space-3, 12px);
+  border-radius: var(--radius-full, 9999px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* bg-[#153974]/10 text-[#153974] (9.4:1) */
+.cp-onboarding__badge--dept {
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+}
+/* bg-[#00AACA]/10 text-[#00AACA] — 2.5:1 on its tint in the source, kept. */
+.cp-onboarding__badge--year {
+  background-color: var(--yu-cyan-a10, #00aaca1a);
+  color: var(--yu-cyan, #00aaca);
+}
+/* bg-purple-100 text-purple-700 (6.0:1) / bg-orange-100 text-orange-700 (4.6:1) */
+.cp-onboarding__badge--double {
+  background-color: var(--purple-100, #f3e8ff);
+  color: var(--purple-700, #8200db);
+}
+.cp-onboarding__badge--minor {
+  background-color: var(--orange-100, #ffedd4);
+  color: var(--orange-700, #ca3500);
+}
+/* <Building2 className="w-3 h-3" /> · <CalendarDays className="w-3 h-3" /> */
+.cp-onboarding__badge-icon {
+  display: block;
+  width: var(--icon-xs, 12px);
+  height: var(--icon-xs, 12px);
+}

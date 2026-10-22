@@ -1,0 +1,213 @@
+<!-- @dsCard group="Patterns" height=1772 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Statistics — preview</title>
+<style>
+  /* Layout only. The statistics page sits on the gray-50 dashboard frame; the stage stands in for it. */
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .stage { background: var(--gray-50, #f9fafb); padding: 16px; border-radius: 8px; }
+  .block + .block { margin-top: 24px; }
+  .cap { margin: 8px 0 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <div class="block">
+    <div class="cp-card cp-statistics">
+      <div class="cp-statistics__header">
+        <h2 class="cp-statistics__title">
+          <svg class="cp-statistics__title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14" /><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg>
+          인기 과목 순위
+        </h2>
+        <p class="cp-statistics__subtitle">100명 중 해당 과목을 계획에 포함한 학생 비율 순으로 정렬됩니다</p>
+      </div>
+      <div class="cp-statistics__list">
+        <div class="cp-statistics__row">
+          <div class="cp-statistics__row-inner">
+            <div class="cp-statistics__rank">1</div>
+            <div class="cp-statistics__row-body">
+              <div class="cp-statistics__info">
+                <div class="cp-statistics__info-text">
+                  <h3 class="cp-statistics__course-name">자료구조</h3>
+                  <p class="cp-statistics__course-meta">CSE2010 · 3학점</p>
+                </div>
+                <span class="cp-statistics__badge cp-statistics__badge--major-required">전공핵심</span>
+              </div>
+              <div class="cp-statistics__progress">
+                <div class="cp-statistics__track"><div class="cp-statistics__fill" style="width: 62%"></div></div>
+              </div>
+              <div class="cp-statistics__stats">
+                <span class="cp-statistics__pct">62.0%</span>
+                <span class="cp-statistics__count">(62명)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cp-statistics__row is-hover">
+          <div class="cp-statistics__row-inner">
+            <div class="cp-statistics__rank">2</div>
+            <div class="cp-statistics__row-body">
+              <div class="cp-statistics__info">
+                <div class="cp-statistics__info-text">
+                  <h3 class="cp-statistics__course-name">알고리즘</h3>
+                  <p class="cp-statistics__course-meta">CSE3010 · 3학점</p>
+                </div>
+                <span class="cp-statistics__badge cp-statistics__badge--major-compulsory">전공필수</span>
+              </div>
+              <div class="cp-statistics__progress">
+                <div class="cp-statistics__track"><div class="cp-statistics__fill" style="width: 41%"></div></div>
+              </div>
+              <div class="cp-statistics__stats">
+                <span class="cp-statistics__pct">41.0%</span>
+                <span class="cp-statistics__count">(41명)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cp-statistics__row">
+          <div class="cp-statistics__row-inner">
+            <div class="cp-statistics__rank">3</div>
+            <div class="cp-statistics__row-body">
+              <div class="cp-statistics__info">
+                <div class="cp-statistics__info-text">
+                  <h3 class="cp-statistics__course-name">컴퓨터네트워크</h3>
+                  <p class="cp-statistics__course-meta">CSE3020 · 3학점</p>
+                </div>
+                <span class="cp-statistics__badge cp-statistics__badge--major-elective">전공선택</span>
+              </div>
+              <div class="cp-statistics__progress">
+                <div class="cp-statistics__track"><div class="cp-statistics__fill" style="width: 27%"></div></div>
+              </div>
+              <div class="cp-statistics__stats">
+                <span class="cp-statistics__pct">27.0%</span>
+                <span class="cp-statistics__count">(27명)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cp-statistics__footer">
+        <button type="button" class="cp-statistics__more">12개 더보기</button>
+      </div>
+      <div class="cp-statistics__note-footer">
+        <p class="cp-statistics__note">
+          <svg class="cp-statistics__note-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          계획을 작성한 학생 중 비율입니다
+        </p>
+      </div>
+    </div>
+    <p class="cap">인기 과목 순위 · 2위 row .is-hover (gray-50) · 8px gray-200 track, 3-stop gradient fill at 62% / 41% / 27% · 12개 더보기 · gray-50 note footer</p>
+  </div>
+
+  <div class="block">
+    <div class="cp-card cp-statistics">
+      <div class="cp-statistics__header">
+        <h2 class="cp-statistics__title">
+          <svg class="cp-statistics__title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16" /><path d="M18 17V9" /><path d="M13 17V5" /><path d="M8 17v-3" /></svg>
+          학기별 평균 수강 현황
+        </h2>
+        <p class="cp-statistics__subtitle">같은 학과 학생들의 학기별 평균 수강 과목 수와 학점입니다</p>
+      </div>
+      <div class="cp-statistics__body">
+        <div class="cp-statistics__tiles is-lg">
+          <div class="cp-statistics__tile">
+            <h3 class="cp-statistics__tile-title">1학년 1학기</h3>
+            <p class="cp-statistics__tile-value">6.2과목 · 18.5학점</p>
+          </div>
+          <div class="cp-statistics__tile">
+            <h3 class="cp-statistics__tile-title">1학년 2학기</h3>
+            <p class="cp-statistics__tile-value">6.0과목 · 18.0학점</p>
+          </div>
+          <div class="cp-statistics__tile">
+            <h3 class="cp-statistics__tile-title">2학년 1학기</h3>
+            <p class="cp-statistics__tile-value">5.8과목 · 17.4학점</p>
+          </div>
+          <div class="cp-statistics__tile">
+            <h3 class="cp-statistics__tile-title">2학년 2학기</h3>
+            <p class="cp-statistics__tile-value">5.6과목 · 16.8학점</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">학기별 평균 수강 현황 · gray-50 stat tiles, 4-up via the .is-lg viewport mirror (1-up below 48rem, 2-up below 64rem)</p>
+  </div>
+
+  <div class="block">
+    <div class="cp-card cp-statistics">
+      <div class="cp-statistics__header">
+        <h2 class="cp-statistics__title cp-statistics__title--plain">익명 수강계획 열람</h2>
+        <p class="cp-statistics__subtitle cp-statistics__subtitle--plain">같은 학과 학생들의 수강 계획을 참고하세요</p>
+      </div>
+      <div class="cp-statistics__body">
+        <div class="cp-statistics__plans">
+          <button type="button" class="cp-statistics__plan">
+            <div class="cp-statistics__plan-head">
+              <div class="cp-statistics__avatar">A</div>
+              <span class="cp-statistics__plan-name">계획 A</span>
+            </div>
+            <div class="cp-statistics__plan-meta">
+              <p class="cp-statistics__plan-line">8개 학기</p>
+              <p class="cp-statistics__plan-line">42개 과목 · 126학점</p>
+            </div>
+          </button>
+          <button type="button" class="cp-statistics__plan is-hover">
+            <div class="cp-statistics__plan-head">
+              <div class="cp-statistics__avatar">B</div>
+              <span class="cp-statistics__plan-name">계획 B</span>
+            </div>
+            <div class="cp-statistics__plan-meta">
+              <p class="cp-statistics__plan-line">7개 학기</p>
+              <p class="cp-statistics__plan-line">39개 과목 · 117학점</p>
+            </div>
+          </button>
+          <button type="button" class="cp-statistics__plan">
+            <div class="cp-statistics__plan-head">
+              <div class="cp-statistics__avatar">C</div>
+              <span class="cp-statistics__plan-name">계획 C</span>
+            </div>
+            <div class="cp-statistics__plan-meta">
+              <p class="cp-statistics__plan-line">8개 학기</p>
+              <p class="cp-statistics__plan-line">45개 과목 · 130학점</p>
+            </div>
+          </button>
+        </div>
+        <p class="cp-statistics__anon-note">
+          <svg class="cp-statistics__anon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
+          모든 계획은 익명으로 표시됩니다
+        </p>
+        <div class="cp-statistics__view-all">
+          <button type="button" class="cp-statistics__outline-button">
+            전체 13개 수강계획 보기
+            <svg class="cp-statistics__button-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="cap">익명 수강계획 열람 (member) · avatars A / B / C · 계획 B .is-hover (yu-blue border + shadow-md) · 전체 13개 수강계획 보기 at rest</p>
+  </div>
+
+  <div class="block">
+    <div class="cp-card cp-statistics">
+      <div class="cp-statistics__header">
+        <h2 class="cp-statistics__title cp-statistics__title--plain">익명 수강계획 열람</h2>
+        <p class="cp-statistics__subtitle cp-statistics__subtitle--plain">같은 학과 학생들의 수강 계획을 참고하세요</p>
+      </div>
+      <div class="cp-statistics__locked">
+        <svg class="cp-statistics__locked-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><path d="M16 3.128a4 4 0 0 1 0 7.744" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><circle cx="9" cy="7" r="4" /></svg>
+        <p class="cp-statistics__locked-title">로그인하면 다른 학생들의 수강 계획을 열람할 수 있습니다</p>
+        <p class="cp-statistics__locked-text">회원가입 후 나의 계획을 등록하면, 같은 학과 학생들의 익명 수강 계획도 참고할 수 있어요.</p>
+        <div class="cp-statistics__actions">
+          <button type="button" class="cp-statistics__cta">구글로 로그인</button>
+          <a class="cp-statistics__outline-button cp-statistics__outline-button--sm is-hover" href="#">회원가입하기</a>
+        </div>
+      </div>
+    </div>
+    <p class="cap">익명 수강계획 열람 (guest) · CTA pair: gradient 구글로 로그인 at rest · 회원가입하기 outlined --sm .is-hover (fills yu-blue)</p>
+  </div>
+
+</div>
+</body>
+</html>

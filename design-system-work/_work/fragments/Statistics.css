@@ -1,0 +1,491 @@
+/* Statistics — pattern extracted from the inline markup of src/app/(dashboard)/statistics/page.tsx (the 인기 과목 순위, 학기별 평균 수강 현황 and 익명 수강계획 열람 Cards and the guest CTA pair); the shell is .cp-card from src/components/ui/Card.tsx (icons: lucide BookOpen, BarChart3, Info, Users, ChevronRight, Loader2) */
+
+/* Block = the <Card> element itself: <div class="cp-card cp-statistics">. .cp-card already sets the white fill, the gray-900
+   hairline, radius-lg, shadow-sm → shadow-md on hover, border-box on every descendant and the inherited body type
+   (400 16px/24px, color gray-900). The page adds mb-8 on the first two Cards; that is page rhythm, not part of the pattern. */
+.cp-statistics {
+  display: block;
+}
+
+/* Section header: "p-6 border-b". The bare border-b under Tailwind v4 is 1px currentColor, i.e. the Card's gray-900. */
+.cp-statistics__header {
+  padding: var(--space-6, 24px);
+  border-bottom: 1px solid var(--border-default, #101828);
+}
+
+/* <h2> "text-xl font-bold flex items-center gap-2" — heading-3 size at weight 700, color inherited (gray-900).
+   The icon and the text node are the two flex items. */
+.cp-statistics__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  font: 700 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* 익명 수강계획 열람 <h2> "text-xl font-bold mb-1": no icon row, 4px below instead. */
+.cp-statistics__title--plain {
+  display: block;
+  margin-bottom: var(--space-1, 4px);
+}
+/* BookOpen / BarChart3 "w-5 h-5 text-[#3069B3]" — 5.5:1 on white. */
+.cp-statistics__title-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  color: var(--yu-blue, #3069b3);
+}
+/* <p> "text-sm text-gray-500 mt-1" — body-sm in gray-500 (4.8:1). */
+.cp-statistics__subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* 익명 수강계획 열람 <p> "text-sm text-gray-600": one step darker, no top margin (the title carries mb-1). */
+.cp-statistics__subtitle--plain {
+  margin-top: 0;
+  color: var(--gray-600, #4a5565);
+}
+
+/* ---- 인기 과목 순위: ranking list ---------------------------------------------------------------- */
+
+/* "divide-y": every child but the last gets a 1px bottom hairline in currentColor (gray-900). */
+.cp-statistics__list > :not(:last-child) {
+  border-bottom: 1px solid var(--border-default, #101828);
+}
+
+/* Row "p-4 hover:bg-gray-50 transition-colors" — a hover wash with no click handler. */
+.cp-statistics__row {
+  padding: var(--space-4, 16px);
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-statistics__row:hover,
+.cp-statistics__row.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+/* "flex items-start gap-4" */
+.cp-statistics__row-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4, 16px);
+}
+
+/* Rank circle "flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] text-white flex items-center
+   justify-center font-bold text-sm" ({index + 1}) and the plan-tile letter avatar (same classes minus flex-shrink-0; A, B, C …).
+   White on the gradient: 11.2:1 at the navy end, 5.5:1 at the blue end. */
+.cp-statistics__rank,
+.cp-statistics__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  border-radius: var(--radius-full, 9999px);
+  background-image: linear-gradient(to bottom right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+  font: 700 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-statistics__rank {
+  flex-shrink: 0;
+}
+
+/* "flex-1 min-w-0" — lets the course name truncate. */
+.cp-statistics__row-body {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+/* "flex items-start justify-between gap-2 mb-2" — name/meta on the left, badge on the right. */
+.cp-statistics__info {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-2, 8px);
+}
+.cp-statistics__info-text {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+/* <h3> "font-semibold text-gray-900 truncate" — body size at 600 (17.7:1). */
+.cp-statistics__course-name {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* <p> "text-sm text-gray-600" — "{code} · {credits}학점" (7.6:1). */
+.cp-statistics__course-meta {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* Category badge "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium whitespace-nowrap" + CATEGORY_COLORS. */
+.cp-statistics__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-0-5, 2px) var(--space-2-5, 10px);
+  border-radius: var(--radius-full, 9999px);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  white-space: nowrap;
+}
+/* 전공핵심 "bg-red-100 text-red-700" (5.3:1) */
+.cp-statistics__badge--major-required   { background-color: var(--category-major-required-bg, #ffe2e2);   color: var(--category-major-required-text, #c10007); }
+/* 전공필수 "bg-rose-100 text-rose-700" (5.0:1) */
+.cp-statistics__badge--major-compulsory { background-color: var(--category-major-compulsory-bg, #ffe4e6); color: var(--category-major-compulsory-text, #c70036); }
+/* 전공선택 "bg-orange-100 text-orange-700" (4.6:1) */
+.cp-statistics__badge--major-elective   { background-color: var(--category-major-elective-bg, #ffedd4);   color: var(--category-major-elective-text, #ca3500); }
+/* 교양필수 "bg-blue-100 text-blue-700" (5.6:1) */
+.cp-statistics__badge--general-required { background-color: var(--category-general-required-bg, #dbeafe); color: var(--category-general-required-text, #1447e6); }
+/* 교양선택 "bg-green-100 text-green-700" (4.5:1) */
+.cp-statistics__badge--general-elective { background-color: var(--category-general-elective-bg, #dcfce7); color: var(--category-general-elective-text, #008236); }
+/* 교직 "bg-violet-100 text-violet-700" (6.2:1) */
+.cp-statistics__badge--teaching         { background-color: var(--category-teaching-bg, #ede9fe);         color: var(--category-teaching-text, #7008e7); }
+/* 자유선택 "bg-gray-100 text-gray-600" (7.2:1) */
+.cp-statistics__badge--free-elective    { background-color: var(--category-free-elective-bg, #f3f4f6);    color: var(--category-free-elective-text, #4a5565); }
+
+/* Progress: wrapper "mb-1"; track "h-2 bg-gray-200 rounded-full overflow-hidden" (h-2 is the 8px spacing step; 1.2:1 on white,
+   decorative — the percentage text carries the value); fill "h-full bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA]
+   transition-all duration-300" with style="width: {percentage}%". */
+.cp-statistics__progress {
+  margin-bottom: var(--space-1, 4px);
+}
+.cp-statistics__track {
+  height: var(--space-2, 8px);
+  overflow: hidden;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--gray-200, #e5e7eb);
+}
+.cp-statistics__fill {
+  height: 100%;
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+  transition: all var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* Stats line "flex items-center gap-2 text-sm": "{percentage.toFixed(1)}%" "font-semibold text-[#3069B3]" (5.5:1) and
+   "({studentCount}명)" "text-gray-500" (4.8:1). */
+.cp-statistics__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-statistics__pct {
+  font-weight: 600;
+  color: var(--yu-blue, #3069b3);
+}
+.cp-statistics__count {
+  color: var(--gray-500, #6a7282);
+}
+
+/* Show-more footer (only while filteredCourses.length > 3): "p-4 border-t" — border-t is 1px currentColor (gray-900). */
+.cp-statistics__footer {
+  padding: var(--space-4, 16px);
+  border-top: 1px solid var(--border-default, #101828);
+}
+/* 더보기 <button> "w-full py-2.5 text-sm font-medium text-[#3069B3] hover:bg-blue-50 rounded-lg transition-colors".
+   Preflight: transparent fill, no border, no pointer cursor, letter-spacing inherited. 5.5:1 at rest, 5.1:1 on blue-50. */
+.cp-statistics__more {
+  appearance: button;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2-5, 10px) 0;
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  color: var(--yu-blue, #3069b3);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-align: center;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-statistics__more:hover,
+.cp-statistics__more.is-hover {
+  background-color: var(--blue-50, #eff6ff);
+}
+/* 접기 (remainingCount === 0): "text-gray-500 hover:bg-gray-50" instead. */
+.cp-statistics__more--collapse {
+  color: var(--gray-500, #6a7282);
+}
+.cp-statistics__more--collapse:hover,
+.cp-statistics__more--collapse.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+
+/* Note footer (whenever rows exist): "p-4 bg-gray-50 border-t" with <p> "text-sm text-gray-600 flex items-center gap-1"
+   and Info "w-4 h-4". gray-600 on gray-50 is 7.2:1. */
+.cp-statistics__note-footer {
+  padding: var(--space-4, 16px);
+  border-top: 1px solid var(--border-default, #101828);
+  background-color: var(--gray-50, #f9fafb);
+}
+.cp-statistics__note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+.cp-statistics__note-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* Empty list "p-8 text-center text-gray-500" (ranking) and "text-center py-12 text-gray-500" (plans, --plans).
+   <p> "font-medium mb-1" then <p> "text-sm"; the filtered-empty string is a bare text node in the container. */
+.cp-statistics__empty {
+  padding: var(--space-8, 32px);
+  text-align: center;
+  color: var(--gray-500, #6a7282);
+}
+.cp-statistics__empty--plans {
+  padding: var(--space-12, 48px) 0;
+}
+.cp-statistics__empty-title {
+  margin: 0 0 var(--space-1, 4px);
+  font: 500 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+}
+.cp-statistics__empty-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+
+/* ---- 학기별 평균 수강 현황: stat tiles ------------------------------------------------------------- */
+
+/* Card body "p-6" (also the member plans body). */
+.cp-statistics__body {
+  padding: var(--space-6, 24px);
+}
+/* "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" — viewport breakpoints md 48rem, lg 64rem. */
+.cp-statistics__tiles {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-4, 16px);
+}
+@media (min-width: 48rem) {
+  .cp-statistics__tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 64rem) {
+  .cp-statistics__tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+/* Preview-only viewport mirror (not in the source): the ≥64rem 4-up layout regardless of frame width. */
+.cp-statistics__tiles.is-lg {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+/* Tile "p-4 bg-gray-50 rounded-lg" — text only, no big-number type. */
+.cp-statistics__tile {
+  padding: var(--space-4, 16px);
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--gray-50, #f9fafb);
+}
+/* <h3> "font-semibold text-gray-900 mb-2" — "{year}학년 {1|2}학기" (17.0:1 on gray-50). */
+.cp-statistics__tile-title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* <p> "text-sm text-gray-600" — "{avgCourses}과목 · {avgCredits}학점" to one decimal (7.2:1 on gray-50). */
+.cp-statistics__tile-value {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+
+/* ---- 익명 수강계획 열람: member variant ------------------------------------------------------------ */
+
+/* Loading "flex items-center justify-center py-12" with Loader2 "w-8 h-8 animate-spin text-[#3069B3]". */
+.cp-statistics__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-12, 48px) 0;
+}
+.cp-statistics__spinner {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  color: var(--yu-blue, #3069b3);
+  animation: cp-spin 1s linear infinite;
+}
+
+/* "grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" */
+.cp-statistics__plans {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: var(--space-4, 16px);
+  margin-bottom: var(--space-4, 16px);
+}
+@media (min-width: 48rem) {
+  .cp-statistics__plans { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Plan tile <button> "p-4 border-2 border-gray-200 rounded-lg hover:border-[#3069B3] hover:shadow-md transition-all text-left".
+   No cursor-pointer, no focus class (browser default ring). gray-200 border is 1.2:1 on white — source pair, kept, flagged. */
+.cp-statistics__plan {
+  appearance: button;
+  margin: 0;
+  padding: var(--space-4, 16px);
+  border: 2px solid var(--gray-200, #e5e7eb);
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-statistics__plan:hover,
+.cp-statistics__plan.is-hover {
+  border-color: var(--yu-blue, #3069b3);
+  box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+/* "flex items-center gap-2 mb-3" — letter avatar (.cp-statistics__avatar) + name. */
+.cp-statistics__plan-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-3, 12px);
+}
+/* <span> "font-semibold text-gray-900" — "계획 {label}". */
+.cp-statistics__plan-name {
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* "space-y-1 text-sm text-gray-600" — <p> "{n}개 학기" and <p> "{n}개 과목 · {n}학점". */
+.cp-statistics__plan-meta {
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
+.cp-statistics__plan-line {
+  margin: 0;
+}
+.cp-statistics__plan-meta > * + * {
+  margin-top: var(--space-1, 4px);
+}
+
+/* Anonymity note (only when plans exist): "text-xs text-gray-400 mt-4 flex items-center gap-1" with Info "w-3.5 h-3.5".
+   gray-400 on white is 2.6:1 — source pair, kept, flagged. */
+.cp-statistics__anon-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  margin: var(--space-4, 16px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+.cp-statistics__anon-icon {
+  display: block;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+}
+
+/* View-all wrap (only when total > 3): "text-center mt-4". */
+.cp-statistics__view-all {
+  margin-top: var(--space-4, 16px);
+  text-align: center;
+}
+
+/* Outlined brand button — two recipes in the source, shared base:
+   전체 {total}개 수강계획 보기 <button>: "inline-flex items-center gap-2 px-6 py-3 border-2 border-[#3069B3] text-[#3069B3] rounded-lg
+   hover:bg-[#3069B3] hover:text-white transition-colors" — no text class, so the label inherits body 16px/24px at 400.
+   회원가입하기 <Link>: the same with "px-5 py-2.5 … text-sm font-medium" → --sm. 5.5:1 at rest; white on yu-blue 5.5:1 on hover.
+   No cursor-pointer and no focus class on either. */
+.cp-statistics__outline-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: var(--space-3, 12px) var(--space-6, 24px);
+  border: 2px solid var(--yu-blue, #3069b3);
+  border-radius: var(--radius-lg, 8px);
+  background-color: transparent;
+  color: var(--yu-blue, #3069b3);
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-statistics__outline-button:hover,
+.cp-statistics__outline-button.is-hover {
+  background-color: var(--yu-blue, #3069b3);
+  color: var(--white, #ffffff);
+}
+.cp-statistics__outline-button--sm {
+  padding: var(--space-2-5, 10px) var(--space-5, 20px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* ChevronRight "w-5 h-5" after the view-all label. */
+.cp-statistics__button-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+}
+
+/* ---- 익명 수강계획 열람: guest variant ------------------------------------------------------------- */
+
+/* Locked body "p-8 text-center". */
+.cp-statistics__locked {
+  padding: var(--space-8, 32px);
+  text-align: center;
+}
+/* Users "w-12 h-12 text-gray-300 mx-auto mb-4" — decorative glyph at the 48px avatar size. */
+.cp-statistics__locked-icon {
+  display: block;
+  width: var(--avatar, 48px);
+  height: var(--avatar, 48px);
+  margin: 0 auto var(--space-4, 16px);
+  color: var(--gray-300, #d1d5dc);
+}
+/* <p> "font-medium text-gray-900 mb-2" */
+.cp-statistics__locked-title {
+  margin: 0 0 var(--space-2, 8px);
+  font: 500 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* <p> "text-sm text-gray-500 mb-6" */
+.cp-statistics__locked-text {
+  margin: 0 0 var(--space-6, 24px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* CTA row "flex items-center justify-center gap-3". */
+.cp-statistics__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3, 12px);
+}
+/* 구글로 로그인 <button> "inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-[#153974] to-[#3069B3] text-white rounded-lg
+   hover:opacity-90 transition-opacity text-sm font-medium". No border, no cursor-pointer, no focus class. */
+.cp-statistics__cta {
+  appearance: button;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: var(--space-2-5, 10px) var(--space-5, 20px);
+  border: 0 solid;
+  border-radius: var(--radius-lg, 8px);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  color: var(--white, #ffffff);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-statistics__cta:hover,
+.cp-statistics__cta.is-hover {
+  opacity: var(--opacity-hover-wash, 0.9);
+}
+
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}

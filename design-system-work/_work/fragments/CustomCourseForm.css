@@ -1,0 +1,163 @@
+/* CustomCourseForm — hand-translated from src/components/features/CustomCourseForm.tsx (overlay, panel, header, form body, labels, select, banners, footer); fields reuse .cp-input (src/components/ui/Input.tsx) and buttons reuse .cp-button (src/components/ui/Button.tsx) */
+
+/* Block = the overlay <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">.
+   The overlay and panel set no text color of their own, so the Input, select and 취소 label inherit the body `foreground`;
+   header, labels, asterisks, banners and the error line set their colors below. */
+.cp-custom-course-form {
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal, 50);
+  padding: var(--space-4, 16px);
+  background-color: var(--black-a50, #00000080);
+}
+
+/* Preview-only modifier: the same overlay pinned to a position: relative stage instead of the viewport.
+   Not in the source. The panel's 90vh clamp becomes 90cqh — 90% of the stage when the stage declares
+   container-type: size; without a size container cqh resolves against the small viewport, i.e. 90vh. */
+.cp-custom-course-form--staged {
+  position: absolute;
+}
+.cp-custom-course-form--staged .cp-custom-course-form__panel {
+  max-height: 90cqh;
+}
+
+/* Panel: bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto */
+.cp-custom-course-form__panel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--container-md, 448px);
+  max-height: 90vh;
+  overflow-y: auto;
+  background-color: var(--white, #ffffff);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1));
+}
+
+/* Header: px-6 py-4 border-b border-gray-200 */
+.cp-custom-course-form__header {
+  padding: var(--space-4, 16px) var(--space-6, 24px);
+  border-bottom: 1px solid var(--gray-200, #e5e7eb);
+}
+
+/* Title <h3>: text-lg font-semibold text-gray-900 (heading-4). Preflight: no margin. */
+.cp-custom-course-form__title {
+  margin: 0;
+  font: 600 18px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* Subtitle <p>: text-sm text-gray-500 mt-1 (body-sm) */
+.cp-custom-course-form__subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+
+/* Body <form>: p-6 space-y-4 */
+.cp-custom-course-form__body {
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--space-6, 24px);
+}
+/* space-y-4 per the brief: 16px above every child after the first. :not(:first-child) lifts this rule to (0,2,0)
+   so it wins over the `margin: 0` resets on the <p> elements below (Tailwind itself wins through its utilities layer). */
+.cp-custom-course-form__body > :not(:first-child) {
+  margin-top: var(--space-4, 16px);
+}
+
+/* Field wrapper <div> — no classes in the source. */
+.cp-custom-course-form__field {
+  display: block;
+}
+
+/* Label: block text-sm font-medium text-gray-700 mb-1 (body-sm-medium). No htmlFor in the source. */
+.cp-custom-course-form__label {
+  display: block;
+  margin: 0 0 var(--space-1, 4px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+
+/* Required asterisk <span className="text-red-500"> */
+.cp-custom-course-form__required {
+  color: var(--red-500, #fb2c36);
+}
+
+/* Native <select>: flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm.
+   Tailwind v4 preflight kept inside the block: font, letter-spacing and color inherit; no margin.
+   The source gives it NO hover, focus, transition or disabled styles — keyboard focus shows only the
+   browser's default outline, unlike the yu-cyan ring on the Inputs beside it. The native chevron stays. */
+.cp-custom-course-form__select {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: var(--control-md, 40px);
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 1px solid var(--gray-300, #d1d5dc);
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--white, #ffffff);
+  color: inherit;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+}
+
+/* Status banner <p>: text-sm rounded-md px-3 py-2 (body-sm), colored by the modifier below. */
+.cp-custom-course-form__notice {
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border-radius: var(--radius-md, 6px);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+}
+/* focusedSemester set: text-blue-600 bg-blue-50 (4.8:1) */
+.cp-custom-course-form__notice--info {
+  color: var(--blue-600, #155dfc);
+  background-color: var(--blue-50, #eff6ff);
+}
+/* focusedSemester null: text-amber-600 bg-amber-50 (3.1:1 in the source — kept, flagged) */
+.cp-custom-course-form__notice--warning {
+  color: var(--amber-600, #e17100);
+  background-color: var(--amber-50, #fffbeb);
+}
+/* <span className="font-medium"> around "{year}학년 {n}학기" */
+.cp-custom-course-form__notice-strong {
+  font-weight: 500;
+}
+
+/* No-department line <p className="text-sm text-amber-600"> — no fill (3.2:1 on white, flagged). */
+.cp-custom-course-form__warning {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-600, #e17100);
+}
+
+/* <a href="/profile" className="underline font-medium"> — preflight: color and decoration inherit, so the link is amber-600 too. */
+.cp-custom-course-form__link {
+  color: inherit;
+  font-weight: 500;
+  text-decoration-line: underline;
+}
+
+/* Mutation error <p className="text-sm text-red-500"> (3.8:1 on white, flagged) */
+.cp-custom-course-form__error {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-500, #fb2c36);
+}
+
+/* Footer: flex gap-3 pt-2 — with the space-y-4 gap above it the buttons sit 24px under the last line. */
+.cp-custom-course-form__footer {
+  display: flex;
+  gap: var(--space-3, 12px);
+  padding-top: var(--space-2, 8px);
+}
+
+/* Both Buttons get className="flex-1": 취소 (.cp-button--ghost, type="button") on the LEFT,
+   추가 (.cp-button--default, type="submit") on the RIGHT. Disabled and hover come from .cp-button. */
+.cp-custom-course-form__action {
+  flex: 1 1 0%;
+}

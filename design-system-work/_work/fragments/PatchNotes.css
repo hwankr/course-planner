@@ -1,0 +1,284 @@
+/* PatchNotes — pattern hand-translated from src/app/(dashboard)/patch-notes/page.tsx and src/app/(dashboard)/patch-notes/[id]/page.tsx; the list rows and the detail card are the Card primitive (.cp-card from Card.css) — only the pattern's own rules live here */
+
+/* Block = the page root of both pages (and of their skeletons): max-w-2xl mx-auto space-y-4. It sits in the dashboard
+   <main> on the gray-50 frame and inherits the body font (Arial 16px/1.5) and the foreground color. */
+.cp-patch-notes {
+  box-sizing: border-box;
+  max-width: var(--container-2xl, 672px);
+  margin: 0 auto;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+}
+.cp-patch-notes *,
+.cp-patch-notes *::before,
+.cp-patch-notes *::after {
+  box-sizing: border-box;
+}
+/* space-y-4 */
+.cp-patch-notes > * + * {
+  margin-top: var(--space-4, 16px);
+}
+
+/* ---- Header row: list page header and detail card header, both "flex items-center gap-3" ---- */
+.cp-patch-notes__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+/* the detail header adds mb-4 */
+.cp-patch-notes__header--detail {
+  margin-bottom: var(--space-4, 16px);
+}
+
+/* Megaphone tile: w-10 h-10 rounded-full flex items-center justify-center bg-purple-100 (the 40px tile has no flex-shrink-0) */
+.cp-patch-notes__tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-md, 40px);
+  height: var(--control-md, 40px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--purple-100, #f3e8ff);
+}
+/* list-row tile: mt-0.5 flex-shrink-0 w-8 h-8 */
+.cp-patch-notes__tile--sm {
+  flex-shrink: 0;
+  margin-top: var(--space-0-5, 2px);
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+}
+
+/* Lucide Megaphone: w-5 h-5 text-purple-600 in the 40px tiles, w-4 h-4 in the 32px tile. Preflight makes svg display:block. */
+.cp-patch-notes__icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  color: var(--purple-600, #9810fa);
+}
+.cp-patch-notes__icon--sm {
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+
+/* <h1> 업데이트 소식: text-2xl font-bold text-gray-900 */
+.cp-patch-notes__title {
+  margin: 0;
+  font: 700 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+
+/* ---- List: flex flex-col gap-3 ---- */
+.cp-patch-notes__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 12px);
+}
+/* <Link href="/patch-notes/{_id}"> renders an <a> with no classes: preflight color/text-decoration inherit; a flex item, so block-level */
+.cp-patch-notes__link {
+  display: block;
+  color: inherit;
+  text-decoration: inherit;
+}
+/* Card className="transition-shadow hover:shadow-md cursor-pointer" — the first two restate .cp-card's own base; only the cursor is new.
+   Hover = .cp-card:hover / .cp-card.is-hover (shadow-sm → shadow-md over duration-slow), defined in Card.css. */
+.cp-patch-notes__card {
+  cursor: pointer;
+}
+/* CardContent className="p-5": cn() drops the base p-6 pt-0, so nothing of .cp-card__content survives */
+.cp-patch-notes__card-content {
+  padding: var(--space-5, 20px);
+}
+/* flex items-start justify-between gap-3 */
+.cp-patch-notes__row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3, 12px);
+}
+/* flex items-start gap-3 min-w-0 */
+.cp-patch-notes__lead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+  min-width: 0;
+}
+/* min-w-0 */
+.cp-patch-notes__text {
+  min-width: 0;
+}
+/* flex items-center gap-2 flex-wrap mb-0.5 */
+.cp-patch-notes__title-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  margin-bottom: var(--space-0-5, 2px);
+}
+/* <span> font-semibold text-gray-900 truncate — size inherited from the Card (16px/24px) */
+.cp-patch-notes__item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* Version pill (rendered only when note.version): inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 */
+.cp-patch-notes__version {
+  display: inline-flex;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--blue-100, #dbeafe);
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  font: 600 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--blue-700, #1447e6);
+}
+/* the list pill adds flex-shrink-0; the detail pill does not */
+.cp-patch-notes__title-row > .cp-patch-notes__version {
+  flex-shrink: 0;
+}
+/* Date <p>: text-xs text-slate-400 mb-2 — formatDate(publishedAt ?? createdAt), ko-KR long date */
+.cp-patch-notes__date {
+  margin: 0 0 var(--space-2, 8px);
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+/* Excerpt <p>: text-sm text-slate-600 leading-relaxed — truncate(content, 100) + "..." (no pre-wrap: line breaks collapse) */
+.cp-patch-notes__excerpt {
+  margin: 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-600, #45556c);
+}
+/* Lucide ArrowRight: flex-shrink-0 mt-1 h-4 w-4 text-slate-300 */
+.cp-patch-notes__arrow {
+  display: block;
+  flex-shrink: 0;
+  margin-top: var(--space-1, 4px);
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--slate-300, #cad5e2);
+}
+
+/* ---- Loading skeleton (animate-pulse rounded-* bg-slate-200), stacked by the root's space-y-4 ---- */
+/* list page: h-8 w-40 rounded-lg title (160px — no spacing token covers w-40) */
+.cp-patch-notes__skeleton-title {
+  height: var(--space-8, 32px);
+  width: 160px;
+  border-radius: var(--radius-lg, 8px);
+  background-color: var(--slate-200, #e2e8f0);
+  animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+/* list page: four h-24 rounded-2xl blocks */
+.cp-patch-notes__skeleton-block {
+  height: var(--space-24, 96px);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--slate-200, #e2e8f0);
+  animation: cp-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+/* detail page: h-6 w-32 title and one h-64 block (256px — no size token covers h-64) */
+.cp-patch-notes__skeleton-title--detail {
+  height: var(--space-6, 24px);
+  width: var(--space-32, 128px);
+}
+.cp-patch-notes__skeleton-block--detail {
+  height: 256px;
+}
+@keyframes cp-pulse { 50% { opacity: 0.5; } }
+
+/* ---- Empty state (list page, under the header): rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center ---- */
+.cp-patch-notes__empty {
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--slate-50, #f8fafc);
+  padding: var(--space-10, 40px);
+  text-align: center;
+}
+/* Megaphone: mx-auto mb-3 h-8 w-8 text-slate-300 */
+.cp-patch-notes__empty-icon {
+  display: block;
+  margin: 0 auto var(--space-3, 12px);
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  color: var(--slate-300, #cad5e2);
+}
+/* <p> text-sm text-slate-500 */
+.cp-patch-notes__empty-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-500, #62748e);
+}
+
+/* ---- Error banner (both pages, replaces the content): rounded-2xl border border-red-200 bg-red-50 p-8 text-center ---- */
+.cp-patch-notes__error {
+  border: 1px solid var(--red-200, #ffc9c9);
+  border-radius: var(--radius-2xl, 16px);
+  background-color: var(--red-50, #fef2f2);
+  padding: var(--space-8, 32px);
+  text-align: center;
+}
+/* <p> text-sm text-red-600 */
+.cp-patch-notes__error-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--red-600, #e7000b);
+}
+
+/* ---- Detail page ---- */
+/* 목록으로 <Link href="/patch-notes">: inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974] */
+.cp-patch-notes__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--yu-cyan, #00aaca);
+  text-decoration: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-patch-notes__back:hover,
+.cp-patch-notes__back.is-hover {
+  color: var(--yu-navy, #153974);
+}
+/* the error branch renders the link outside the space-y root and adds mb-4 */
+.cp-patch-notes__back--error {
+  margin-bottom: var(--space-4, 16px);
+}
+/* Lucide ArrowLeft h-4 w-4 — inherits the link color */
+.cp-patch-notes__back-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+/* CardContent className="p-6": cn() drops the base pt-0 */
+.cp-patch-notes__detail-content {
+  padding: var(--space-6, 24px);
+}
+/* <h1> note.title: text-xl font-bold text-gray-900 */
+.cp-patch-notes__detail-title {
+  margin: 0;
+  font: 700 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* meta row: flex items-center gap-2 mt-0.5 */
+.cp-patch-notes__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin-top: var(--space-0-5, 2px);
+}
+/* <span> text-xs text-slate-400 */
+.cp-patch-notes__meta-date {
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-400, #90a1b9);
+}
+/* border-t pt-4 — a bare border-t under v4 is 1px currentColor, i.e. the Card's gray-900 */
+.cp-patch-notes__body {
+  border-top: 1px solid var(--border-default, #101828);
+  padding-top: var(--space-4, 16px);
+}
+/* <p> note.content: text-sm text-slate-700 whitespace-pre-wrap leading-relaxed */
+.cp-patch-notes__content {
+  margin: 0;
+  font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--slate-700, #314158);
+  white-space: pre-wrap;
+}

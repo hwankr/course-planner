@@ -1,0 +1,4216 @@
+{
+ "files_read": [
+  "src/app/(dashboard)/calendar/page.tsx",
+  "src/app/(dashboard)/profile/page.tsx",
+  "src/app/(dashboard)/onboarding/page.tsx",
+  "src/app/(dashboard)/help/page.tsx",
+  "src/app/(dashboard)/help/feedback/page.tsx",
+  "src/app/(dashboard)/help/graduation-guide/page.tsx",
+  "src/app/(dashboard)/patch-notes/page.tsx",
+  "src/app/(dashboard)/patch-notes/[id]/page.tsx",
+  "src/app/(legal)/privacy/page.tsx",
+  "src/app/(legal)/terms/page.tsx"
+ ],
+ "components": [
+  {
+   "name": "CalendarPageHeader",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "Page title with icon and admin-only add button",
+   "props": "none (page component). Uses useAuth().isAdmin, useToastStore",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "min-h-screen bg-gray-50 p-4 md:p-8"
+    },
+    {
+     "part": "container",
+     "tag": "div",
+     "classes": "max-w-7xl mx-auto"
+    },
+    {
+     "part": "header-row",
+     "tag": "div",
+     "classes": "mb-6 flex items-center justify-between flex-wrap gap-4"
+    },
+    {
+     "part": "title-group",
+     "tag": "div",
+     "classes": "flex items-center gap-3"
+    },
+    {
+     "part": "icon",
+     "tag": "CalendarDays",
+     "classes": "w-8 h-8",
+     "inline_style": "color: '#153974'"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-2xl md:text-3xl font-bold",
+     "inline_style": "color: '#153974'",
+     "text": "학사일정"
+    },
+    {
+     "part": "add-button (admin)",
+     "tag": "button",
+     "classes": "flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors",
+     "inline_style": "backgroundColor: '#153974'",
+     "text": "일정 추가"
+    },
+    {
+     "part": "add-button icon",
+     "tag": "Plus",
+     "classes": "w-4 h-4"
+    }
+   ],
+   "notes": "Brand color applied via inline style, not Tailwind class. No hover state on primary button."
+  },
+  {
+   "name": "CategoryFilterChips",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "Pill filter for event categories; active chip takes the category's own color map",
+   "props": "selectedCategory: AcademicEventCategory | 'all'",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "mb-4 flex gap-2 flex-wrap"
+    },
+    {
+     "part": "chip-all",
+     "tag": "button",
+     "classes": "px-3 py-1 rounded-full text-sm font-medium transition-colors",
+     "text": "전체",
+     "states": [
+      {
+       "state": "active",
+       "classes": "bg-blue-600 text-white"
+      },
+      {
+       "state": "inactive",
+       "classes": "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+      }
+     ]
+    },
+    {
+     "part": "chip-category",
+     "tag": "button",
+     "classes": "px-3 py-1 rounded-full text-sm font-medium transition-colors",
+     "states": [
+      {
+       "state": "active",
+       "classes": "categoryColors[cat] (e.g. bg-blue-100 text-blue-700 border-blue-200)"
+      },
+      {
+       "state": "inactive",
+       "classes": "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+      }
+     ]
+    }
+   ],
+   "notes": "Active category chips have border-* color class but no 'border' width class, so border is only rendered in the inactive state."
+  },
+  {
+   "name": "CalendarMonthNav",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "Prev/next month, today button, month and year labels",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "mb-6"
+    },
+    {
+     "part": "card-content",
+     "tag": "CardContent",
+     "classes": "px-1 py-4 md:p-6"
+    },
+    {
+     "part": "nav-row",
+     "tag": "div",
+     "classes": "flex items-center justify-between mb-4"
+    },
+    {
+     "part": "nav-group",
+     "tag": "div",
+     "classes": "flex items-center gap-1"
+    },
+    {
+     "part": "prev/next button",
+     "tag": "button",
+     "classes": "p-2 rounded-lg hover:bg-gray-100 transition-colors"
+    },
+    {
+     "part": "chevron icon",
+     "tag": "ChevronLeft / ChevronRight",
+     "classes": "w-5 h-5"
+    },
+    {
+     "part": "month label",
+     "tag": "h2",
+     "classes": "text-lg md:text-xl font-semibold min-w-[3rem] text-center",
+     "text": "{month + 1}월"
+    },
+    {
+     "part": "today button",
+     "tag": "button",
+     "classes": "px-3 py-1 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors ml-1",
+     "text": "오늘"
+    },
+    {
+     "part": "year label",
+     "tag": "h2",
+     "classes": "text-lg md:text-xl font-semibold text-gray-500 mr-2",
+     "text": "{year}년"
+    }
+   ]
+  },
+  {
+   "name": "CalendarGrid",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "7-column month grid with weekday header, day cells, today/selected markers, event chips (desktop text chips, mobile micro chips)",
+   "props": "calendarDays: (Date|null)[]; eventsByDate: Map<string, CalendarEvent[]>; isToday / isSelected / dayOfWeek / isAdmin",
+   "elements": [
+    {
+     "part": "grid",
+     "tag": "div",
+     "classes": "grid grid-cols-7 gap-0 md:gap-1"
+    },
+    {
+     "part": "weekday header cell",
+     "tag": "div",
+     "classes": "text-center text-xs md:text-sm font-medium py-2 border-b border-gray-200 md:border-b-0",
+     "states": [
+      {
+       "state": "sunday (i===0)",
+       "classes": "text-red-600"
+      },
+      {
+       "state": "saturday (i===6)",
+       "classes": "text-blue-600"
+      },
+      {
+       "state": "weekday",
+       "classes": "text-gray-600"
+      }
+     ]
+    },
+    {
+     "part": "weekday header (loading)",
+     "tag": "div",
+     "classes": "text-center text-sm font-medium text-gray-600 py-2"
+    },
+    {
+     "part": "skeleton cell",
+     "tag": "div",
+     "classes": "min-h-[90px] md:aspect-square bg-gray-100 animate-pulse border border-gray-200 md:rounded-lg"
+    },
+    {
+     "part": "empty leading cell",
+     "tag": "div",
+     "classes": "min-h-[90px] md:aspect-square border border-gray-100 md:border-0"
+    },
+    {
+     "part": "day cell",
+     "tag": "div",
+     "classes": "min-h-[90px] md:aspect-square p-0.5 md:p-2 border border-gray-200 md:rounded-lg {state} cursor-pointer md:cursor-default {isAdmin ? 'md:cursor-pointer' : ''} transition-colors overflow-hidden",
+     "states": [
+      {
+       "state": "today && selected",
+       "classes": "bg-blue-100 md:bg-blue-50 border-amber-400 md:border-2 md:border-blue-500 md:ring-2 md:ring-amber-400 md:ring-offset-0"
+      },
+      {
+       "state": "today",
+       "classes": "bg-blue-50 border-blue-400 md:border-2 md:border-blue-500"
+      },
+      {
+       "state": "selected",
+       "classes": "bg-amber-50/50 border-amber-300 md:border-2 md:border-amber-400 md:bg-white md:hover:bg-gray-50"
+      },
+      {
+       "state": "default",
+       "classes": "bg-white hover:bg-gray-50"
+      },
+      {
+       "state": "admin",
+       "classes": "md:cursor-pointer"
+      }
+     ]
+    },
+    {
+     "part": "day number",
+     "tag": "div",
+     "classes": "text-[10px] md:text-sm font-medium mb-0.5 md:mb-1",
+     "states": [
+      {
+       "state": "sunday",
+       "classes": "text-red-600"
+      },
+      {
+       "state": "saturday",
+       "classes": "text-blue-600"
+      },
+      {
+       "state": "weekday",
+       "classes": "text-gray-700"
+      }
+     ]
+    },
+    {
+     "part": "desktop events wrapper",
+     "tag": "div",
+     "classes": "hidden md:block space-y-0.5"
+    },
+    {
+     "part": "desktop event chip",
+     "tag": "div",
+     "classes": "text-xs px-1 py-0.5 rounded truncate cursor-pointer {categoryColors[event.category]} {diffDays > 0 ? 'font-medium' : ''} {isLong ? 'italic' : ''}",
+     "text": "{event.isHoliday && '🔴 '}{label}  — label for long events: '{title} ~MM.DD' on start day, 'MM.DD~ {title}' on end day",
+     "states": [
+      {
+       "state": "multi-day",
+       "classes": "font-medium"
+      },
+      {
+       "state": "long (>7 days)",
+       "classes": "italic"
+      }
+     ]
+    },
+    {
+     "part": "desktop overflow count",
+     "tag": "div",
+     "classes": "text-xs text-gray-500 px-1",
+     "text": "+{n}"
+    },
+    {
+     "part": "mobile events wrapper",
+     "tag": "div",
+     "classes": "md:hidden space-y-px pointer-events-none"
+    },
+    {
+     "part": "mobile event chip",
+     "tag": "div",
+     "classes": "text-[10px] leading-tight px-0.5 rounded truncate",
+     "states": [
+      {
+       "state": "academic",
+       "classes": "text-blue-700 bg-blue-50"
+      },
+      {
+       "state": "registration",
+       "classes": "text-green-700 bg-green-50"
+      },
+      {
+       "state": "exam",
+       "classes": "text-red-700 bg-red-50"
+      },
+      {
+       "state": "holiday",
+       "classes": "text-rose-700 bg-rose-50"
+      },
+      {
+       "state": "other/default",
+       "classes": "text-gray-600 bg-gray-50"
+      }
+     ]
+    },
+    {
+     "part": "mobile overflow count",
+     "tag": "div",
+     "classes": "text-[9px] text-gray-400 px-0.5 leading-tight",
+     "text": "+{n}"
+    }
+   ],
+   "notes": "Shows max 3 events per day. Long events (>7 days) only render on start and end days. Holiday marker is the 🔴 emoji prefix. Selected state uses amber, today uses blue; both together combine blue bg + amber ring."
+  },
+  {
+   "name": "MobileSelectedDayPanel",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "Mobile-only card listing events for the tapped day",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "md:hidden mb-4"
+    },
+    {
+     "part": "card-content",
+     "tag": "CardContent",
+     "classes": "p-4"
+    },
+    {
+     "part": "header row",
+     "tag": "div",
+     "classes": "flex items-center justify-between mb-3"
+    },
+    {
+     "part": "title",
+     "tag": "h3",
+     "classes": "font-semibold text-base",
+     "inline_style": "color: '#153974'",
+     "text": "{M}월 {D}일 ({요일})"
+    },
+    {
+     "part": "close button",
+     "tag": "button",
+     "classes": "p-1 rounded-lg hover:bg-gray-100 transition-colors"
+    },
+    {
+     "part": "close icon",
+     "tag": "X",
+     "classes": "w-4 h-4 text-gray-500"
+    },
+    {
+     "part": "empty state",
+     "tag": "p",
+     "classes": "text-sm text-gray-400 text-center py-4",
+     "text": "이 날의 일정이 없습니다."
+    },
+    {
+     "part": "list",
+     "tag": "div",
+     "classes": "space-y-2"
+    },
+    {
+     "part": "event row",
+     "tag": "div",
+     "classes": "flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-100"
+    },
+    {
+     "part": "category badge",
+     "tag": "span",
+     "classes": "px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap {categoryColors[event.category]}"
+    },
+    {
+     "part": "holiday marker",
+     "tag": "span",
+     "classes": "text-red-600 text-xs",
+     "text": "🔴"
+    },
+    {
+     "part": "event title",
+     "tag": "span",
+     "classes": "text-sm font-medium truncate"
+    },
+    {
+     "part": "date range",
+     "tag": "p",
+     "classes": "text-xs text-gray-500 mt-0.5"
+    }
+   ]
+  },
+  {
+   "name": "SelectedEventDetailCard",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "Detail card for a clicked event with edit/delete (admin) and close",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "mb-6 border-l-4",
+     "inline_style": "borderLeftColor: '#00AACA'"
+    },
+    {
+     "part": "card-content",
+     "tag": "CardContent",
+     "classes": "p-4 md:p-6"
+    },
+    {
+     "part": "row",
+     "tag": "div",
+     "classes": "flex items-start justify-between mb-3"
+    },
+    {
+     "part": "badge row",
+     "tag": "div",
+     "classes": "flex items-center gap-2 mb-2"
+    },
+    {
+     "part": "category badge",
+     "tag": "span",
+     "classes": "px-2 py-1 rounded text-xs font-medium {categoryColors[category]}"
+    },
+    {
+     "part": "holiday label",
+     "tag": "span",
+     "classes": "text-red-600 text-sm",
+     "text": "🔴 공휴일"
+    },
+    {
+     "part": "title",
+     "tag": "h3",
+     "classes": "text-lg font-semibold mb-1"
+    },
+    {
+     "part": "date range",
+     "tag": "p",
+     "classes": "text-sm text-gray-600 mb-2"
+    },
+    {
+     "part": "description",
+     "tag": "p",
+     "classes": "text-sm text-gray-700"
+    },
+    {
+     "part": "action group",
+     "tag": "div",
+     "classes": "flex gap-2"
+    },
+    {
+     "part": "edit button",
+     "tag": "button",
+     "classes": "p-2 rounded-lg hover:bg-gray-100 transition-colors"
+    },
+    {
+     "part": "edit icon",
+     "tag": "Pencil",
+     "classes": "w-4 h-4 text-gray-600"
+    },
+    {
+     "part": "delete button",
+     "tag": "button",
+     "classes": "p-2 rounded-lg hover:bg-red-50 transition-colors"
+    },
+    {
+     "part": "delete icon",
+     "tag": "Trash2",
+     "classes": "w-4 h-4 text-red-600"
+    },
+    {
+     "part": "close button",
+     "tag": "button",
+     "classes": "p-2 rounded-lg hover:bg-gray-100 transition-colors"
+    },
+    {
+     "part": "close icon",
+     "tag": "X",
+     "classes": "w-4 h-4 text-gray-600"
+    }
+   ]
+  },
+  {
+   "name": "MonthEventList",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "List of this month's non-system events",
+   "elements": [
+    {
+     "part": "card-content",
+     "tag": "CardContent",
+     "classes": "p-4 md:p-6"
+    },
+    {
+     "part": "title",
+     "tag": "h3",
+     "classes": "text-lg font-semibold mb-4",
+     "inline_style": "color: '#153974'",
+     "text": "이번 달 일정"
+    },
+    {
+     "part": "skeleton row",
+     "tag": "div",
+     "classes": "h-16 bg-gray-100 animate-pulse rounded-lg"
+    },
+    {
+     "part": "empty state",
+     "tag": "p",
+     "classes": "text-gray-500 text-center py-8",
+     "text": "등록된 일정이 없습니다."
+    },
+    {
+     "part": "list",
+     "tag": "div",
+     "classes": "space-y-2"
+    },
+    {
+     "part": "row",
+     "tag": "div",
+     "classes": "flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200"
+    },
+    {
+     "part": "category badge",
+     "tag": "div",
+     "classes": "px-2 py-1 rounded text-xs font-medium whitespace-nowrap {categoryColors[category]}"
+    },
+    {
+     "part": "holiday marker",
+     "tag": "span",
+     "classes": "text-red-600",
+     "text": "🔴"
+    },
+    {
+     "part": "title",
+     "tag": "span",
+     "classes": "font-medium"
+    },
+    {
+     "part": "date range",
+     "tag": "p",
+     "classes": "text-xs text-gray-600"
+    }
+   ]
+  },
+  {
+   "name": "EventFormModal",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "purpose": "Create/edit academic event modal with native inputs",
+   "props": "formData: { title, description, startDate, endDate, category, isHoliday }; editingEvent: CalendarEvent | null",
+   "elements": [
+    {
+     "part": "overlay",
+     "tag": "div",
+     "classes": "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+    },
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "w-full max-w-lg max-h-[90vh] overflow-y-auto"
+    },
+    {
+     "part": "card-content",
+     "tag": "CardContent",
+     "classes": "p-6"
+    },
+    {
+     "part": "header row",
+     "tag": "div",
+     "classes": "flex items-center justify-between mb-4"
+    },
+    {
+     "part": "title",
+     "tag": "h3",
+     "classes": "text-xl font-semibold",
+     "inline_style": "color: '#153974'",
+     "text": "일정 수정 / 일정 추가"
+    },
+    {
+     "part": "close button",
+     "tag": "button",
+     "classes": "p-2 rounded-lg hover:bg-gray-100 transition-colors"
+    },
+    {
+     "part": "close icon",
+     "tag": "X",
+     "classes": "w-5 h-5"
+    },
+    {
+     "part": "form",
+     "tag": "form",
+     "classes": "space-y-4"
+    },
+    {
+     "part": "label",
+     "tag": "label",
+     "classes": "block text-sm font-medium text-gray-700 mb-1",
+     "text": "제목 * / 설명 / 시작일 * / 종료일 / 분류"
+    },
+    {
+     "part": "required mark",
+     "tag": "span",
+     "classes": "text-red-500",
+     "text": "*"
+    },
+    {
+     "part": "text input / date input / textarea / select",
+     "tag": "input|textarea|select",
+     "classes": "w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    },
+    {
+     "part": "date grid",
+     "tag": "div",
+     "classes": "grid grid-cols-2 gap-4"
+    },
+    {
+     "part": "checkbox row",
+     "tag": "div",
+     "classes": "flex items-center gap-2"
+    },
+    {
+     "part": "checkbox",
+     "tag": "input[type=checkbox]",
+     "classes": "w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+    },
+    {
+     "part": "checkbox label",
+     "tag": "label",
+     "classes": "text-sm font-medium text-gray-700",
+     "text": "공휴일로 표시"
+    },
+    {
+     "part": "footer",
+     "tag": "div",
+     "classes": "flex gap-3 pt-4"
+    },
+    {
+     "part": "cancel button",
+     "tag": "button",
+     "classes": "flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors",
+     "text": "취소"
+    },
+    {
+     "part": "submit button",
+     "tag": "button",
+     "classes": "flex-1 px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50",
+     "inline_style": "backgroundColor: '#153974'",
+     "text": "저장 중... / 수정 / 추가",
+     "states": [
+      {
+       "state": "disabled (pending)",
+       "classes": "disabled:opacity-50"
+      }
+     ]
+    }
+   ],
+   "notes": "Uses raw <input>/<select> rather than the ui Input component; focus ring is Tailwind blue-500, not brand."
+  },
+  {
+   "name": "ProfilePageHeader",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "Title + subtitle for both guest and authenticated variants",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "max-w-2xl mx-auto space-y-6"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-2xl font-bold text-gray-900",
+     "text": "프로필"
+    },
+    {
+     "part": "subtitle (guest)",
+     "tag": "p",
+     "classes": "text-gray-600 mt-1",
+     "text": "프로필을 설정하면 과목 리스트가 학과별로 필터됩니다."
+    },
+    {
+     "part": "subtitle (auth)",
+     "tag": "p",
+     "classes": "text-gray-600 mt-1",
+     "text": "개인 정보를 관리하세요."
+    }
+   ]
+  },
+  {
+   "name": "ProfileBanner",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "Brand gradient banner with overlapping initial avatar, name, and pill badges",
+   "elements": [
+    {
+     "part": "wrapper",
+     "tag": "div",
+     "classes": "animate-fade-in"
+    },
+    {
+     "part": "banner",
+     "tag": "div",
+     "classes": "h-32 rounded-xl bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] relative mb-16"
+    },
+    {
+     "part": "avatar",
+     "tag": "div",
+     "classes": "absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center ring-4 ring-white shadow-lg"
+    },
+    {
+     "part": "avatar initial",
+     "tag": "span",
+     "classes": "text-2xl font-bold text-white",
+     "text": "first letter uppercased, fallback 'U'"
+    },
+    {
+     "part": "name block",
+     "tag": "div",
+     "classes": "text-center mt-2"
+    },
+    {
+     "part": "name",
+     "tag": "h2",
+     "classes": "text-xl font-bold text-gray-900",
+     "text": "fallback '사용자'"
+    },
+    {
+     "part": "badge row",
+     "tag": "div",
+     "classes": "flex items-center justify-center gap-2 mt-2 flex-wrap"
+    },
+    {
+     "part": "department badge",
+     "tag": "span",
+     "classes": "inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#153974]/10 text-[#153974] text-xs font-medium"
+    },
+    {
+     "part": "enrollment badge",
+     "tag": "span",
+     "classes": "inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#00AACA]/10 text-[#00AACA] text-xs font-medium",
+     "text": "{year}년 입학"
+    },
+    {
+     "part": "major-type badge",
+     "tag": "span",
+     "classes": "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium",
+     "states": [
+      {
+       "state": "double",
+       "classes": "bg-purple-100 text-purple-700"
+      },
+      {
+       "state": "minor",
+       "classes": "bg-orange-100 text-orange-700"
+      }
+     ],
+     "text": "복수전공: {dept} / 부전공: {dept}"
+    },
+    {
+     "part": "badge icon",
+     "tag": "Building2 / CalendarDays",
+     "classes": "w-3 h-3"
+    }
+   ]
+  },
+  {
+   "name": "ProfileInfoCard",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "기본 정보 card: read-only key/value rows or edit form toggled by ghost icon button",
+   "props": "isEditing: boolean; Button variant=\"ghost\" size=\"sm\"; Input; SearchableSelect",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "animate-fade-in-up relative z-10"
+    },
+    {
+     "part": "card-header",
+     "tag": "CardHeader",
+     "classes": "flex flex-row items-center justify-between"
+    },
+    {
+     "part": "header title group",
+     "tag": "div",
+     "classes": "flex items-center gap-2"
+    },
+    {
+     "part": "header icon",
+     "tag": "User",
+     "classes": "w-5 h-5 text-gray-600"
+    },
+    {
+     "part": "edit toggle",
+     "tag": "Button",
+     "classes": "variant=\"ghost\" size=\"sm\"; icon X w-4 h-4 (editing) / Pencil w-4 h-4"
+    },
+    {
+     "part": "form",
+     "tag": "form",
+     "classes": "space-y-4"
+    },
+    {
+     "part": "label with icon",
+     "tag": "label",
+     "classes": "flex items-center gap-2 text-sm font-medium text-gray-700 mb-1"
+    },
+    {
+     "part": "label icon",
+     "tag": "User / CalendarDays / Building2",
+     "classes": "w-4 h-4 text-gray-400"
+    },
+    {
+     "part": "native select",
+     "tag": "select",
+     "classes": "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+    },
+    {
+     "part": "helper",
+     "tag": "p",
+     "classes": "text-xs text-gray-500 mt-1",
+     "text": "과목 리스트에 표시될 커리큘럼 연도를 선택합니다"
+    },
+    {
+     "part": "submit",
+     "tag": "Button",
+     "classes": "type=\"submit\" disabled={isPending}",
+     "text": "저장 중... / 저장"
+    },
+    {
+     "part": "error",
+     "tag": "p",
+     "classes": "text-sm text-red-500 mt-2",
+     "text": "저장에 실패했습니다."
+    },
+    {
+     "part": "read-only list",
+     "tag": "div",
+     "classes": "space-y-3"
+    },
+    {
+     "part": "kv row",
+     "tag": "div",
+     "classes": "flex justify-between py-2 border-b"
+    },
+    {
+     "part": "kv row (last)",
+     "tag": "div",
+     "classes": "flex justify-between py-2"
+    },
+    {
+     "part": "kv label group",
+     "tag": "div",
+     "classes": "flex items-center gap-2"
+    },
+    {
+     "part": "kv icon",
+     "tag": "Mail / User / CalendarDays / Building2",
+     "classes": "w-4 h-4 text-gray-400"
+    },
+    {
+     "part": "kv label",
+     "tag": "span",
+     "classes": "text-gray-600"
+    },
+    {
+     "part": "kv value",
+     "tag": "span",
+     "classes": "font-medium",
+     "states": [
+      {
+       "state": "empty",
+       "classes": "text-gray-400"
+      }
+     ],
+     "text": "미설정 / 학과 미설정"
+    }
+   ],
+   "notes": "border-b without color relies on Tailwind v4 default border color (currentColor) — renders as text-colored hairline."
+  },
+  {
+   "name": "MajorTypeToggle",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "Pair of toggle buttons for 복수전공 (purple) / 부전공 (orange); duplicated verbatim in onboarding/page.tsx and in guest + auth profile",
+   "props": "majorType: 'single' | 'double' | 'minor'",
+   "elements": [
+    {
+     "part": "section label",
+     "tag": "label",
+     "classes": "block text-sm font-medium text-gray-700 mb-2",
+     "text": "복수전공 / 부전공"
+    },
+    {
+     "part": "row",
+     "tag": "div",
+     "classes": "flex gap-2"
+    },
+    {
+     "part": "double button",
+     "tag": "button",
+     "classes": "flex-1 px-3 py-2 text-sm rounded-lg border transition-all",
+     "states": [
+      {
+       "state": "active",
+       "classes": "bg-purple-500 text-white border-purple-500 shadow-sm"
+      },
+      {
+       "state": "inactive",
+       "classes": "bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600"
+      }
+     ],
+     "text": "복수전공 (with Check) / + 복수전공 추가"
+    },
+    {
+     "part": "minor button",
+     "tag": "button",
+     "classes": "flex-1 px-3 py-2 text-sm rounded-lg border transition-all",
+     "states": [
+      {
+       "state": "active",
+       "classes": "bg-orange-500 text-white border-orange-500 shadow-sm"
+      },
+      {
+       "state": "disabled (double selected)",
+       "classes": "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+      },
+      {
+       "state": "inactive",
+       "classes": "bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600"
+      }
+     ],
+     "text": "부전공 (with Check) / + 부전공 추가"
+    },
+    {
+     "part": "button inner",
+     "tag": "span",
+     "classes": "flex items-center justify-center gap-1.5"
+    },
+    {
+     "part": "check icon",
+     "tag": "Check",
+     "classes": "w-4 h-4"
+    },
+    {
+     "part": "hint",
+     "tag": "p",
+     "classes": "text-xs text-gray-500 mt-1.5",
+     "text": "복수전공을 선택했습니다. 해제하려면 다시 클릭하세요."
+    },
+    {
+     "part": "secondary dept label",
+     "tag": "label",
+     "classes": "block text-sm font-medium text-gray-700 mb-1",
+     "text": "복수전공 학과 / 부전공 학과"
+    },
+    {
+     "part": "secondary dept select",
+     "tag": "SearchableSelect",
+     "classes": "placeholder=\"학과를 검색하세요\""
+    }
+   ]
+  },
+  {
+   "name": "MajorSettingsCard",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "전공 설정 card wrapping MajorTypeToggle + save",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "animate-fade-in-up anim-delay-50 relative z-[5]"
+    },
+    {
+     "part": "header icon",
+     "tag": "Building2",
+     "classes": "w-5 h-5 text-gray-600"
+    },
+    {
+     "part": "body",
+     "tag": "div",
+     "classes": "space-y-4"
+    },
+    {
+     "part": "save",
+     "tag": "Button",
+     "classes": "default variant",
+     "text": "저장 / 저장 중..."
+    },
+    {
+     "part": "error",
+     "tag": "p",
+     "classes": "text-sm text-red-500"
+    }
+   ]
+  },
+  {
+   "name": "AccountInfoCard",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "계정 정보 card (guest and auth variants)",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "animate-fade-in-up anim-delay-100"
+    },
+    {
+     "part": "header icon",
+     "tag": "Shield",
+     "classes": "w-5 h-5 text-gray-600"
+    },
+    {
+     "part": "kv row",
+     "tag": "div",
+     "classes": "flex justify-between py-2 border-b"
+    },
+    {
+     "part": "kv label",
+     "tag": "span",
+     "classes": "text-gray-600",
+     "text": "계정 유형 / 데이터 저장 / 권한"
+    },
+    {
+     "part": "guest value",
+     "tag": "span",
+     "classes": "font-medium text-amber-600",
+     "text": "게스트 모드"
+    },
+    {
+     "part": "guest storage value",
+     "tag": "span",
+     "classes": "font-medium text-gray-500",
+     "text": "이 브라우저에만 저장"
+    },
+    {
+     "part": "auth value group",
+     "tag": "div",
+     "classes": "flex items-center gap-2 font-medium",
+     "text": "Google 계정 / 이메일 계정"
+    },
+    {
+     "part": "value icon",
+     "tag": "Chrome / Mail / Star",
+     "classes": "w-4 h-4 text-gray-400"
+    },
+    {
+     "part": "role",
+     "tag": "span",
+     "classes": "capitalize",
+     "text": "student / admin"
+    },
+    {
+     "part": "register CTA (guest)",
+     "tag": "Button",
+     "classes": "variant=\"outline\" className=\"w-full\"",
+     "text": "회원가입하여 데이터 영구 저장"
+    },
+    {
+     "part": "CTA wrapper",
+     "tag": "div",
+     "classes": "mt-4"
+    }
+   ]
+  },
+  {
+   "name": "DangerZoneCard",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "purpose": "Destructive action card (회원 탈퇴 / guest 계정 초기화)",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "animate-fade-in-up anim-delay-200 border-red-200"
+    },
+    {
+     "part": "header icon",
+     "tag": "Trash2",
+     "classes": "w-5 h-5 text-red-500"
+    },
+    {
+     "part": "title",
+     "tag": "CardTitle",
+     "classes": "text-red-600",
+     "text": "위험 구역 / 계정 초기화"
+    },
+    {
+     "part": "description",
+     "tag": "p",
+     "classes": "text-sm text-gray-600 mb-4"
+    },
+    {
+     "part": "destructive button",
+     "tag": "Button",
+     "classes": "variant=\"outline\" className=\"border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400\"",
+     "text": "회원 탈퇴 / 삭제 중... / 계정 초기화"
+    }
+   ],
+   "notes": "Uses window.confirm with multi-line message; alert() on failure."
+  },
+  {
+   "name": "OnboardingHeader",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "purpose": "Centered title with gradient text and two-line subtitle",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "min-h-[60vh] flex items-center justify-center px-4"
+    },
+    {
+     "part": "container",
+     "tag": "div",
+     "classes": "w-full max-w-2xl mx-auto space-y-8"
+    },
+    {
+     "part": "header",
+     "tag": "div",
+     "classes": "text-center animate-fade-in-down"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-3xl font-bold text-gradient",
+     "text": "초기 설정"
+    },
+    {
+     "part": "subtitle",
+     "tag": "p",
+     "classes": "text-gray-600 mt-2",
+     "text": "수강 계획을 시작하기 위한 기본 정보를 입력해주세요."
+    },
+    {
+     "part": "caption",
+     "tag": "p",
+     "classes": "text-sm text-gray-400 mt-1",
+     "text": "몇 가지 정보만 입력하면 바로 시작할 수 있어요"
+    }
+   ]
+  },
+  {
+   "name": "OnboardingStepper",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "purpose": "Two-step progress indicator: circles joined by an animated gradient line, labels below",
+   "props": "step: 1 | 2",
+   "elements": [
+    {
+     "part": "wrapper",
+     "tag": "div",
+     "classes": "space-y-2"
+    },
+    {
+     "part": "row",
+     "tag": "div",
+     "classes": "flex items-center justify-center gap-0 w-full max-w-xs mx-auto"
+    },
+    {
+     "part": "step circle",
+     "tag": "div",
+     "classes": "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300",
+     "states": [
+      {
+       "state": "current",
+       "classes": "bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30"
+      },
+      {
+       "state": "completed (step 1 when step>1)",
+       "classes": "bg-emerald-500 text-white"
+      },
+      {
+       "state": "upcoming (step 2 when step<2)",
+       "classes": "bg-gray-200 text-gray-500"
+      }
+     ],
+     "text": "'1' or Check icon / '2'"
+    },
+    {
+     "part": "completed check",
+     "tag": "Check",
+     "classes": "w-5 h-5"
+    },
+    {
+     "part": "connector track",
+     "tag": "div",
+     "classes": "flex-1 h-1 mx-2 rounded-full bg-gray-200 overflow-hidden"
+    },
+    {
+     "part": "connector fill",
+     "tag": "div",
+     "classes": "h-full rounded-full transition-all duration-500",
+     "states": [
+      {
+       "state": "step>1",
+       "classes": "w-full bg-gradient-to-r from-[#153974] to-[#3069B3]"
+      },
+      {
+       "state": "step 1",
+       "classes": "w-0"
+      }
+     ]
+    },
+    {
+     "part": "labels row",
+     "tag": "div",
+     "classes": "flex justify-between w-full max-w-xs mx-auto mt-2 px-0"
+    },
+    {
+     "part": "label",
+     "tag": "span",
+     "classes": "text-xs font-medium transition-colors duration-300",
+     "states": [
+      {
+       "state": "reached",
+       "classes": "text-[#153974]"
+      },
+      {
+       "state": "not reached",
+       "classes": "text-gray-400"
+      }
+     ],
+     "text": "학과 선택 / 졸업 요건"
+    }
+   ]
+  },
+  {
+   "name": "OnboardingStep1Card",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "purpose": "학과 및 입학 정보 form card",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "border-t-4 border-[#3069B3] animate-fade-in-up"
+    },
+    {
+     "part": "header group",
+     "tag": "div",
+     "classes": "flex items-center gap-2"
+    },
+    {
+     "part": "header icon",
+     "tag": "School",
+     "classes": "w-5 h-5 text-[#153974]"
+    },
+    {
+     "part": "content",
+     "tag": "CardContent",
+     "classes": "space-y-4"
+    },
+    {
+     "part": "label",
+     "tag": "label",
+     "classes": "block text-sm font-medium text-gray-700 mb-1",
+     "text": "학과 / 입학연도"
+    },
+    {
+     "part": "dept select",
+     "tag": "SearchableSelect",
+     "classes": "placeholder='불러오는 중...' | '학과를 검색하세요'; disabled while loading"
+    },
+    {
+     "part": "year input",
+     "tag": "Input",
+     "classes": "type=\"number\" placeholder=\"예: 2024\" min=2000"
+    },
+    {
+     "part": "helper",
+     "tag": "p",
+     "classes": "text-xs text-gray-500 mt-1",
+     "text": "입학한 연도를 입력하세요."
+    },
+    {
+     "part": "error",
+     "tag": "p",
+     "classes": "text-sm text-red-500"
+    },
+    {
+     "part": "footer",
+     "tag": "div",
+     "classes": "flex justify-end pt-2"
+    },
+    {
+     "part": "next button",
+     "tag": "Button",
+     "classes": "inline-flex items-center",
+     "text": "다음"
+    },
+    {
+     "part": "next icon",
+     "tag": "ArrowRight",
+     "classes": "w-4 h-4 ml-1"
+    }
+   ]
+  },
+  {
+   "name": "OnboardingStep2Card",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "purpose": "졸업 요건 설정: year selector, help link, amber warning banner, two-column numeric form, autofill notice, back/complete",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "border-t-4 border-emerald-500 animate-fade-in-up"
+    },
+    {
+     "part": "header row",
+     "tag": "div",
+     "classes": "flex items-center justify-between"
+    },
+    {
+     "part": "header icon",
+     "tag": "GraduationCap",
+     "classes": "w-5 h-5 text-emerald-600"
+    },
+    {
+     "part": "year group",
+     "tag": "div",
+     "classes": "flex items-center gap-1.5"
+    },
+    {
+     "part": "year label",
+     "tag": "label",
+     "classes": "text-xs text-gray-500 whitespace-nowrap",
+     "text": "기준 연도"
+    },
+    {
+     "part": "year select",
+     "tag": "select",
+     "classes": "text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#153974] focus:border-[#153974]"
+    },
+    {
+     "part": "help line",
+     "tag": "p",
+     "classes": "text-xs text-gray-500 mt-1",
+     "text": "졸업 기준과 취득 학점을 잘 모르시나요? 확인 방법 보기"
+    },
+    {
+     "part": "help link",
+     "tag": "Link",
+     "classes": "text-[#00AACA] hover:text-[#153974] underline",
+     "text": "확인 방법 보기"
+    },
+    {
+     "part": "content",
+     "tag": "CardContent",
+     "classes": "space-y-6"
+    },
+    {
+     "part": "warning banner",
+     "tag": "div",
+     "classes": "p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2"
+    },
+    {
+     "part": "warning icon",
+     "tag": "AlertTriangle",
+     "classes": "w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"
+    },
+    {
+     "part": "warning title",
+     "tag": "p",
+     "classes": "text-sm font-medium text-amber-800",
+     "text": "복수전공을 선택하셨습니다"
+    },
+    {
+     "part": "warning body",
+     "tag": "p",
+     "classes": "text-xs text-amber-600 mt-1",
+     "text": "이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요. 아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다."
+    },
+    {
+     "part": "grid",
+     "tag": "div",
+     "classes": "grid grid-cols-1 md:grid-cols-2 gap-6"
+    },
+    {
+     "part": "column",
+     "tag": "div",
+     "classes": "space-y-4"
+    },
+    {
+     "part": "column header",
+     "tag": "div",
+     "classes": "flex items-center gap-1.5 border-b pb-2"
+    },
+    {
+     "part": "column icon",
+     "tag": "BookOpen / Award",
+     "classes": "w-4 h-4 text-gray-500",
+     "states": [
+      {
+       "state": "double major columns",
+       "classes": "w-4 h-4 text-purple-500"
+      },
+      {
+       "state": "minor columns",
+       "classes": "w-4 h-4 text-orange-500"
+      }
+     ]
+    },
+    {
+     "part": "column title",
+     "tag": "h3",
+     "classes": "text-sm font-semibold text-gray-900",
+     "text": "졸업 기준 / 취득 학점 / 복수전공 기준 / 복수전공 기이수 / 부전공 기준 / 부전공 기이수"
+    },
+    {
+     "part": "field label",
+     "tag": "label",
+     "classes": "block text-xs text-gray-600 mb-1",
+     "text": "졸업학점 / 교양학점 / 전공학점 / 전공핵심 (최소) / 기이수 졸업학점 ..."
+    },
+    {
+     "part": "field input",
+     "tag": "Input",
+     "classes": "type=\"number\" min=0"
+    },
+    {
+     "part": "field helper",
+     "tag": "p",
+     "classes": "text-xs text-gray-400 mt-0.5",
+     "text": "전공필수 최소 이수학점"
+    },
+    {
+     "part": "autofill notice",
+     "tag": "p",
+     "classes": "text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md",
+     "text": "학과 기준표에서 불러왔습니다. 수정할 수 있습니다."
+    },
+    {
+     "part": "error",
+     "tag": "p",
+     "classes": "text-sm text-red-500"
+    },
+    {
+     "part": "footer",
+     "tag": "div",
+     "classes": "flex justify-between pt-2"
+    },
+    {
+     "part": "back button",
+     "tag": "Button",
+     "classes": "variant=\"outline\" className=\"inline-flex items-center\"",
+     "text": "이전"
+    },
+    {
+     "part": "back icon",
+     "tag": "ArrowLeft",
+     "classes": "w-4 h-4 mr-1"
+    },
+    {
+     "part": "complete button",
+     "tag": "Button",
+     "classes": "inline-flex items-center",
+     "text": "완료 / 처리 중..."
+    },
+    {
+     "part": "complete icon",
+     "tag": "CheckCircle",
+     "classes": "w-4 h-4 ml-1"
+    }
+   ]
+  },
+  {
+   "name": "HelpPageShell",
+   "file": "src/app/(dashboard)/help/page.tsx",
+   "purpose": "Help index: header card, 5 article section cards, CTA box, bottom nav",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100"
+    },
+    {
+     "part": "container",
+     "tag": "div",
+     "classes": "mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10"
+    },
+    {
+     "part": "header card",
+     "tag": "div",
+     "classes": "mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7"
+    },
+    {
+     "part": "back link",
+     "tag": "Link",
+     "classes": "mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]",
+     "text": "플래너로 돌아가기"
+    },
+    {
+     "part": "back icon",
+     "tag": "ArrowLeft",
+     "classes": "h-4 w-4"
+    },
+    {
+     "part": "eyebrow pill",
+     "tag": "div",
+     "classes": "mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700",
+     "text": "도움말 가이드"
+    },
+    {
+     "part": "eyebrow icon",
+     "tag": "HelpCircle",
+     "classes": "h-3.5 w-3.5"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-3xl font-bold text-[#153974] md:text-4xl",
+     "text": "YU 수강 플래너 사용 가이드"
+    },
+    {
+     "part": "subtitle",
+     "tag": "p",
+     "classes": "mt-2 text-sm text-slate-500",
+     "text": "수강 플래너의 주요 기능을 빠르게 알아보세요"
+    }
+   ]
+  },
+  {
+   "name": "HelpSectionCard",
+   "file": "src/app/(dashboard)/help/page.tsx",
+   "purpose": "Article section: tinted icon tile + h2, prose paragraphs, optional 2-up boxes, numbered step boxes, screenshot frames",
+   "props": "ZoomableImage from @/components/ui/ZoomableImage (src, alt, width, height, className=\"w-full h-auto\")",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "div",
+     "classes": "mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7"
+    },
+    {
+     "part": "heading row",
+     "tag": "div",
+     "classes": "mb-5 flex items-center gap-3"
+    },
+    {
+     "part": "icon tile",
+     "tag": "div",
+     "classes": "flex h-10 w-10 items-center justify-center rounded-lg bg-[#153974]/10",
+     "states": [
+      {
+       "state": "section 1 시작하기 / 5 프로필 관리",
+       "classes": "bg-[#153974]/10 ; icon text-[#153974]"
+      },
+      {
+       "state": "section 2 수강 계획 세우기 / 4 학과 통계",
+       "classes": "bg-[#3069B3]/10 ; icon text-[#3069B3]"
+      },
+      {
+       "state": "section 3 졸업요건 추적",
+       "classes": "bg-[#00AACA]/10 ; icon text-[#00AACA]"
+      }
+     ]
+    },
+    {
+     "part": "section icon",
+     "tag": "Rocket / Calendar / GraduationCap / BarChart3 / UserCog",
+     "classes": "h-5 w-5"
+    },
+    {
+     "part": "h2",
+     "tag": "h2",
+     "classes": "text-2xl font-bold text-[#153974]",
+     "text": "시작하기 / 수강 계획 세우기 / 졸업요건 추적 / 학과 통계 / 프로필 관리"
+    },
+    {
+     "part": "prose",
+     "tag": "p",
+     "classes": "mb-4 text-sm leading-relaxed text-slate-600 md:text-base"
+    },
+    {
+     "part": "2-up grid",
+     "tag": "div",
+     "classes": "mb-4 grid gap-4 md:grid-cols-2"
+    },
+    {
+     "part": "neutral box",
+     "tag": "div",
+     "classes": "rounded-xl border border-slate-200 bg-slate-50 p-4"
+    },
+    {
+     "part": "highlight box",
+     "tag": "div",
+     "classes": "rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4"
+    },
+    {
+     "part": "box title",
+     "tag": "h3",
+     "classes": "mb-2 font-semibold text-[#153974]",
+     "text": "비회원 / 회원"
+    },
+    {
+     "part": "box list",
+     "tag": "ul",
+     "classes": "space-y-1 text-sm text-slate-600",
+     "text": "• 바로 사용 가능 (hand-typed bullets)"
+    },
+    {
+     "part": "steps wrapper",
+     "tag": "div",
+     "classes": "mb-4 space-y-3"
+    },
+    {
+     "part": "step box",
+     "tag": "div",
+     "classes": "rounded-lg bg-slate-50 p-3"
+    },
+    {
+     "part": "step number",
+     "tag": "span",
+     "classes": "font-semibold text-[#153974]",
+     "text": "1."
+    },
+    {
+     "part": "step text",
+     "tag": "span",
+     "classes": "text-sm text-slate-600 md:text-base"
+    },
+    {
+     "part": "image frame",
+     "tag": "div",
+     "classes": "mt-4 overflow-hidden rounded-xl border border-slate-200 / overflow-hidden rounded-xl border border-slate-200 (inside space-y-4)"
+    },
+    {
+     "part": "image",
+     "tag": "ZoomableImage",
+     "classes": "w-full h-auto"
+    }
+   ]
+  },
+  {
+   "name": "HelpCalloutLink",
+   "file": "src/app/(dashboard)/help/page.tsx",
+   "purpose": "Teal-tinted link card to graduation guide",
+   "elements": [
+    {
+     "part": "link",
+     "tag": "Link",
+     "classes": "mb-4 flex items-center gap-2 rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4 text-sm font-medium text-[#153974] transition-colors hover:border-[#00AACA]/50 hover:bg-[#00AACA]/10",
+     "text": "영남대학교 포털에서 졸업요건 조회하는 방법 →"
+    },
+    {
+     "part": "icon",
+     "tag": "ExternalLink",
+     "classes": "h-4 w-4 text-[#00AACA]"
+    }
+   ]
+  },
+  {
+   "name": "HelpContactCTA",
+   "file": "src/app/(dashboard)/help/page.tsx",
+   "purpose": "Teal-tinted CTA box + primary button; bottom nav links",
+   "elements": [
+    {
+     "part": "box",
+     "tag": "div",
+     "classes": "mb-8 rounded-2xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-6 text-center"
+    },
+    {
+     "part": "prompt",
+     "tag": "p",
+     "classes": "mb-3 text-sm text-slate-600 md:text-base",
+     "text": "궁금한 점이나 오류를 발견하셨나요?"
+    },
+    {
+     "part": "primary button link",
+     "tag": "Link",
+     "classes": "inline-flex items-center gap-2 rounded-xl bg-[#153974] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f]",
+     "text": "문의 및 피드백 보내기"
+    },
+    {
+     "part": "button icon",
+     "tag": "ExternalLink",
+     "classes": "h-4 w-4"
+    },
+    {
+     "part": "bottom nav",
+     "tag": "div",
+     "classes": "flex flex-wrap justify-center gap-4"
+    },
+    {
+     "part": "nav link",
+     "tag": "Link",
+     "classes": "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]",
+     "text": "플래너로 이동 / 졸업요건 조회 가이드"
+    }
+   ]
+  },
+  {
+   "name": "FeedbackContactCard",
+   "file": "src/app/(dashboard)/help/feedback/page.tsx",
+   "purpose": "Email contact card with gradient mail tile and copy-to-clipboard button",
+   "props": "copied: boolean (2s timeout)",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100"
+    },
+    {
+     "part": "container",
+     "tag": "div",
+     "classes": "mx-auto max-w-3xl px-4 pb-12 pt-6 md:px-6 md:pt-10"
+    },
+    {
+     "part": "back link",
+     "tag": "Link",
+     "classes": "mb-8 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]",
+     "text": "도움말로 돌아가기"
+    },
+    {
+     "part": "card",
+     "tag": "div",
+     "classes": "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 md:p-12"
+    },
+    {
+     "part": "eyebrow pill",
+     "tag": "div",
+     "classes": "mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700",
+     "text": "Contact"
+    },
+    {
+     "part": "eyebrow icon",
+     "tag": "MessageSquare",
+     "classes": "h-3.5 w-3.5"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-2xl font-bold text-[#153974] sm:text-3xl md:text-4xl",
+     "text": "문의하기"
+    },
+    {
+     "part": "lead",
+     "tag": "p",
+     "classes": "mt-3 text-sm text-slate-600 leading-relaxed sm:text-base",
+     "text": "궁금한 점이나 문의 사항이 있으시면 아래 메일로 연락 주세요."
+    },
+    {
+     "part": "email panel",
+     "tag": "div",
+     "classes": "mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:mt-8 sm:p-5"
+    },
+    {
+     "part": "email row",
+     "tag": "div",
+     "classes": "flex items-center gap-3 sm:gap-4"
+    },
+    {
+     "part": "mail tile",
+     "tag": "div",
+     "classes": "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#153974] to-[#1a4a8f] sm:h-12 sm:w-12"
+    },
+    {
+     "part": "mail icon",
+     "tag": "Mail",
+     "classes": "h-5 w-5 text-white sm:h-6 sm:w-6"
+    },
+    {
+     "part": "email label",
+     "tag": "p",
+     "classes": "text-xs text-slate-500 sm:text-sm",
+     "text": "이메일"
+    },
+    {
+     "part": "email value",
+     "tag": "p",
+     "classes": "truncate text-sm font-semibold text-[#153974] sm:text-lg"
+    },
+    {
+     "part": "copy button",
+     "tag": "button",
+     "classes": "mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-xs font-medium text-slate-600 transition-colors hover:border-[#153974] hover:text-[#153974] sm:mt-4 sm:w-auto cursor-pointer",
+     "states": [
+      {
+       "state": "copied",
+       "classes": "Check h-3.5 w-3.5 text-green-600 + span text-green-600 '복사됨'"
+      },
+      {
+       "state": "default",
+       "classes": "Copy h-3.5 w-3.5 + '이메일 복사하기'"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "name": "QuickInquiryCard",
+   "file": "src/app/(dashboard)/help/feedback/page.tsx",
+   "purpose": "Textarea form to submit feedback; logged-out dashed placeholder",
+   "props": "content (max 2000); isPending; showMyFeedback = isAuthenticated && !isGuest",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "div",
+     "classes": "mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 md:p-12"
+    },
+    {
+     "part": "eyebrow pill (teal)",
+     "tag": "div",
+     "classes": "mb-3 inline-flex items-center gap-2 rounded-full bg-[#00AACA]/10 px-3 py-1 text-xs font-semibold text-[#00AACA]",
+     "text": "빠른 문의"
+    },
+    {
+     "part": "eyebrow icon",
+     "tag": "Send",
+     "classes": "h-3.5 w-3.5"
+    },
+    {
+     "part": "title",
+     "tag": "h2",
+     "classes": "text-xl font-bold text-[#153974] sm:text-2xl",
+     "text": "문의 남기기"
+    },
+    {
+     "part": "lead",
+     "tag": "p",
+     "classes": "mt-2 text-sm text-slate-600 leading-relaxed",
+     "text": "간단한 문의사항을 남겨주세요. 관리자가 확인합니다."
+    },
+    {
+     "part": "form wrapper",
+     "tag": "div",
+     "classes": "mt-5"
+    },
+    {
+     "part": "textarea",
+     "tag": "textarea",
+     "classes": "w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-[#00AACA] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20",
+     "text": "placeholder: 문의 내용을 입력하세요"
+    },
+    {
+     "part": "footer row",
+     "tag": "div",
+     "classes": "mt-2 flex items-center justify-between"
+    },
+    {
+     "part": "char counter",
+     "tag": "span",
+     "classes": "text-xs text-slate-400",
+     "text": "{n}/2000"
+    },
+    {
+     "part": "submit button",
+     "tag": "button",
+     "classes": "inline-flex items-center gap-1.5 rounded-lg bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
+     "states": [
+      {
+       "state": "pending",
+       "classes": "Loader2 h-4 w-4 animate-spin + '전송 중...'"
+      },
+      {
+       "state": "too short (<5)",
+       "classes": "Send h-4 w-4 + '5자 이상 입력해주세요' (disabled)"
+      },
+      {
+       "state": "ready",
+       "classes": "Send h-4 w-4 + '문의 남기기'"
+      }
+     ]
+    },
+    {
+     "part": "logged-out box",
+     "tag": "div",
+     "classes": "mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center"
+    },
+    {
+     "part": "logged-out text",
+     "tag": "p",
+     "classes": "text-sm text-slate-500",
+     "text": "문의를 남기려면 로그인이 필요합니다."
+    },
+    {
+     "part": "login link",
+     "tag": "Link",
+     "classes": "mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f]",
+     "text": "로그인하기"
+    }
+   ]
+  },
+  {
+   "name": "MyFeedbackList",
+   "file": "src/app/(dashboard)/help/feedback/page.tsx",
+   "purpose": "User's submitted inquiries with status pill, delete, and admin reply block",
+   "props": "MyFeedbackItem { status: 'pending' | 'resolved'; adminReply?; adminReplyAt?; createdAt }",
+   "elements": [
+    {
+     "part": "card",
+     "tag": "div",
+     "classes": "mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 md:p-12"
+    },
+    {
+     "part": "eyebrow pill (purple)",
+     "tag": "div",
+     "classes": "mb-3 inline-flex items-center gap-2 rounded-full bg-purple-50 px-3 py-1 text-xs font-semibold text-purple-600",
+     "text": "내 문의 내역"
+    },
+    {
+     "part": "eyebrow icon",
+     "tag": "MessageSquareText",
+     "classes": "h-3.5 w-3.5"
+    },
+    {
+     "part": "title",
+     "tag": "h2",
+     "classes": "text-xl font-bold text-[#153974] sm:text-2xl",
+     "text": "문의 내역 확인"
+    },
+    {
+     "part": "lead",
+     "tag": "p",
+     "classes": "mt-2 text-sm text-slate-600 leading-relaxed",
+     "text": "내가 남긴 문의와 관리자 답변을 확인할 수 있습니다."
+    },
+    {
+     "part": "skeleton",
+     "tag": "div",
+     "classes": "h-24 animate-pulse rounded-xl bg-slate-100 (inside mt-5 space-y-3)"
+    },
+    {
+     "part": "empty box",
+     "tag": "div",
+     "classes": "mt-5 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center"
+    },
+    {
+     "part": "empty icon",
+     "tag": "MessageSquareText",
+     "classes": "mx-auto h-10 w-10 text-slate-300"
+    },
+    {
+     "part": "empty text",
+     "tag": "p",
+     "classes": "mt-3 text-sm text-slate-500",
+     "text": "아직 문의 내역이 없습니다."
+    },
+    {
+     "part": "list",
+     "tag": "div",
+     "classes": "mt-5 space-y-3"
+    },
+    {
+     "part": "item",
+     "tag": "div",
+     "classes": "rounded-xl border p-4 transition-colors",
+     "states": [
+      {
+       "state": "has adminReply",
+       "classes": "border-l-4 border-l-green-400 border-slate-200 bg-green-50/30"
+      },
+      {
+       "state": "no reply",
+       "classes": "border-slate-200 bg-white"
+      }
+     ]
+    },
+    {
+     "part": "item header",
+     "tag": "div",
+     "classes": "flex items-center justify-between ; left flex items-center gap-2"
+    },
+    {
+     "part": "status pill",
+     "tag": "span",
+     "classes": "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+     "states": [
+      {
+       "state": "pending",
+       "classes": "bg-yellow-100 text-yellow-700 + Clock h-3 w-3 '대기중'"
+      },
+      {
+       "state": "resolved",
+       "classes": "bg-green-100 text-green-700 + CheckCircle h-3 w-3 '해결됨'"
+      }
+     ]
+    },
+    {
+     "part": "timestamp",
+     "tag": "span",
+     "classes": "text-xs text-slate-400",
+     "text": "toLocaleDateString('ko-KR', {year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})"
+    },
+    {
+     "part": "delete button",
+     "tag": "button",
+     "classes": "rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-500 disabled:opacity-50 cursor-pointer"
+    },
+    {
+     "part": "delete icon",
+     "tag": "Trash2",
+     "classes": "h-4 w-4"
+    },
+    {
+     "part": "message",
+     "tag": "p",
+     "classes": "mt-2 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed"
+    },
+    {
+     "part": "admin reply box",
+     "tag": "div",
+     "classes": "mt-3 rounded-lg bg-white border border-green-200 p-3"
+    },
+    {
+     "part": "admin reply header",
+     "tag": "div",
+     "classes": "flex items-center gap-1.5 mb-1.5"
+    },
+    {
+     "part": "admin reply pill",
+     "tag": "span",
+     "classes": "inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700",
+     "text": "관리자 답변"
+    },
+    {
+     "part": "admin reply text",
+     "tag": "p",
+     "classes": "text-sm text-slate-700 whitespace-pre-wrap leading-relaxed"
+    }
+   ]
+  },
+  {
+   "name": "GraduationGuideHeader",
+   "file": "src/app/(dashboard)/help/graduation-guide/page.tsx",
+   "purpose": "Header card with slate back link and brand-tinted eyebrow",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "bg-gradient-to-b from-slate-50 via-white to-slate-100"
+    },
+    {
+     "part": "container",
+     "tag": "div",
+     "classes": "mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10"
+    },
+    {
+     "part": "header",
+     "tag": "header",
+     "classes": "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8"
+    },
+    {
+     "part": "back link",
+     "tag": "Link",
+     "classes": "mb-4 inline-flex items-center gap-2 text-sm text-slate-600 transition-colors hover:text-[#00AACA]",
+     "text": "플래너로 돌아가기"
+    },
+    {
+     "part": "eyebrow pill",
+     "tag": "p",
+     "classes": "inline-flex items-center gap-2 rounded-full bg-[#153974]/5 px-3 py-1 text-xs font-semibold text-[#153974]",
+     "text": "졸업 정보 가이드"
+    },
+    {
+     "part": "eyebrow icon",
+     "tag": "GraduationCap",
+     "classes": "h-3.5 w-3.5"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "mt-3 text-3xl font-bold tracking-tight text-[#153974] md:text-4xl",
+     "text": "영남대학교 졸업기준·취득학점 확인 방법"
+    }
+   ]
+  },
+  {
+   "name": "GuideFlowSection",
+   "file": "src/app/(dashboard)/help/graduation-guide/page.tsx",
+   "purpose": "STEP card: badge, h2 with icon tile, numbered ol, zoomable screenshot pane with caption",
+   "props": "FlowStep { id, badge, title, description, steps[], imageSrc, imageAlt, imageCaption, imageWidth, imageHeight, icon, iconColorClass, iconBgClass } — STEP 1: Search, text-[#153974], bg-[#153974]/10; STEP 2: BookOpen, text-[#00AACA], bg-[#00AACA]/10",
+   "elements": [
+    {
+     "part": "list wrapper",
+     "tag": "div",
+     "classes": "mt-8 space-y-6"
+    },
+    {
+     "part": "section",
+     "tag": "section",
+     "classes": "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+    },
+    {
+     "part": "grid",
+     "tag": "div",
+     "classes": "grid gap-0 lg:grid-cols-[1.05fr_1fr]"
+    },
+    {
+     "part": "text pane",
+     "tag": "div",
+     "classes": "p-6 md:p-7"
+    },
+    {
+     "part": "badge",
+     "tag": "p",
+     "classes": "inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700",
+     "text": "STEP 1 / STEP 2"
+    },
+    {
+     "part": "h2",
+     "tag": "h2",
+     "classes": "mt-3 flex items-center gap-3 text-2xl font-bold text-[#153974]"
+    },
+    {
+     "part": "icon tile",
+     "tag": "span",
+     "classes": "flex h-10 w-10 items-center justify-center rounded-lg {section.iconBgClass}"
+    },
+    {
+     "part": "icon",
+     "tag": "Search / BookOpen",
+     "classes": "h-5 w-5 {section.iconColorClass}"
+    },
+    {
+     "part": "description",
+     "tag": "p",
+     "classes": "mt-3 text-sm leading-relaxed text-slate-600 md:text-base",
+     "text": "(empty string in data)"
+    },
+    {
+     "part": "ol",
+     "tag": "ol",
+     "classes": "mt-4 space-y-2"
+    },
+    {
+     "part": "li",
+     "tag": "li",
+     "classes": "flex items-start gap-3 rounded-lg bg-slate-50 p-3"
+    },
+    {
+     "part": "number bullet",
+     "tag": "span",
+     "classes": "mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[#153974] text-xs font-bold text-white"
+    },
+    {
+     "part": "step text",
+     "tag": "span",
+     "classes": "text-sm leading-relaxed text-slate-700"
+    },
+    {
+     "part": "image pane",
+     "tag": "div",
+     "classes": "border-t border-slate-200 bg-slate-50 lg:border-l lg:border-t-0"
+    },
+    {
+     "part": "zoom button",
+     "tag": "button",
+     "classes": "group relative block aspect-[4/3] w-full cursor-zoom-in lg:aspect-[1/1]"
+    },
+    {
+     "part": "image",
+     "tag": "Image (fill)",
+     "classes": "object-contain transition-transform duration-200 group-hover:scale-[1.01]"
+    },
+    {
+     "part": "zoom hint",
+     "tag": "span",
+     "classes": "absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-2.5 py-1 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100",
+     "text": "클릭하여 확대"
+    },
+    {
+     "part": "caption",
+     "tag": "p",
+     "classes": "border-t border-slate-200 bg-white px-4 py-3 text-sm text-slate-600",
+     "text": "(empty string in data)"
+    }
+   ]
+  },
+  {
+   "name": "GuideStep3Section",
+   "file": "src/app/(dashboard)/help/graduation-guide/page.tsx",
+   "purpose": "Wide screenshot + 2x2 audit checklist cards",
+   "elements": [
+    {
+     "part": "section",
+     "tag": "section",
+     "classes": "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7"
+    },
+    {
+     "part": "h2",
+     "tag": "h2",
+     "classes": "flex items-center gap-3 text-2xl font-bold text-[#153974]",
+     "text": "STEP 3. 졸업모의사정에서 확인할 항목"
+    },
+    {
+     "part": "icon tile (purple)",
+     "tag": "span",
+     "classes": "flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100"
+    },
+    {
+     "part": "icon",
+     "tag": "FileText",
+     "classes": "h-5 w-5 text-purple-600"
+    },
+    {
+     "part": "lead",
+     "tag": "p",
+     "classes": "mt-3 text-sm leading-relaxed text-slate-600 md:text-base"
+    },
+    {
+     "part": "image frame",
+     "tag": "div",
+     "classes": "mt-5 overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+    },
+    {
+     "part": "zoom button",
+     "tag": "button",
+     "classes": "group relative block aspect-[1425/436] w-full cursor-zoom-in"
+    },
+    {
+     "part": "audit grid",
+     "tag": "div",
+     "classes": "mt-5 grid gap-3 md:grid-cols-2"
+    },
+    {
+     "part": "audit card",
+     "tag": "article",
+     "classes": "rounded-xl border border-slate-200 bg-slate-50 p-4"
+    },
+    {
+     "part": "audit title",
+     "tag": "h3",
+     "classes": "text-base font-semibold text-[#153974]",
+     "text": "졸업기준 학점 / 취득 학점 / 전공필수 이수 현황 / 구분별 학점 표"
+    },
+    {
+     "part": "audit desc",
+     "tag": "p",
+     "classes": "mt-1 text-sm leading-relaxed text-slate-600"
+    },
+    {
+     "part": "bottom nav",
+     "tag": "nav",
+     "classes": "mt-8 text-center"
+    },
+    {
+     "part": "nav link",
+     "tag": "Link",
+     "classes": "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]",
+     "text": "플래너로 돌아가기"
+    }
+   ]
+  },
+  {
+   "name": "ImageLightbox",
+   "file": "src/app/(dashboard)/help/graduation-guide/page.tsx",
+   "purpose": "Full-screen zoom dialog closed by backdrop click or Escape; locks body scroll",
+   "props": "ZoomImage { src, alt, width, height }",
+   "elements": [
+    {
+     "part": "backdrop",
+     "tag": "div[role=dialog][aria-modal]",
+     "classes": "fixed inset-0 z-50 bg-slate-950/85 p-4 md:p-8"
+    },
+    {
+     "part": "centering",
+     "tag": "div",
+     "classes": "mx-auto flex h-full max-w-6xl items-center justify-center"
+    },
+    {
+     "part": "inner",
+     "tag": "div",
+     "classes": "relative flex h-full w-full items-center justify-center"
+    },
+    {
+     "part": "close button",
+     "tag": "button",
+     "classes": "absolute -top-10 right-0 inline-flex items-center gap-1 rounded-md bg-white/15 px-2.5 py-1.5 text-sm text-white backdrop-blur transition-colors hover:bg-white/25",
+     "text": "닫기"
+    },
+    {
+     "part": "close icon",
+     "tag": "X",
+     "classes": "h-4 w-4"
+    },
+    {
+     "part": "image frame",
+     "tag": "div",
+     "classes": "overflow-hidden rounded-xl border border-white/20 bg-black/30"
+    },
+    {
+     "part": "image",
+     "tag": "Image",
+     "classes": "h-auto max-h-[80vh] w-auto max-w-[calc(100vw-2rem)] object-contain md:max-w-[calc(100vw-4rem)]"
+    }
+   ]
+  },
+  {
+   "name": "PatchNotesList",
+   "file": "src/app/(dashboard)/patch-notes/page.tsx",
+   "purpose": "Update announcements list: purple megaphone header, skeleton, error, empty state, link cards with version badge",
+   "props": "IPatchNoteResponse { _id, title, content, version?, publishedAt?, createdAt }",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "max-w-2xl mx-auto space-y-4"
+    },
+    {
+     "part": "skeleton title",
+     "tag": "div",
+     "classes": "h-8 w-40 animate-pulse rounded-lg bg-slate-200"
+    },
+    {
+     "part": "skeleton card",
+     "tag": "div",
+     "classes": "h-24 animate-pulse rounded-2xl bg-slate-200"
+    },
+    {
+     "part": "error box",
+     "tag": "div",
+     "classes": "rounded-2xl border border-red-200 bg-red-50 p-8 text-center"
+    },
+    {
+     "part": "error text",
+     "tag": "p",
+     "classes": "text-sm text-red-600",
+     "text": "업데이트 소식을 불러오는 중 오류가 발생했습니다."
+    },
+    {
+     "part": "header row",
+     "tag": "div",
+     "classes": "flex items-center gap-3"
+    },
+    {
+     "part": "header icon tile",
+     "tag": "div",
+     "classes": "w-10 h-10 rounded-full flex items-center justify-center bg-purple-100"
+    },
+    {
+     "part": "header icon",
+     "tag": "Megaphone",
+     "classes": "w-5 h-5 text-purple-600"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-2xl font-bold text-gray-900",
+     "text": "업데이트 소식"
+    },
+    {
+     "part": "empty box",
+     "tag": "div",
+     "classes": "rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center"
+    },
+    {
+     "part": "empty icon",
+     "tag": "Megaphone",
+     "classes": "mx-auto mb-3 h-8 w-8 text-slate-300"
+    },
+    {
+     "part": "empty text",
+     "tag": "p",
+     "classes": "text-sm text-slate-500",
+     "text": "등록된 업데이트 소식이 없습니다."
+    },
+    {
+     "part": "list",
+     "tag": "div",
+     "classes": "flex flex-col gap-3"
+    },
+    {
+     "part": "card",
+     "tag": "Card",
+     "classes": "transition-shadow hover:shadow-md cursor-pointer"
+    },
+    {
+     "part": "card content",
+     "tag": "CardContent",
+     "classes": "p-5"
+    },
+    {
+     "part": "row",
+     "tag": "div",
+     "classes": "flex items-start justify-between gap-3 ; left flex items-start gap-3 min-w-0"
+    },
+    {
+     "part": "item icon tile",
+     "tag": "div",
+     "classes": "mt-0.5 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100"
+    },
+    {
+     "part": "item icon",
+     "tag": "Megaphone",
+     "classes": "w-4 h-4 text-purple-600"
+    },
+    {
+     "part": "title row",
+     "tag": "div",
+     "classes": "flex items-center gap-2 flex-wrap mb-0.5"
+    },
+    {
+     "part": "item title",
+     "tag": "span",
+     "classes": "font-semibold text-gray-900 truncate"
+    },
+    {
+     "part": "version badge",
+     "tag": "span",
+     "classes": "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 flex-shrink-0"
+    },
+    {
+     "part": "date",
+     "tag": "p",
+     "classes": "text-xs text-slate-400 mb-2",
+     "text": "toLocaleDateString('ko-KR', {year:'numeric', month:'long', day:'numeric'})"
+    },
+    {
+     "part": "excerpt",
+     "tag": "p",
+     "classes": "text-sm text-slate-600 leading-relaxed",
+     "text": "truncate(content, 100) + '...'"
+    },
+    {
+     "part": "chevron",
+     "tag": "ArrowRight",
+     "classes": "flex-shrink-0 mt-1 h-4 w-4 text-slate-300"
+    }
+   ],
+   "notes": "No per-type tag colors exist; only a single blue version badge. Type/category of patch note is not rendered."
+  },
+  {
+   "name": "PatchNoteDetail",
+   "file": "src/app/(dashboard)/patch-notes/[id]/page.tsx",
+   "purpose": "Single announcement with back link, header, version badge, pre-wrapped content",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "max-w-2xl mx-auto space-y-4"
+    },
+    {
+     "part": "skeleton",
+     "tag": "div",
+     "classes": "h-6 w-32 animate-pulse rounded-lg bg-slate-200 / h-64 animate-pulse rounded-2xl bg-slate-200"
+    },
+    {
+     "part": "back link",
+     "tag": "Link",
+     "classes": "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974] (error variant adds mb-4)",
+     "text": "목록으로"
+    },
+    {
+     "part": "back icon",
+     "tag": "ArrowLeft",
+     "classes": "h-4 w-4"
+    },
+    {
+     "part": "error box",
+     "tag": "div",
+     "classes": "rounded-2xl border border-red-200 bg-red-50 p-8 text-center"
+    },
+    {
+     "part": "error text",
+     "tag": "p",
+     "classes": "text-sm text-red-600",
+     "text": "업데이트 소식을 찾을 수 없습니다."
+    },
+    {
+     "part": "card content",
+     "tag": "CardContent",
+     "classes": "p-6"
+    },
+    {
+     "part": "header row",
+     "tag": "div",
+     "classes": "flex items-center gap-3 mb-4"
+    },
+    {
+     "part": "icon tile",
+     "tag": "div",
+     "classes": "w-10 h-10 rounded-full flex items-center justify-center bg-purple-100"
+    },
+    {
+     "part": "icon",
+     "tag": "Megaphone",
+     "classes": "w-5 h-5 text-purple-600"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-xl font-bold text-gray-900"
+    },
+    {
+     "part": "meta row",
+     "tag": "div",
+     "classes": "flex items-center gap-2 mt-0.5"
+    },
+    {
+     "part": "version badge",
+     "tag": "span",
+     "classes": "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700"
+    },
+    {
+     "part": "date",
+     "tag": "span",
+     "classes": "text-xs text-slate-400"
+    },
+    {
+     "part": "body divider",
+     "tag": "div",
+     "classes": "border-t pt-4"
+    },
+    {
+     "part": "content",
+     "tag": "p",
+     "classes": "text-sm text-slate-700 whitespace-pre-wrap leading-relaxed"
+    }
+   ]
+  },
+  {
+   "name": "PrivacyPolicyPage",
+   "file": "src/app/(legal)/privacy/page.tsx",
+   "purpose": "Server-rendered legal prose with numbered h2 sections, nested h3/h4, disc lists, vendor table, contact box",
+   "props": "export const metadata: Metadata = { title: '개인정보처리방침 | YU 수강 플래너', description: 'YU 수강 플래너 개인정보처리방침' }",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-16 px-4"
+    },
+    {
+     "part": "sheet",
+     "tag": "div",
+     "classes": "max-w-3xl mx-auto bg-white rounded-lg shadow-sm p-8"
+    },
+    {
+     "part": "back link",
+     "tag": "Link",
+     "classes": "inline-flex items-center text-[#153974] hover:underline mb-8",
+     "text": "← 홈으로 돌아가기"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-3xl font-bold text-[#153974] mb-2",
+     "text": "개인정보처리방침"
+    },
+    {
+     "part": "date",
+     "tag": "p",
+     "classes": "text-gray-600 mb-8",
+     "text": "시행일자: 2026년 2월 9일"
+    },
+    {
+     "part": "prose wrapper",
+     "tag": "div",
+     "classes": "prose prose-sm max-w-none space-y-8"
+    },
+    {
+     "part": "section",
+     "tag": "section",
+     "classes": "(none) ; final 부칙 section: border-t pt-6 mt-8"
+    },
+    {
+     "part": "paragraph",
+     "tag": "p",
+     "classes": "text-gray-700 leading-relaxed / text-gray-700 leading-relaxed mt-2 / text-gray-700 mb-2 / text-gray-700 mt-3 / text-gray-700 mb-3"
+    },
+    {
+     "part": "h2",
+     "tag": "h2",
+     "classes": "text-xl font-semibold text-[#153974] mb-3",
+     "text": "1. 개인정보의 처리 목적 ... 11. 개인정보처리방침 변경 / 부칙"
+    },
+    {
+     "part": "h3",
+     "tag": "h3",
+     "classes": "text-lg font-semibold text-gray-800 mt-4 mb-2",
+     "text": "2.1 수집 항목"
+    },
+    {
+     "part": "h4 group",
+     "tag": "div",
+     "classes": "mb-4"
+    },
+    {
+     "part": "h4",
+     "tag": "h4",
+     "classes": "font-semibold text-gray-800 mb-2",
+     "text": "필수 수집 항목 / 선택 수집 항목 / 자동 수집 항목 / 서비스 이용 데이터"
+    },
+    {
+     "part": "ul",
+     "tag": "ul",
+     "classes": "list-disc pl-6 text-gray-700 space-y-1 (one instance adds mt-2)"
+    },
+    {
+     "part": "table wrapper",
+     "tag": "div",
+     "classes": "overflow-x-auto"
+    },
+    {
+     "part": "table",
+     "tag": "table",
+     "classes": "min-w-full border border-gray-300"
+    },
+    {
+     "part": "thead",
+     "tag": "thead",
+     "classes": "bg-gray-100"
+    },
+    {
+     "part": "th",
+     "tag": "th",
+     "classes": "border border-gray-300 px-4 py-2 text-left",
+     "text": "수탁업체 / 위탁 업무 내용"
+    },
+    {
+     "part": "td",
+     "tag": "td",
+     "classes": "border border-gray-300 px-4 py-2"
+    },
+    {
+     "part": "inline code",
+     "tag": "code",
+     "classes": "bg-gray-100 px-1 py-0.5 rounded",
+     "text": "next-auth.session-token"
+    },
+    {
+     "part": "contact box",
+     "tag": "div",
+     "classes": "bg-gray-50 p-4 rounded border border-gray-200"
+    },
+    {
+     "part": "contact box title",
+     "tag": "p",
+     "classes": "font-semibold text-gray-800 mb-2",
+     "text": "개인정보 보호책임자"
+    },
+    {
+     "part": "contact list",
+     "tag": "ul",
+     "classes": "text-gray-700 space-y-1"
+    }
+   ]
+  },
+  {
+   "name": "TermsPage",
+   "file": "src/app/(legal)/terms/page.tsx",
+   "purpose": "Server-rendered terms with 제N조 sections, decimal lists, highlighted disclaimer section, footer contact box",
+   "props": "export const metadata: Metadata = { title: '이용약관 | YU 수강 플래너', description: 'YU 수강 플래너 서비스 이용약관' }",
+   "elements": [
+    {
+     "part": "root",
+     "tag": "div",
+     "classes": "min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50"
+    },
+    {
+     "part": "container",
+     "tag": "div",
+     "classes": "container mx-auto max-w-3xl px-4 py-16"
+    },
+    {
+     "part": "back link",
+     "tag": "Link",
+     "classes": "inline-flex items-center text-[#153974] hover:text-[#1a4a8f] mb-8 transition-colors",
+     "text": "돌아가기"
+    },
+    {
+     "part": "back icon (inline svg)",
+     "tag": "svg",
+     "classes": "w-5 h-5 mr-2",
+     "text": "fill=none stroke=currentColor viewBox=0 0 24 24 ; path strokeLinecap=round strokeLinejoin=round strokeWidth=2 d=M10 19l-7-7m0 0l7-7m-7 7h18"
+    },
+    {
+     "part": "sheet",
+     "tag": "div",
+     "classes": "bg-white rounded-2xl shadow-xl p-8 md:p-12"
+    },
+    {
+     "part": "title",
+     "tag": "h1",
+     "classes": "text-3xl md:text-4xl font-bold text-[#153974] mb-2",
+     "text": "이용약관"
+    },
+    {
+     "part": "date",
+     "tag": "p",
+     "classes": "text-gray-500 mb-8",
+     "text": "시행일: 2026년 2월 9일"
+    },
+    {
+     "part": "prose wrapper",
+     "tag": "div",
+     "classes": "space-y-8 text-gray-700 leading-relaxed"
+    },
+    {
+     "part": "h2",
+     "tag": "h2",
+     "classes": "text-2xl font-bold text-[#153974] mb-4",
+     "text": "제1조 (목적) ... 제12조 (분쟁 해결) / 부칙"
+    },
+    {
+     "part": "ol",
+     "tag": "ol",
+     "classes": "list-decimal list-inside space-y-2 ml-4"
+    },
+    {
+     "part": "nested ul",
+     "tag": "ul",
+     "classes": "list-disc list-inside ml-6 mt-2 space-y-1"
+    },
+    {
+     "part": "intro p",
+     "tag": "p",
+     "classes": "mb-2",
+     "text": "회원은 다음 행위를 하여서는 안 됩니다:"
+    },
+    {
+     "part": "disclaimer section",
+     "tag": "section",
+     "classes": "bg-amber-50 border-2 border-amber-300 rounded-lg p-6"
+    },
+    {
+     "part": "disclaimer h2",
+     "tag": "h2",
+     "classes": "text-2xl font-bold text-red-700 mb-4",
+     "text": "제8조 (학사 정보 면책) ⚠️ 중요"
+    },
+    {
+     "part": "disclaimer ol",
+     "tag": "ol",
+     "classes": "list-decimal list-inside space-y-3 ml-4"
+    },
+    {
+     "part": "disclaimer li (emphasis)",
+     "tag": "li",
+     "classes": "font-semibold text-gray-900"
+    },
+    {
+     "part": "disclaimer li (critical)",
+     "tag": "li",
+     "classes": "font-semibold text-red-700"
+    },
+    {
+     "part": "appendix section",
+     "tag": "section",
+     "classes": "border-t-2 border-gray-200 pt-6"
+    },
+    {
+     "part": "footer box",
+     "tag": "div",
+     "classes": "mt-6 p-4 bg-gray-50 rounded-lg"
+    },
+    {
+     "part": "footer line",
+     "tag": "p",
+     "classes": "text-sm text-gray-600 / text-sm text-gray-600 mt-1",
+     "text": "<strong>문의:</strong> ... / <strong>운영자:</strong> 개인 프로젝트 (영남대학교 학생)"
+    }
+   ]
+  }
+ ],
+ "semantic_maps": [
+  {
+   "domain": "AcademicEventCategory chip colors (categoryColors) + labels (categoryLabels)",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "entries": [
+    {
+     "key": "academic",
+     "label": "학사",
+     "classes": "bg-blue-100 text-blue-700 border-blue-200"
+    },
+    {
+     "key": "registration",
+     "label": "수강신청",
+     "classes": "bg-green-100 text-green-700 border-green-200"
+    },
+    {
+     "key": "exam",
+     "label": "시험",
+     "classes": "bg-red-100 text-red-700 border-red-200"
+    },
+    {
+     "key": "holiday",
+     "label": "공휴일",
+     "classes": "bg-rose-100 text-rose-700 border-rose-200"
+    },
+    {
+     "key": "other",
+     "label": "기타",
+     "classes": "bg-gray-100 text-gray-700 border-gray-200"
+    }
+   ]
+  },
+  {
+   "domain": "AcademicEventCategory mobile micro-chip colors (inline ternary)",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "entries": [
+    {
+     "key": "academic",
+     "classes": "text-blue-700 bg-blue-50"
+    },
+    {
+     "key": "registration",
+     "classes": "text-green-700 bg-green-50"
+    },
+    {
+     "key": "exam",
+     "classes": "text-red-700 bg-red-50"
+    },
+    {
+     "key": "holiday",
+     "classes": "text-rose-700 bg-rose-50"
+    },
+    {
+     "key": "other (default)",
+     "classes": "text-gray-600 bg-gray-50"
+    }
+   ]
+  },
+  {
+   "domain": "Weekday coloring",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "entries": [
+    {
+     "key": "0 (일)",
+     "label": "Sunday",
+     "classes": "text-red-600"
+    },
+    {
+     "key": "6 (토)",
+     "label": "Saturday",
+     "classes": "text-blue-600"
+    },
+    {
+     "key": "1-5",
+     "label": "Weekday",
+     "classes": "text-gray-600 (header) / text-gray-700 (day number)"
+    }
+   ]
+  },
+  {
+   "domain": "Calendar day-cell state",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "entries": [
+    {
+     "key": "today && selected",
+     "classes": "bg-blue-100 md:bg-blue-50 border-amber-400 md:border-2 md:border-blue-500 md:ring-2 md:ring-amber-400 md:ring-offset-0"
+    },
+    {
+     "key": "today",
+     "classes": "bg-blue-50 border-blue-400 md:border-2 md:border-blue-500"
+    },
+    {
+     "key": "selected",
+     "classes": "bg-amber-50/50 border-amber-300 md:border-2 md:border-amber-400 md:bg-white md:hover:bg-gray-50"
+    },
+    {
+     "key": "default",
+     "classes": "bg-white hover:bg-gray-50"
+    }
+   ]
+  },
+  {
+   "domain": "Holiday marker",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "entries": [
+    {
+     "key": "isHoliday",
+     "label": "🔴 prefix / '🔴 공휴일'",
+     "classes": "text-red-600 (wrapper span) ; emoji inline in chip text"
+    }
+   ]
+  },
+  {
+   "domain": "Category filter chip (all)",
+   "file": "src/app/(dashboard)/calendar/page.tsx",
+   "entries": [
+    {
+     "key": "all active",
+     "label": "전체",
+     "classes": "bg-blue-600 text-white"
+    },
+    {
+     "key": "inactive",
+     "classes": "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50"
+    }
+   ]
+  },
+  {
+   "domain": "MajorType toggle buttons (profile guest, profile auth, onboarding — identical)",
+   "file": "src/app/(dashboard)/profile/page.tsx, src/app/(dashboard)/onboarding/page.tsx",
+   "entries": [
+    {
+     "key": "double active",
+     "label": "복수전공",
+     "classes": "bg-purple-500 text-white border-purple-500 shadow-sm"
+    },
+    {
+     "key": "double inactive",
+     "label": "+ 복수전공 추가",
+     "classes": "bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600"
+    },
+    {
+     "key": "minor active",
+     "label": "부전공",
+     "classes": "bg-orange-500 text-white border-orange-500 shadow-sm"
+    },
+    {
+     "key": "minor disabled (when double)",
+     "label": "+ 부전공 추가",
+     "classes": "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+    },
+    {
+     "key": "minor inactive",
+     "label": "+ 부전공 추가",
+     "classes": "bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600"
+    }
+   ]
+  },
+  {
+   "domain": "MajorType badge (profile banner)",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "entries": [
+    {
+     "key": "double",
+     "label": "복수전공",
+     "classes": "bg-purple-100 text-purple-700"
+    },
+    {
+     "key": "minor",
+     "label": "부전공",
+     "classes": "bg-orange-100 text-orange-700"
+    }
+   ]
+  },
+  {
+   "domain": "Onboarding step-2 column icon tint by track",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "entries": [
+    {
+     "key": "primary",
+     "label": "졸업 기준 / 취득 학점",
+     "classes": "text-gray-500"
+    },
+    {
+     "key": "double",
+     "label": "복수전공 기준 / 복수전공 기이수",
+     "classes": "text-purple-500"
+    },
+    {
+     "key": "minor",
+     "label": "부전공 기준 / 부전공 기이수",
+     "classes": "text-orange-500"
+    }
+   ]
+  },
+  {
+   "domain": "Onboarding stepper state",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "entries": [
+    {
+     "key": "current",
+     "classes": "bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30"
+    },
+    {
+     "key": "completed",
+     "classes": "bg-emerald-500 text-white (Check w-5 h-5)"
+    },
+    {
+     "key": "upcoming",
+     "classes": "bg-gray-200 text-gray-500"
+    },
+    {
+     "key": "connector filled",
+     "classes": "w-full bg-gradient-to-r from-[#153974] to-[#3069B3]"
+    },
+    {
+     "key": "label reached / not",
+     "classes": "text-[#153974] / text-gray-400"
+    }
+   ]
+  },
+  {
+   "domain": "Onboarding card accent by step",
+   "file": "src/app/(dashboard)/onboarding/page.tsx",
+   "entries": [
+    {
+     "key": "step 1",
+     "label": "학과 및 입학 정보",
+     "classes": "border-t-4 border-[#3069B3] ; School icon text-[#153974]"
+    },
+    {
+     "key": "step 2",
+     "label": "졸업 요건 설정",
+     "classes": "border-t-4 border-emerald-500 ; GraduationCap icon text-emerald-600"
+    }
+   ]
+  },
+  {
+   "domain": "Feedback status",
+   "file": "src/app/(dashboard)/help/feedback/page.tsx",
+   "entries": [
+    {
+     "key": "pending",
+     "label": "대기중",
+     "classes": "bg-yellow-100 text-yellow-700 (Clock h-3 w-3)"
+    },
+    {
+     "key": "resolved",
+     "label": "해결됨",
+     "classes": "bg-green-100 text-green-700 (CheckCircle h-3 w-3)"
+    },
+    {
+     "key": "has adminReply (card)",
+     "classes": "border-l-4 border-l-green-400 border-slate-200 bg-green-50/30"
+    },
+    {
+     "key": "adminReply pill",
+     "label": "관리자 답변",
+     "classes": "bg-green-100 text-green-700 font-semibold"
+    },
+    {
+     "key": "adminReply box",
+     "classes": "bg-white border border-green-200 rounded-lg p-3"
+    }
+   ]
+  },
+  {
+   "domain": "Eyebrow pill variants",
+   "file": "help/page.tsx, help/feedback/page.tsx, help/graduation-guide/page.tsx",
+   "entries": [
+    {
+     "key": "neutral",
+     "label": "도움말 가이드 / Contact / STEP 1",
+     "classes": "bg-slate-100 text-slate-700"
+    },
+    {
+     "key": "teal",
+     "label": "빠른 문의",
+     "classes": "bg-[#00AACA]/10 text-[#00AACA]"
+    },
+    {
+     "key": "purple",
+     "label": "내 문의 내역",
+     "classes": "bg-purple-50 text-purple-600"
+    },
+    {
+     "key": "navy",
+     "label": "졸업 정보 가이드",
+     "classes": "bg-[#153974]/5 text-[#153974]"
+    }
+   ]
+  },
+  {
+   "domain": "Help section icon tile tints",
+   "file": "src/app/(dashboard)/help/page.tsx, graduation-guide",
+   "entries": [
+    {
+     "key": "navy",
+     "label": "Rocket 시작하기, UserCog 프로필 관리, Search STEP 1",
+     "classes": "bg-[#153974]/10 ; text-[#153974]"
+    },
+    {
+     "key": "blue",
+     "label": "Calendar 수강 계획, BarChart3 학과 통계",
+     "classes": "bg-[#3069B3]/10 ; text-[#3069B3]"
+    },
+    {
+     "key": "teal",
+     "label": "GraduationCap 졸업요건 추적, BookOpen STEP 2",
+     "classes": "bg-[#00AACA]/10 ; text-[#00AACA]"
+    },
+    {
+     "key": "purple",
+     "label": "FileText STEP 3",
+     "classes": "bg-purple-100 ; text-purple-600"
+    }
+   ]
+  },
+  {
+   "domain": "Patch note badges",
+   "file": "src/app/(dashboard)/patch-notes/page.tsx",
+   "entries": [
+    {
+     "key": "version",
+     "classes": "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700"
+    },
+    {
+     "key": "icon tile",
+     "classes": "bg-purple-100 ; Megaphone text-purple-600"
+    }
+   ]
+  },
+  {
+   "domain": "Account type (profile)",
+   "file": "src/app/(dashboard)/profile/page.tsx",
+   "entries": [
+    {
+     "key": "guest",
+     "label": "게스트 모드",
+     "classes": "font-medium text-amber-600"
+    },
+    {
+     "key": "google",
+     "label": "Google 계정",
+     "classes": "Chrome w-4 h-4 text-gray-400"
+    },
+    {
+     "key": "email",
+     "label": "이메일 계정",
+     "classes": "Mail w-4 h-4 text-gray-400"
+    }
+   ]
+  },
+  {
+   "domain": "Toast types used (useToastStore.addToast)",
+   "file": "calendar/page.tsx, help/feedback/page.tsx",
+   "entries": [
+    {
+     "key": "success",
+     "label": "일정이 추가되었습니다. / 문의가 성공적으로 제출되었습니다.",
+     "classes": "type: 'success'"
+    },
+    {
+     "key": "warning",
+     "label": "제목과 시작일은 필수입니다. / 일정 저장에 실패했습니다.",
+     "classes": "type: 'warning' (used for failures too; no 'error' type used)"
+    }
+   ]
+  },
+  {
+   "domain": "Primary action button recipes",
+   "file": "multiple",
+   "entries": [
+    {
+     "key": "calendar (inline style)",
+     "classes": "px-4 py-2 rounded-lg text-white transition-colors + style backgroundColor #153974"
+    },
+    {
+     "key": "help CTA",
+     "classes": "inline-flex items-center gap-2 rounded-xl bg-[#153974] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f]"
+    },
+    {
+     "key": "feedback submit",
+     "classes": "inline-flex items-center gap-1.5 rounded-lg bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f] disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+    },
+    {
+     "key": "text link",
+     "classes": "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
+    }
+   ]
+  }
+ ],
+ "color_classes_seen": [
+  "bg-gray-50",
+  "bg-gray-100",
+  "bg-gray-200",
+  "bg-white",
+  "bg-black",
+  "bg-opacity-50",
+  "bg-black/30",
+  "text-white",
+  "text-gray-400",
+  "text-gray-500",
+  "text-gray-600",
+  "text-gray-700",
+  "text-gray-800",
+  "text-gray-900",
+  "border-gray-100",
+  "border-gray-200",
+  "border-gray-300",
+  "bg-blue-50",
+  "bg-blue-100",
+  "bg-blue-600",
+  "text-blue-600",
+  "text-blue-700",
+  "border-blue-200",
+  "border-blue-400",
+  "border-blue-500",
+  "ring-blue-500",
+  "bg-green-50",
+  "bg-green-50/30",
+  "bg-green-100",
+  "text-green-600",
+  "text-green-700",
+  "border-green-200",
+  "border-l-green-400",
+  "bg-red-50",
+  "bg-red-100",
+  "text-red-500",
+  "text-red-600",
+  "text-red-700",
+  "border-red-200",
+  "border-red-300",
+  "border-red-400",
+  "bg-rose-50",
+  "bg-rose-100",
+  "text-rose-700",
+  "border-rose-200",
+  "bg-amber-50",
+  "bg-amber-50/50",
+  "text-amber-500",
+  "text-amber-600",
+  "text-amber-800",
+  "border-amber-200",
+  "border-amber-300",
+  "border-amber-400",
+  "ring-amber-400",
+  "bg-yellow-100",
+  "text-yellow-700",
+  "bg-emerald-50",
+  "bg-emerald-500",
+  "text-emerald-600",
+  "border-emerald-500",
+  "bg-purple-50",
+  "bg-purple-100",
+  "bg-purple-500",
+  "text-purple-500",
+  "text-purple-600",
+  "text-purple-700",
+  "border-purple-400",
+  "border-purple-500",
+  "bg-orange-100",
+  "bg-orange-500",
+  "text-orange-500",
+  "text-orange-600",
+  "text-orange-700",
+  "border-orange-400",
+  "border-orange-500",
+  "bg-slate-50",
+  "bg-slate-100",
+  "bg-slate-200",
+  "bg-slate-900/75",
+  "bg-slate-950/85",
+  "text-slate-300",
+  "text-slate-400",
+  "text-slate-500",
+  "text-slate-600",
+  "text-slate-700",
+  "text-slate-900",
+  "border-slate-200",
+  "from-slate-50",
+  "via-white",
+  "to-slate-100",
+  "from-blue-50",
+  "to-indigo-50",
+  "bg-white/15",
+  "bg-white/25",
+  "border-white/20",
+  "ring-white",
+  "text-[#153974]",
+  "bg-[#153974]",
+  "bg-[#153974]/5",
+  "bg-[#153974]/10",
+  "border-[#153974]",
+  "ring-[#153974]",
+  "shadow-[#153974]/30",
+  "from-[#153974]",
+  "text-[#3069B3]",
+  "bg-[#3069B3]/10",
+  "border-[#3069B3]",
+  "via-[#3069B3]",
+  "to-[#3069B3]",
+  "text-[#00AACA]",
+  "bg-[#00AACA]/5",
+  "bg-[#00AACA]/10",
+  "border-[#00AACA]",
+  "border-[#00AACA]/30",
+  "border-[#00AACA]/50",
+  "ring-[#00AACA]/20",
+  "to-[#00AACA]",
+  "text-[#1a4a8f]",
+  "bg-[#1a4a8f]",
+  "to-[#1a4a8f]",
+  "text-gradient"
+ ],
+ "typography": [
+  {
+   "role": "Page title (calendar, inline brand color)",
+   "classes": "text-2xl md:text-3xl font-bold + style={{ color: '#153974' }}",
+   "where": "calendar/page.tsx h1 '학사일정'"
+  },
+  {
+   "role": "Page title (dashboard narrow pages)",
+   "classes": "text-2xl font-bold text-gray-900",
+   "where": "profile/page.tsx h1 '프로필'; patch-notes/page.tsx h1 '업데이트 소식'"
+  },
+  {
+   "role": "Page title (onboarding, gradient text)",
+   "classes": "text-3xl font-bold text-gradient",
+   "where": "onboarding/page.tsx h1 '초기 설정'"
+  },
+  {
+   "role": "Page title (help index)",
+   "classes": "text-3xl font-bold text-[#153974] md:text-4xl",
+   "where": "help/page.tsx h1"
+  },
+  {
+   "role": "Page title (feedback)",
+   "classes": "text-2xl font-bold text-[#153974] sm:text-3xl md:text-4xl",
+   "where": "help/feedback/page.tsx h1 '문의하기'"
+  },
+  {
+   "role": "Page title (graduation guide)",
+   "classes": "mt-3 text-3xl font-bold tracking-tight text-[#153974] md:text-4xl",
+   "where": "help/graduation-guide/page.tsx h1"
+  },
+  {
+   "role": "Page title (privacy)",
+   "classes": "text-3xl font-bold text-[#153974] mb-2",
+   "where": "privacy/page.tsx h1"
+  },
+  {
+   "role": "Page title (terms)",
+   "classes": "text-3xl md:text-4xl font-bold text-[#153974] mb-2",
+   "where": "terms/page.tsx h1"
+  },
+  {
+   "role": "Detail title (patch note)",
+   "classes": "text-xl font-bold text-gray-900",
+   "where": "patch-notes/[id]/page.tsx h1"
+  },
+  {
+   "role": "Profile display name",
+   "classes": "text-xl font-bold text-gray-900",
+   "where": "profile/page.tsx h2 under banner"
+  },
+  {
+   "role": "Page subtitle",
+   "classes": "text-gray-600 mt-1",
+   "where": "profile/page.tsx"
+  },
+  {
+   "role": "Page subtitle (help)",
+   "classes": "mt-2 text-sm text-slate-500",
+   "where": "help/page.tsx"
+  },
+  {
+   "role": "Page subtitle (onboarding) + caption",
+   "classes": "text-gray-600 mt-2 / text-sm text-gray-400 mt-1",
+   "where": "onboarding/page.tsx header"
+  },
+  {
+   "role": "Page subtitle (feedback)",
+   "classes": "mt-3 text-sm text-slate-600 leading-relaxed sm:text-base",
+   "where": "help/feedback/page.tsx"
+  },
+  {
+   "role": "Legal effective-date line",
+   "classes": "text-gray-600 mb-8 (privacy) / text-gray-500 mb-8 (terms)",
+   "where": "(legal) pages"
+  },
+  {
+   "role": "Section h2 (help articles)",
+   "classes": "text-2xl font-bold text-[#153974]",
+   "where": "help/page.tsx, graduation-guide (with flex items-center gap-3)"
+  },
+  {
+   "role": "Section h2 (feedback cards)",
+   "classes": "text-xl font-bold text-[#153974] sm:text-2xl",
+   "where": "help/feedback/page.tsx"
+  },
+  {
+   "role": "Section h2 (privacy)",
+   "classes": "text-xl font-semibold text-[#153974] mb-3",
+   "where": "privacy/page.tsx"
+  },
+  {
+   "role": "Section h2 (terms)",
+   "classes": "text-2xl font-bold text-[#153974] mb-4",
+   "where": "terms/page.tsx"
+  },
+  {
+   "role": "Section h3 (privacy)",
+   "classes": "text-lg font-semibold text-gray-800 mt-4 mb-2",
+   "where": "privacy/page.tsx"
+  },
+  {
+   "role": "Section h4 (privacy)",
+   "classes": "font-semibold text-gray-800 mb-2",
+   "where": "privacy/page.tsx"
+  },
+  {
+   "role": "Card section title (calendar, inline color)",
+   "classes": "text-lg font-semibold mb-4 + style={{ color: '#153974' }}",
+   "where": "calendar/page.tsx '이번 달 일정'"
+  },
+  {
+   "role": "Modal title",
+   "classes": "text-xl font-semibold + style={{ color: '#153974' }}",
+   "where": "calendar/page.tsx event form"
+  },
+  {
+   "role": "Event detail title",
+   "classes": "text-lg font-semibold mb-1",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Month label",
+   "classes": "text-lg md:text-xl font-semibold min-w-[3rem] text-center",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Year label",
+   "classes": "text-lg md:text-xl font-semibold text-gray-500 mr-2",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Form group heading (onboarding step 2)",
+   "classes": "text-sm font-semibold text-gray-900",
+   "where": "onboarding/page.tsx h3 '졸업 기준' etc."
+  },
+  {
+   "role": "Help sub-card heading",
+   "classes": "mb-2 font-semibold text-[#153974]",
+   "where": "help/page.tsx 비회원/회원 boxes"
+  },
+  {
+   "role": "Audit item heading",
+   "classes": "text-base font-semibold text-[#153974]",
+   "where": "graduation-guide h3"
+  },
+  {
+   "role": "Help body prose",
+   "classes": "mb-4 text-sm leading-relaxed text-slate-600 md:text-base",
+   "where": "help/page.tsx, graduation-guide"
+  },
+  {
+   "role": "Legal body prose",
+   "classes": "text-gray-700 leading-relaxed (privacy, inside prose prose-sm max-w-none space-y-8) / space-y-8 text-gray-700 leading-relaxed (terms wrapper)",
+   "where": "(legal) pages"
+  },
+  {
+   "role": "User-generated text",
+   "classes": "text-sm text-slate-700 whitespace-pre-wrap leading-relaxed",
+   "where": "feedback message, admin reply, patch note content"
+  },
+  {
+   "role": "Form label",
+   "classes": "block text-sm font-medium text-gray-700 mb-1",
+   "where": "calendar modal, onboarding, profile"
+  },
+  {
+   "role": "Form label with icon",
+   "classes": "flex items-center gap-2 text-sm font-medium text-gray-700 mb-1",
+   "where": "profile/page.tsx"
+  },
+  {
+   "role": "Compact numeric label",
+   "classes": "block text-xs text-gray-600 mb-1",
+   "where": "onboarding step 2"
+  },
+  {
+   "role": "Helper text",
+   "classes": "text-xs text-gray-500 mt-1 / text-xs text-gray-500 mt-1.5 / text-xs text-gray-400 mt-0.5",
+   "where": "profile, onboarding"
+  },
+  {
+   "role": "Inline error",
+   "classes": "text-sm text-red-500",
+   "where": "onboarding, profile"
+  },
+  {
+   "role": "Required asterisk",
+   "classes": "text-red-500",
+   "where": "calendar modal labels"
+  },
+  {
+   "role": "Eyebrow pill",
+   "classes": "inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700",
+   "where": "help, feedback, graduation-guide"
+  },
+  {
+   "role": "Key-value row label / value",
+   "classes": "text-gray-600 / font-medium ; empty value text-gray-400",
+   "where": "profile/page.tsx"
+  },
+  {
+   "role": "Calendar weekday header",
+   "classes": "text-center text-xs md:text-sm font-medium py-2",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Calendar day number",
+   "classes": "text-[10px] md:text-sm font-medium mb-0.5 md:mb-1",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Calendar event chip (desktop)",
+   "classes": "text-xs px-1 py-0.5 rounded truncate cursor-pointer",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Calendar event chip (mobile)",
+   "classes": "text-[10px] leading-tight px-0.5 rounded truncate",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Calendar overflow count",
+   "classes": "text-xs text-gray-500 px-1 (desktop) / text-[9px] text-gray-400 px-0.5 leading-tight (mobile)",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "role": "Timestamp / counter",
+   "classes": "text-xs text-slate-400",
+   "where": "feedback, patch-notes"
+  },
+  {
+   "role": "List card title",
+   "classes": "font-semibold text-gray-900 truncate",
+   "where": "patch-notes/page.tsx"
+  },
+  {
+   "role": "Truncated excerpt",
+   "classes": "text-sm text-slate-600 leading-relaxed",
+   "where": "patch-notes/page.tsx"
+  },
+  {
+   "role": "Avatar initial",
+   "classes": "text-2xl font-bold text-white",
+   "where": "profile/page.tsx"
+  },
+  {
+   "role": "Legal table cells",
+   "classes": "border border-gray-300 px-4 py-2 text-left (th) / border border-gray-300 px-4 py-2 (td)",
+   "where": "privacy/page.tsx"
+  },
+  {
+   "role": "Inline code",
+   "classes": "bg-gray-100 px-1 py-0.5 rounded",
+   "where": "privacy/page.tsx <code>"
+  }
+ ],
+ "layout_patterns": [
+  {
+   "name": "Full-bleed gray page",
+   "description": "Calendar uses its own page bg and wide container",
+   "classes": "min-h-screen bg-gray-50 p-4 md:p-8 > max-w-7xl mx-auto",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Narrow stacked page",
+   "description": "Profile and patch-notes center a 2xl column with vertical rhythm",
+   "classes": "max-w-2xl mx-auto space-y-6 (profile) / max-w-2xl mx-auto space-y-4 (patch-notes)",
+   "where": "profile, patch-notes"
+  },
+  {
+   "name": "Vertically centered wizard",
+   "description": "Onboarding centers content in 60vh",
+   "classes": "min-h-[60vh] flex items-center justify-center px-4 > w-full max-w-2xl mx-auto space-y-8",
+   "where": "onboarding/page.tsx"
+  },
+  {
+   "name": "Help article shell",
+   "description": "Slate vertical gradient background with 5xl column",
+   "classes": "min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 > mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10",
+   "where": "help/page.tsx, graduation-guide (no min-h-screen), feedback (max-w-3xl)"
+  },
+  {
+   "name": "Help section card",
+   "description": "White rounded-2xl card for each article section",
+   "classes": "mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7",
+   "where": "help/page.tsx"
+  },
+  {
+   "name": "Feedback card",
+   "description": "Larger padding steps",
+   "classes": "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8 md:p-12",
+   "where": "help/feedback/page.tsx"
+  },
+  {
+   "name": "Guide header",
+   "description": "",
+   "classes": "rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8",
+   "where": "graduation-guide header"
+  },
+  {
+   "name": "Legal page shell (privacy)",
+   "description": "Blue/indigo diagonal gradient with white sheet",
+   "classes": "min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-16 px-4 > max-w-3xl mx-auto bg-white rounded-lg shadow-sm p-8",
+   "where": "privacy/page.tsx"
+  },
+  {
+   "name": "Legal page shell (terms)",
+   "description": "Same gradient with via-white and heavier card",
+   "classes": "min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 > container mx-auto max-w-3xl px-4 py-16 > bg-white rounded-2xl shadow-xl p-8 md:p-12",
+   "where": "terms/page.tsx"
+  },
+  {
+   "name": "Page header row",
+   "description": "Icon + title left, action right, wraps",
+   "classes": "mb-6 flex items-center justify-between flex-wrap gap-4 ; inner flex items-center gap-3",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Section header row with icon tile",
+   "description": "",
+   "classes": "mb-5 flex items-center gap-3 ; tile flex h-10 w-10 items-center justify-center rounded-lg bg-[#153974]/10",
+   "where": "help/page.tsx"
+  },
+  {
+   "name": "Round icon tile",
+   "description": "Patch notes use circle tile",
+   "classes": "w-10 h-10 rounded-full flex items-center justify-center bg-purple-100 / mt-0.5 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100",
+   "where": "patch-notes"
+  },
+  {
+   "name": "Calendar grid",
+   "description": "7-column grid, gapless on mobile",
+   "classes": "grid grid-cols-7 gap-0 md:gap-1",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Calendar day cell",
+   "description": "Fixed min height on mobile, square on desktop",
+   "classes": "min-h-[90px] md:aspect-square p-0.5 md:p-2 border border-gray-200 md:rounded-lg ... transition-colors overflow-hidden",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Key-value row",
+   "description": "Profile read-only info",
+   "classes": "flex justify-between py-2 border-b (last row without border-b) ; left flex items-center gap-2",
+   "where": "profile/page.tsx"
+  },
+  {
+   "name": "Form stack",
+   "description": "",
+   "classes": "space-y-4",
+   "where": "all forms"
+  },
+  {
+   "name": "Two-column form",
+   "description": "Onboarding step 2 side-by-side",
+   "classes": "grid grid-cols-1 md:grid-cols-2 gap-6 ; column space-y-4 ; column header flex items-center gap-1.5 border-b pb-2",
+   "where": "onboarding/page.tsx"
+  },
+  {
+   "name": "Date pair",
+   "description": "",
+   "classes": "grid grid-cols-2 gap-4",
+   "where": "calendar modal"
+  },
+  {
+   "name": "Modal overlay",
+   "description": "Centered card modal",
+   "classes": "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 > Card w-full max-w-lg max-h-[90vh] overflow-y-auto > CardContent p-6",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Lightbox",
+   "description": "Image zoom dialog",
+   "classes": "fixed inset-0 z-50 bg-slate-950/85 p-4 md:p-8 > mx-auto flex h-full max-w-6xl items-center justify-center",
+   "where": "graduation-guide"
+  },
+  {
+   "name": "Guide two-pane section",
+   "description": "Text left, image right on lg",
+   "classes": "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm > grid gap-0 lg:grid-cols-[1.05fr_1fr] ; text p-6 md:p-7 ; image pane border-t border-slate-200 bg-slate-50 lg:border-l lg:border-t-0",
+   "where": "graduation-guide"
+  },
+  {
+   "name": "Image frame",
+   "description": "Screenshot wrapper",
+   "classes": "overflow-hidden rounded-xl border border-slate-200 (help) / mt-5 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 (guide)",
+   "where": "help, graduation-guide"
+  },
+  {
+   "name": "Numbered step row",
+   "description": "",
+   "classes": "rounded-lg bg-slate-50 p-3 (help) / flex items-start gap-3 rounded-lg bg-slate-50 p-3 (guide ol li)",
+   "where": "help, graduation-guide"
+  },
+  {
+   "name": "Comparison boxes",
+   "description": "2-up feature boxes",
+   "classes": "mb-4 grid gap-4 md:grid-cols-2 ; neutral rounded-xl border border-slate-200 bg-slate-50 p-4 ; highlighted rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4",
+   "where": "help/page.tsx"
+  },
+  {
+   "name": "Audit item grid",
+   "description": "",
+   "classes": "mt-5 grid gap-3 md:grid-cols-2 ; article rounded-xl border border-slate-200 bg-slate-50 p-4",
+   "where": "graduation-guide"
+  },
+  {
+   "name": "Profile banner + avatar",
+   "description": "Gradient banner with overlapping avatar",
+   "classes": "h-32 rounded-xl bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] relative mb-16 > absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center ring-4 ring-white shadow-lg",
+   "where": "profile/page.tsx"
+  },
+  {
+   "name": "Badge row",
+   "description": "",
+   "classes": "flex items-center justify-center gap-2 mt-2 flex-wrap",
+   "where": "profile/page.tsx"
+  },
+  {
+   "name": "Stepper",
+   "description": "Two circles joined by progress line",
+   "classes": "flex items-center justify-center gap-0 w-full max-w-xs mx-auto ; line flex-1 h-1 mx-2 rounded-full bg-gray-200 overflow-hidden ; labels flex justify-between w-full max-w-xs mx-auto mt-2 px-0",
+   "where": "onboarding/page.tsx"
+  },
+  {
+   "name": "Filter chip row",
+   "description": "",
+   "classes": "mb-4 flex gap-2 flex-wrap",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Event list row",
+   "description": "",
+   "classes": "flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200",
+   "where": "calendar/page.tsx"
+  },
+  {
+   "name": "Legal table",
+   "description": "",
+   "classes": "overflow-x-auto > table min-w-full border border-gray-300 ; thead bg-gray-100",
+   "where": "privacy/page.tsx"
+  },
+  {
+   "name": "Bottom nav links",
+   "description": "",
+   "classes": "flex flex-wrap justify-center gap-4 / nav mt-8 text-center",
+   "where": "help, graduation-guide"
+  },
+  {
+   "name": "Skeleton loaders",
+   "description": "",
+   "classes": "min-h-[90px] md:aspect-square bg-gray-100 animate-pulse border border-gray-200 md:rounded-lg (calendar) ; h-16 bg-gray-100 animate-pulse rounded-lg ; h-24 animate-pulse rounded-xl bg-slate-100 (feedback) ; h-8 w-40 animate-pulse rounded-lg bg-slate-200 + h-24 animate-pulse rounded-2xl bg-slate-200 (patch-notes)",
+   "where": "calendar, feedback, patch-notes"
+  }
+ ],
+ "copy_samples": [
+  {
+   "text": "학사일정",
+   "where": "calendar h1",
+   "note": "noun-only page titles"
+  },
+  {
+   "text": "일정 추가",
+   "where": "calendar admin button",
+   "note": "verb-noun, no particle"
+  },
+  {
+   "text": "이 날의 일정이 없습니다.",
+   "where": "calendar mobile empty state",
+   "note": "합니다체, period"
+  },
+  {
+   "text": "이 일정을 삭제하시겠습니까?",
+   "where": "calendar confirm()",
+   "note": "formal -시겠습니까"
+  },
+  {
+   "text": "제목과 시작일은 필수입니다.",
+   "where": "calendar toast warning"
+  },
+  {
+   "text": "저장 중...",
+   "where": "pending buttons (calendar, profile)",
+   "note": "ASCII three dots"
+  },
+  {
+   "text": "🔴 공휴일",
+   "where": "calendar event detail",
+   "note": "emoji as holiday marker"
+  },
+  {
+   "text": "프로필을 설정하면 과목 리스트가 학과별로 필터됩니다.",
+   "where": "profile guest subtitle"
+  },
+  {
+   "text": "개인 정보를 관리하세요.",
+   "where": "profile subtitle",
+   "note": "-하세요 polite imperative"
+  },
+  {
+   "text": "+ 복수전공 추가",
+   "where": "major toggle inactive",
+   "note": "leading plus sign"
+  },
+  {
+   "text": "복수전공을 선택했습니다. 해제하려면 다시 클릭하세요.",
+   "where": "major toggle hint"
+  },
+  {
+   "text": "정말로 회원 탈퇴하시겠습니까?\n\n모든 수강 계획, 커스텀 과목 등 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다.\n\n이 작업은 되돌릴 수 없습니다.",
+   "where": "profile window.confirm",
+   "note": "multi-paragraph destructive confirm"
+  },
+  {
+   "text": "회원가입하여 데이터 영구 저장",
+   "where": "guest CTA button"
+  },
+  {
+   "text": "위험 구역",
+   "where": "profile danger card title"
+  },
+  {
+   "text": "미설정",
+   "where": "profile empty value"
+  },
+  {
+   "text": "초기 설정",
+   "where": "onboarding h1"
+  },
+  {
+   "text": "수강 계획을 시작하기 위한 기본 정보를 입력해주세요.",
+   "where": "onboarding subtitle",
+   "note": "-해주세요"
+  },
+  {
+   "text": "몇 가지 정보만 입력하면 바로 시작할 수 있어요",
+   "where": "onboarding caption",
+   "note": "only 해요체 line; no period"
+  },
+  {
+   "text": "학과를 검색하세요",
+   "where": "SearchableSelect placeholder"
+  },
+  {
+   "text": "예: 2024",
+   "where": "year input placeholder"
+  },
+  {
+   "text": "학과를 선택해주세요.",
+   "where": "onboarding validation error"
+  },
+  {
+   "text": "학과 기준표에서 불러왔습니다. 수정할 수 있습니다.",
+   "where": "onboarding autofill notice"
+  },
+  {
+   "text": "졸업 기준과 취득 학점을 잘 모르시나요? 확인 방법 보기",
+   "where": "onboarding step 2 help line"
+  },
+  {
+   "text": "이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요. 아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다.",
+   "where": "onboarding amber warning"
+  },
+  {
+   "text": "YU 수강 플래너 사용 가이드",
+   "where": "help h1"
+  },
+  {
+   "text": "수강 플래너의 주요 기능을 빠르게 알아보세요",
+   "where": "help subtitle",
+   "note": "no period"
+  },
+  {
+   "text": "플래너로 돌아가기",
+   "where": "back links (help, guide)"
+  },
+  {
+   "text": "영남대학교 포털에서 졸업요건 조회하는 방법 →",
+   "where": "help callout link",
+   "note": "trailing arrow glyph"
+  },
+  {
+   "text": "궁금한 점이나 오류를 발견하셨나요?",
+   "where": "help CTA prompt"
+  },
+  {
+   "text": "문의 및 피드백 보내기",
+   "where": "help CTA button"
+  },
+  {
+   "text": "Contact",
+   "where": "feedback eyebrow",
+   "note": "English eyebrow"
+  },
+  {
+   "text": "이메일 복사하기 / 복사됨",
+   "where": "feedback copy button"
+  },
+  {
+   "text": "5자 이상 입력해주세요",
+   "where": "feedback disabled submit label"
+  },
+  {
+   "text": "문의를 남기려면 로그인이 필요합니다.",
+   "where": "feedback logged-out"
+  },
+  {
+   "text": "아직 문의 내역이 없습니다.",
+   "where": "feedback empty"
+  },
+  {
+   "text": "대기중 / 해결됨 / 관리자 답변",
+   "where": "feedback status pills"
+  },
+  {
+   "text": "클릭하여 확대",
+   "where": "guide image hover hint"
+  },
+  {
+   "text": "STEP 3. 졸업모의사정에서 확인할 항목",
+   "where": "guide h2"
+  },
+  {
+   "text": "업데이트 소식",
+   "where": "patch-notes h1"
+  },
+  {
+   "text": "등록된 업데이트 소식이 없습니다.",
+   "where": "patch-notes empty"
+  },
+  {
+   "text": "목록으로",
+   "where": "patch-note detail back link"
+  },
+  {
+   "text": "← 홈으로 돌아가기",
+   "where": "privacy back link",
+   "note": "text arrow character"
+  },
+  {
+   "text": "시행일자: 2026년 2월 9일",
+   "where": "privacy date"
+  },
+  {
+   "text": "제8조 (학사 정보 면책) ⚠️ 중요",
+   "where": "terms highlighted section",
+   "note": "emoji in heading"
+  }
+ ],
+ "motion": [
+  {
+   "classes": "transition-colors",
+   "where": "buttons, links, filter chips, list rows (ubiquitous)"
+  },
+  {
+   "classes": "transition-all",
+   "where": "MajorType toggle buttons"
+  },
+  {
+   "classes": "transition-all duration-300",
+   "where": "onboarding stepper circles"
+  },
+  {
+   "classes": "transition-all duration-500",
+   "where": "onboarding stepper connector fill (w-0 → w-full)"
+  },
+  {
+   "classes": "transition-colors duration-300",
+   "where": "onboarding stepper labels"
+  },
+  {
+   "classes": "animate-pulse",
+   "where": "skeletons (calendar cells, list rows, feedback, patch-notes)"
+  },
+  {
+   "classes": "animate-fade-in",
+   "where": "profile banner wrapper (custom, globals.css)"
+  },
+  {
+   "classes": "animate-fade-in-up",
+   "where": "profile cards, onboarding cards (custom)"
+  },
+  {
+   "classes": "animate-fade-in-down",
+   "where": "onboarding header (custom)"
+  },
+  {
+   "classes": "anim-delay-50 / anim-delay-100 / anim-delay-200",
+   "where": "profile cards stagger (custom)"
+  },
+  {
+   "classes": "transition-shadow hover:shadow-md",
+   "where": "patch-notes list card"
+  },
+  {
+   "classes": "transition-transform duration-200 group-hover:scale-[1.01]",
+   "where": "graduation-guide images"
+  },
+  {
+   "classes": "opacity-0 transition-opacity group-hover:opacity-100",
+   "where": "graduation-guide zoom hint pill"
+  },
+  {
+   "classes": "animate-spin",
+   "where": "Loader2 in feedback submit"
+  },
+  {
+   "classes": "backdrop-blur",
+   "where": "lightbox close button"
+  },
+  {
+   "classes": "hover:bg-gray-100 / hover:bg-gray-50 / hover:bg-red-50",
+   "where": "icon buttons and rows"
+  }
+ ],
+ "icons": [
+  {
+   "name": "CalendarDays",
+   "size_classes": "w-8 h-8 (style color #153974) ; w-4 h-4 text-gray-400 ; w-3 h-3",
+   "where": "calendar h1; profile labels/badge"
+  },
+  {
+   "name": "ChevronLeft / ChevronRight",
+   "size_classes": "w-5 h-5",
+   "where": "calendar month nav"
+  },
+  {
+   "name": "Plus",
+   "size_classes": "w-4 h-4",
+   "where": "calendar add button"
+  },
+  {
+   "name": "Pencil",
+   "size_classes": "w-4 h-4 text-gray-600 ; w-4 h-4",
+   "where": "calendar edit; profile edit toggle"
+  },
+  {
+   "name": "Trash2",
+   "size_classes": "w-4 h-4 text-red-600 ; w-5 h-5 text-red-500 ; h-4 w-4",
+   "where": "calendar delete; profile danger header; feedback delete"
+  },
+  {
+   "name": "X",
+   "size_classes": "w-4 h-4 text-gray-500 ; w-4 h-4 text-gray-600 ; w-5 h-5 ; w-4 h-4 ; h-4 w-4",
+   "where": "calendar panels/modal; profile edit toggle; lightbox close"
+  },
+  {
+   "name": "User",
+   "size_classes": "w-5 h-5 text-gray-600 ; w-4 h-4 text-gray-400",
+   "where": "profile card header / labels"
+  },
+  {
+   "name": "Mail",
+   "size_classes": "w-4 h-4 text-gray-400 ; h-5 w-5 text-white sm:h-6 sm:w-6",
+   "where": "profile; feedback mail tile"
+  },
+  {
+   "name": "Building2",
+   "size_classes": "w-5 h-5 text-gray-600 ; w-4 h-4 text-gray-400 ; w-3 h-3",
+   "where": "profile"
+  },
+  {
+   "name": "Shield",
+   "size_classes": "w-5 h-5 text-gray-600",
+   "where": "profile account card"
+  },
+  {
+   "name": "Star",
+   "size_classes": "w-4 h-4 text-gray-400",
+   "where": "profile role row"
+  },
+  {
+   "name": "Chrome",
+   "size_classes": "w-4 h-4 text-gray-400",
+   "where": "profile Google account (Chrome icon used for Google)"
+  },
+  {
+   "name": "Check",
+   "size_classes": "w-4 h-4 ; w-5 h-5 ; h-3.5 w-3.5 text-green-600",
+   "where": "major toggle; stepper completed; copy button"
+  },
+  {
+   "name": "School",
+   "size_classes": "w-5 h-5 text-[#153974]",
+   "where": "onboarding step 1"
+  },
+  {
+   "name": "GraduationCap",
+   "size_classes": "w-5 h-5 text-emerald-600 ; h-5 w-5 text-[#00AACA] ; h-3.5 w-3.5",
+   "where": "onboarding step 2; help section 3; guide eyebrow"
+  },
+  {
+   "name": "BookOpen",
+   "size_classes": "w-4 h-4 text-gray-500|text-purple-500|text-orange-500 ; h-5 w-5 text-[#00AACA]",
+   "where": "onboarding columns; guide STEP 2"
+  },
+  {
+   "name": "Award",
+   "size_classes": "w-4 h-4 text-gray-500|text-purple-500|text-orange-500",
+   "where": "onboarding earned-credit columns"
+  },
+  {
+   "name": "ArrowRight",
+   "size_classes": "w-4 h-4 ml-1 ; flex-shrink-0 mt-1 h-4 w-4 text-slate-300",
+   "where": "onboarding next; patch-notes card chevron"
+  },
+  {
+   "name": "ArrowLeft",
+   "size_classes": "w-4 h-4 mr-1 ; h-4 w-4",
+   "where": "onboarding back; help/feedback/guide/patch-notes back links"
+  },
+  {
+   "name": "CheckCircle",
+   "size_classes": "w-4 h-4 ml-1 ; h-3 w-3",
+   "where": "onboarding complete; feedback resolved pill"
+  },
+  {
+   "name": "AlertTriangle",
+   "size_classes": "w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5",
+   "where": "onboarding warning banner"
+  },
+  {
+   "name": "HelpCircle",
+   "size_classes": "h-3.5 w-3.5",
+   "where": "help eyebrow"
+  },
+  {
+   "name": "Rocket",
+   "size_classes": "h-5 w-5 text-[#153974]",
+   "where": "help section 1"
+  },
+  {
+   "name": "Calendar",
+   "size_classes": "h-5 w-5 text-[#3069B3]",
+   "where": "help section 2"
+  },
+  {
+   "name": "BarChart3",
+   "size_classes": "h-5 w-5 text-[#3069B3]",
+   "where": "help section 4"
+  },
+  {
+   "name": "UserCog",
+   "size_classes": "h-5 w-5 text-[#153974]",
+   "where": "help section 5"
+  },
+  {
+   "name": "ExternalLink",
+   "size_classes": "h-4 w-4 ; h-4 w-4 text-[#00AACA]",
+   "where": "help links/CTA"
+  },
+  {
+   "name": "MessageSquare",
+   "size_classes": "h-3.5 w-3.5",
+   "where": "feedback eyebrow"
+  },
+  {
+   "name": "MessageSquareText",
+   "size_classes": "h-3.5 w-3.5 ; mx-auto h-10 w-10 text-slate-300",
+   "where": "feedback eyebrow / empty state"
+  },
+  {
+   "name": "Copy",
+   "size_classes": "h-3.5 w-3.5",
+   "where": "feedback copy button"
+  },
+  {
+   "name": "Send",
+   "size_classes": "h-3.5 w-3.5 ; h-4 w-4",
+   "where": "feedback eyebrow / submit"
+  },
+  {
+   "name": "Loader2",
+   "size_classes": "h-4 w-4 animate-spin",
+   "where": "feedback submit pending"
+  },
+  {
+   "name": "Clock",
+   "size_classes": "h-3 w-3",
+   "where": "feedback pending pill"
+  },
+  {
+   "name": "Search",
+   "size_classes": "h-5 w-5 text-[#153974]",
+   "where": "guide STEP 1"
+  },
+  {
+   "name": "FileText",
+   "size_classes": "h-5 w-5 text-purple-600",
+   "where": "guide STEP 3"
+  },
+  {
+   "name": "Megaphone",
+   "size_classes": "w-5 h-5 text-purple-600 ; w-4 h-4 text-purple-600 ; mx-auto mb-3 h-8 w-8 text-slate-300",
+   "where": "patch-notes header/items/empty"
+  },
+  {
+   "name": "inline SVG arrow-left",
+   "size_classes": "w-5 h-5 mr-2 (stroke currentColor, strokeWidth 2, d=\"M10 19l-7-7m0 0l7-7m-7 7h18\")",
+   "where": "terms back link"
+  },
+  {
+   "name": "text glyphs",
+   "size_classes": "← (privacy back link) ; → (help callout) ; • (help list bullets) ; 🔴 (holiday) ; ⚠️ (terms heading)",
+   "where": "various"
+  }
+ ],
+ "oddities": [
+  "Neutral palette split: calendar, profile, onboarding, privacy, terms use gray-*; help, feedback, graduation-guide use slate-*; patch-notes mixes text-gray-900 titles with slate-* body/meta.",
+  "Brand navy applied three ways: Tailwind arbitrary (text-[#153974]/bg-[#153974]), inline style={{ color: '#153974' }} / backgroundColor (calendar page only), and CSS utility text-gradient (onboarding h1).",
+  "#1a4a8f is a fourth blue outside the brand trio: hover:bg-[#1a4a8f] on primary buttons (help, feedback), gradient to-[#1a4a8f] on feedback mail tile, hover:text-[#1a4a8f] on terms back link.",
+  "Calendar primary buttons (일정 추가, modal submit) have transition-colors but no hover class.",
+  "Three different focus rings: focus:ring-2 focus:ring-blue-500 (calendar modal inputs), focus:ring-1 focus:ring-[#153974] focus:border-[#153974] (onboarding year select), focus:ring-2 focus:ring-[#00AACA]/20 focus:border-[#00AACA] (feedback textarea). Profile native <select> has no focus style at all.",
+  "Calendar '전체' active chip uses Tailwind bg-blue-600, not a brand color; checkbox uses text-blue-600 focus:ring-blue-500.",
+  "Modal overlay uses Tailwind v3 syntax 'bg-black bg-opacity-50' — bg-opacity-* was removed in Tailwind v4, so the overlay renders as opaque black; graduation-guide lightbox correctly uses bg-slate-950/85.",
+  "Active category filter chips carry border-*-200 color classes but no 'border' width utility, so no border renders in the active state while the inactive state has 'border border-gray-300' — chips shift by 1px when toggled.",
+  "exam uses red-* and holiday uses rose-* — adjacent hues that are hard to distinguish; holiday additionally gets a 🔴 emoji prefix.",
+  "Today marker is blue (bg-blue-50 border-blue-400/500) while selected day is amber (border-amber-300/400, ring-amber-400); mobile selected uses bg-amber-50/50 but desktop selected is md:bg-white.",
+  "md:ring-offset-0 is a no-op default.",
+  "Micro type on mobile calendar: text-[10px] day numbers/chips and text-[9px] overflow counter; text-gray-400 '+N' on white is roughly 2.5–3:1 contrast (fails AA).",
+  "text-slate-400 timestamps and char counter on white (~3:1) and text-slate-300 empty-state icons are low contrast.",
+  "Purple/orange are reserved for double major/minor in profile+onboarding, but purple is reused for unrelated patch-notes Megaphone tile and the feedback '내 문의 내역' pill and the guide STEP 3 FileText tile.",
+  "Emerald appears only in onboarding (completed stepper circle, step-2 card border-t, autofill notice) while success elsewhere uses green-* (feedback resolved, copy success).",
+  "Yellow (bg-yellow-100 text-yellow-700) used for feedback pending while amber is used for warnings/guest mode/selected day — two near-identical warm hues.",
+  "Patch-notes version badge (bg-blue-100 text-blue-700) duplicates the calendar 'academic' chip colors; patch notes have no per-type tag colors at all.",
+  "Legal pages use a different background family (bg-gradient-to-br from-blue-50 to-indigo-50 / via-white) than the help pages (slate vertical gradient), and different card radii/shadows: privacy rounded-lg shadow-sm vs terms rounded-2xl shadow-xl.",
+  "privacy/page.tsx applies 'prose prose-sm max-w-none' (Tailwind Typography plugin classes) — with no tailwind.config and no @plugin in CSS these likely do nothing.",
+  "Three different back-link implementations: lucide ArrowLeft (help, patch-notes), inline SVG path (terms), and the literal '←' character (privacy). Guide back link is text-slate-600 hover:text-[#00AACA] (inverse of the usual teal→navy pattern).",
+  "Help '비회원/회원' lists use hand-typed '• ' bullets inside <li> instead of list-disc.",
+  "Terms 제8조 section: red-700 heading and red-700 li inside an amber-50/amber-300 box, with ⚠️ emoji in the heading.",
+  "border-b / border-t used without a color on key-value rows, column headers and patch-note divider — in Tailwind v4 default border color is currentColor, rendering a dark text-colored hairline rather than gray-200.",
+  "Profile cards use 'relative z-10' and 'relative z-[5]' z-index hacks so SearchableSelect dropdowns overlay the following card.",
+  "MajorTypeToggle JSX is copy-pasted three times (guest profile, auth profile, onboarding) rather than extracted.",
+  "Profile uses the Chrome lucide icon to represent a Google account.",
+  "Stepper has no-op utilities: gap-0, px-0.",
+  "Onboarding header subtitle uses -해주세요 while caption uses 해요체 '시작할 수 있어요' without a period; all other copy is 합니다체/-하세요 with periods.",
+  "FlowStep data has empty description and imageCaption strings, rendering empty <p> elements (mt-3 and px-4 py-3 caption bar).",
+  "Lightbox attaches both onPointerDown and onClick to close, and stops both on the image frame.",
+  "Buttons add explicit 'cursor-pointer' in feedback page (Tailwind v4 buttons default to cursor: default) but not in calendar/profile/onboarding raw <button>s.",
+  "Calendar event-detail Card combines class border-l-4 with inline style borderLeftColor '#00AACA'.",
+  "Hard-coded 'min-w-[3rem]' on the month label and 'min-h-[90px]' on day cells; 'aspect-[1425/436]' one-off ratio in guide.",
+  "Profile guest form uses the ui Input component for text fields but a raw <select> styled 'flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm' (rounded-md) next to rounded-lg buttons."
+ ]
+}

@@ -1,0 +1,708 @@
+{
+  "files_read": [
+    "src/app/page.tsx",
+    "src/app/(dashboard)/dashboard/page.tsx",
+    "src/app/(dashboard)/planner/page.tsx",
+    "src/app/(dashboard)/onboarding/page.tsx",
+    "src/app/(dashboard)/help/page.tsx",
+    "src/components/features/CourseCard.tsx",
+    "src/components/features/RequirementsSummary.tsx",
+    "src/lib/utils.ts",
+    "src/lib/auth/login-message.ts",
+    "README.md",
+    "src/lib/graduationDelta.ts (partial: CATEGORY_LABELS / GRADUATION_CATEGORY_LABELS resolved)",
+    "src/lib/priorCredits.ts (partial: validatePriorCredits messages resolved)"
+  ],
+  "components": [
+    {
+      "name": "LandingNav",
+      "file": "src/app/page.tsx",
+      "purpose": "Sticky glass nav with YU logo, product name, section anchors, login pill",
+      "props": "none (page-level JSX)",
+      "elements": [
+        {"part": "root", "tag": "nav", "classes": "sticky top-0 z-50 glass border-b border-gray-200/50 animate-fade-in-down"},
+        {"part": "logo", "tag": "Image", "classes": "h-6", "inline_style": "{ width: 'auto' }", "text": "alt=\"영남대학교\""},
+        {"part": "brand", "tag": "h1", "classes": "text-xl font-bold text-gradient", "text": "YU 수강 플래너"},
+        {"part": "section-link", "tag": "a", "classes": "text-sm text-gray-500 hover:text-[#153974] transition-colors", "text": "서비스 소개 / 이용 방법 / 시작하기"},
+        {"part": "login-pill", "tag": "Link", "classes": "rounded-full border border-[#153974]/20 bg-[#153974]/5 px-4 py-1.5 text-sm font-medium text-[#153974] hover:bg-[#153974]/10 transition-colors", "text": "로그인", "states": [{"state": "authenticated", "classes": "same classes, text: 플래너로 이동"}]}
+      ],
+      "notes": "Section links hidden on mobile via hidden md:flex."
+    },
+    {
+      "name": "LandingHero",
+      "file": "src/app/page.tsx",
+      "purpose": "Fullbleed navy hero with typing headline, two CTAs and a guest-mode notice",
+      "props": "none",
+      "elements": [
+        {"part": "bg", "tag": "div", "classes": "absolute inset-0 bg-gradient-to-br from-[#0a1e3d] via-[#153974] to-[#1a2f5a]"},
+        {"part": "badge", "tag": "div", "classes": "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 mb-8 animate-scale-in", "text": "YU the Future"},
+        {"part": "h1", "tag": "h1", "classes": "text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight animate-fade-in-up anim-delay-100"},
+        {"part": "h1-line1", "tag": "span", "classes": "block text-white/90", "text": "영남대학교 생활을"},
+        {"part": "h1-typed", "tag": "span", "classes": "relative z-10 text-gradient-typing", "text": "스마트하게 설계하다. | 직관적으로 관리하다. | 아름답게 기록하다."},
+        {"part": "cursor", "tag": "span", "classes": "animate-cursor", "text": "|"},
+        {"part": "underline-accent", "tag": "span", "classes": "absolute -bottom-2 left-0 w-full h-3 bg-[#00AACA]/30 -skew-x-12 -z-0 blur-sm"},
+        {"part": "description", "tag": "p", "classes": "text-base lg:text-lg text-white/60 mb-6 leading-relaxed max-w-xl mx-auto animate-fade-in-up anim-delay-200", "text": "1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 다른 사람들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요."},
+        {"part": "cta-primary", "tag": "Button size=lg", "classes": "bg-white text-[#153974] hover:bg-white/90 shadow-lg shadow-black/20 group", "text": "바로 시작하기"},
+        {"part": "cta-ghost", "tag": "Button variant=ghost size=lg", "classes": "text-white/70 hover:text-white hover:bg-white/10", "text": "비회원으로 체험하기"},
+        {"part": "notice", "tag": "p", "classes": "text-sm text-white/40 mt-4 animate-fade-in-up anim-delay-300 text-center", "text": "비회원은 데이터가 저장되지 않습니다"}
+      ],
+      "notes": "Typing effect cycles 3 phrases ending with 하다. plus period. Guest CTA calls enterGuestMode then hard-navigates to /planner."
+    },
+    {
+      "name": "LandingOverviewSection",
+      "file": "src/app/page.tsx",
+      "purpose": "#overview: English eyebrow, question headline, 4 numbered alternating feature rows",
+      "props": "none",
+      "elements": [
+        {"part": "eyebrow", "tag": "p", "classes": "text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3", "text": "SERVICE"},
+        {"part": "h2", "tag": "h2", "classes": "text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight", "text": "왜 YU 수강 플래너인가요?"},
+        {"part": "subtitle", "tag": "p", "classes": "text-gray-500 max-w-lg", "text": "학생들의 수강 계획을 체계적으로 관리할 수 있는 핵심 기능들"},
+        {"part": "feature-number", "tag": "span", "classes": "deco-number", "text": "01 / 02 / 03 / 04"},
+        {"part": "feature-dot", "tag": "span", "classes": "deco-dot-accent"},
+        {"part": "feature-title", "tag": "h3", "classes": "text-2xl font-bold text-gray-900", "text": "드래그앤드롭 플래너 / 졸업 요건 추적 / 다른 사람들의 수강 계획 참고 / 통계 기반 의사결정"},
+        {"part": "feature-body", "tag": "p", "classes": "text-gray-600 leading-relaxed", "text": "직관적인 드래그앤드롭으로 학기별 과목을 손쉽게 배치하세요. 마우스 하나로 과목을 원하는 학기에 끌어놓기만 하면 됩니다."}
+      ]
+    },
+    {
+      "name": "LandingFlowSection",
+      "file": "src/app/page.tsx",
+      "purpose": "#flow dark navy 3-step how-it-works (desktop row / mobile stack)",
+      "props": "none",
+      "elements": [
+        {"part": "root-bg", "tag": "div", "classes": "relative bg-gradient-to-br from-[#0f2847] to-[#153974] clip-diagonal-both py-32 md:py-40"},
+        {"part": "eyebrow", "tag": "p", "classes": "text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3", "text": "HOW IT WORKS"},
+        {"part": "h2", "tag": "h2", "classes": "text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight", "text": "이렇게 사용하세요"},
+        {"part": "subtitle", "tag": "p", "classes": "text-white/60 max-w-lg mx-auto", "text": "3단계로 간단하게 나만의 수강 계획을 완성하세요"},
+        {"part": "step-number", "tag": "span", "classes": "deco-number deco-number-light block mb-4", "inline_style": "mobile only: { fontSize: '56px' }", "text": "01 / 02 / 03"},
+        {"part": "step-icon", "tag": "MousePointerClick | LayoutGrid | CheckCircle", "classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4"},
+        {"part": "step-title", "tag": "h3", "classes": "text-xl font-bold text-white mb-3", "text": "가입 / 계획 / 완성"},
+        {"part": "step-body", "tag": "p", "classes": "text-white/60 text-sm leading-relaxed", "text": "구글 계정으로 간편하게 가입하거나, 비회원으로 바로 체험해보세요."},
+        {"part": "divider-desktop", "tag": "div", "classes": "divider-vertical-gradient self-stretch my-8"},
+        {"part": "divider-mobile", "tag": "div", "classes": "divider-horizontal-gradient mx-auto w-3/4 my-2"}
+      ]
+    },
+    {
+      "name": "LandingCtaSection",
+      "file": "src/app/page.tsx",
+      "purpose": "#features closing CTA on pale blue gradient",
+      "props": "none",
+      "elements": [
+        {"part": "bg", "tag": "div", "classes": "absolute inset-0 bg-gradient-to-b from-white via-[#f0f7ff] to-[#e8f4fd]"},
+        {"part": "eyebrow", "tag": "p", "classes": "text-sm uppercase tracking-widest text-[#00AACA] font-medium mb-4", "text": "지금이 가장 빠릅니다"},
+        {"part": "h2", "tag": "h2", "classes": "text-3xl md:text-5xl font-bold text-gray-900 mb-4 tracking-tight", "text": "수강 계획을 시작하세요"},
+        {"part": "body", "tag": "p", "classes": "text-gray-500 mb-10 leading-relaxed", "text": "체계적인 수강 계획으로 졸업까지의 여정을 한눈에 관리하세요."},
+        {"part": "cta-primary", "tag": "Button size=lg", "classes": "group shadow-glow", "text": "바로 시작하기"},
+        {"part": "cta-ghost", "tag": "Button variant=ghost size=lg", "classes": "", "text": "비회원으로 체험하기"},
+        {"part": "footnote", "tag": "p", "classes": "text-sm text-gray-400", "text": "가입 없이 바로 체험 가능"}
+      ]
+    },
+    {
+      "name": "PlannerHeader",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Page title, department chips, helper sentence, export + reset actions",
+      "props": "none",
+      "elements": [
+        {"part": "h1", "tag": "h1", "classes": "text-xl sm:text-2xl font-bold text-gray-900", "text": "수강 계획"},
+        {"part": "dept-chip", "tag": "span", "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]", "text": "{departmentName}"},
+        {"part": "secondary-chip", "tag": "span", "classes": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", "text": "복수전공: {name} | 부전공: {name}", "states": [{"state": "double", "classes": "bg-purple-100 text-purple-700"}, {"state": "minor", "classes": "bg-orange-100 text-orange-700"}]},
+        {"part": "no-dept-link", "tag": "Link", "classes": "text-xs text-gray-400 hover:text-[#153974] underline", "text": "학과를 설정해주세요"},
+        {"part": "helper", "tag": "p", "classes": "text-gray-600 mt-1 text-sm sm:text-base", "text": "학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요."},
+        {"part": "export-button", "tag": "Button variant=outline", "classes": "text-sm", "text": "내보내기", "states": [{"state": "exporting", "classes": "inner: animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600 ; text 내보내는 중..."}]},
+        {"part": "export-menu", "tag": "div", "classes": "absolute left-0 sm:left-auto sm:right-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[140px]"},
+        {"part": "export-menu-item", "tag": "button", "classes": "w-full text-left px-3 py-2 text-sm hover:bg-gray-50", "text": "PNG 이미지 / PDF 문서"},
+        {"part": "reset-button", "tag": "Button variant=outline", "classes": "text-sm text-red-600 border-red-300 hover:bg-red-50", "text": "초기화"}
+      ],
+      "notes": "Guest clicking export gets info toast 로그인 후 이용할 수 있는 기능입니다. Reset uses window.confirm."
+    },
+    {
+      "name": "PlannerStates",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Loading spinner and error retry block",
+      "props": "none",
+      "elements": [
+        {"part": "loading-wrap", "tag": "div", "classes": "flex items-center justify-center min-h-[400px]"},
+        {"part": "spinner", "tag": "div", "classes": "animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]"},
+        {"part": "error-wrap", "tag": "div", "classes": "flex flex-col items-center justify-center min-h-[400px] text-center"},
+        {"part": "error-text", "tag": "p", "classes": "text-red-500 mb-4", "text": "계획을 불러오는데 실패했습니다."},
+        {"part": "retry", "tag": "Button", "classes": "", "text": "다시 시도"}
+      ]
+    },
+    {
+      "name": "PlannerSemesterGrid",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "purpose": "Year filter pills, per-year heading with credit total and status hint, 2-col semester grid, add-semester button",
+      "props": "none",
+      "elements": [
+        {"part": "filter-label", "tag": "span", "classes": "text-[11px] font-medium text-gray-400 flex-shrink-0", "text": "학년"},
+        {"part": "filter-pill", "tag": "button", "classes": "px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0", "text": "{y}학년 | 전체", "states": [{"state": "active", "classes": "bg-[#153974] text-white"}, {"state": "inactive", "classes": "bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20"}]},
+        {"part": "year-heading", "tag": "h3", "classes": "text-sm font-semibold text-gray-500 uppercase tracking-wide", "text": "{year}학년"},
+        {"part": "year-credits", "tag": "span", "classes": "ml-2 text-xs font-normal text-gray-400", "text": "({n}학점)"},
+        {"part": "status-hint", "tag": "span", "classes": "flex items-center gap-1 text-[10px]"},
+        {"part": "hint-planned", "tag": "span", "classes": "px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700", "text": "예정"},
+        {"part": "hint-arrow", "tag": "span", "classes": "text-gray-400", "text": "↔"},
+        {"part": "hint-completed", "tag": "span", "classes": "px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700", "text": "이수"},
+        {"part": "hint-text", "tag": "span", "classes": "text-gray-400 ml-0.5", "text": "클릭하여 변경"},
+        {"part": "grid", "tag": "div", "classes": "grid grid-cols-1 sm:grid-cols-2 gap-3"},
+        {"part": "add-semester", "tag": "Button variant=ghost", "classes": "text-gray-500 hover:text-gray-700 border-dashed border-2 px-6 py-3", "text": "학기 추가"},
+        {"part": "add-semester-icon", "tag": "svg (inline plus, heroicons solid 20)", "classes": "w-5 h-5 mr-2"},
+        {"part": "drag-overlay", "tag": "div", "classes": "w-[250px] shadow-lg rounded-lg opacity-90 pointer-events-none"}
+      ]
+    },
+    {
+      "name": "OnboardingHeader",
+      "file": "src/app/(dashboard)/onboarding/page.tsx",
+      "purpose": "Title and two-line intro above the stepper",
+      "props": "none",
+      "elements": [
+        {"part": "root", "tag": "div", "classes": "text-center animate-fade-in-down"},
+        {"part": "h1", "tag": "h1", "classes": "text-3xl font-bold text-gradient", "text": "초기 설정"},
+        {"part": "lead", "tag": "p", "classes": "text-gray-600 mt-2", "text": "수강 계획을 시작하기 위한 기본 정보를 입력해주세요."},
+        {"part": "sub", "tag": "p", "classes": "text-sm text-gray-400 mt-1", "text": "몇 가지 정보만 입력하면 바로 시작할 수 있어요"}
+      ]
+    },
+    {
+      "name": "OnboardingStepper",
+      "file": "src/app/(dashboard)/onboarding/page.tsx",
+      "purpose": "Two-step progress indicator with gradient active circle and connecting bar",
+      "props": "step: 1 | 2",
+      "elements": [
+        {"part": "circle", "tag": "div", "classes": "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300", "states": [{"state": "active", "classes": "bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30"}, {"state": "done (step1 when step>1)", "classes": "bg-emerald-500 text-white"}, {"state": "pending (step2 when step<2)", "classes": "bg-gray-200 text-gray-500"}]},
+        {"part": "done-icon", "tag": "Check", "classes": "w-5 h-5"},
+        {"part": "track", "tag": "div", "classes": "flex-1 h-1 mx-2 rounded-full bg-gray-200 overflow-hidden"},
+        {"part": "track-fill", "tag": "div", "classes": "h-full rounded-full transition-all duration-500", "states": [{"state": "step>1", "classes": "w-full bg-gradient-to-r from-[#153974] to-[#3069B3]"}, {"state": "step=1", "classes": "w-0"}]},
+        {"part": "label", "tag": "span", "classes": "text-xs font-medium transition-colors duration-300", "text": "학과 선택 / 졸업 요건", "states": [{"state": "reached", "classes": "text-[#153974]"}, {"state": "unreached", "classes": "text-gray-400"}]}
+      ]
+    },
+    {
+      "name": "OnboardingStep1Card",
+      "file": "src/app/(dashboard)/onboarding/page.tsx",
+      "purpose": "Department, enrollment year, double/minor toggles, secondary department",
+      "props": "none",
+      "elements": [
+        {"part": "root", "tag": "Card", "classes": "border-t-4 border-[#3069B3] animate-fade-in-up"},
+        {"part": "title-icon", "tag": "School", "classes": "w-5 h-5 text-[#153974]"},
+        {"part": "title", "tag": "CardTitle", "classes": "", "text": "학과 및 입학 정보"},
+        {"part": "label", "tag": "label", "classes": "block text-sm font-medium text-gray-700 mb-1", "text": "학과 / 입학연도"},
+        {"part": "label-toggles", "tag": "label", "classes": "block text-sm font-medium text-gray-700 mb-2", "text": "복수전공 / 부전공"},
+        {"part": "dept-select", "tag": "SearchableSelect", "classes": "", "text": "placeholder: 학과를 검색하세요 (loading: 불러오는 중...)"},
+        {"part": "year-input", "tag": "Input type=number", "classes": "", "text": "placeholder: 예: 2024"},
+        {"part": "year-hint", "tag": "p", "classes": "text-xs text-gray-500 mt-1", "text": "입학한 연도를 입력하세요."},
+        {"part": "double-toggle", "tag": "button", "classes": "flex-1 px-3 py-2 text-sm rounded-lg border transition-all", "text": "+ 복수전공 추가 | (selected) 복수전공", "states": [{"state": "selected", "classes": "bg-purple-500 text-white border-purple-500 shadow-sm"}, {"state": "unselected", "classes": "bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600"}]},
+        {"part": "minor-toggle", "tag": "button", "classes": "flex-1 px-3 py-2 text-sm rounded-lg border transition-all", "text": "+ 부전공 추가 | (selected) 부전공", "states": [{"state": "selected", "classes": "bg-orange-500 text-white border-orange-500 shadow-sm"}, {"state": "disabled (double chosen)", "classes": "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"}, {"state": "unselected", "classes": "bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600"}]},
+        {"part": "toggle-check", "tag": "Check", "classes": "w-4 h-4"},
+        {"part": "toggle-hint", "tag": "p", "classes": "text-xs text-gray-500 mt-1.5", "text": "{복수전공|부전공}을 선택했습니다. 해제하려면 다시 클릭하세요."},
+        {"part": "error", "tag": "p", "classes": "text-sm text-red-500"},
+        {"part": "next", "tag": "Button", "classes": "inline-flex items-center", "text": "다음"},
+        {"part": "next-icon", "tag": "ArrowRight", "classes": "w-4 h-4 ml-1"}
+      ]
+    },
+    {
+      "name": "OnboardingStep2Card",
+      "file": "src/app/(dashboard)/onboarding/page.tsx",
+      "purpose": "Graduation requirement + prior credits form with year select and multi-major warning",
+      "props": "none",
+      "elements": [
+        {"part": "root", "tag": "Card", "classes": "border-t-4 border-emerald-500 animate-fade-in-up"},
+        {"part": "title-icon", "tag": "GraduationCap", "classes": "w-5 h-5 text-emerald-600"},
+        {"part": "title", "tag": "CardTitle", "classes": "", "text": "졸업 요건 설정"},
+        {"part": "year-label", "tag": "label", "classes": "text-xs text-gray-500 whitespace-nowrap", "text": "기준 연도"},
+        {"part": "year-select", "tag": "select", "classes": "text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#153974] focus:border-[#153974]", "text": "2025 / 2026"},
+        {"part": "help-hint", "tag": "p", "classes": "text-xs text-gray-500 mt-1", "text": "졸업 기준과 취득 학점을 잘 모르시나요?"},
+        {"part": "help-link", "tag": "Link", "classes": "text-[#00AACA] hover:text-[#153974] underline", "text": "확인 방법 보기"},
+        {"part": "warning", "tag": "div", "classes": "p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2"},
+        {"part": "warning-icon", "tag": "AlertTriangle", "classes": "w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5"},
+        {"part": "warning-title", "tag": "p", "classes": "text-sm font-medium text-amber-800", "text": "{복수전공|부전공}을 선택하셨습니다"},
+        {"part": "warning-body", "tag": "p", "classes": "text-xs text-amber-600 mt-1", "text": "이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요. 아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다."},
+        {"part": "section-head", "tag": "div", "classes": "flex items-center gap-1.5 border-b pb-2"},
+        {"part": "section-icon", "tag": "BookOpen | Award", "classes": "w-4 h-4 text-gray-500", "states": [{"state": "double", "classes": "w-4 h-4 text-purple-500"}, {"state": "minor", "classes": "w-4 h-4 text-orange-500"}]},
+        {"part": "section-title", "tag": "h3", "classes": "text-sm font-semibold text-gray-900", "text": "졸업 기준 / 취득 학점 / 복수전공 기준 / 복수전공 기이수 / 부전공 기준 / 부전공 기이수"},
+        {"part": "field-label", "tag": "label", "classes": "block text-xs text-gray-600 mb-1", "text": "졸업학점 / 교양학점 / 전공학점 / 전공핵심 (최소) / 기이수 졸업학점 / ..."},
+        {"part": "field-hint", "tag": "p", "classes": "text-xs text-gray-400 mt-0.5", "text": "전공필수 최소 이수학점 / 이미 이수한 총 학점 (전공+교양+기타 포함)"},
+        {"part": "autofill-msg", "tag": "p", "classes": "text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md", "text": "학과 기준표에서 불러왔습니다. 수정할 수 있습니다."},
+        {"part": "error", "tag": "p", "classes": "text-sm text-red-500"},
+        {"part": "back", "tag": "Button variant=outline", "classes": "inline-flex items-center", "text": "이전"},
+        {"part": "back-icon", "tag": "ArrowLeft", "classes": "w-4 h-4 mr-1"},
+        {"part": "complete", "tag": "Button", "classes": "inline-flex items-center", "text": "완료", "states": [{"state": "pending (member only)", "classes": "text 처리 중... ; CheckCircle hidden"}]},
+        {"part": "complete-icon", "tag": "CheckCircle", "classes": "w-4 h-4 ml-1"}
+      ],
+      "notes": "Defaults: 120 total, 30 general, 63 major, 24 major-core; double 36/12; minor 21/9/0. Fields grid: grid grid-cols-1 md:grid-cols-2 gap-6."
+    },
+    {
+      "name": "HelpPage",
+      "file": "src/app/(dashboard)/help/page.tsx",
+      "purpose": "Static user guide with 5 sectioned cards, screenshots, contact CTA",
+      "props": "none",
+      "elements": [
+        {"part": "root", "tag": "div", "classes": "min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100"},
+        {"part": "container", "tag": "div", "classes": "mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10"},
+        {"part": "card", "tag": "div", "classes": "mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7"},
+        {"part": "back-link", "tag": "Link", "classes": "mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]", "text": "플래너로 돌아가기"},
+        {"part": "badge", "tag": "div", "classes": "mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700", "text": "도움말 가이드"},
+        {"part": "badge-icon", "tag": "HelpCircle", "classes": "h-3.5 w-3.5"},
+        {"part": "h1", "tag": "h1", "classes": "text-3xl font-bold text-[#153974] md:text-4xl", "text": "YU 수강 플래너 사용 가이드"},
+        {"part": "subtitle", "tag": "p", "classes": "mt-2 text-sm text-slate-500", "text": "수강 플래너의 주요 기능을 빠르게 알아보세요"},
+        {"part": "section-icon-box", "tag": "div", "classes": "flex h-10 w-10 items-center justify-center rounded-lg bg-[#153974]/10", "states": [{"state": "section 2 and 4", "classes": "flex h-10 w-10 items-center justify-center rounded-lg bg-[#3069B3]/10"}, {"state": "section 3", "classes": "flex h-10 w-10 items-center justify-center rounded-lg bg-[#00AACA]/10"}]},
+        {"part": "section-icon", "tag": "Rocket | Calendar | GraduationCap | BarChart3 | UserCog", "classes": "h-5 w-5 text-[#153974] | h-5 w-5 text-[#3069B3] | h-5 w-5 text-[#00AACA]"},
+        {"part": "h2", "tag": "h2", "classes": "text-2xl font-bold text-[#153974]", "text": "시작하기 / 수강 계획 세우기 / 졸업요건 추적 / 학과 통계 / 프로필 관리"},
+        {"part": "body", "tag": "p", "classes": "mb-4 text-sm leading-relaxed text-slate-600 md:text-base"},
+        {"part": "compare-card-guest", "tag": "div", "classes": "rounded-xl border border-slate-200 bg-slate-50 p-4"},
+        {"part": "compare-card-member", "tag": "div", "classes": "rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4"},
+        {"part": "compare-title", "tag": "h3", "classes": "mb-2 font-semibold text-[#153974]", "text": "비회원 / 회원"},
+        {"part": "compare-list", "tag": "ul", "classes": "space-y-1 text-sm text-slate-600", "text": "• 바로 사용 가능 • 브라우저 저장 • 통계 공유 불가 | • Google 로그인 • 데이터 동기화 • 통계 공유 가능"},
+        {"part": "numbered-step", "tag": "div", "classes": "rounded-lg bg-slate-50 p-3"},
+        {"part": "step-number", "tag": "span", "classes": "font-semibold text-[#153974]", "text": "1. ... 5."},
+        {"part": "step-text", "tag": "span", "classes": "text-sm text-slate-600 md:text-base"},
+        {"part": "guide-link", "tag": "Link", "classes": "mb-4 flex items-center gap-2 rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4 text-sm font-medium text-[#153974] transition-colors hover:border-[#00AACA]/50 hover:bg-[#00AACA]/10", "text": "영남대학교 포털에서 졸업요건 조회하는 방법 →"},
+        {"part": "guide-link-icon", "tag": "ExternalLink", "classes": "h-4 w-4 text-[#00AACA]"},
+        {"part": "image-frame", "tag": "div", "classes": "overflow-hidden rounded-xl border border-slate-200"},
+        {"part": "image", "tag": "ZoomableImage", "classes": "w-full h-auto"},
+        {"part": "contact-box", "tag": "div", "classes": "mb-8 rounded-2xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-6 text-center"},
+        {"part": "contact-text", "tag": "p", "classes": "mb-3 text-sm text-slate-600 md:text-base", "text": "궁금한 점이나 오류를 발견하셨나요?"},
+        {"part": "contact-cta", "tag": "Link", "classes": "inline-flex items-center gap-2 rounded-xl bg-[#153974] px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#1a4a8f]", "text": "문의 및 피드백 보내기"},
+        {"part": "bottom-nav", "tag": "div", "classes": "flex flex-wrap justify-center gap-4"},
+        {"part": "bottom-link", "tag": "Link", "classes": "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]", "text": "플래너로 이동 / 졸업요건 조회 가이드"}
+      ],
+      "notes": "Only file in this set that uses slate-* instead of gray-*; also the only one writing h-N w-N (height first)."
+    },
+    {
+      "name": "CourseCard (compact)",
+      "file": "src/components/features/CourseCard.tsx",
+      "purpose": "Single-line course chip with status pill, category/department tags, name, credits, remove X",
+      "props": "course: { _id?, id?, code, name, credits, category?: 'major_required'|'major_compulsory'|'major_elective'|'general_required'|'general_elective'|'free_elective'|'teaching', status?: 'planned'|'enrolled'|'completed'|'failed' }; index?; onRemove?; onStatusChange?(courseId, newStatus); isDragDisabled?; compact?; departmentLabel?: string",
+      "elements": [
+        {"part": "root", "tag": "Card", "classes": "mb-1 px-2 py-1.5 transition-shadow ${statusColors[status]} ${isDragDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-move'} shadow-sm hover:shadow-md"},
+        {"part": "status-pill", "tag": "button", "classes": "px-1.5 py-0.5 rounded text-[9px] font-medium flex-shrink-0 cursor-pointer transition-all hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 ${statusPillColors[status]}", "text": "예정 / 수강중 / 이수 / 재수강", "states": [{"state": "first-time pulse hint", "classes": "animate-pulse ring-2 ring-blue-300/50"}]},
+        {"part": "status-pill-a11y", "tag": "button attrs", "classes": "", "text": "aria-label=\"상태 변경: {statusLabels[status]}\" title=\"클릭하여 상태 변경: 예정 ↔ 이수\""},
+        {"part": "category-tag", "tag": "span", "classes": "text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}"},
+        {"part": "dept-tag", "tag": "span", "classes": "text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap", "states": [{"state": "복수전공", "classes": "bg-purple-100 text-purple-700"}, {"state": "부전공", "classes": "bg-orange-100 text-orange-700"}, {"state": "other", "classes": "bg-gray-100 text-gray-600"}]},
+        {"part": "name", "tag": "span", "classes": "text-xs font-medium text-gray-800 truncate"},
+        {"part": "credits", "tag": "span", "classes": "text-[10px] text-gray-500 whitespace-nowrap", "text": "{credits}학점"},
+        {"part": "remove", "tag": "button", "classes": "p-0.5 hover:bg-white rounded-full transition-colors flex-shrink-0", "text": "aria-label=\"과목 제거\""},
+        {"part": "remove-icon", "tag": "svg (inline X, heroicons solid 20)", "classes": "w-3 h-3 text-gray-400 hover:text-red-500"}
+      ],
+      "notes": "Status toggle is 2-step planned <-> completed only; module-level statusHintShown flag drives one-time pulse."
+    },
+    {
+      "name": "CourseCard (full)",
+      "file": "src/components/features/CourseCard.tsx",
+      "purpose": "Default card layout with tag row, name, credits",
+      "props": "same as compact",
+      "elements": [
+        {"part": "root", "tag": "Card", "classes": "mb-2 p-3 transition-shadow ${statusColors[status]} ${isDragDisabled ? 'opacity-60 cursor-not-allowed' : 'cursor-move'} shadow-sm hover:shadow-md"},
+        {"part": "category-tag", "tag": "span", "classes": "text-xs px-1.5 py-0.5 rounded font-medium ${categoryColors[course.category] || 'bg-gray-100 text-gray-600'}"},
+        {"part": "dept-tag", "tag": "span", "classes": "text-xs px-1.5 py-0.5 rounded font-medium", "states": [{"state": "복수전공", "classes": "bg-purple-100 text-purple-700"}, {"state": "부전공", "classes": "bg-orange-100 text-orange-700"}, {"state": "other", "classes": "bg-gray-100 text-gray-600"}]},
+        {"part": "status-button", "tag": "button", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer", "text": "계획 / 수강중 / 완료 / 재수강"},
+        {"part": "status-static", "tag": "span", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border"},
+        {"part": "name", "tag": "p", "classes": "text-sm font-medium text-gray-800 truncate"},
+        {"part": "credits", "tag": "p", "classes": "text-xs text-gray-500 mt-1", "text": "{credits}학점"},
+        {"part": "remove", "tag": "button", "classes": "ml-2 p-1 hover:bg-white rounded-full transition-colors", "text": "aria-label=\"과목 제거\""},
+        {"part": "remove-icon", "tag": "svg", "classes": "w-4 h-4 text-gray-400 hover:text-red-500"}
+      ]
+    },
+    {
+      "name": "RequirementsSummary / StackedBar",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Segmented progress bar: earned -> enrolled -> planned, clamped at 100%",
+      "props": "{ earned, enrolled?=0, planned?=0, required, size?: 'lg'|'md'|'sm' }",
+      "elements": [
+        {"part": "track", "tag": "div", "classes": "flex-1 ${height} bg-gray-100 rounded-full overflow-hidden flex", "states": [{"state": "size=lg", "classes": "h-2.5"}, {"state": "size=md", "classes": "h-2"}, {"state": "size=sm", "classes": "h-1.5"}]},
+        {"part": "seg-earned", "tag": "div", "classes": "bg-blue-600", "states": [{"state": "met (earned >= required)", "classes": "bg-emerald-500"}]},
+        {"part": "seg-enrolled", "tag": "div", "classes": "bg-sky-400"},
+        {"part": "seg-planned", "tag": "div", "classes": "", "inline_style": "backgroundImage: repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)"}
+      ]
+    },
+    {
+      "name": "RequirementsSummary / BreakdownLine + TrackRow",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Legend line under bars and a labelled requirement row",
+      "props": "BreakdownLine: SegmentValues & { prior?, className? }; TrackRow: SegmentValues & { label, prior?, sub? }",
+      "elements": [
+        {"part": "met-line", "tag": "p", "classes": "text-[11px] text-emerald-600", "text": "요건 충족"},
+        {"part": "legend-line", "tag": "p", "classes": "text-[11px] text-gray-400 flex items-center gap-x-2.5 gap-y-0.5 flex-wrap", "text": "이수 N (기이수 N 포함) · 수강중 N · 예정 N · 미계획 N"},
+        {"part": "legend-dot", "tag": "span", "classes": "w-2 h-2 rounded-[2px] inline-block", "states": [{"state": "earned", "classes": "bg-blue-600 (met: bg-emerald-500)"}, {"state": "enrolled", "classes": "bg-sky-400"}, {"state": "planned", "classes": "inline backgroundImage stripes"}, {"state": "unplanned", "classes": "bg-gray-200"}]},
+        {"part": "row-label", "tag": "span", "classes": "w-16 flex-shrink-0 whitespace-nowrap text-xs text-gray-600", "text": "전공 / 복수전공 / 부전공 / 교양", "states": [{"state": "sub", "classes": "w-16 flex-shrink-0 whitespace-nowrap pl-3 text-[11px] text-gray-400 ; text prefixed with └ (핵심, 주전공최소)"}]},
+        {"part": "row-value", "tag": "span", "classes": "w-16 flex-shrink-0 text-right whitespace-nowrap text-xs text-gray-500", "text": "{earned}/{required} (prefixed ✓ when met)", "states": [{"state": "met", "classes": "text-emerald-600"}, {"state": "sub", "classes": "text-[11px]"}]},
+        {"part": "row-earned", "tag": "span", "classes": "font-medium"},
+        {"part": "row-breakdown", "tag": "BreakdownLine", "classes": "mt-0.5 pl-[72px]"}
+      ]
+    },
+    {
+      "name": "RequirementsSummary (states + view)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "purpose": "Graduation requirement widget: loading / error / empty / edit / view",
+      "props": "none",
+      "elements": [
+        {"part": "loading-skeleton", "tag": "div", "classes": "h-4 bg-gray-200 rounded animate-pulse"},
+        {"part": "error-card", "tag": "Card role=alert", "classes": "border-red-200"},
+        {"part": "error-text", "tag": "p", "classes": "text-sm text-red-600", "text": "졸업요건 정보를 불러오지 못했습니다."},
+        {"part": "error-retry", "tag": "Button size=sm variant=outline", "classes": "", "text": "다시 시도 | 다시 시도 중..."},
+        {"part": "empty-card", "tag": "Card", "classes": "border-dashed"},
+        {"part": "empty-text", "tag": "p", "classes": "text-sm text-gray-500", "text": "졸업 요건을 설정하세요"},
+        {"part": "empty-manual", "tag": "Button size=sm variant=outline", "classes": "", "text": "직접 입력"},
+        {"part": "empty-default", "tag": "Button size=sm", "classes": "", "text": "기본 요건 생성 | 생성 중..."},
+        {"part": "form-title", "tag": "p", "classes": "text-sm font-medium text-gray-700", "text": "졸업 요건 입력 | 졸업 요건 수정"},
+        {"part": "save-error", "tag": "p", "classes": "text-sm text-red-500 mb-2", "text": "저장에 실패했습니다."},
+        {"part": "view-content", "tag": "CardContent", "classes": "py-3 px-3 sm:px-4"},
+        {"part": "view-title", "tag": "span", "classes": "text-sm font-medium text-gray-700 whitespace-nowrap", "text": "졸업 요건"},
+        {"part": "year-badge", "tag": "span", "classes": "text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full whitespace-nowrap", "text": "{year}년 기준"},
+        {"part": "pct", "tag": "span", "classes": "text-lg font-semibold text-gray-800", "text": "{n}%", "states": [{"state": ">=100", "classes": "text-lg font-semibold text-emerald-600"}]},
+        {"part": "projected", "tag": "span", "classes": "text-xs text-gray-400 whitespace-nowrap", "text": "→ 계획 반영 시 {n}%"},
+        {"part": "total-fraction", "tag": "span", "classes": "text-xs text-gray-500 whitespace-nowrap", "text": "{earned}/{required}학점"},
+        {"part": "total-earned", "tag": "span", "classes": "font-medium text-gray-700"},
+        {"part": "detail-block", "tag": "div", "classes": "mt-3 pt-3 border-t space-y-2.5"},
+        {"part": "footer", "tag": "div", "classes": "mt-3 pt-2.5 border-t flex items-center justify-between gap-2 flex-wrap"},
+        {"part": "footer-hint", "tag": "span", "classes": "text-[11px] text-gray-400", "text": "과목 카드의 상태(예정·수강중·이수)를 바꾸면 바로 반영됩니다."},
+        {"part": "edit-button", "tag": "button", "classes": "inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#153974] bg-[#153974]/10 hover:bg-[#153974]/20 rounded-md transition-colors", "text": "요건 수정"},
+        {"part": "edit-icon", "tag": "svg (inline pencil, heroicons outline 24)", "classes": "w-3 h-3"}
+      ]
+    },
+    {
+      "name": "DashboardPage",
+      "file": "src/app/(dashboard)/dashboard/page.tsx",
+      "purpose": "Server redirect to /planner; no UI",
+      "props": "none",
+      "elements": [{"part": "root", "classes": "(none - redirect('/planner'))"}]
+    }
+  ],
+  "semantic_maps": [
+    {
+      "domain": "Course status -> card background (statusColors)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        {"key": "planned", "label": "계획 (full) / 예정 (pill)", "classes": "bg-[#153974]/5 border-[#153974]/20"},
+        {"key": "enrolled", "label": "수강중", "classes": "bg-green-50 border-green-200"},
+        {"key": "completed", "label": "완료 (full) / 이수 (pill)", "classes": "bg-gray-50 border-gray-200"},
+        {"key": "failed", "label": "재수강", "classes": "bg-red-50 border-red-200"}
+      ]
+    },
+    {
+      "domain": "Course status -> compact pill (statusPillColors / statusPillLabels)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        {"key": "planned", "label": "예정", "classes": "bg-blue-100 text-blue-700"},
+        {"key": "enrolled", "label": "수강중", "classes": "bg-green-100 text-green-700"},
+        {"key": "completed", "label": "이수", "classes": "bg-emerald-100 text-emerald-700"},
+        {"key": "failed", "label": "재수강", "classes": "bg-red-100 text-red-700"}
+      ]
+    },
+    {
+      "domain": "Course status -> full-card labels (statusLabels)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        {"key": "planned", "label": "계획", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border"},
+        {"key": "enrolled", "label": "수강중", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border"},
+        {"key": "completed", "label": "완료", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border"},
+        {"key": "failed", "label": "재수강", "classes": "text-xs px-2 py-0.5 rounded-full bg-white border"}
+      ]
+    },
+    {
+      "domain": "RequirementCategory -> label + chip color (categoryLabels / categoryColors; GRADUATION_CATEGORY_LABELS in graduationDelta.ts is identical)",
+      "file": "src/components/features/CourseCard.tsx",
+      "entries": [
+        {"key": "major_required", "label": "전공핵심", "classes": "bg-red-100 text-red-700"},
+        {"key": "major_compulsory", "label": "전공필수", "classes": "bg-rose-100 text-rose-700"},
+        {"key": "major_elective", "label": "전공선택", "classes": "bg-orange-100 text-orange-700"},
+        {"key": "general_required", "label": "교양필수", "classes": "bg-blue-100 text-blue-700"},
+        {"key": "general_elective", "label": "교양선택", "classes": "bg-green-100 text-green-700"},
+        {"key": "teaching", "label": "교직", "classes": "bg-violet-100 text-violet-700"},
+        {"key": "free_elective", "label": "자유선택", "classes": "bg-gray-100 text-gray-600"}
+      ]
+    },
+    {
+      "domain": "Department label (secondary major) -> chip color",
+      "file": "src/components/features/CourseCard.tsx + src/app/(dashboard)/planner/page.tsx",
+      "entries": [
+        {"key": "복수전공 (double)", "label": "복수전공", "classes": "bg-purple-100 text-purple-700"},
+        {"key": "부전공 (minor)", "label": "부전공", "classes": "bg-orange-100 text-orange-700"},
+        {"key": "other", "label": "", "classes": "bg-gray-100 text-gray-600"}
+      ]
+    },
+    {
+      "domain": "MajorType -> label + selected toggle color",
+      "file": "src/app/(dashboard)/onboarding/page.tsx (labels also in help/page.tsx)",
+      "entries": [
+        {"key": "single", "label": "단일전공 (help text only; never shown as chip)", "classes": ""},
+        {"key": "double", "label": "복수전공", "classes": "bg-purple-500 text-white border-purple-500 shadow-sm"},
+        {"key": "minor", "label": "부전공", "classes": "bg-orange-500 text-white border-orange-500 shadow-sm"}
+      ]
+    },
+    {
+      "domain": "Term -> label",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        {"key": "spring", "label": "1학기 (format: `${year}학년 ${'1'}학기`)", "classes": ""},
+        {"key": "fall", "label": "2학기", "classes": ""}
+      ]
+    },
+    {
+      "domain": "Graduation progress segment -> color + legend word",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        {"key": "earned (unmet)", "label": "이수", "classes": "bg-blue-600"},
+        {"key": "earned (met)", "label": "이수 / 요건 충족", "classes": "bg-emerald-500"},
+        {"key": "enrolled", "label": "수강중", "classes": "bg-sky-400"},
+        {"key": "planned", "label": "예정", "classes": "inline style repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)"},
+        {"key": "unplanned", "label": "미계획", "classes": "bg-gray-200"},
+        {"key": "prior", "label": "(기이수 N 포함)", "classes": ""}
+      ]
+    },
+    {
+      "domain": "Requirement track labels (TrackRow)",
+      "file": "src/components/features/RequirementsSummary.tsx",
+      "entries": [
+        {"key": "primaryMajor", "label": "전공", "classes": "text-xs text-gray-600"},
+        {"key": "primaryMajor.requiredMin", "label": "└ 핵심", "classes": "pl-3 text-[11px] text-gray-400"},
+        {"key": "minorPrimaryMajorMin", "label": "└ 주전공최소", "classes": "pl-3 text-[11px] text-gray-400"},
+        {"key": "secondaryMajor", "label": "복수전공", "classes": "text-xs text-gray-600"},
+        {"key": "minor", "label": "부전공", "classes": "text-xs text-gray-600"},
+        {"key": "general", "label": "교양", "classes": "text-xs text-gray-600"}
+      ]
+    },
+    {
+      "domain": "Toast usage (type -> message)",
+      "file": "src/app/(dashboard)/planner/page.tsx",
+      "entries": [
+        {"key": "success", "label": "`${course.name} 추가됨 · +${course.credits}학점 ${catLabel}` with action 실행 취소 (5000ms)", "classes": ""},
+        {"key": "info", "label": "실행 취소됨 (1500ms) / 계획이 초기화되었습니다. (3000ms) / 로그인 후 이용할 수 있는 기능입니다. (3000ms)", "classes": ""},
+        {"key": "graduationDelta.secondRowLabel", "label": "전공핵심 (when major_required) else 전체", "classes": ""}
+      ]
+    },
+    {
+      "domain": "Help section -> icon tint",
+      "file": "src/app/(dashboard)/help/page.tsx",
+      "entries": [
+        {"key": "시작하기", "label": "Rocket", "classes": "bg-[#153974]/10 text-[#153974]"},
+        {"key": "수강 계획 세우기", "label": "Calendar", "classes": "bg-[#3069B3]/10 text-[#3069B3]"},
+        {"key": "졸업요건 추적", "label": "GraduationCap", "classes": "bg-[#00AACA]/10 text-[#00AACA]"},
+        {"key": "학과 통계", "label": "BarChart3", "classes": "bg-[#3069B3]/10 text-[#3069B3]"},
+        {"key": "프로필 관리", "label": "UserCog", "classes": "bg-[#153974]/10 text-[#153974]"}
+      ]
+    },
+    {
+      "domain": "Onboarding stepper state",
+      "file": "src/app/(dashboard)/onboarding/page.tsx",
+      "entries": [
+        {"key": "active", "label": "1 / 2", "classes": "bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30"},
+        {"key": "done", "label": "Check icon", "classes": "bg-emerald-500 text-white"},
+        {"key": "pending", "label": "2", "classes": "bg-gray-200 text-gray-500"}
+      ]
+    }
+  ],
+  "color_classes_seen": [
+    "bg-white", "bg-white/10", "bg-white/90", "border-white/20", "text-white", "text-white/40", "text-white/60", "text-white/70", "text-white/80", "text-white/90",
+    "shadow-black/20",
+    "text-[#153974]", "bg-[#153974]", "bg-[#153974]/5", "bg-[#153974]/10", "bg-[#153974]/20", "border-[#153974]", "border-[#153974]/20", "ring-[#153974]", "shadow-[#153974]/30", "from-[#153974]", "to-[#153974]", "via-[#153974]", "via-[#153974]/30",
+    "text-[#3069B3]", "border-[#3069B3]", "bg-[#3069B3]/10", "to-[#3069B3]",
+    "text-[#00AACA]", "bg-[#00AACA]/5", "bg-[#00AACA]/10", "bg-[#00AACA]/30", "bg-[#00AACA]/[0.08]", "border-[#00AACA]/30", "border-[#00AACA]/50",
+    "bg-[#1a4a8f]",
+    "from-[#0a1e3d]", "from-[#0a1e3d]/60", "to-[#0a1e3d]/80", "to-[#1a2f5a]", "from-[#0f2847]", "from-white", "via-[#f0f7ff]", "to-[#e8f4fd]",
+    "from-slate-50", "via-white", "to-slate-100", "bg-slate-50", "bg-slate-100", "border-slate-200", "text-slate-500", "text-slate-600", "text-slate-700",
+    "bg-gray-50", "bg-gray-100", "bg-gray-200", "border-gray-200", "border-gray-200/50", "border-gray-300", "border-gray-400", "border-gray-600", "ring-gray-300", "text-gray-400", "text-gray-500", "text-gray-600", "text-gray-700", "text-gray-800", "text-gray-900",
+    "bg-blue-100", "bg-blue-600", "text-blue-700", "ring-blue-300/50",
+    "bg-sky-400",
+    "bg-emerald-50", "bg-emerald-100", "bg-emerald-500", "border-emerald-500", "text-emerald-600", "text-emerald-700",
+    "bg-green-50", "bg-green-100", "border-green-200", "text-green-700",
+    "bg-teal-50", "border-teal-200", "text-teal-700",
+    "bg-red-50", "bg-red-100", "border-red-200", "border-red-300", "text-red-500", "text-red-600", "text-red-700",
+    "bg-rose-100", "text-rose-700",
+    "bg-orange-100", "bg-orange-500", "border-orange-400", "border-orange-500", "text-orange-500", "text-orange-600", "text-orange-700",
+    "bg-purple-100", "bg-purple-500", "border-purple-400", "border-purple-500", "text-purple-500", "text-purple-600", "text-purple-700",
+    "bg-violet-100", "text-violet-700",
+    "bg-amber-50", "border-amber-200", "text-amber-500", "text-amber-600", "text-amber-800"
+  ],
+  "typography": [
+    {"role": "Hero display", "classes": "text-4xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight tracking-tight", "where": "page.tsx hero h1"},
+    {"role": "Marketing section h2", "classes": "text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight (CTA: text-3xl md:text-5xl)", "where": "page.tsx"},
+    {"role": "Marketing eyebrow (English)", "classes": "text-sm uppercase tracking-[0.2em] font-semibold text-[#00AACA] mb-3", "where": "page.tsx SERVICE / HOW IT WORKS"},
+    {"role": "Marketing eyebrow (Korean, CTA)", "classes": "text-sm uppercase tracking-widest text-[#00AACA] font-medium mb-4", "where": "page.tsx 지금이 가장 빠릅니다"},
+    {"role": "Feature title", "classes": "text-2xl font-bold text-gray-900", "where": "page.tsx overview rows"},
+    {"role": "Step title (dark)", "classes": "text-xl font-bold text-white mb-3", "where": "page.tsx flow"},
+    {"role": "Body (light bg)", "classes": "text-gray-600 leading-relaxed", "where": "page.tsx"},
+    {"role": "Body (dark bg)", "classes": "text-white/60 text-sm leading-relaxed", "where": "page.tsx"},
+    {"role": "Brand wordmark", "classes": "text-xl font-bold text-gradient", "where": "nav h1 YU 수강 플래너"},
+    {"role": "App page h1", "classes": "text-xl sm:text-2xl font-bold text-gray-900", "where": "planner/page.tsx 수강 계획"},
+    {"role": "Onboarding h1", "classes": "text-3xl font-bold text-gradient", "where": "onboarding/page.tsx 초기 설정"},
+    {"role": "Help h1", "classes": "text-3xl font-bold text-[#153974] md:text-4xl", "where": "help/page.tsx"},
+    {"role": "Help h2", "classes": "text-2xl font-bold text-[#153974]", "where": "help/page.tsx"},
+    {"role": "Help body", "classes": "text-sm leading-relaxed text-slate-600 md:text-base", "where": "help/page.tsx"},
+    {"role": "Form label (primary)", "classes": "block text-sm font-medium text-gray-700 mb-1", "where": "onboarding step 1"},
+    {"role": "Form label (dense)", "classes": "block text-xs text-gray-600 mb-1", "where": "onboarding step 2"},
+    {"role": "Form sub-section h3", "classes": "text-sm font-semibold text-gray-900", "where": "onboarding step 2"},
+    {"role": "Field hint", "classes": "text-xs text-gray-400 mt-0.5 / text-xs text-gray-500 mt-1", "where": "onboarding"},
+    {"role": "Inline error", "classes": "text-sm text-red-500", "where": "onboarding, RequirementsSummary"},
+    {"role": "Widget title", "classes": "text-sm font-medium text-gray-700", "where": "RequirementsSummary 졸업 요건"},
+    {"role": "Widget big number", "classes": "text-lg font-semibold text-gray-800 (met: text-emerald-600)", "where": "RequirementsSummary %"},
+    {"role": "Micro legend", "classes": "text-[11px] text-gray-400", "where": "RequirementsSummary, planner year filter label"},
+    {"role": "Micro tag", "classes": "text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap", "where": "CourseCard compact category/dept"},
+    {"role": "Micro status pill", "classes": "px-1.5 py-0.5 rounded text-[9px] font-medium", "where": "CourseCard compact status"},
+    {"role": "Year group heading", "classes": "text-sm font-semibold text-gray-500 uppercase tracking-wide", "where": "planner {year}학년"},
+    {"role": "Card course name", "classes": "text-xs font-medium text-gray-800 truncate (full: text-sm font-medium text-gray-800 truncate)", "where": "CourseCard"}
+  ],
+  "layout_patterns": [
+    {"name": "Marketing container", "description": "Centered container with 16px gutter", "classes": "container mx-auto px-4", "where": "page.tsx all sections"},
+    {"name": "Alternating feature rows", "description": "2-col grid, number column swaps side via order-1/order-2 on md", "classes": "grid grid-cols-1 md:grid-cols-2 gap-8 items-center ; order-2 md:order-1 / order-1 md:order-2", "where": "page.tsx overview"},
+    {"name": "Desktop/mobile step duplication", "description": "Same 3 steps rendered twice: hidden md:flex row with vertical dividers, md:hidden stack with horizontal dividers", "classes": "hidden md:flex items-start justify-center max-w-5xl mx-auto / md:hidden space-y-0", "where": "page.tsx flow"},
+    {"name": "Stacked CTA pair", "description": "Buttons stack on mobile, row on sm", "classes": "flex flex-col sm:flex-row gap-4 justify-center items-center", "where": "page.tsx hero & CTA"},
+    {"name": "App page vertical rhythm", "description": "Page root and inner stacks use space-y-6; semester grid space-y-4; per-year space-y-2", "classes": "space-y-6 / space-y-4 / space-y-2", "where": "planner/page.tsx"},
+    {"name": "Header row responsive", "description": "Title left, actions right; stacks on mobile", "classes": "flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3", "where": "planner header"},
+    {"name": "Semester 2-col grid", "description": "Semesters within a year", "classes": "grid grid-cols-1 sm:grid-cols-2 gap-3", "where": "planner"},
+    {"name": "Onboarding centered form", "description": "Vertically centered narrow column", "classes": "min-h-[60vh] flex items-center justify-center px-4 ; w-full max-w-2xl mx-auto space-y-8", "where": "onboarding"},
+    {"name": "Onboarding 2-col form", "description": "Requirements left, earned right; conditional double/minor pairs appended", "classes": "grid grid-cols-1 md:grid-cols-2 gap-6 ; space-y-4", "where": "onboarding step 2"},
+    {"name": "Help section card", "description": "Rounded 2xl white card per section", "classes": "mb-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-7", "where": "help"},
+    {"name": "Help content column", "classes": "mx-auto max-w-5xl px-4 pb-12 pt-6 md:px-6 md:pt-10", "description": "Wider than onboarding, narrower than marketing", "where": "help"},
+    {"name": "Requirement row", "description": "Fixed 64px label, flex bar, fixed 64px value; breakdown indented 72px", "classes": "flex items-center gap-2 ; w-16 flex-shrink-0 ; mt-0.5 pl-[72px]", "where": "RequirementsSummary TrackRow"},
+    {"name": "Compact card single line", "classes": "flex items-center justify-between gap-1 ; flex items-center gap-1.5 min-w-0 flex-1", "description": "Tags + name + credits in one truncating row", "where": "CourseCard compact"}
+  ],
+  "copy_samples": [
+    {"text": "YU 수강 플래너", "where": "page.tsx nav h1; help h1 'YU 수강 플래너 사용 가이드'", "note": "Canonical product name: Latin 'YU' + space + '수강 플래너' (space between 수강 and 플래너). Shortened to '수강 플래너' in help prose and just '플래너' in nav verbs (플래너로 이동 / 플래너로 돌아가기). No 'YU플래너' form in these files."},
+    {"text": "영남대학교", "where": "page.tsx logo alt; hero '영남대학교 생활을'; help '영남대학교 포털에서…'", "note": "Full university name in Korean; 'YU' only as brand prefix / English slogan."},
+    {"text": "YU the Future", "where": "page.tsx hero badge", "note": "English slogan, title case, no punctuation."},
+    {"text": "스마트하게 설계하다. / 직관적으로 관리하다. / 아름답게 기록하다.", "where": "page.tsx hero typing words", "note": "Literary plain-form 하다 declaratives WITH periods; the only place this register appears. Adverb + verb pattern."},
+    {"text": "1학년부터 졸업까지, 수강 계획을 한눈에 세우세요. 다른 사람들의 수강 이력을 참고하고, 나만의 졸업 로드맵을 완성하세요.", "where": "page.tsx hero description", "note": "Marketing register = 하세요체 imperatives, full periods, '나만의' first-person framing. '한눈에' recurs 4x across landing/help."},
+    {"text": "바로 시작하기 / 비회원으로 체험하기", "where": "page.tsx CTAs (both hero and footer CTA)", "note": "Buttons use -기 nominalized verbs, never periods. '바로' (right away) is a favorite intensifier."},
+    {"text": "비회원은 데이터가 저장되지 않습니다", "where": "page.tsx hero notice", "note": "합니다체 statement, NO period. Guest = '비회원', member = '회원'."},
+    {"text": "서비스 소개 / 이용 방법 / 시작하기 / 로그인 / 플래너로 이동", "where": "page.tsx nav", "note": "Nav labels: 2-4 word noun phrases or -기 form."},
+    {"text": "SERVICE / HOW IT WORKS", "where": "page.tsx section eyebrows", "note": "English ALL-CAPS eyebrows with tracking-[0.2em]; third eyebrow switches to Korean '지금이 가장 빠릅니다' (합니다체, no period) while keeping the uppercase class."},
+    {"text": "왜 YU 수강 플래너인가요?", "where": "page.tsx overview h2", "note": "Only question-form headline; 해요체 + question mark."},
+    {"text": "학생들의 수강 계획을 체계적으로 관리할 수 있는 핵심 기능들", "where": "page.tsx overview subtitle", "note": "Noun-phrase ending (기능들), no period; subtitles under h2 omit periods."},
+    {"text": "드래그앤드롭 플래너 / 졸업 요건 추적 / 다른 사람들의 수강 계획 참고 / 통계 기반 의사결정", "where": "page.tsx feature h3", "note": "Feature titles are noun phrases. '드래그앤드롭' written as one word, no hyphen."},
+    {"text": "마우스 하나로 과목을 원하는 학기에 끌어놓기만 하면 됩니다.", "where": "page.tsx feature 01 body", "note": "Mixes 하세요 imperative sentence followed by 됩니다 explanatory sentence in same paragraph."},
+    {"text": "전공필수, 교양, 자유선택 등 모든 졸업 요건을 한눈에 확인하세요.", "where": "page.tsx feature 02", "note": "Category vocabulary surfaced in marketing: 전공필수, 교양, 자유선택."},
+    {"text": "이렇게 사용하세요 / 3단계로 간단하게 나만의 수강 계획을 완성하세요", "where": "page.tsx flow h2 + sub", "note": "h2 하세요 no period; sub also no period. Numerals Arabic ('3단계')."},
+    {"text": "가입 / 계획 / 완성", "where": "page.tsx flow step titles", "note": "Two-syllable Sino-Korean nouns as step names, numbered 01/02/03."},
+    {"text": "구글 계정으로 간편하게 가입하거나, 비회원으로 바로 체험해보세요.", "where": "page.tsx flow step 1", "note": "'구글' transliterated here, but help page writes 'Google 로그인' in Latin — inconsistent."},
+    {"text": "수강 계획을 시작하세요 / 체계적인 수강 계획으로 졸업까지의 여정을 한눈에 관리하세요. / 가입 없이 바로 체험 가능", "where": "page.tsx CTA section", "note": "Footnote '가입 없이 바로 체험 가능' is a terse noun-ending fragment."},
+    {"text": "수강 계획", "where": "planner/page.tsx h1 (also export header)", "note": "App page title = 2 words with space; landing uses same phrase as the core object."},
+    {"text": "학과를 설정해주세요", "where": "planner header link when no department", "note": "해주세요 request, no period (vs onboarding validation '학과를 선택해주세요.' with period)."},
+    {"text": "학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.", "where": "planner header helper", "note": "Instructional 하세요 with period; loanwords 포커스, 리스트 used freely."},
+    {"text": "내보내기 / 내보내는 중... / PNG 이미지 / PDF 문서 / 초기화", "where": "planner header actions", "note": "Progress states use '-는 중...' with ASCII three dots. File formats in Latin caps + Korean noun."},
+    {"text": "로그인 후 이용할 수 있는 기능입니다.", "where": "planner export (guest) info toast", "note": "Toast gating message, 합니다체 with period."},
+    {"text": "모든 학기와 과목이 삭제됩니다. 계획을 초기화하시겠습니까?", "where": "planner handleResetPlan window.confirm", "note": "Destructive confirm: consequence sentence + 하시겠습니까? question. Native confirm, not a styled dialog."},
+    {"text": "계획이 초기화되었습니다.", "where": "planner reset success toast (type info)", "note": "Past-tense 되었습니다 + period."},
+    {"text": "{course.name} 추가됨 · +{credits}학점 {catLabel}", "where": "planner showAddCourseToast success", "note": "Dense toast grammar: noun + 됨 (nominal past), middot '·' separator, '+N학점' signed number, category label appended. Undo action label '실행 취소', follow-up toast '실행 취소됨'."},
+    {"text": "계획을 불러오는데 실패했습니다. / 다시 시도", "where": "planner error state", "note": "Error = '…에 실패했습니다.' pattern + retry button '다시 시도'."},
+    {"text": "학년 · {y}학년 · 전체 · {year}학년 ({n}학점)", "where": "planner year filter + group heading", "note": "Year as Arabic numeral + 학년; credits in parentheses with 학점 suffix; 'all' = 전체."},
+    {"text": "예정 ↔ 이수 클릭하여 변경", "where": "planner status hint", "note": "Unicode arrow ↔ used as glyph between status chips."},
+    {"text": "학기 추가", "where": "planner add-semester button", "note": "Noun + 추가 pattern for add actions (학기 추가, 복수전공 추가, 부전공 추가)."},
+    {"text": "N/A / Unknown Course / Loading...", "where": "planner fallback strings", "note": "English fallbacks leak into otherwise Korean UI."},
+    {"text": "초기 설정", "where": "onboarding h1", "note": "Onboarding titled '초기 설정' not '온보딩' (though help alt text says '온보딩 화면')."},
+    {"text": "수강 계획을 시작하기 위한 기본 정보를 입력해주세요. / 몇 가지 정보만 입력하면 바로 시작할 수 있어요", "where": "onboarding header", "note": "Lead = 해주세요 + period; sub = 해요체 '있어요' WITHOUT period — softest register in the app."},
+    {"text": "학과 선택 / 졸업 요건", "where": "onboarding stepper labels", "note": "Step labels noun phrases; '졸업 요건' with space here."},
+    {"text": "학과 및 입학 정보 / 졸업 요건 설정", "where": "onboarding CardTitles", "note": "Formal '및' conjunction in titles."},
+    {"text": "학과를 검색하세요 / 불러오는 중... / 예: 2024", "where": "onboarding placeholders", "note": "Placeholder = 하세요 no period; example placeholder uses '예: ' prefix."},
+    {"text": "입학한 연도를 입력하세요.", "where": "onboarding year hint", "note": "Field hint 하세요 WITH period."},
+    {"text": "+ 복수전공 추가 / + 부전공 추가 / 복수전공을 선택했습니다. 해제하려면 다시 클릭하세요.", "where": "onboarding toggles + hint", "note": "Plus sign as literal text prefix; selected-state hint 했습니다 + 하세요."},
+    {"text": "학과를 선택해주세요. / 올바른 입학연도를 입력해주세요. / 복수전공/부전공 학과를 선택해주세요. / 주전공과 다른 학과를 선택해주세요. / 졸업학점은 1 이상이어야 합니다. / 오류가 발생했습니다.", "where": "onboarding validation setError", "note": "Validation = 해주세요 polite request + period; slash '/' between alternatives; '입학연도' spelling."},
+    {"text": "기이수 전공핵심은 기이수 전공 학점 이하여야 합니다 / 기이수 졸업학점은 전공+교양 합계(N학점) 이상이어야 합니다", "where": "src/lib/priorCredits.ts validatePriorCredits (surfaced via onboarding setError)", "note": "Same 합니다체 rule-statement but NO trailing period, unlike onboarding's own messages. '+' joins track names."},
+    {"text": "다음 / 이전 / 완료 / 처리 중...", "where": "onboarding nav buttons", "note": "Single-word Sino-Korean button labels; pending = '처리 중...'."},
+    {"text": "기준 연도 / 2025 / 2026", "where": "onboarding year select", "note": "Requirement year referred to as '기준 연도'; badge in widget reads '{year}년 기준'."},
+    {"text": "졸업 기준과 취득 학점을 잘 모르시나요? 확인 방법 보기", "where": "onboarding step 2 hint + link", "note": "Honorific 모르시나요? question then link in -기 form."},
+    {"text": "복수전공을 선택하셨습니다 / 이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요. 아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다.", "where": "onboarding amber warning", "note": "Warning title uses honorific 셨 and no period; body hedges with '실제와 다를 수 있습니다.'"},
+    {"text": "졸업 기준 / 취득 학점 / 복수전공 기준 / 복수전공 기이수 / 부전공 기준 / 부전공 기이수", "where": "onboarding step 2 h3", "note": "'기이수' (already-earned) is the house term for prior credits; '취득 학점' used as section title."},
+    {"text": "졸업학점 / 교양학점 / 전공학점 / 전공핵심 (최소) / 기이수 졸업학점 / 기이수 교양학점 / 기이수 전공학점 / 기이수 전공핵심학점 / 복수전공 전공학점 / 복수전공 전공핵심 (최소) / 기이수 복수전공 전공학점 / 기이수 복수전공 전공핵심 / 부전공 전공학점 / 부전공 전공핵심 (최소) / 부전공시 주전공 최소학점 / 기이수 부전공 전공학점 / 기이수 부전공 전공핵심", "where": "onboarding field labels", "note": "Compound nouns without spaces (졸업학점, 교양학점) but with space before parenthetical '(최소)'. '전공핵심' = major core/required-min."},
+    {"text": "전공필수 최소 이수학점 / 이미 이수한 총 학점 (전공+교양+기타 포함)", "where": "onboarding field hints", "note": "Hint under 전공핵심 says 전공필수 — vocabulary slip between 핵심 and 필수."},
+    {"text": "학과 기준표에서 불러왔습니다. 수정할 수 있습니다.", "where": "onboarding autoFillMessage", "note": "Success feedback: two short 합니다체 sentences, emerald styling."},
+    {"text": "플래너로 돌아가기 / 도움말 가이드 / YU 수강 플래너 사용 가이드 / 수강 플래너의 주요 기능을 빠르게 알아보세요", "where": "help header", "note": "Help subtitle 하세요 no period."},
+    {"text": "시작하기 / 수강 계획 세우기 / 졸업요건 추적 / 학과 통계 / 프로필 관리", "where": "help h2", "note": "'졸업요건' written WITHOUT space in help (and in RequirementsSummary error), WITH space elsewhere ('졸업 요건')."},
+    {"text": "YU 수강 플래너는 비회원으로도 바로 사용할 수 있습니다. 비회원 모드에서는 데이터가 브라우저에 저장되며, 회원 가입 시 어디서든 접속 가능하고 학과 통계에 기여할 수 있습니다.", "where": "help section 1", "note": "Help prose is pure 합니다체 explanatory, long compound sentences, periods."},
+    {"text": "• 바로 사용 가능 • 브라우저 저장 • 통계 공유 불가 | • Google 로그인 • 데이터 동기화 • 통계 공유 가능", "where": "help compare cards 비회원 / 회원", "note": "Literal '• ' bullet characters typed in li text; terse noun fragments; 가능/불가 pair."},
+    {"text": "졸업요건은 언제든 수정할 수 있으니 정확하지 않아도 괜찮습니다.", "where": "help section 1", "note": "Reassuring tone ('괜찮습니다')."},
+    {"text": "학기 추가: 화면 하단의 + 버튼으로 새 학기를 추가합니다 / 과목 제거: 과목의 X 버튼을 누르거나 카탈로그 영역으로 드래그합니다 / 이수 상태: 과목 카드의 상태 버튼으로 예정/이수 중/이수 완료를 전환합니다", "where": "help numbered steps 1-5", "note": "'Label: sentence' pattern, 합니다체, NO trailing period. Help says '이수 중/이수 완료' but UI pills say '수강중/이수' and full card says '수강중/완료'."},
+    {"text": "영남대학교 포털에서 졸업요건 조회하는 방법 →", "where": "help guide link", "note": "Trailing '→' arrow typed in link text in addition to ExternalLink icon."},
+    {"text": "궁금한 점이나 오류를 발견하셨나요? / 문의 및 피드백 보내기 / 졸업요건 조회 가이드", "where": "help contact + bottom nav", "note": "Honorific question + -기 CTA; '피드백' loanword."},
+    {"text": "프로필 페이지에서 학과, 입학년도, 전공 유형(단일전공/복수전공/부전공)을 변경할 수 있습니다.", "where": "help section 5", "note": "'입학년도' here vs '입학연도' in onboarding; '단일전공' appears only in help."},
+    {"text": "온보딩 화면 - 학과 선택과 졸업요건 설정 / 학기 그리드 - 학년별 학기 카드와 과목 배치 / 과목 카탈로그 - 학년/학기/카테고리 필터와 추가 버튼", "where": "help image alt texts", "note": "Alt pattern 'Screen - description' with spaced hyphen."},
+    {"text": "졸업 요건 / {year}년 기준 / {n}% / → 계획 반영 시 {n}% / {earned}/{required}학점", "where": "RequirementsSummary view header", "note": "Percent with no space; '→' arrow prefix for projection; fraction 'earned/required학점'."},
+    {"text": "요건 충족 / 이수 N (기이수 N 포함) / 수강중 N / 예정 N / 미계획 N", "where": "RequirementsSummary BreakdownLine", "note": "Legend words: 이수(earned), 수강중(enrolled), 예정(planned), 미계획(unplanned), 기이수(prior). Numbers without 학점 suffix here."},
+    {"text": "전공 / └ 핵심 / └ 주전공최소 / 복수전공 / 부전공 / 교양 / ✓ ", "where": "RequirementsSummary TrackRow", "note": "Box-drawing '└' for sub-rows; '✓ ' check glyph prefix when met."},
+    {"text": "과목 카드의 상태(예정·수강중·이수)를 바꾸면 바로 반영됩니다. / 요건 수정", "where": "RequirementsSummary footer", "note": "Middot '·' separates enumerated statuses inside parentheses."},
+    {"text": "졸업요건 정보를 불러오지 못했습니다. / 다시 시도 / 다시 시도 중... / 졸업 요건을 설정하세요 / 직접 입력 / 기본 요건 생성 / 생성 중... / 졸업 요건 입력 / 졸업 요건 수정 / 저장에 실패했습니다.", "where": "RequirementsSummary states", "note": "Error variants '불러오지 못했습니다.' vs planner's '불러오는데 실패했습니다.' — two phrasings for load failure."},
+    {"text": "{credits}학점 / 상태 변경: 계획 / 클릭하여 상태 변경: 예정 ↔ 이수 / 과목 제거", "where": "CourseCard text, aria-label, title", "note": "aria-labels follow 'Action: value' with colon; aria uses 계획 while visible pill says 예정."},
+    {"text": "계획 / 수강중 / 완료 / 재수강 (full card) — 예정 / 수강중 / 이수 / 재수강 (compact pill)", "where": "CourseCard statusLabels vs statusPillLabels", "note": "Two different label sets for the same four statuses within one component."},
+    {"text": "전공핵심 / 전공필수 / 전공선택 / 교양필수 / 교양선택 / 교직 / 자유선택", "where": "CourseCard categoryLabels = graduationDelta GRADUATION_CATEGORY_LABELS", "note": "Four-syllable category nouns, no spaces. major_required -> 전공핵심 and major_compulsory -> 전공필수 (key/label naming crossed)."},
+    {"text": "{year}학년 {1|2}학기", "where": "RequirementsSummary semesterOptions label", "note": "Semester format is '학년 + 학기' (e.g. '1학년 1학기'), NOT calendar '2026-1학기'; internal terms spring/fall map to 1/2."},
+    {"text": "알 수 없는 오류가 발생했습니다.", "where": "src/lib/utils.ts getErrorMessage fallback", "note": "Generic error fallback, 합니다체 + period."},
+    {"text": "이메일 또는 비밀번호가 올바르지 않습니다. 잠시 후 다시 시도해주세요.", "where": "src/lib/auth/login-message.ts LOGIN_FAILURE_MESSAGE", "note": "Login failure: deliberately generic (same message for any failure), two sentences, 합니다 + 해주세요."},
+    {"text": "This is a Next.js project bootstrapped with create-next-app. / MongoDB transaction requirement", "where": "README.md", "note": "README is English create-next-app boilerplate (still mentions Geist font and 'edit app/page.tsx') plus an ops section on MongoDB transactions; no product description, no Korean."}
+  ],
+  "motion": [
+    {"classes": "animate-fade-in-down", "where": "page.tsx nav; onboarding header"},
+    {"classes": "animate-fade-in-up anim-delay-100 / anim-delay-200 / anim-delay-300", "where": "page.tsx hero h1, description, CTAs, notice"},
+    {"classes": "animate-fade-in-up", "where": "onboarding Cards"},
+    {"classes": "animate-scale-in", "where": "page.tsx hero badge"},
+    {"classes": "animate-cursor", "where": "page.tsx typing cursor '|'"},
+    {"classes": "animate-on-scroll scroll-delay-0 / scroll-delay-100 / scroll-delay-150 / scroll-delay-200 / scroll-delay-300 (+ .visible added by IntersectionObserver, threshold 0.1, respects prefers-reduced-motion)", "where": "page.tsx sections"},
+    {"classes": "group-hover:translate-x-1 transition-transform", "where": "page.tsx ArrowRight in CTAs"},
+    {"classes": "transition-colors", "where": "nav links, pills, help links, filter pills, edit button"},
+    {"classes": "transition-all duration-300", "where": "onboarding stepper circles and labels"},
+    {"classes": "transition-all duration-500", "where": "onboarding stepper fill bar"},
+    {"classes": "transition-all", "where": "onboarding major toggles; CourseCard status pill"},
+    {"classes": "transition-shadow shadow-sm hover:shadow-md", "where": "CourseCard root"},
+    {"classes": "hover:ring-2 hover:ring-offset-1 hover:ring-gray-300", "where": "CourseCard compact status pill"},
+    {"classes": "animate-pulse ring-2 ring-blue-300/50", "where": "CourseCard first-time status hint"},
+    {"classes": "animate-pulse", "where": "RequirementsSummary loading skeleton"},
+    {"classes": "animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]", "where": "planner page loading"},
+    {"classes": "animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600", "where": "planner export button loading"},
+    {"classes": "blur-[1px] rotate-[-3deg] / rotate-[2deg] / rotate-[1deg] / rotate-[-2deg] / rotate-[3deg] opacity-[0.08]", "where": "page.tsx hero screenshot mosaic"},
+    {"classes": "blur-3xl", "where": "page.tsx decorative glows"}
+  ],
+  "icons": [
+    {"name": "ArrowRight", "size_classes": "ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform", "where": "page.tsx CTAs"},
+    {"name": "ArrowRight", "size_classes": "w-4 h-4 ml-1", "where": "onboarding 다음"},
+    {"name": "ArrowLeft", "size_classes": "w-4 h-4 mr-1", "where": "onboarding 이전"},
+    {"name": "ArrowLeft", "size_classes": "h-4 w-4", "where": "help back links"},
+    {"name": "Sparkles", "size_classes": "w-4 h-4 text-white/80", "where": "page.tsx hero badge"},
+    {"name": "MousePointerClick", "size_classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4", "where": "page.tsx step 가입"},
+    {"name": "LayoutGrid", "size_classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4", "where": "page.tsx step 계획"},
+    {"name": "CheckCircle", "size_classes": "w-6 h-6 text-[#00AACA] mx-auto mb-4", "where": "page.tsx step 완성"},
+    {"name": "CheckCircle", "size_classes": "w-4 h-4 ml-1", "where": "onboarding 완료"},
+    {"name": "Check", "size_classes": "w-5 h-5", "where": "onboarding stepper done circle"},
+    {"name": "Check", "size_classes": "w-4 h-4", "where": "onboarding selected major toggle"},
+    {"name": "School", "size_classes": "w-5 h-5 text-[#153974]", "where": "onboarding step 1 title"},
+    {"name": "GraduationCap", "size_classes": "w-5 h-5 text-emerald-600", "where": "onboarding step 2 title"},
+    {"name": "GraduationCap", "size_classes": "h-5 w-5 text-[#00AACA]", "where": "help section 3"},
+    {"name": "BookOpen", "size_classes": "w-4 h-4 text-gray-500 | text-purple-500 | text-orange-500", "where": "onboarding 기준 section heads"},
+    {"name": "Award", "size_classes": "w-4 h-4 text-gray-500 | text-purple-500 | text-orange-500", "where": "onboarding 기이수 section heads"},
+    {"name": "AlertTriangle", "size_classes": "w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5", "where": "onboarding warning"},
+    {"name": "Download", "size_classes": "w-4 h-4", "where": "planner 내보내기"},
+    {"name": "HelpCircle", "size_classes": "h-3.5 w-3.5", "where": "help badge"},
+    {"name": "Rocket", "size_classes": "h-5 w-5 text-[#153974]", "where": "help 시작하기"},
+    {"name": "Calendar", "size_classes": "h-5 w-5 text-[#3069B3]", "where": "help 수강 계획 세우기"},
+    {"name": "BarChart3", "size_classes": "h-5 w-5 text-[#3069B3]", "where": "help 학과 통계"},
+    {"name": "UserCog", "size_classes": "h-5 w-5 text-[#153974]", "where": "help 프로필 관리"},
+    {"name": "ExternalLink", "size_classes": "h-4 w-4 (one instance h-4 w-4 text-[#00AACA])", "where": "help links and contact CTA"},
+    {"name": "inline SVG plus (heroicons solid 20x20 path M10 3a1 1 0 011 1v5h5...)", "size_classes": "w-5 h-5 mr-2", "where": "planner 학기 추가 button"},
+    {"name": "inline SVG X (heroicons solid 20x20 path M4.293 4.293...)", "size_classes": "w-3 h-3 text-gray-400 hover:text-red-500 (compact) / w-4 h-4 text-gray-400 hover:text-red-500 (full)", "where": "CourseCard remove"},
+    {"name": "inline SVG pencil (heroicons outline 24x24, strokeWidth 2)", "size_classes": "w-3 h-3", "where": "RequirementsSummary 요건 수정"},
+    {"name": "Image /yu-logo.svg", "size_classes": "h-6 width=60 height=24 style width:auto", "where": "page.tsx nav"}
+  ],
+  "oddities": [
+    "VOICE: Three registers coexist — marketing landing = 하세요체 imperatives with periods; app helper/validation = 해주세요/하세요 (periods inconsistent); help prose and toasts = 합니다체; onboarding sub-line '몇 가지 정보만 입력하면 바로 시작할 수 있어요' is the lone 해요체 string. Hero typing words use literary plain 하다 with periods.",
+    "PUNCTUATION: Periods are inconsistent on same-role strings: onboarding validation '학과를 선택해주세요.' has a period but priorCredits.ts validation '…이하여야 합니다' does not; help numbered steps '…추가합니다' have no period while help paragraphs do; '학과를 설정해주세요' (planner) vs '학과를 선택해주세요.' (onboarding). Buttons never carry periods (consistent). No exclamation marks anywhere. No emoji anywhere; typographic glyphs are used instead: '·' middot, '↔', '→', '└', '✓', '•', '+'.",
+    "SPELLING: '졸업 요건' (spaced: planner, onboarding, RequirementsSummary title) vs '졸업요건' (unspaced: help h2s, help prose, RequirementsSummary error, image alts).",
+    "SPELLING: '입학연도' (onboarding label + validation) vs '입학년도' (help section 5).",
+    "MIXING: '구글 계정' (landing, transliterated) vs 'Google 로그인' (help, Latin). Other Latin tokens: YU, PNG, PDF, SERVICE, HOW IT WORKS, 'YU the Future', 'N/A', 'Unknown Course', 'Loading...'.",
+    "STATUS VOCAB DRIFT: planned/enrolled/completed/failed rendered as 계획/수강중/완료/재수강 (full CourseCard), 예정/수강중/이수/재수강 (compact pill), 예정/이수 중/이수 완료 (help prose), and 이수/수강중/예정/미계획 (RequirementsSummary legend). aria-label uses 계획 while the visible pill reads 예정.",
+    "CATEGORY KEY/LABEL CROSS: major_required -> '전공핵심' and major_compulsory -> '전공필수'; onboarding hint under '전공핵심 (최소)' says '전공필수 최소 이수학점', and toast secondRowLabel calls major_required '전공핵심'.",
+    "LOAD-ERROR PHRASING: '계획을 불러오는데 실패했습니다.' (planner) vs '졸업요건 정보를 불러오지 못했습니다.' (RequirementsSummary) vs '저장에 실패했습니다.' — two verbs for failure.",
+    "SEMESTER FORMAT: UI uses '{year}학년 {1|2}학기' (academic-year based), while droppable ids and types use english 'spring'/'fall'. No calendar-year format like '2026-1학기' in these files.",
+    "GRAY vs SLATE: help/page.tsx uses slate-50/100/200/500/600/700 exclusively; every other file uses gray-*. help also orders size classes h-N w-N whereas the rest write w-N h-N.",
+    "UPPERCASE ON HANGUL: 'uppercase tracking-widest' applied to Korean eyebrow '지금이 가장 빠릅니다' and 'uppercase tracking-wide' on '{year}학년' heading — no visual effect on Hangul.",
+    "OFF-BRAND HEX: #0a1e3d, #1a2f5a, #0f2847 (hero/flow gradient navies), #1a4a8f (help CTA hover), #f0f7ff and #e8f4fd (CTA section gradient), inline #93c5fd/#dbeafe stripes (hard-coded Tailwind blue-300/blue-100 values) — none of these are the brand trio #153974/#3069B3/#00AACA.",
+    "SECONDARY-MAJOR COLOR DRIFT: double major is purple-100/700 chips but purple-500 solid toggle; minor is orange-100/700 chips but orange-500 toggle; the orange-100/700 pair is ALSO the major_elective category chip color, so '부전공' tag and '전공선택' tag look identical.",
+    "ENROLLED/COMPLETED HUE DRIFT: enrolled = green-50 card, green-100 pill, but sky-400 bar segment; completed = gray-50 card but emerald-100 pill and emerald-500 bar segment. planned = bg-[#153974]/5 card, blue-100 pill, blue stripe bar.",
+    "TINY TYPE: text-[9px] (status pill), text-[10px] (tags, credits, hint, year badge), text-[11px] (legend, filter label) paired with text-gray-400 — likely under 4.5:1 contrast at those sizes. Also text-white/40 notice on navy hero.",
+    "SPINNER COLORS: page spinner border-[#3069B3] vs button spinner border-gray-600.",
+    "NATIVE DIALOG: destructive reset uses window.confirm('모든 학기와 과목이 삭제됩니다. 계획을 초기화하시겠습니까?') instead of a styled modal.",
+    "ENGLISH LEAKS: 'N/A', 'Unknown Course', 'Loading...' placeholders can render inside Korean course cards.",
+    "LITERAL GLYPHS AS ICONS: help list items hard-code '• ' bullets in li text; help guide link appends ' →' in text while sibling links use ExternalLink icon; toggles prefix '+ ' as text; RequirementsSummary prefixes '✓ ' and '└ '.",
+    "HELP TERMS vs UI: help says '카탈로그 영역', '+ 버튼', 'X 버튼', '연필 아이콘' — UI has no visible '카탈로그' label in these files (planner helper says '과목 리스트').",
+    "ONBOARDING NAME: page h1 '초기 설정' but help alt text calls it '온보딩 화면'.",
+    "LOGIC ON LABEL: CourseCard compares departmentLabel === '복수전공' / '부전공' (Korean display string) to choose colors.",
+    "README: untouched create-next-app boilerplate in English (Geist font, 'edit app/page.tsx') plus MongoDB transaction notes; no product name, no Korean, no brand voice. CLAUDE.md says Next.js 15 while sweep brief says 16.",
+    "DASHBOARD: /dashboard is a bare redirect to /planner — no dashboard copy exists.",
+    "HERO SLOGAN: English 'YU the Future' badge sits above Korean headline; eyebrows SERVICE / HOW IT WORKS English but third eyebrow Korean.",
+    "DEFAULT NUMBERS: onboarding defaults 120/30/63/24 (single), 36/12 (double), 21/9/0 (minor); requirement year select hard-coded to 2025/2026.",
+    "MODULE-LEVEL UI STATE: CourseCard statusHintShown is a module variable, so pulse hint shows once per page load across all cards."
+  ]
+}

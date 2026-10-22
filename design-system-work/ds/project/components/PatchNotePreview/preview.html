@@ -1,0 +1,148 @@
+<!-- @dsCard group="Planner" height=798 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>PatchNotePreview — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-900, #101828); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: flex; align-items: flex-start; gap: 24px; }
+  .cell { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+
+  <div class="cell">
+    <div class="cp-patch-note-preview">
+      <div class="cp-patch-note-preview__header">
+        <svg class="lucide lucide-eye cp-patch-note-preview__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="cp-patch-note-preview__header-label">미리보기</span>
+      </div>
+      <div class="cp-patch-note-preview__section">
+        <p class="cp-patch-note-preview__section-label">알림 드롭다운</p>
+        <div class="cp-patch-note-preview__dropdown">
+          <div class="cp-patch-note-preview__item">
+            <div class="cp-patch-note-preview__avatar-wrap">
+              <div class="cp-patch-note-preview__avatar">
+                <svg class="lucide lucide-megaphone cp-patch-note-preview__icon cp-patch-note-preview__icon--megaphone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+              </div>
+            </div>
+            <div class="cp-patch-note-preview__item-body">
+              <p class="cp-patch-note-preview__item-text">새로운 업데이트: 2026년 1학기 수강계획 기능 개선</p>
+              <p class="cp-patch-note-preview__item-time">방금 전</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cp-patch-note-preview__section">
+        <p class="cp-patch-note-preview__section-label">업데이트 소식 상세</p>
+        <div class="cp-patch-note-preview__detail">
+          <div class="cp-patch-note-preview__title-row">
+            <h3 class="cp-patch-note-preview__title">2026년 1학기 수강계획 기능 개선</h3>
+            <span class="cp-patch-note-preview__version">v2.1.0</span>
+          </div>
+          <div class="cp-patch-note-preview__body">
+            <p class="cp-patch-note-preview__content">- 학기 카드에서 과목을 드래그하여 다른 학기로 옮길 수 있습니다.
+- 졸업요건 진행률이 과목 추가 알림에 함께 표시됩니다.
+- 수강계획을 PNG, PDF로 내보낼 때 해상도가 개선되었습니다.</p>
+          </div>
+          <p class="cp-patch-note-preview__detail-time">방금 전</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">title + content + version (sample admin input) · pill renders only when version.trim() is non-empty · line breaks kept by whitespace-pre-wrap</p>
+  </div>
+
+  <div class="cell">
+    <div class="cp-patch-note-preview">
+      <div class="cp-patch-note-preview__header">
+        <svg class="lucide lucide-eye cp-patch-note-preview__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="cp-patch-note-preview__header-label">미리보기</span>
+      </div>
+      <div class="cp-patch-note-preview__section">
+        <p class="cp-patch-note-preview__section-label">알림 드롭다운</p>
+        <div class="cp-patch-note-preview__dropdown">
+          <div class="cp-patch-note-preview__item">
+            <div class="cp-patch-note-preview__avatar-wrap">
+              <div class="cp-patch-note-preview__avatar">
+                <svg class="lucide lucide-megaphone cp-patch-note-preview__icon cp-patch-note-preview__icon--megaphone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+              </div>
+            </div>
+            <div class="cp-patch-note-preview__item-body">
+              <p class="cp-patch-note-preview__item-text">새로운 업데이트: 제목을 입력하세요</p>
+              <p class="cp-patch-note-preview__item-time">방금 전</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cp-patch-note-preview__section">
+        <p class="cp-patch-note-preview__section-label">업데이트 소식 상세</p>
+        <div class="cp-patch-note-preview__detail">
+          <div class="cp-patch-note-preview__title-row">
+            <h3 class="cp-patch-note-preview__title cp-patch-note-preview__title--placeholder">제목을 입력하세요</h3>
+          </div>
+          <div class="cp-patch-note-preview__body">
+            <p class="cp-patch-note-preview__content cp-patch-note-preview__content--placeholder">내용을 입력하세요</p>
+          </div>
+          <p class="cp-patch-note-preview__detail-time">방금 전</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">empty form · placeholders 제목을 입력하세요 / 내용을 입력하세요 in italic gray-400 (2.6:1, flagged) · no version pill · the row carries the title placeholder in plain gray-700</p>
+  </div>
+
+  <div class="cell">
+    <div class="cp-patch-note-preview">
+      <div class="cp-patch-note-preview__header">
+        <svg class="lucide lucide-eye cp-patch-note-preview__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+        <span class="cp-patch-note-preview__header-label">미리보기</span>
+      </div>
+      <div class="cp-patch-note-preview__section">
+        <p class="cp-patch-note-preview__section-label">알림 드롭다운</p>
+        <div class="cp-patch-note-preview__dropdown">
+          <div class="cp-patch-note-preview__item">
+            <div class="cp-patch-note-preview__avatar-wrap">
+              <div class="cp-patch-note-preview__avatar">
+                <svg class="lucide lucide-megaphone cp-patch-note-preview__icon cp-patch-note-preview__icon--megaphone" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2 2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><path d="M8 6v8"/></svg>
+              </div>
+            </div>
+            <div class="cp-patch-note-preview__item-body">
+              <p class="cp-patch-note-preview__item-text">새로운 업데이트: 수강계획 공유 링크, 학기별 학점 요약, 졸업요건 자동 재계산과 접근성 개선 사항을 안내합...</p>
+              <p class="cp-patch-note-preview__item-time">방금 전</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cp-patch-note-preview__section">
+        <p class="cp-patch-note-preview__section-label">업데이트 소식 상세</p>
+        <div class="cp-patch-note-preview__detail">
+          <div class="cp-patch-note-preview__title-row">
+            <h3 class="cp-patch-note-preview__title">수강계획 공유 링크, 학기별 학점 요약, 졸업요건 자동 재계산과 접근성 개선 사항을 안내합니다</h3>
+            <span class="cp-patch-note-preview__version">v2.2.0-beta</span>
+          </div>
+          <div class="cp-patch-note-preview__body">
+            <p class="cp-patch-note-preview__content">- 학기 카드에서 과목을 드래그하여 다른 학기로 옮길 수 있습니다.
+- 졸업요건 진행률이 과목 추가 알림에 함께 표시됩니다.
+- 수강계획을 PNG, PDF로 내보낼 때 해상도가 개선되었습니다.
+- 복수전공 필터가 과목 검색에 추가되었습니다.
+- 학기 추가 대화상자에서 계절학기를 선택할 수 있습니다.
+- 알림 드롭다운에서 읽지 않은 소식 수를 확인할 수 있습니다.
+- 관리자 페이지에 업데이트 소식 미리보기가 추가되었습니다.
+- 모바일 화면에서 학기 열의 가로 스크롤이 부드러워졌습니다.
+- 키보드만으로 과목 검색과 선택이 가능해졌습니다.
+- 프로필에서 입학년도를 수정하면 졸업요건이 다시 계산됩니다.</p>
+          </div>
+          <p class="cp-patch-note-preview__detail-time">방금 전</p>
+        </div>
+      </div>
+    </div>
+    <p class="cap">52-char title: the row shows 50 chars + "...", the h3 shows it whole and the pill wraps under it (flex-wrap) · body taller than 256px scrolls (max-h-64 overflow-y-auto)</p>
+  </div>
+
+</div>
+
+</body>
+</html>

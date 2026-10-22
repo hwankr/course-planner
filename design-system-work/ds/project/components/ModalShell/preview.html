@@ -1,0 +1,172 @@
+<!-- @dsCard group="Patterns" height=688 -->
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>ModalShell — preview</title>
+<style>
+  body { margin: 16px; font-family: var(--font-body, Arial, Helvetica, sans-serif); color: var(--foreground, #171717); background: var(--background, #ffffff); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  .row { display: flex; align-items: flex-start; gap: 16px; }
+  .row + .row { margin-top: 20px; }
+  .cell { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  /* Each stage stands in for the viewport: a gray-50 dashboard page under the overlay. container-type: size lets
+     the panels' 90vh / 85vh clamps measure the stage (cqh under the staged modifier). */
+  .stage { position: relative; height: 240px; overflow: hidden; border-radius: 8px; background: var(--gray-50, #f9fafb); container-type: size; }
+  /* Page stand-in so the 50% alpha has something to show through (the opaque calendar overlay hides it). */
+  .scenery { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+  .scenery__bar { height: 28px; border-radius: 6px; border: 1px solid var(--gray-200, #e5e7eb); background: var(--white, #ffffff); }
+  .scenery__card { flex: 1 1 auto; border-radius: 8px; border: 1px solid var(--gray-200, #e5e7eb); background: var(--white, #ffffff); }
+  .cap { margin: 0; min-height: 64px; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
+</style>
+</head>
+<body>
+
+<div class="row">
+
+  <!-- (a) CustomCourseForm.tsx -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--gutter cp-modal--staged">
+        <div class="cp-modal__panel cp-modal__panel--custom-course cp-modal__panel--scroll">
+          <div class="cp-modal__header cp-modal__header--custom-course">
+            <h3 class="cp-modal__title">커스텀 과목 추가</h3>
+            <p class="cp-modal__subtitle">나만의 과목을 추가하세요.</p>
+          </div>
+          <form class="cp-modal__body cp-modal__body--custom-course">
+            <div class="cp-modal__actions cp-modal__actions--split">
+              <button type="button" class="cp-button cp-button--ghost">취소</button>
+              <button type="button" class="cp-button cp-button--default">추가</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(a) CustomCourseForm.tsx · bg-black/50 + p-4 gutter · rounded-lg shadow-xl max-w-md max-h-[90vh] · header px-6 py-4 with border-b gray-200 · Button ghost + default, flex-1</p>
+  </div>
+
+  <!-- (b) AddSemesterDialog.tsx -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--staged">
+        <div class="cp-card cp-modal__panel cp-modal__panel--add-semester">
+          <div class="cp-card__content cp-modal__card-body">
+            <h2 class="cp-modal__title cp-modal__title--2xl">학기 추가</h2>
+            <form class="cp-modal__body--add-semester">
+              <div class="cp-modal__actions cp-modal__actions--split">
+                <button type="button" class="cp-button cp-button--default">추가</button>
+                <button type="button" class="cp-button cp-button--outline">취소</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(b) AddSemesterDialog.tsx · bg-black/50, no gutter · Card panel: gray-900 hairline, shadow-sm, CardContent pt-6, max-w-md · h2 text-2xl · Button default + outline</p>
+  </div>
+
+  <!-- (c) AllPlansModal.tsx -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--gutter cp-modal--under cp-modal--staged" role="dialog" aria-modal="true" aria-label="익명 수강계획 전체 보기">
+        <div class="cp-modal__panel cp-modal__panel--all-plans" tabindex="-1">
+          <div class="cp-modal__header cp-modal__header--all-plans">
+            <div>
+              <h2 class="cp-modal__title cp-modal__title--bold">익명 수강계획 전체 보기</h2>
+              <p class="cp-modal__subtitle cp-modal__subtitle--tight">총 12개의 수강계획</p>
+            </div>
+            <button type="button" class="cp-modal__close cp-modal__close--all-plans" aria-label="닫기">
+              <svg class="cp-modal__close-icon cp-modal__close-icon--muted" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <div class="cp-modal__content"></div>
+          <div class="cp-modal__footer cp-modal__footer--all-plans">
+            <div class="cp-modal__notice">
+              <svg class="cp-modal__notice-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <p class="cp-modal__notice-text">이 계획은 익명으로 공유되며, 작성자의 개인정보는 포함되지 않습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(c) AllPlansModal.tsx · bg-black/50 + p-4, z-40 · rounded-xl shadow-2xl max-w-4xl max-h-[85vh] · gray-50 header and footer bands, bare border = foreground hairline · X p-2 · content left empty</p>
+  </div>
+
+</div>
+
+<div class="row">
+
+  <!-- (d1) admin/courses/page.tsx form modal -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--staged">
+        <div class="cp-modal__panel cp-modal__panel--admin-form cp-modal__panel--scroll">
+          <div class="cp-modal__header cp-modal__header--admin-courses">
+            <h2 class="cp-modal__title cp-modal__title--bold">과목 추가</h2>
+            <button type="button" class="cp-modal__close cp-modal__close--admin">
+              <svg class="cp-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+            </button>
+          </div>
+          <form class="cp-modal__body--admin-courses">
+            <div class="cp-modal__actions cp-modal__actions--admin-courses">
+              <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-modal">취소</button>
+              <button type="button" class="cp-admin__btn cp-modal__submit--admin">추가</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(d) admin/courses/page.tsx · bg-black/50, no gutter · rounded-2xl p-6 shadow-xl max-w-lg · h2 text-lg bold, X p-1 slate-400 · justify-end: 취소 slate-200, 추가 cyan (departments form: no X, ghost 취소)</p>
+  </div>
+
+  <!-- (d2) admin/departments/page.tsx delete confirm -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--staged">
+        <div class="cp-modal__panel cp-modal__panel--admin-confirm">
+          <h2 class="cp-modal__title cp-modal__title--bold">학과 삭제</h2>
+          <p class="cp-modal__text">정말로 이 학과를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+          <div class="cp-modal__actions cp-modal__actions--admin-confirm">
+            <button type="button" class="cp-admin__btn cp-admin__btn--cancel-departments">취소</button>
+            <button type="button" class="cp-admin__btn cp-admin__btn--danger-departments">삭제</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(d) admin/departments/page.tsx confirm · bg-black/50, no gutter · rounded-2xl p-6 shadow-xl max-w-sm · h2 text-lg bold, body text-sm slate-600 · mt-4 justify-end: ghost 취소, red-600 삭제</p>
+  </div>
+
+  <!-- (e) calendar/page.tsx event form -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--gutter cp-modal--opaque cp-modal--staged">
+        <div class="cp-card cp-modal__panel cp-modal__panel--calendar-event cp-modal__panel--scroll">
+          <div class="cp-card__content cp-modal__card-body">
+            <div class="cp-modal__header cp-modal__header--calendar">
+              <h3 class="cp-modal__title cp-modal__title--navy">일정 추가</h3>
+              <button type="button" class="cp-modal__close cp-modal__close--calendar">
+                <svg class="cp-modal__close-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <form class="cp-modal__body--calendar">
+              <div class="cp-modal__actions cp-modal__actions--calendar">
+                <button type="button" class="cp-calendar__cancel">취소</button>
+                <button type="button" class="cp-calendar__submit">추가</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(e) calendar/page.tsx · bg-black bg-opacity-50 — bg-opacity-* no longer exists in Tailwind v4 (v4: bg-black/50), so the overlay is opaque black · Card max-w-lg, CardContent p-6, h3 text-xl navy · 취소 outline, 추가 navy</p>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,712 @@
+/* AppHeader (pattern) — hand-translated from src/app/(dashboard)/layout.tsx: the dashboard shell root (bg-gray-50 bg-grid), the 4px gradient accent bar, the 64px white header (brand, desktop nav, 더보기 dropdown, notification bell + panel, user menu, guest Buttons, mobile toggle + menu) and the amber guest banner. Guest Buttons reuse .cp-button from Button.css. */
+
+/* Block = the shell root <div class="bg-gray-50 bg-grid"> that wraps accent bar, header, banner and <main>.
+   It inherits the body context from globals.css (Arial 16px/1.5, foreground) and the .bg-grid utility:
+   two 1px hairlines at rgba(0,0,0,.03) on a 40px cell (the cell size is a layout constant, not a token). */
+.cp-app-header {
+  box-sizing: border-box;
+  display: block;
+  background-color: var(--gray-50, #f9fafb);
+  background-image:
+    linear-gradient(var(--black-a3, #00000008) 1px, var(--transparent, #00000000) 1px),
+    linear-gradient(90deg, var(--black-a3, #00000008) 1px, var(--transparent, #00000000) 1px);
+  background-size: 40px 40px;
+  font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--foreground, #171717);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+/* Parts also render on their own in the preview strips, so any element carrying a block class gets the preflight box-sizing too. */
+.cp-app-header *,
+.cp-app-header *::before,
+.cp-app-header *::after,
+[class*="cp-app-header__"],
+[class*="cp-app-header__"] *,
+[class*="cp-app-header__"] *::before,
+[class*="cp-app-header__"] *::after {
+  box-sizing: border-box;
+}
+
+/* Accent bar: h-1 bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] */
+.cp-app-header__accent {
+  height: var(--space-1, 4px);
+  background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+}
+
+/* Header: <header class="bg-white shadow-sm border-b">. Bare border-b under v4 is 1px currentColor and
+   nothing above the header sets a text color, so the hairline is the body foreground (#171717), not gray-200. */
+.cp-app-header__bar {
+  display: block;
+  background-color: var(--white, #ffffff);
+  box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  border-bottom: 1px solid var(--foreground, #171717);
+}
+
+/* container mx-auto px-4 — width 100% plus a max-width equal to each viewport breakpoint
+   (sm 640, md 768, lg 1024, xl 1280, 2xl 1536); the breakpoint widths are layout constants, not tokens. */
+.cp-app-header__container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--space-4, 16px);
+  padding-right: var(--space-4, 16px);
+}
+@media (min-width: 640px)  { .cp-app-header__container { max-width: 640px; } }
+@media (min-width: 768px)  { .cp-app-header__container { max-width: 768px; } }
+@media (min-width: 1024px) { .cp-app-header__container { max-width: 1024px; } }
+@media (min-width: 1280px) { .cp-app-header__container { max-width: 1280px; } }
+@media (min-width: 1536px) { .cp-app-header__container { max-width: 1536px; } }
+
+/* Row: flex h-16 items-center justify-between gap-2 */
+.cp-app-header__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+  height: var(--space-16, 64px);
+}
+
+/* Left cluster: flex items-center gap-3 md:gap-8 min-w-0 flex-1 (basis 0, so it fills what the right cluster leaves) */
+.cp-app-header__left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  min-width: 0;
+  flex: 1 1 0%;
+}
+@media (min-width: 768px) {
+  .cp-app-header__left { gap: var(--space-8, 32px); }
+}
+
+/* Brand link: <Link href="/planner" class="flex items-center gap-2 min-w-0 shrink"> — it is the only part of the
+   row allowed to shrink, so the wordmark truncates first when the nav and the right cluster need the room. */
+.cp-app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  min-width: 0;
+  flex-shrink: 1;
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/* Logo: next/image src=/yu-logo.svg width=60 height=24, style width:auto, class h-5 md:h-6 shrink-0;
+   the 297.4×57.3 viewBox makes it about 104px wide at 20px and 125px at 24px. color:transparent hides alt text while loading. */
+.cp-app-header__logo {
+  display: block;
+  height: var(--space-5, 20px);
+  width: auto;
+  max-width: 100%;
+  flex-shrink: 0;
+  color: transparent;
+}
+@media (min-width: 768px) {
+  .cp-app-header__logo { height: var(--space-6, 24px); }
+}
+
+/* Wordmark: text-sm sm:text-base md:text-xl font-bold text-gradient truncate.
+   .text-gradient (globals.css) is plain CSS: linear-gradient(135deg, …) with no oklab interpolation. */
+.cp-app-header__wordmark {
+  font: 700 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: linear-gradient(135deg, var(--yu-navy, #153974), var(--yu-blue, #3069b3), var(--yu-cyan, #00aaca));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+@media (min-width: 640px) {
+  .cp-app-header__wordmark { font-size: 16px; line-height: 24px; }
+}
+@media (min-width: 768px) {
+  .cp-app-header__wordmark { font-size: 20px; line-height: 28px; }
+}
+
+/* Desktop nav: hidden md:flex gap-1 flex-shrink-0 */
+.cp-app-header__nav {
+  display: none;
+  gap: var(--space-1, 4px);
+  flex-shrink: 0;
+}
+@media (min-width: 768px) {
+  .cp-app-header__nav { display: flex; }
+}
+
+/* Nav pill: px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap
+   inactive: text-gray-600 hover:bg-gray-50 hover:text-gray-900 · current route: bg-[#153974]/10 text-[#153974] font-semibold
+   (the current pill carries no hover classes, so hovering it changes nothing). Button resets kept for the 더보기 <button>. */
+.cp-app-header__nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  border: 0 solid;
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--transparent, #00000000);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  white-space: nowrap;
+  color: var(--gray-600, #4a5565);
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__nav-link:hover,
+.cp-app-header__nav-link.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+  color: var(--gray-900, #101828);
+}
+.cp-app-header__nav-link.is-current {
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+  font-weight: 600;
+}
+/* 관리자 (rendered when !isGuest && isAdmin): adds `relative`; current = bg-purple-50 text-purple-600, weight stays 500 */
+.cp-app-header__nav-link--admin {
+  position: relative;
+}
+.cp-app-header__nav-link--admin.is-current {
+  background-color: var(--purple-50, #faf5ff);
+  color: var(--purple-600, #9810fa);
+  font-weight: 500;
+}
+/* 더보기 <button aria-haspopup="true">: same pill with `relative` and gap-1.5; current when any secondary route matches */
+.cp-app-header__nav-link--more {
+  position: relative;
+  gap: var(--space-1-5, 6px);
+}
+
+/* Lucide icons in pills and menu items: w-4 h-4 (lucide-react sets a 2px currentColor stroke) */
+.cp-app-header__nav-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  flex-shrink: 0;
+}
+
+/* Chevrons: w-3.5 h-3.5 transition-transform, rotate-180 while the menu is open */
+.cp-app-header__chevron {
+  display: block;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+  transition: transform var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__nav-link.is-open > .cp-app-header__chevron,
+.cp-app-header__user.is-open > .cp-app-header__chevron {
+  transform: rotate(180deg);
+}
+
+/* Each menu trigger sits in <div class="relative"> that anchors its dropdown and receives the outside-click ref */
+.cp-app-header__menu-wrap {
+  position: relative;
+}
+
+/* Dropdown panel: absolute right-0 mt-1 bg-white rounded-lg shadow-lg border py-1 z-50 (role="menu").
+   Bare border = currentColor = the inherited foreground. Widths: w-44 (더보기), sm:w-80 (알림), w-48 (user). */
+.cp-app-header__dropdown {
+  position: absolute;
+  right: 0;
+  margin-top: var(--space-1, 4px);
+  padding: var(--space-1, 4px) 0;
+  background-color: var(--white, #ffffff);
+  border: 1px solid var(--foreground, #171717);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1));
+  z-index: var(--z-modal, 50);
+}
+.cp-app-header__dropdown--more { width: 176px; } /* w-44 — no size token */
+.cp-app-header__dropdown--user { width: 192px; } /* w-48 — no size token */
+/* 알림: fixed left-2 right-2 below sm (full width, static top), sm:absolute sm:left-auto sm:right-0 sm:w-80 */
+.cp-app-header__dropdown--notifications {
+  position: fixed;
+  left: var(--space-2, 8px);
+  right: var(--space-2, 8px);
+}
+@media (min-width: 640px) {
+  .cp-app-header__dropdown--notifications {
+    position: absolute;
+    left: auto;
+    right: 0;
+    width: var(--container-xs, 320px);
+  }
+}
+
+/* Menu item (<Link role="menuitem"> or the 로그아웃 <button>): flex items-center gap-2 px-4 py-2.5 text-sm transition-colors
+   inactive text-gray-600 hover:bg-gray-50 (text keeps gray-600) · current bg-[#153974]/10 text-[#153974] font-semibold */
+.cp-app-header__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  width: 100%;
+  margin: 0;
+  padding: var(--space-2-5, 10px) var(--space-4, 16px);
+  border: 0 solid;
+  background-color: var(--transparent, #00000000);
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  text-align: left;
+  color: var(--gray-600, #4a5565);
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__dropdown-item:hover,
+.cp-app-header__dropdown-item.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+.cp-app-header__dropdown-item.is-current {
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+  font-weight: 600;
+}
+
+/* Notification panel head: flex items-center justify-between px-4 py-2.5 border-b (currentColor = foreground) */
+.cp-app-header__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2-5, 10px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--foreground, #171717);
+}
+/* "알림": text-sm font-semibold text-gray-900 */
+.cp-app-header__panel-title {
+  font: 600 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+}
+/* 모두 읽음 (shown while unreadCount > 0): inline-flex items-center gap-1 text-xs text-[#00AACA] hover:text-[#153974] font-medium transition-colors cursor-pointer */
+.cp-app-header__mark-read {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1, 4px);
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  background-color: var(--transparent, #00000000);
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  color: var(--yu-cyan, #00aaca);
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__mark-read:hover,
+.cp-app-header__mark-read.is-hover {
+  color: var(--yu-navy, #153974);
+}
+.cp-app-header__mark-read-icon {
+  display: block;
+  width: var(--icon-sm, 14px);
+  height: var(--icon-sm, 14px);
+}
+/* List: max-h-80 overflow-y-auto (320px, the container-xs step) */
+.cp-app-header__panel-list {
+  max-height: var(--container-xs, 320px);
+  overflow-y: auto;
+}
+/* Empty state: px-4 py-8 text-center · Bell mx-auto h-8 w-8 text-gray-300 · p mt-2 text-sm text-gray-500 */
+.cp-app-header__empty {
+  padding: var(--space-8, 32px) var(--space-4, 16px);
+  text-align: center;
+}
+.cp-app-header__empty-icon {
+  display: block;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  margin: 0 auto;
+  color: var(--gray-300, #d1d5dc);
+}
+.cp-app-header__empty-text {
+  margin: var(--space-2, 8px) 0 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-500, #6a7282);
+}
+/* Notification row (<Link role="menuitem">): flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-b-0 */
+.cp-app-header__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--gray-50, #f9fafb);
+  color: inherit;
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__notice:last-child {
+  border-bottom-width: 0;
+}
+.cp-app-header__notice:hover,
+.cp-app-header__notice.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+/* Icon chip: <div class="flex-shrink-0 mt-0.5"><div class="w-8 h-8 rounded-full flex items-center justify-center bg-…"> */
+.cp-app-header__notice-icon-wrap {
+  flex-shrink: 0;
+  margin-top: var(--space-0-5, 2px);
+}
+.cp-app-header__notice-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--blue-100, #dbeafe);   /* any other type (feedback-reply): MessageSquareText in blue-600 */
+}
+.cp-app-header__notice-chip--patch-note   { background-color: var(--purple-100, #f3e8ff); } /* Megaphone in purple-600 */
+.cp-app-header__notice-chip--feedback-new { background-color: var(--yellow-100, #fef9c2); } /* MessageSquareText in yellow-600 */
+.cp-app-header__notice-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  color: var(--blue-600, #155dfc);
+}
+.cp-app-header__notice-chip--patch-note   .cp-app-header__notice-icon { color: var(--purple-600, #9810fa); }
+.cp-app-header__notice-chip--feedback-new .cp-app-header__notice-icon { color: var(--yellow-600, #d08700); }
+/* Row body: flex-1 min-w-0 · message p text-sm text-gray-700 · time p text-xs text-gray-400 mt-0.5 */
+.cp-app-header__notice-body {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+.cp-app-header__notice-text {
+  margin: 0;
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-700, #364153);
+}
+.cp-app-header__notice-time {
+  margin: var(--space-0-5, 2px) 0 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-400, #99a1af);
+}
+
+/* Right cluster: flex items-center gap-2 sm:gap-3 flex-shrink-0 */
+.cp-app-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  flex-shrink: 0;
+}
+@media (min-width: 640px) {
+  .cp-app-header__right { gap: var(--space-3, 12px); }
+}
+
+/* Bell <button title="알림" aria-haspopup="true">: relative p-1.5 rounded-full hover:bg-gray-100 transition-colors cursor-pointer.
+   It has no display class, so it stays inline-level: its wrap becomes a 33px line box and the 32px bell sits half a pixel above the row's centre. */
+.cp-app-header__bell {
+  position: relative;
+  display: inline-block;
+  margin: 0;
+  padding: var(--space-1-5, 6px);
+  border: 0 solid;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--transparent, #00000000);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__bell:hover,
+.cp-app-header__bell.is-hover {
+  background-color: var(--gray-100, #f3f4f6);
+}
+/* Bell icon: w-5 h-5, text-gray-400 at zero unread, text-gray-700 once unreadCount > 0 */
+.cp-app-header__bell-icon {
+  display: block;
+  width: var(--icon-lg, 20px);
+  height: var(--icon-lg, 20px);
+  color: var(--gray-400, #99a1af);
+}
+.cp-app-header__bell-icon--unread {
+  color: var(--gray-700, #364153);
+}
+/* Unread badge (unreadCount > 0, text "99+" past 99): absolute -top-1 -right-1 flex items-center justify-center
+   min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 · student bg-red-500 text-white · admin bg-yellow-400 text-yellow-900 */
+.cp-app-header__badge {
+  position: absolute;
+  top: calc(-1 * var(--space-1, 4px));
+  right: calc(-1 * var(--space-1, 4px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;   /* min-w-[18px], h-[18px] — no size token */
+  height: 18px;
+  padding: 0 var(--space-1, 4px);
+  border-radius: var(--radius-full, 9999px);
+  font: 700 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
+  background-color: var(--red-500, #fb2c36);
+  color: var(--white, #ffffff);
+}
+.cp-app-header__badge--admin {
+  background-color: var(--yellow-400, #fdc700);
+  color: var(--yellow-900, #733e0a);
+}
+
+/* User <button aria-haspopup="true">: flex items-center gap-2 rounded-full hover:bg-gray-50 px-1 py-1 transition-colors (no pointer cursor) */
+.cp-app-header__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: var(--space-1, 4px);
+  border: 0 solid;
+  border-radius: var(--radius-full, 9999px);
+  background-color: var(--transparent, #00000000);
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__user:hover,
+.cp-app-header__user.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+}
+/* Avatar: w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center text-white text-xs font-medium — holds user.name.charAt(0) */
+.cp-app-header__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-2xl, 32px);
+  height: var(--icon-2xl, 32px);
+  border-radius: var(--radius-full, 9999px);
+  background-image: linear-gradient(to bottom right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--white, #ffffff);
+}
+/* Name: hidden sm:inline text-sm text-gray-600 max-w-[100px] truncate (a flex item, so it is blockified and truncates) */
+.cp-app-header__user-name {
+  display: none;
+  max-width: 100px;   /* max-w-[100px] — no size token */
+  font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* User chevron: hidden sm:block w-3.5 h-3.5 text-gray-400 transition-transform (+ rotate-180 while open, via .is-open) */
+.cp-app-header__user-chevron {
+  display: none;
+  color: var(--gray-400, #99a1af);
+}
+@media (min-width: 640px) {
+  .cp-app-header__user-name { display: inline; }
+  .cp-app-header__user-chevron { display: block; }
+}
+/* User menu head: px-4 py-2 border-b · p text-sm font-medium text-gray-900 truncate */
+.cp-app-header__user-head {
+  padding: var(--space-2, 8px) var(--space-4, 16px);
+  border-bottom: 1px solid var(--foreground, #171717);
+}
+.cp-app-header__user-head-name {
+  margin: 0;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-900, #101828);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Guest / fallback Buttons: <Button variant="ghost"|"default" size="sm" className="text-xs sm:text-sm whitespace-nowrap">
+   — the consumer className overrides the Button's 14px label below sm. The 회원가입 Button sits inside a bare <Link href="/register">. */
+.cp-app-header__guest-button.cp-button {
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+@media (min-width: 640px) {
+  .cp-app-header__guest-button.cp-button { font-size: 14px; line-height: 20px; }
+}
+.cp-app-header__register-link {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/* Mobile toggle <button aria-label="Toggle menu">: md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 (Menu / X at w-6 h-6, no transition) */
+.cp-app-header__mobile-toggle {
+  display: inline-block;
+  margin: 0;
+  padding: var(--space-2, 8px);
+  border: 0 solid;
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--transparent, #00000000);
+  color: var(--gray-600, #4a5565);
+  font: inherit;
+}
+.cp-app-header__mobile-toggle:hover,
+.cp-app-header__mobile-toggle.is-hover {
+  background-color: var(--gray-100, #f3f4f6);
+}
+.cp-app-header__mobile-toggle-icon {
+  display: block;
+  width: var(--icon-xl, 24px);
+  height: var(--icon-xl, 24px);
+}
+@media (min-width: 768px) {
+  .cp-app-header__mobile-toggle { display: none; }
+}
+
+/* Mobile menu (mobileMenuOpen, below md): <div class="md:hidden border-t animate-fade-in-down"> with
+   <nav class="container mx-auto px-4 py-2 flex flex-col gap-1"> — pair the nav with .cp-app-header__container. */
+.cp-app-header__mobile-menu {
+  border-top: 1px solid var(--foreground, #171717);
+  animation: cp-app-header-fade-in-down var(--duration-enter, 500ms) ease-out both;
+}
+@media (min-width: 768px) {
+  .cp-app-header__mobile-menu { display: none; }
+}
+.cp-app-header__mobile-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  padding-top: var(--space-2, 8px);
+  padding-bottom: var(--space-2, 8px);
+}
+/* Mobile item: px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center gap-2 (same current / hover colors as the desktop pill;
+   --admin current = purple). The 로그아웃 <button> adds w-full text-left and has no transition. */
+.cp-app-header__mobile-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  margin: 0;
+  padding: var(--space-3, 12px);
+  border: 0 solid;
+  border-radius: var(--radius-md, 6px);
+  background-color: var(--transparent, #00000000);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  color: var(--gray-600, #4a5565);
+  text-decoration: none;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-duration: var(--duration-fast, 150ms);
+  transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+.cp-app-header__mobile-item:hover,
+.cp-app-header__mobile-item.is-hover {
+  background-color: var(--gray-50, #f9fafb);
+  color: var(--gray-900, #101828);
+}
+.cp-app-header__mobile-item.is-current {
+  background-color: var(--yu-navy-a10, #1539741a);
+  color: var(--yu-navy, #153974);
+  font-weight: 600;
+}
+.cp-app-header__mobile-item--admin.is-current {
+  background-color: var(--purple-50, #faf5ff);
+  color: var(--purple-600, #9810fa);
+  font-weight: 500;
+}
+.cp-app-header__mobile-item--button {
+  width: 100%;
+  text-align: left;
+  transition: none;
+}
+/* 고객 지원 accordion <button aria-expanded>: w-full px-3 py-3 rounded-md text-sm font-medium transition-colors flex items-center justify-between;
+   its label is <span class="flex items-center gap-2"> and its ChevronDown is w-4 h-4 (16px, not 14) */
+.cp-app-header__mobile-support {
+  width: 100%;
+  justify-content: space-between;
+  gap: 0;
+}
+.cp-app-header__mobile-support-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+.cp-app-header__mobile-support-chevron {
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+}
+/* Separator: <div class="border-t my-1"> (currentColor = foreground) */
+.cp-app-header__mobile-sep {
+  margin: var(--space-1, 4px) 0;
+  border-top: 1px solid var(--foreground, #171717);
+}
+/* Support sub-list (supportMenuOpen): ml-4 flex flex-col gap-1; items px-3 py-2.5 rounded-md text-sm (weight 400) text-gray-500 hover:bg-gray-50 hover:text-gray-900 */
+.cp-app-header__mobile-sub {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1, 4px);
+  margin-left: var(--space-4, 16px);
+}
+.cp-app-header__mobile-subitem {
+  padding: var(--space-2-5, 10px) var(--space-3, 12px);
+  font-weight: 400;
+  color: var(--gray-500, #6a7282);
+}
+.cp-app-header__mobile-subitem.is-current {
+  font-weight: 600;
+}
+@keyframes cp-app-header-fade-in-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cp-app-header__mobile-menu { animation: none; opacity: 1; transform: none; }
+}
+
+/* Guest banner (isGuest), directly under the header: <div class="bg-amber-50 border-b border-amber-200">
+   with <div class="container mx-auto px-4 py-2 flex items-center justify-between gap-2 flex-wrap"> — pair the inner with .cp-app-header__container */
+.cp-app-header__guest-banner {
+  background-color: var(--amber-50, #fffbeb);
+  border-bottom: 1px solid var(--amber-200, #fee685);
+}
+.cp-app-header__guest-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+  padding-top: var(--space-2, 8px);
+  padding-bottom: var(--space-2, 8px);
+}
+/* Message group: flex items-center gap-2 · AlertTriangle w-4 h-4 text-amber-800 · p text-xs sm:text-sm text-amber-800 */
+.cp-app-header__guest-message {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+.cp-app-header__guest-icon {
+  display: block;
+  width: var(--icon-md, 16px);
+  height: var(--icon-md, 16px);
+  flex-shrink: 0;
+  color: var(--amber-800, #973c00);
+}
+.cp-app-header__guest-text {
+  margin: 0;
+  font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--amber-800, #973c00);
+}
+@media (min-width: 640px) {
+  .cp-app-header__guest-text { font-size: 14px; line-height: 20px; }
+}
+/* Actions: flex items-center gap-3 · 구글로 로그인 <button> and 회원가입하기 <Link>: text-sm font-medium text-amber-900 hover:text-amber-700 underline (no transition) */
+.cp-app-header__guest-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+.cp-app-header__guest-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0 solid;
+  background-color: var(--transparent, #00000000);
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  letter-spacing: inherit;
+  color: var(--amber-900, #7b3306);
+  text-decoration-line: underline;
+}
+.cp-app-header__guest-link:hover,
+.cp-app-header__guest-link.is-hover {
+  color: var(--amber-700, #bb4d00);
+}
