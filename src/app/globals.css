@@ -18,8 +18,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* NOTE: scroll-behavior: smooth removed from html to prevent conflict with
-   @hello-pangea/dnd's internal scroll tracking during drag operations.
+/* NOTE: scroll-behavior: smooth removed from html so the browser does not
+   re-animate programmatic scrolls during drag operations (dnd-kit's auto-scroll
+   and the frame-by-frame smoothScrollTo() in useAutoScrollOnDrag).
    Use the smoothScrollTo() utility for explicit smooth scrolls instead. */
 
 /* ============================================
@@ -223,26 +224,12 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.glass-strong {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
 /* ============================================
    TEXT GRADIENTS
    ============================================ */
 
 .text-gradient {
   background: linear-gradient(135deg, #153974, #3069B3, #00AACA);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.text-gradient-warm {
-  background: linear-gradient(135deg, #f59e0b, #ef4444, #ec4899);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -271,19 +258,6 @@ body {
     linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
-}
-
-/* ============================================
-   CARD HOVER ENHANCEMENT
-   ============================================ */
-
-.card-hover {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.card-hover:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 /* ============================================
@@ -345,27 +319,6 @@ body {
 }
 
 /* ============================================
-   GRADIENT BORDER EFFECT
-   ============================================ */
-
-.gradient-border {
-  position: relative;
-}
-
-.gradient-border::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  border-radius: inherit;
-  background: linear-gradient(135deg, #153974, #3069B3, #00AACA);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-/* ============================================
    GLOW SHADOW
    ============================================ */
 
@@ -374,24 +327,8 @@ body {
 }
 
 /* ============================================
-   SECTION DECORATIVE LINE
-   ============================================ */
-
-.section-line {
-  width: 40px;
-  height: 3px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #153974, #00AACA);
-  margin: 0 auto;
-}
-
-/* ============================================
    CLIP PATH UTILITIES
    ============================================ */
-
-.clip-diagonal-top {
-  clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
-}
 
 .clip-diagonal-both {
   clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%);
@@ -463,25 +400,8 @@ body {
 }
 
 /* ============================================
-   STAT SEPARATOR
+   TYPING HEADLINE GRADIENT (for dark backgrounds)
    ============================================ */
-
-.stat-separator {
-  width: 1px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* ============================================
-   TEXT GRADIENT LIGHT (for dark backgrounds)
-   ============================================ */
-
-.text-gradient-light {
-  background: linear-gradient(135deg, #00AACA, #4dd9f0, #80e8ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
 
 .text-gradient-typing {
   background: linear-gradient(90deg, #4dd9f0, #60a5fa, #a78bfa, #4dd9f0);
@@ -526,10 +446,6 @@ body {
   .animate-on-scroll {
     opacity: 1 !important;
     transform: none !important;
-    transition: none !important;
-  }
-
-  .deco-bar {
     transition: none !important;
   }
 }
