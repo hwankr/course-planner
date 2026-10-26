@@ -24,23 +24,22 @@
   min-height: 0;
   flex: 1 1 0%;
 }
-/* preview only: the stage gives the frame its height instead of the viewport */
-.cp-auth-layout--staged {
-  min-height: 0;
-}
 
 /* ------------------------------------------------------------------------------------------------
    LEFT — brand panel: "hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-[#003E7E] via-[#153974]
    to-[#3069B3] animate-gradient relative overflow-hidden". The panel is a flex row with no justify-content,
    so the hero wrap sits at its left edge and stretches to full height.
-   .animate-gradient (background-size 200% 200% + gradientShift 8s) is NOT reproduced: the static panel shows
-   the whole three-stop ramp at once; in the app the ramp is twice the panel width and pans. */
+   .animate-gradient = background-size 200% 200% (static, kept) + gradientShift 8s (only the panning is NOT
+   reproduced). The ramp is twice the panel width and rests at the 0% keyframe (background-position 0% 50%),
+   so the panel shows its left half, yu-navy-hover → yu-navy; yu-blue is off-panel at rest. */
 .cp-auth-layout__brand {
   position: relative;
   display: none;
   width: 50%;
   overflow: hidden;
   background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974), var(--yu-blue, #3069b3));
+  background-size: 200% 200%;
+  background-position: 0% 50%;
 }
 @media (min-width: 768px) {
   .cp-auth-layout__brand { display: flex; }
@@ -56,11 +55,11 @@
   inset: 0;
   opacity: 0.3;
   background-image:
-    radial-gradient(at 40% 20%, var(--yu-navy-a15, #15397426) 0px, var(--transparent, transparent) 50%),
-    radial-gradient(at 80% 0%, var(--yu-blue-a12, #3069b31f) 0px, var(--transparent, transparent) 50%),
-    radial-gradient(at 0% 50%, var(--yu-cyan-a10, #00aaca1a) 0px, var(--transparent, transparent) 50%),
-    radial-gradient(at 80% 50%, var(--yu-blue-a8, #3069b314) 0px, var(--transparent, transparent) 50%),
-    radial-gradient(at 0% 100%, var(--yu-cyan-a6, #00aaca0f) 0px, var(--transparent, transparent) 50%);
+    radial-gradient(at 40% 20%, var(--yu-navy-a15, #15397426) 0px, var(--transparent, #00000000) 50%),
+    radial-gradient(at 80% 0%, var(--yu-blue-a12, #3069b31f) 0px, var(--transparent, #00000000) 50%),
+    radial-gradient(at 0% 50%, var(--yu-cyan-a10, #00aaca1a) 0px, var(--transparent, #00000000) 50%),
+    radial-gradient(at 80% 50%, var(--yu-blue-a8, #3069b314) 0px, var(--transparent, #00000000) 50%),
+    radial-gradient(at 0% 100%, var(--yu-cyan-a6, #00aaca0f) 0px, var(--transparent, #00000000) 50%);
 }
 
 /* Floating discs: "absolute … bg-white/20 rounded-full blur-xl animate-float". blur-xl = blur(24px).
@@ -115,9 +114,10 @@
 @media (min-width: 1024px) {
   .cp-auth-layout__headline { font-size: 48px; }
 }
-/* "space-y-6" */
-.cp-auth-layout__features > * + * {
-  margin-top: var(--space-6, 24px);
+/* <div className="space-y-6"> around the three feature rows, Tailwind v4 semantics: 24px margin-bottom on every row
+   except the DOM-last. The rows (flex items-start gap-4) carry no block margin of their own; the list is a plain block. */
+.cp-auth-layout__features > :not(:last-child) {
+  margin-bottom: var(--space-6, 24px);
 }
 /* feature row: "flex items-start gap-4" */
 .cp-auth-layout__feature {
@@ -138,7 +138,8 @@
   margin: 0 0 var(--space-1, 4px);
   font: 600 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
 }
-/* <p className="text-blue-100"> — body in blue-100 (4.5:1 on the yu-blue end of the ramp) */
+/* <p className="text-blue-100"> — body in blue-100: 8.7:1–9.2:1 on the resting yu-navy-hover → yu-navy half;
+   4.5:1 on yu-blue, which pans on-panel only mid-animation */
 .cp-auth-layout__feature-desc {
   margin: 0;
   font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
@@ -207,12 +208,15 @@
   color: var(--gray-500, #6a7282);
 }
 
-/* <form className="space-y-4"> */
+/* <form onSubmit={handleSubmit} className="space-y-4">, Tailwind v4 semantics: 16px margin-bottom on every element
+   child except the DOM-last, which is always the submit Button. The error alert, rendered only while `error` is set,
+   is then the first child and carries the 16px itself. The alert and the field <div>s have no block margin of their
+   own (the register hint's mt-1 sits inside its field), and the Button's `margin: 0` is never in play. */
 .cp-auth-layout__form {
   margin: 0;
 }
-.cp-auth-layout__form > * + * {
-  margin-top: var(--space-4, 16px);
+.cp-auth-layout__form > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
 /* Error alert, rendered only while `error` is set:
    "p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm" (red-600 on red-50 is 4.4:1 — kept) */
@@ -306,13 +310,17 @@
   letter-spacing: inherit;
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-500, #6a7282);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-auth-layout__guest:hover,
 .cp-auth-layout__guest.is-hover {
   color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-auth-layout__guest:hover {
+    color: var(--yu-navy, #153974);
+  }
 }
 
 /* In-app browser notice (replaces the Google button when inAppInfo.isInApp):
@@ -354,13 +362,17 @@
   letter-spacing: inherit;
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--amber-900, #7b3306);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-auth-layout__inapp-button:hover,
 .cp-auth-layout__inapp-button.is-hover {
   background-color: var(--amber-200, #fee685);
+}
+@media (hover: hover) {
+  .cp-auth-layout__inapp-button:hover {
+    background-color: var(--amber-200, #fee685);
+  }
 }
 
 /* Footer line: <p className="mt-6 text-center text-sm text-gray-600"> with
@@ -376,7 +388,11 @@
   font-weight: 500;
   text-decoration: none;
 }
-.cp-auth-layout__footer-link:hover,
 .cp-auth-layout__footer-link.is-hover {
   text-decoration-line: underline;
+}
+@media (hover: hover) {
+  .cp-auth-layout__footer-link:hover {
+    text-decoration-line: underline;
+  }
 }

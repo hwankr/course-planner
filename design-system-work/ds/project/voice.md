@@ -1,6 +1,6 @@
 # Voice and copy
 
-The product speaks Korean, politely and briefly, to one student at a time. It names itself **YU 수강 플래너** (short name **YU플래너** in the PWA manifest), never "the app"; the university is always **영남대학교** in Korean (the logo's alt text), "YU" only in the product name, the slogan "YU the Future" and the footer. The footer also states what the product is not: "이 서비스는 영남대학교 공식 서비스가 아닙니다".
+The product speaks Korean, politely and briefly, to one student at a time. It names itself **YU 수강 플래너** (short name **YU플래너** in the PWA manifest), never "the app" except in one admin card description (앱 변경사항과 업데이트 내역을 관리합니다.); the university is always **영남대학교** in Korean (the logo's alt text), "YU" only in the product name, the slogan "YU the Future" and the footer. The footer also states what the product is not: "이 서비스는 영남대학교 공식 서비스가 아닙니다".
 
 ## Three registers
 
@@ -12,34 +12,34 @@ The product speaks Korean, politely and briefly, to one student at a time. It na
 
 Marketing headlines take a fourth, literary form — the bare -하다 infinitive with a full stop — only in the hero typewriter line: 스마트하게 설계하다. / 직관적으로 관리하다. / 아름답게 기록하다. Do not use it in the product.
 
-Never address the reader as 당신; personalization is 나만의 ("나만의 졸업 로드맵", "나만의 과목"). The brand motif is **한눈에** ("at a glance"), used four times on the landing page; keep it for benefit statements, not for UI labels.
+Never address the reader as 당신; personalization is 나만의 ("나만의 졸업 로드맵", "나만의 과목"). The brand motif is **한눈에** ("at a glance"), used three times on the landing page; keep it for benefit statements, not for UI labels.
 
 ## Punctuation
 
 - A full stop ends complete sentences in body copy, success and error messages (일시적인 오류가 발생했습니다. 페이지를 새로고침하거나 잠시 후 다시 시도해주세요.). Headings, labels, chips, footnotes, validation messages and short hints carry none (1 이상의 학점을 입력하세요 · 가입 없이 바로 체험 가능 · 요건 충족). The source is not perfectly consistent here; when in doubt, full sentence → period, fragment → none.
-- One exclamation mark exists in the whole product: 복사됨! after copying the contact e-mail. Do not add others.
+- Two exclamation marks exist in the whole product: 복사됨! after copying the contact e-mail, and the statistics guest banner's 회원가입하고 다른 학생들도 통계를 볼 수 있도록 도와주세요!. Do not add others.
 - One question mark on a heading: 왜 YU 수강 플래너인가요? Confirmations end in -시겠습니까?; help prompts in -모르시나요?
-- The middle dot ` · ` separates summary items (12학점 · 4과목, 전핵3 · 전선6), never a slash or comma. `/` means "of" in counts (21/63학점). `→` introduces a projection (→ 계획 반영 시 31%); `↔` a toggle (예정 ↔ 이수); `✓` precedes a satisfied count; `└` prefixes a sub-row; `+` is both the add glyph and the overflow count (+2개 더 보기).
+- The middle dot ` · ` separates summary items (12학점 · 4과목, 전핵3 · 전선6), never a slash or comma (only the admin pages slip: 핵심 {n} / 전공 {n} on requirements, {n}과목 / {n}학점 on users). `/` means "of" in counts (21/63학점). `→` introduces a projection (→ 계획 반영 시 31%); `↔` a toggle (예정 ↔ 이수); `✓` precedes a satisfied count; `└` prefixes a sub-row; `+` is both the add glyph and the overflow count (+2개 더 보기).
 - Loading states use three ASCII periods with no space: 로딩중... · 추가 중... · 생성 중... · 다시 시도 중... · 로딩 중... (the spacing before 중 varies in the source; prefer 로딩 중... with a space in new copy).
 - Placeholders show an example with the 예: prefix (예: 데이터베이스 · 예: 130) or a plain imperative (과목명 또는 코드 검색... · 학과를 검색하세요 · 선택하세요).
 - Typographic single quotes mark a status word inside prose: 계획에 ‘이수’ 과목이 있습니다. An em dash separates an option label from its gloss: 선택 안 함 — 계획의 이수 과목을 모두 합산.
 
 ## Numbers, units and formats
 
-Numbers are Arabic and glued to their unit with no space: 3학점 · 1학년 1학기 · 2026년 · 45개 · 6과목 · 13% · 2025년 기준. Semesters are {year}학년 {1학기|2학기} (spring → 1학기, fall → 2학기); grades 1학년 … 6학년; a plan label is 계획 A, 계획 B. Percentages are integers. Money never appears. Dates in lists read 방금 전 for "just now".
+Numbers are Arabic and glued to their unit with no space: 3학점 · 1학년 1학기 · 2026년 · 45개 · 6과목 · 13% · 2025년 기준. Semesters are {year}학년 {1학기|2학기} (spring → 1학기, fall → 2학기); grades 1학년 … 5학년; a plan label is 계획 A, 계획 B. Percentages are integers, except the one-decimal course shares on the statistics page. Money never appears. Dates in lists read 방금 전 for "just now".
 
 ## Vocabulary
 
 - Requirement categories: 전공핵심 · 전공필수 · 전공선택 · 교양필수 · 교양선택 · 교직 · 자유선택, abbreviated 전핵 · 전필 · 전선 · 교필 · 교선 · 교직 · 자선 only inside chips and summaries.
 - Course status: 계획 / 수강중 / 완료 / 재수강 on cards, 예정 / 수강중 / 이수 / 재수강 in compact pills and the requirements legend (the failed state is named by its consequence, 재수강). 미계획 is the unplanned remainder.
-- Major tracks: 단일전공 · 복수전공 · 부전공; 주전공 for the primary one when another exists; 기이수 for credits already earned per the transcript; 졸업 요건 (with a space in titles — the error string 졸업요건 정보를… lacks it; prefer the spaced form).
-- Loanwords are written in Hangul and used freely: 드래그앤드롭 (no spaces), 드래그, 리스트, 로드맵, 커스텀, 포커스, 플래너, 카탈로그, 프로필, 피드백, 체험하기.
-- English appears only as fixed strings: YU · YU the Future · SERVICE · HOW IT WORKS (eyebrows) · Focus (the focused-column badge) · Service / Support / Legal (footer headings) · Contact : · All rights reserved · student (a role value). Do not introduce more.
+- Major tracks: 단일전공 · 복수전공 · 부전공; 주전공 for the primary one when another exists; 기이수 for credits already earned per the transcript; 졸업 요건 (with a space in titles, metadata, onboarding and the landing page; help, profile, the admin requirements page, the catalog and the API error messages write 졸업요건 — prefer the spaced form).
+- Loanwords are written in Hangul and used freely: 드래그앤드롭 (no spaces), 드래그, 리스트, 로드맵, 커스텀, 포커스, 플래너, 카탈로그, 프로필, 피드백, 카테고리.
+- English appears only as fixed strings: YU · YU the Future · SERVICE · HOW IT WORKS (eyebrows) · Focus (the focused-column badge) · Service / Support / Legal (footer headings) · Contact (the feedback-page badge) · Contact : · STEP 1 / STEP 2 (graduation-guide badges) · PNG / PDF (export menu) · Generated by Course Planner (PDF footer) · All rights reserved · student / admin (role values) · Google and protocol names such as OAuth, JWT, HTTPS (login labels, legal prose). Do not introduce more.
 
 ## Patterns for new copy
 
 - Empty state: what to do next, in -세요 (졸업 요건을 설정하세요), optionally followed by one or two label buttons.
-- Error: what failed, in 합니다체 with a period, then a label button 다시 시도 — "{대상}을 불러오지 못했습니다." for reads, "{동작}에 실패했습니다." for writes, "잠시 후 다시 시도해주세요." for transient faults.
+- Error: what failed, in 합니다체 with a period, then a label button 다시 시도 — "{대상}을 불러오는데 실패했습니다." for reads, "{동작}에 실패했습니다." for writes, "잠시 후 다시 시도해주세요." for transient faults.
 - Destructive confirmation: a native `confirm()` question in -시겠습니까? that states the scope and count first ("이 학기에 4개의 과목이 있습니다. 정말 삭제하시겠습니까?").
 - Toast: a short statement in 합니다체 or a noun phrase, an optional one-line description, an optional label action; no exclamation marks.
 - Help and legal prose: 합니다체, full sentences with periods, `body-relaxed`; link labels are noun phrases (확인 방법 보기 · 프로필 설정).
@@ -47,15 +47,15 @@ Numbers are Arabic and glued to their unit with no space: 3학점 · 1학년 1�
 
 ## Source inconsistencies to avoid
 
-The codebase drifts in a few places; the rule is the first form in each pair.
+The codebase drifts in a few places; the rule is the first form in each pair unless the line names another.
 
-- 졸업 요건 (planner, onboarding, the summary title) vs 졸업요건 (help headings, one error string, image alt text).
-- 입학연도 (onboarding) vs 입학년도 (help).
-- 구글 로그인 / 구글로 로그인 (header, banners, landing) vs Google로 로그인 (login form) — three strings for one action; use 구글로 로그인 in buttons.
+- 졸업 요건 (landing, metadata and manifest, auth pages, onboarding, the summary title, footer, legal) vs 졸업요건 (help, profile, the admin requirements page, the catalog, API error messages) — roughly even across UI strings.
+- 입학연도 (onboarding only) vs 입학년도 (profile, help, the privacy policy).
+- 구글 로그인 / 구글로 로그인 (header, banners, the statistics page) vs Google로 로그인 (login form) — three strings for one action; use 구글로 로그인 in buttons.
 - Status words in help prose (예정 / 이수 중 / 이수 완료) do not match the pills (예정 / 수강중 / 이수); write the pill words.
-- Load failures read 불러오지 못했습니다. in one place and 불러오는데 실패했습니다. in another; use the second for consistency with 저장에 실패했습니다.
+- Load failures read 불러오지 못했습니다. in one place (the requirements summary) and 불러오는데 실패했습니다. almost everywhere else; use the second for consistency with 저장에 실패했습니다.
 - Validation lines end with a period in onboarding (학과를 선택해주세요.) and without one in forms (1 이상의 학점을 입력하세요); keep them period-free.
 - English fallbacks (N/A, Unknown Course, Loading...) can leak into cards when data is missing; give every fallback a Korean string (해당 없음, 알 수 없는 과목, 불러오는 중...).
 - The enum keys and labels cross: `major_required` is 전공핵심 and `major_compulsory` is 전공필수. Trust the label, not the key.
 - The onboarding hint under 전공핵심 (최소) says 전공필수 최소 이수학점; say 전공핵심.
-- `uppercase` and `tracking-wide` are applied to Korean headings ({year}학년, 지금이 가장 빠릅니다) with no visible effect; reserve them for Latin eyebrows.
+- `uppercase` with `tracking-wide` / `tracking-widest` is applied to Korean headings ({year}학년, 지금이 가장 빠릅니다), where `uppercase` has no visible effect and the tracking only spaces the Hangul; reserve them for Latin eyebrows.

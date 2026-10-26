@@ -40,9 +40,13 @@
 }
 
 /* hover:border-gray-400 — applies to error and disabled fields too (no pointer-events-none here). */
-.cp-input__field:hover,
 .cp-input__field.is-hover {
   border-color: var(--gray-400, #99a1af);
+}
+@media (hover: hover) {
+  .cp-input__field:hover {
+    border-color: var(--gray-400, #99a1af);
+  }
 }
 
 /* focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:border-transparent — plain focus:, so any
@@ -95,9 +99,13 @@
 .cp-input--soft .cp-input__field::placeholder {
   color: color-mix(in oklab, currentColor 50%, transparent);
 }
-.cp-input--soft .cp-input__field:hover,
 .cp-input--soft .cp-input__field.is-hover {
   border-color: var(--slate-200, #e2e8f0);
+}
+@media (hover: hover) {
+  .cp-input--soft .cp-input__field:hover {
+    border-color: var(--slate-200, #e2e8f0);
+  }
 }
 /* focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20 */
 .cp-input--soft .cp-input__field:focus,

@@ -581,8 +581,8 @@
   },
   "lastChange": {
     "by": "hwankr",
-    "at": "2026-10-22T15:51:03.130Z",
+    "at": "2026-10-26T04:22:46.017Z",
     "via": "Claude Code · GitHub hwankr/course-planner@b3e587f",
-    "note": "Added the Callout pattern card; all 34 cards now published"
+    "note": "Verified the last 15 cards line by line; audited the bundle against Tailwind 4.1.18 output (v4 sibling spacing, hover media, transitions); recomputed contrast; fact-checked section docs and token notes"
   }
 }

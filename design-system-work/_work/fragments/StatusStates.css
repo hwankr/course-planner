@@ -1,4 +1,4 @@
-/* StatusStates — pattern hand-translated from src/app/(dashboard)/loading.tsx, src/app/(dashboard)/error.tsx, src/app/not-found.tsx, src/app/global-error.tsx, src/components/providers/OnboardingGuard.tsx, src/app/(dashboard)/statistics/page.tsx, src/app/(dashboard)/admin/courses/page.tsx, src/components/features/AllPlansModal.tsx (plus the sibling recipes in src/components/features/RequirementsSummary.tsx, src/app/(dashboard)/planner/page.tsx, src/app/(dashboard)/calendar/page.tsx); .cp-card from Card.css is reused, not redefined */
+/* StatusStates — pattern hand-translated from src/app/(dashboard)/loading.tsx, src/app/(dashboard)/error.tsx, src/app/not-found.tsx, src/app/global-error.tsx, src/components/providers/OnboardingGuard.tsx, src/app/(dashboard)/statistics/page.tsx, src/app/(dashboard)/admin/courses/page.tsx, src/components/features/AllPlansModal.tsx (plus the spinner siblings in src/app/(dashboard)/planner/page.tsx and src/components/features/CourseCatalog.tsx, and the skeleton siblings in src/components/features/RequirementsSummary.tsx, src/app/(dashboard)/calendar/page.tsx); .cp-card from Card.css is reused, not redefined */
 
 /* Block = a neutral root for any status piece. The app renders these directly inside the dashboard
    <main> (body font 16px/1.5 Arial, color `foreground`), so the root restates that inheritance. */
@@ -124,8 +124,9 @@
     border-radius: var(--radius-lg, 8px);
   }
 }
-/* space-y-4 */
-.cp-status__skeleton-stack > * + * { margin-top: var(--space-4, 16px); }
+/* <div className="space-y-4"> (admin/courses auth guard: title bar + h-64 block; list loading: three h-24 blocks),
+   v4 semantics: 16px margin-bottom on every block except the last. The blocks carry no margin of their own. */
+.cp-status__skeleton-stack > :not(:last-child) { margin-bottom: var(--space-4, 16px); }
 
 /* ---------------------------------------------------------------- Page column: error.tsx, global-error.tsx, not-found.tsx
    flex flex-col items-center justify-center gap-4 p-8 text-center (+ min-h-[400px] or min-h-screen) */
@@ -158,9 +159,13 @@
 .cp-status__glyph--danger { color: var(--red-600, #e7000b); }   /* exclamation-triangle: 3.9:1 on red-100 */
 .cp-status__glyph--brand  { color: var(--yu-navy, #153974); }   /* emoji-sad: 9.2:1 on blue-100 */
 
-/* Text block: space-y-2 (error.tsx, not-found.tsx). global-error.tsx has no wrapper — heading and body
-   are direct children of the gap-4 column, so they sit 16px apart. */
-.cp-status__text > * + * { margin-top: var(--space-2, 8px); }
+/* Text block: <div className="space-y-2"> (error.tsx, not-found.tsx), v4 semantics: 8px margin-bottom on every child
+   except the DOM-last. At (0,2,0) it beats the `margin: 0` resets on .cp-status__title / .cp-status__body below, as
+   Tailwind's utilities layer beats preflight. error.tsx's dev-only <details className="mt-4"> is the last child
+   whenever it renders, so it keeps only its own 16px margin-top, which collapses with the body's 8px margin-bottom
+   → 16px. global-error.tsx has no wrapper — heading and body are direct children of the gap-4 column, so they sit
+   16px apart. */
+.cp-status__text > :not(:last-child) { margin-bottom: var(--space-2, 8px); }
 .cp-status__title {
   margin: 0;
   font: 600 20px/28px var(--font-body, Arial, Helvetica, sans-serif);
@@ -208,8 +213,12 @@
   text-decoration: none;
   appearance: none;
 }
-.cp-status__action:hover,
 .cp-status__action.is-hover { background-color: var(--yu-navy-hover, #003e7e); }
+@media (hover: hover) {
+  .cp-status__action:hover {
+    background-color: var(--yu-navy-hover, #003e7e);
+  }
+}
 /* focus:outline-none focus:ring-2 focus:ring-[#00AACA] focus:ring-offset-2 — on any focus (error.tsx, not-found.tsx).
    yu-cyan is 2.8:1 against the white offset — source pair, kept, flagged. */
 .cp-status__action:focus,
@@ -287,8 +296,12 @@
   text-decoration: none;
   transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-status__cta:hover,
 .cp-status__cta.is-hover { opacity: var(--opacity-hover-wash, 0.9); }
+@media (hover: hover) {
+  .cp-status__cta:hover {
+    opacity: var(--opacity-hover-wash, 0.9);
+  }
+}
 .cp-status__cta-icon {
   display: block;
   width: var(--icon-lg, 20px);

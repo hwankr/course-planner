@@ -1,7 +1,7 @@
-/* Badge (pattern) — hand-translated from inline <span>/<div>/<p> markup in src/app/(dashboard)/admin/users/page.tsx, admin/feedback/page.tsx, admin/patch-notes/page.tsx, admin/departments/page.tsx, admin/courses/page.tsx, help/page.tsx, help/feedback/page.tsx, help/graduation-guide/page.tsx, planner/page.tsx and layout.tsx. No component exists; every modifier below is one source recipe, named by what it labels. */
+/* Badge (pattern) — hand-translated from inline <span>/<div>/<p> markup in src/app/(dashboard)/admin/users/page.tsx, admin/feedback/page.tsx, admin/patch-notes/page.tsx, admin/departments/page.tsx, admin/courses/page.tsx, help/page.tsx, help/feedback/page.tsx, help/graduation-guide/page.tsx, planner/page.tsx and layout.tsx. No component exists; every modifier below is one source recipe, named by what it labels. Recipes another card already styles are reused, not redefined: feedback status + 관리자 답변 (FeedbackCard.css .cp-feedback-card__status / __reply-pill), version (PatchNotes.css .cp-patch-notes__version), N학점 (AdminList.css .cp-admin__badge--credits), planner header (PageHeader.css .cp-page-header__badge--*), eyebrows (HelpSection.css .cp-help__eyebrow, FeedbackCard.css .cp-feedback-card__eyebrow--*), bell count and notification circles (AppHeader.css .cp-app-header__badge, __notice-chip). */
 
 /* Block = the most repeated recipe: "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium" (caption-medium).
-   Color always comes from a modifier; the bare block is never used alone in the app. <p> eyebrows get margin 0 from preflight. */
+   Color always comes from a modifier; the bare block is never used alone in the app. */
 .cp-badge {
   box-sizing: border-box;
   display: inline-flex;
@@ -17,11 +17,6 @@
   width: var(--icon-xs, 12px);
   height: var(--icon-xs, 12px);
 }
-/* Eyebrow icons are h-3.5 w-3.5 (icon-sm). */
-.cp-badge__icon--eyebrow {
-  width: var(--icon-sm, 14px);
-  height: var(--icon-sm, 14px);
-}
 
 /* ---- Role badge · admin/users/page.tsx ----
    "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold" + Shield (관리자) / User (학생) at h-3 w-3 */
@@ -33,28 +28,6 @@
 }
 .cp-badge--admin   { background-color: var(--red-100, #ffe2e2);  color: var(--red-700, #c10007); }   /* user.role === 'admin' */
 .cp-badge--student { background-color: var(--blue-100, #dbeafe); color: var(--blue-700, #1447e6); }  /* user.role === 'student' */
-
-/* ---- Feedback status · admin/feedback/page.tsx (the same string on help/feedback/page.tsx) ----
-   "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium" + Clock (대기중) / CheckCircle (해결됨) at h-3 w-3 */
-.cp-badge--pending,
-.cp-badge--resolved {
-  align-items: center;
-  gap: var(--space-1, 4px);
-}
-.cp-badge--pending  { background-color: var(--yellow-100, #fef9c2); color: var(--yellow-700, #a65f00); } /* status === 'pending' */
-.cp-badge--resolved { background-color: var(--green-100, #dcfce7);  color: var(--green-700, #008236); }  /* status === 'resolved' */
-
-/* ---- 관리자 답변 · admin/feedback/page.tsx ----
-   "inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700" + Reply at h-3 w-3
-   (help/feedback/page.tsx renders the same pill without the icon). */
-.cp-badge--reply {
-  align-items: center;
-  gap: var(--space-1, 4px);
-  padding: var(--space-0-5, 2px) var(--space-2, 8px);
-  font-weight: 600;
-  background-color: var(--green-100, #dcfce7);
-  color: var(--green-700, #008236);
-}
 
 /* ---- Patch-note status · admin/patch-notes/page.tsx ----
    "inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold" + STATUS_COLORS[status]; no icon, no items-center */
@@ -79,91 +52,6 @@
   background-color: var(--blue-100, #dbeafe);
   color: var(--blue-700, #1447e6);
 }
-/* Version · admin/patch-notes/page.tsx (and patch-notes/page.tsx, patch-notes/[id]/page.tsx):
-   "inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700" — px-2, not px-2.5 */
-.cp-badge--version {
-  padding: var(--space-0-5, 2px) var(--space-2, 8px);
-  font-weight: 600;
-  background-color: var(--blue-100, #dbeafe);
-  color: var(--blue-700, #1447e6);
-}
-/* N학점 · admin/courses/page.tsx: "inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600" */
-.cp-badge--credits {
-  padding: var(--space-0-5, 2px) var(--space-2, 8px);
-  background-color: var(--slate-100, #f1f5f9);
-  color: var(--slate-600, #45556c);
-}
-
-/* ---- Planner header · planner/page.tsx (header and the export-only header) ----
-   "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" + one color pair; sits on the gray-50 page */
-.cp-badge--department,
-.cp-badge--double,
-.cp-badge--minor {
-  align-items: center;
-}
-.cp-badge--department { background-color: var(--yu-navy-a10, #1539741a); color: var(--yu-navy, #153974); }   /* {departmentName}: bg-[#153974]/10 text-[#153974] */
-.cp-badge--double     { background-color: var(--purple-100, #f3e8ff);     color: var(--purple-700, #8200db); } /* 복수전공: … (majorType 'double') */
-.cp-badge--minor      { background-color: var(--orange-100, #ffedd4);     color: var(--orange-700, #ca3500); } /* 부전공: … (majorType 'minor') */
-
-/* ---- Eyebrow pill · help/page.tsx, help/feedback/page.tsx, help/graduation-guide/page.tsx ----
-   "inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold" + a color pair; a <div> on help and help/feedback, a <p> on graduation-guide */
-.cp-badge--eyebrow {
-  align-items: center;
-  gap: var(--space-2, 8px);
-  padding: var(--space-1, 4px) var(--space-3, 12px);
-  font-weight: 600;
-}
-/* help and help/feedback add mb-3 to the <div>; graduation-guide spaces the heading with mt-3 instead */
-.cp-badge--eyebrow-spaced { margin-bottom: var(--space-3, 12px); }
-.cp-badge--eyebrow-slate  { background-color: var(--slate-100, #f1f5f9);   color: var(--slate-700, #314158); } /* 도움말 가이드 (HelpCircle), Contact (MessageSquare), STEP 1 / STEP 2 */
-.cp-badge--eyebrow-cyan   { background-color: var(--yu-cyan-a10, #00aaca1a); color: var(--yu-cyan, #00aaca); }  /* 빠른 문의 (Send): bg-[#00AACA]/10 text-[#00AACA] */
-.cp-badge--eyebrow-purple { background-color: var(--purple-50, #faf5ff);    color: var(--purple-600, #9810fa); } /* 내 문의 내역 (MessageSquareText) */
-.cp-badge--eyebrow-navy   { background-color: var(--yu-navy-a5, #1539740d); color: var(--yu-navy, #153974); }   /* 졸업 정보 가이드 (GraduationCap): bg-[#153974]/5 text-[#153974] */
-
-/* ---- Bell count · layout.tsx (rendered only while unreadCount > 0, text "99+" past 99) ----
-   "absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1";
-   its containing block is the bell <button class="relative p-1.5 rounded-full …"> (.cp-app-header__bell in AppHeader.css).
-   text-[10px] inherits the body line-height 1.5 → 15px. 18px has no size token. */
-.cp-badge--count {
-  position: absolute;
-  top: calc(-1 * var(--space-1, 4px));
-  right: calc(-1 * var(--space-1, 4px));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 var(--space-1, 4px);
-  font: 700 10px/15px var(--font-body, Arial, Helvetica, sans-serif);
-  background-color: var(--red-500, #fb2c36); /* student: bg-red-500 text-white */
-  color: var(--white, #ffffff);
-}
-.cp-badge--count-admin {
-  background-color: var(--yellow-400, #fdc700); /* isAdmin: bg-yellow-400 text-yellow-900 */
-  color: var(--yellow-900, #733e0a);
-}
-
-/* ---- Notification icon circle · layout.tsx (one per row of the 알림 panel) ----
-   <div class="w-8 h-8 rounded-full flex items-center justify-center bg-…"> holding a w-4 h-4 Lucide icon;
-   type 'patch-note' → bg-purple-100 + Megaphone text-purple-600 · 'feedback-new' → bg-yellow-100 + MessageSquareText text-yellow-600 · any other type → bg-blue-100 + MessageSquareText text-blue-600 */
-.cp-badge--chip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--icon-2xl, 32px);
-  height: var(--icon-2xl, 32px);
-  padding: 0;
-  background-color: var(--blue-100, #dbeafe);
-}
-.cp-badge--chip-patch-note   { background-color: var(--purple-100, #f3e8ff); }
-.cp-badge--chip-feedback-new { background-color: var(--yellow-100, #fef9c2); }
-.cp-badge__icon--chip {
-  width: var(--icon-md, 16px);
-  height: var(--icon-md, 16px);
-  color: var(--blue-600, #155dfc);
-}
-.cp-badge--chip-patch-note   .cp-badge__icon--chip { color: var(--purple-600, #9810fa); }
-.cp-badge--chip-feedback-new .cp-badge__icon--chip { color: var(--yellow-600, #d08700); }
 
 /* ---- Plan-status mini pill · admin/users/page.tsx (course rows of the expanded 수강 계획표) ----
    "rounded-full px-1.5 py-0.5 text-[10px] font-medium" + getStatusColor(status). A plain inline <span> (no inline-flex);

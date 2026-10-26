@@ -1,4 +1,4 @@
-/* FilterChips (pattern) — hand-translated from src/app/(dashboard)/planner/page.tsx (학년 pills), src/app/(dashboard)/statistics/page.tsx (gradient chips, two sizes), src/app/(dashboard)/admin/courses/page.tsx (개설 학기 toggles); the CourseCatalog 이수 chips reuse .cp-course-catalog__filters / __filter-row--category / __filter-label / __chip(--red…--gray) from CourseCatalog.css and the calendar chips reuse .cp-calendar__filters / __chip(--all…--other) from CalendarGrid.css — neither is redefined here; the statistics rows sit in .cp-card from Card.css; no component exists in the source */
+/* FilterChips (pattern) — hand-translated from src/app/(dashboard)/planner/page.tsx (학년 pills), src/app/(dashboard)/statistics/page.tsx (gradient chips, two sizes), src/app/(dashboard)/admin/courses/page.tsx (개설 학기 toggles); the CourseCatalog 학과 · 학년 · 학기 · 이수 chips reuse .cp-course-catalog__filters / __filter-row(--dept, --year-sem, --category) / __filter-group / __filter-label(--fixed) / __divider / __chip(--purple, --orange, --indigo, --emerald, --red…--gray) from CourseCatalog.css and the calendar chips reuse .cp-calendar__filters / __chip(--all…--other) from CalendarGrid.css — neither is redefined here; the statistics rows sit in .cp-card from Card.css; no component exists in the source */
 
 /* Block = a neutral root around any chip row. Every page renders its row straight into the page
    container (body font 16px/1.5 Arial, `foreground` text; `gray-900` inside a Card), restated here
@@ -47,13 +47,13 @@
   appearance: button;
   margin: 0;
   border: 0 solid;
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   color: inherit;
   letter-spacing: inherit;
   text-transform: none;
   text-decoration: none;
   cursor: default;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -70,9 +70,13 @@
   color: var(--yu-navy, #153974);
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
 }
-.cp-filter-chips__chip--planner:hover,
 .cp-filter-chips__chip--planner.is-hover {
   background-color: var(--yu-navy-a20, #15397433);
+}
+@media (hover: hover) {
+  .cp-filter-chips__chip--planner:hover {
+    background-color: var(--yu-navy-a20, #15397433);
+  }
 }
 .cp-filter-chips__chip--planner.is-active {
   background-color: var(--yu-navy, #153974);
@@ -98,15 +102,19 @@
   color: var(--gray-700, #364153);
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
 }
-.cp-filter-chips__chip--stat:hover,
 .cp-filter-chips__chip--stat.is-hover,
-.cp-filter-chips__chip--stat-sm:hover,
 .cp-filter-chips__chip--stat-sm.is-hover {
   background-color: var(--gray-200, #e5e7eb);
 }
+@media (hover: hover) {
+  .cp-filter-chips__chip--stat:hover,
+.cp-filter-chips__chip--stat-sm:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
+}
 .cp-filter-chips__chip--stat.is-active,
 .cp-filter-chips__chip--stat-sm.is-active {
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3));
   color: var(--white, #ffffff);
 }
@@ -140,9 +148,13 @@
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
   cursor: pointer;
 }
-.cp-filter-chips__chip--admin:hover,
 .cp-filter-chips__chip--admin.is-hover {
   background-color: var(--slate-200, #e2e8f0);
+}
+@media (hover: hover) {
+  .cp-filter-chips__chip--admin:hover {
+    background-color: var(--slate-200, #e2e8f0);
+  }
 }
 .cp-filter-chips__chip--admin.is-active {
   background-color: var(--yu-cyan, #00aaca);

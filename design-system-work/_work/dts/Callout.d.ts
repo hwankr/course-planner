@@ -23,7 +23,7 @@ export type CalloutRecipe =
 /** Color family a recipe draws from: amber (guest / warning), blue (info), red (error), green (admin reply). */
 export type CalloutTone = 'amber' | 'blue' | 'red' | 'green';
 
-/** Lucide icon a recipe leads with; the login, admin, form-strip and reply recipes have none. */
+/** Lucide icon a recipe leads with; the login-error, inapp, admin-error, form-info, form-warning, req-suggest and reply recipes have none. */
 export type CalloutIcon = 'log-in' | 'info' | 'alert-triangle' | 'help-circle';
 
 /** The shape every recipe is built from — a container, optional icon, one or two lines, at most one action pair. */
@@ -51,7 +51,7 @@ export interface StatisticsCalloutState {
   /** From useAuth(); shows the amber guest callout. */
   isGuest: boolean;
   /** From useAuth(); onClick of the amber 구글로 로그인 button. */
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<void>;
   /** stats.departmentName — the <strong> run in the info callout. */
   departmentName: string;
 }
@@ -61,7 +61,7 @@ export interface GuestStripState {
   /** From useAuth(). */
   isGuest: boolean;
   /** onClick of the underlined 구글로 로그인 <button>; 회원가입하기 is a Link to /register. */
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<void>;
 }
 
 /** src/app/(auth)/login/page.tsx — login-error above the fields, inapp in place of the Google Button. */

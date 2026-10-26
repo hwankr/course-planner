@@ -66,8 +66,8 @@ export interface FeedbackCardProps {
   showMyFeedback: boolean;
   /** True while GET /api/feedback/my loads: two h-24 pulse skeletons stand in for the list. */
   feedbackLoading: boolean;
-  /** The user's items; undefined or empty renders 아직 문의 내역이 없습니다.. */
-  myFeedbacks?: MyFeedbackItem[];
+  /** useQuery data; undefined or empty data renders 아직 문의 내역이 없습니다.. */
+  myFeedbacks?: { success: boolean; data: MyFeedbackItem[] };
   /** True while DELETE /api/feedback/:id runs: every 문의 삭제 button fades to 50%. */
   isDeleting: boolean;
 }
@@ -78,12 +78,12 @@ export interface AdminFeedbackItemProps {
   item: FeedbackItem;
   /** expandedIds.has(item._id): full message and 접기 instead of line-clamp-3 and 더보기 (only when message.length > 150). */
   isExpanded: boolean;
-  /** replyingId === item._id && replyContent.length > 0: reveals the counter, 취소 and 답변 및 해결 처리 row under the textarea. */
-  isReplying: boolean;
+  /** Id of the row being typed into; footer shows when replyingId === item._id && replyContent.length > 0. */
+  replyingId: string | null;
   /** Reply draft, sliced to 2000; 답변 및 해결 처리 is disabled until replyContent.trim().length >= 1. */
   replyContent: string;
-  /** True while PATCH { adminReply } runs: textarea and 취소 disabled, submit shows Loader2 + 전송 중.... */
-  isSubmittingReply: boolean;
+  /** True while PATCH { adminReply } runs (submitReply isPending): textarea and 취소 disabled, 답변 및 해결 처리 shows Loader2 + 전송 중.... */
+  isReplying: boolean;
   /** True while DELETE runs: the 피드백 삭제 button fades to 50%. */
   isDeletingFeedback: boolean;
 }

@@ -75,7 +75,7 @@ export interface CalendarGridProps {
   calendarDays: (Date | null)[];
   /** Non-system events of the month sorted by startDate; feeds 이번 달 일정. */
   sortedEvents: CalendarEvent[];
-  /** From useAuth(); shows 일정 추가 and edit/delete, and makes desktop cells clickable. */
+  /** From useAuth(); shows 일정 추가 and edit/delete, makes a cell click open the prefilled form (any width) and adds md:cursor-pointer. */
   isAdmin: boolean;
   /** TanStack isLoading; swaps the grid for 35 pulsing cells and the list for five h-16 rows. */
   isLoading: boolean;
@@ -85,6 +85,8 @@ export interface CalendarGridProps {
   editingEvent: CalendarEvent | null;
   /** Controlled form values. */
   formData: EventFormData;
+  /** create or update mutation pending; disables submit and shows 저장 중... */
+  isSaving: boolean;
   /** Prev/next chevron; also clears selectedEvent and selectedDate. */
   onNavigateMonth: (direction: 'prev' | 'next') => void;
   /** 오늘 button; jumps to the current month and clears both selections. */
@@ -103,4 +105,12 @@ export interface CalendarGridProps {
   onDeleteEvent: (id: string) => Promise<void>;
   /** Form submit; validates title and startDate, then create or update. */
   onSubmitEvent: (e: React.FormEvent) => Promise<void>;
+  /** Modal X and 취소; setShowEventForm(false). */
+  onCloseForm: () => void;
+  /** Detail Card X; setSelectedEvent(null). */
+  onCloseDetail: () => void;
+  /** Mobile day panel X; setSelectedDate(null). */
+  onClearSelectedDate: () => void;
+  /** Every form field's onChange; setFormData({ ...formData, [field]: value }). */
+  onFormChange: (data: EventFormData) => void;
 }

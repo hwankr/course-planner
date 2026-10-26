@@ -6,7 +6,7 @@
 
 /** Props Next.js passes to src/app/(dashboard)/error.tsx and src/app/global-error.tsx. */
 export interface ErrorPageProps {
-  /** The thrown error; `digest` is Next's hash for server-side errors. `message` renders only when NODE_ENV !== 'production'. */
+  /** The thrown error; `digest` is Next's hash for server-side errors. (dashboard)/error.tsx renders `message` in a <details> only when NODE_ENV !== 'production'; global-error.tsx never shows it. */
   error: Error & { digest?: string };
   /** Re-renders the failed segment; both files call it from the 다시 시도 button. */
   reset: () => void;
@@ -14,7 +14,7 @@ export interface ErrorPageProps {
 
 /** src/components/providers/OnboardingGuard.tsx */
 export interface OnboardingGuardProps {
-  /** Rendered once the stores are hydrated and the session is authenticated and onboarded; the arc spinner shows meanwhile. */
+  /** Rendered for onboarded users or guests, and for users not yet onboarded on /onboarding or /help; the arc shows while stores hydrate or (non-guest) the session loads; null while redirecting. */
   children: React.ReactNode;
 }
 

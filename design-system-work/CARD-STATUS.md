@@ -22,22 +22,24 @@ Generated from this session's workflow journals. "Verified" means an independent
 | CourseCatalog | Planner | verified, 6 findings applied by hand | - |
 | AllPlansModal | Planner | verified, 6 findings applied by hand | - |
 | AnonymousPlanModal | Planner | verified, 5 findings applied by hand | - |
-| PatchNotePreview | Planner | built, render-checked, not yet verified line by line | verify |
-| AppHeader | Patterns | built, render-checked, not yet verified line by line | verify |
-| AuthLayout | Patterns | verified, 8 findings NOT applied | apply pending/AuthLayout.md |
-| PageHeader | Patterns | built, render-checked, not yet verified line by line | verify |
-| FilterChips | Patterns | built, render-checked, not yet verified line by line | verify |
-| Badge | Patterns | built, render-checked, not yet verified line by line | verify |
-| Callout | Patterns | built, render-checked, not yet verified line by line | verify |
-| StatusStates | Patterns | built, render-checked, not yet verified line by line | verify |
-| Statistics | Patterns | built, render-checked, not yet verified line by line | verify |
-| Onboarding | Patterns | verified, 7 findings NOT applied | apply pending/Onboarding.md |
-| CalendarGrid | Patterns | built, render-checked, not yet verified line by line | verify |
-| HelpSection | Patterns | built by hand from source, render-checked | verify |
-| AdminList | Patterns | built, render-checked, not yet verified line by line | verify |
-| FeedbackCard | Patterns | built, render-checked, not yet verified line by line | verify |
-| ProfileCard | Patterns | built by hand from source, render-checked | verify |
-| PatchNotes | Patterns | built, render-checked, not yet verified line by line | verify |
-| ModalShell | Patterns | built, render-checked, not yet verified line by line | verify |
+| PatchNotePreview | Planner | verified, 4 findings fixed | - |
+| AppHeader | Patterns | verified, 11 findings fixed | - |
+| AuthLayout | Patterns | verified, 8 findings fixed | - |
+| PageHeader | Patterns | verified, 10 findings fixed | - |
+| FilterChips | Patterns | verified, 13 findings fixed | - |
+| Badge | Patterns | verified, 11 findings fixed | - |
+| Callout | Patterns | verified, 9 findings fixed | - |
+| StatusStates | Patterns | verified, 9 findings fixed | - |
+| Statistics | Patterns | verified, 9 findings fixed | - |
+| Onboarding | Patterns | verified, 7 findings fixed | - |
+| CalendarGrid | Patterns | verified, 19 findings fixed | - |
+| HelpSection | Patterns | verified, 20 findings fixed | - |
+| AdminList | Patterns | verified, 20 findings fixed | - |
+| FeedbackCard | Patterns | verified, 14 findings fixed | - |
+| ProfileCard | Patterns | verified, 14 findings fixed | - |
+| PatchNotes | Patterns | verified, 7 findings fixed | - |
+| ModalShell | Patterns | verified, 9 findings fixed | - |
 
 The cover (`components/Cover/preview.html`) is hand-made from the tokens and needs no verification.
+
+After verification, a Tailwind v4 audit (2026-10-26) checked the whole bundle against `tools/tw.mjs` (real Tailwind 4.1.18 output): every `space-y`/`space-x` rendition was rewritten to v4's `:not(:last-child)` margin-bottom form (13 had rendered differently: Card header, ErrorBoundary, StatusStates, RequirementForm, PatchNotes detail, CourseCatalog, AdminList overlays), real `:hover` rules moved under `@media (hover: hover)`, `transition-colors` gained `outline-color`, a RequirementsSummary `p` reset stopped overriding four margins, and every contrast figure in the docs was recomputed with `tools/contrast.mjs`. `node tools/cascade-check.mjs` reports 0 own-class margin/padding rules lost to resets. Onboarding's count includes one finding the fixer disputed with the v4 source (no change needed).

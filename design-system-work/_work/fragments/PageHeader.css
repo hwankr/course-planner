@@ -89,9 +89,13 @@
   color: var(--gray-400, #99a1af);
   text-decoration-line: underline;
 }
-.cp-page-header__dept-link:hover,
 .cp-page-header__dept-link.is-hover {
   color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-page-header__dept-link:hover {
+    color: var(--yu-navy, #153974);
+  }
 }
 
 /* Instruction line: <p data-export-ignore className="text-gray-600 mt-1 text-sm sm:text-base"> */
@@ -192,9 +196,13 @@
   text-align: left;
   appearance: button;
 }
-.cp-page-header__menu-item:hover,
 .cp-page-header__menu-item.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-page-header__menu-item:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 
 /* 초기화: <Button variant="outline" className="text-sm text-red-600 border-red-300 hover:bg-red-50"> — through cn()/tailwind-merge the
@@ -203,9 +211,13 @@
   color: var(--red-600, #e7000b);
   border-color: var(--red-300, #ffa2a2);
 }
-.cp-page-header .cp-page-header__reset:hover,
 .cp-page-header .cp-page-header__reset.is-hover {
   background-color: var(--red-50, #fef2f2);
+}
+@media (hover: hover) {
+  .cp-page-header .cp-page-header__reset:hover {
+    background-color: var(--red-50, #fef2f2);
+  }
 }
 
 /* Export-only header — planner/page.tsx, rendered inside the capture only while isExporting:
@@ -278,13 +290,17 @@
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--yu-cyan, #00aaca);
   text-decoration: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-page-header__back:hover,
 .cp-page-header__back.is-hover {
   color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-page-header__back:hover {
+    color: var(--yu-navy, #153974);
+  }
 }
 
 /* Title row: <div className="flex items-center justify-between"> */
@@ -324,11 +340,15 @@
   letter-spacing: inherit;
   appearance: button;
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-page-header__primary:hover,
 .cp-page-header__primary.is-hover {
   background-color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-page-header__primary:hover {
+    background-color: var(--yu-navy, #153974);
+  }
 }

@@ -11,7 +11,10 @@
   border: 1px solid var(--border-default, #101828);
   border-radius: var(--radius-lg, 8px);
 }
-.cp-requirement-form > * + * { margin-top: var(--space-5, 20px); }
+/* "space-y-5" on the root <form>, v4 semantics: margin-bottom on every element child except the DOM-last one
+   (the footer row). The form is block flow and none of its children (help banner, sections, footer) carries a
+   margin utility of its own. */
+.cp-requirement-form > :not(:last-child) { margin-bottom: var(--space-5, 20px); }
 
 /* Help banner: flex items-center gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2 */
 .cp-requirement-form__help {
@@ -37,11 +40,19 @@
   color: var(--yu-cyan, #00aaca);
   text-decoration: underline;
 }
-.cp-requirement-form__link:hover,
 .cp-requirement-form__link.is-hover { color: var(--yu-navy, #153974); }
+@media (hover: hover) {
+  .cp-requirement-form__link:hover {
+    color: var(--yu-navy, #153974);
+  }
+}
 
-/* Sections. First: space-y-3. Others: border-t pt-4 (currentColor → border-default). */
-.cp-requirement-form__section--first > * + * { margin-top: var(--space-3, 12px); }
+/* Sections. First: "space-y-3". Others: border-t pt-4 (currentColor → border-default).
+   space-y-3 in v4 semantics: margin-bottom on every element child except the DOM-last one. Its children are the
+   "border-b pb-2" heading, then the radio row or the locked notice, then (when onLoadFromDeptReq is passed) the load
+   wrapper; none carries a margin utility, so the gap must also beat the preflight-style `margin: 0` on
+   .cp-requirement-form__heading and .cp-requirement-form__notice — (0,2,0) does, whatever the source order. */
+.cp-requirement-form__section--first > :not(:last-child) { margin-bottom: var(--space-3, 12px); }
 .cp-requirement-form__section--ruled {
   border-top: 1px solid var(--border-default, #101828);
   padding-top: var(--space-4, 16px);
@@ -90,8 +101,10 @@
   color: var(--gray-500, #6a7282);
 }
 
-/* Load-from-department row: space-y-1 wrapper, flex items-center gap-2 row, text-xs text-blue-600 message */
-.cp-requirement-form__load > * + * { margin-top: var(--space-1, 4px); }
+/* Load-from-department row: "space-y-1" wrapper, flex items-center gap-2 row, text-xs text-blue-600 message.
+   space-y-1 in v4 semantics: margin-bottom on every element child except the DOM-last one, so the row takes the
+   4px when the message is rendered and nothing when it is not; the message's preflight `margin: 0` stays as the last child. */
+.cp-requirement-form__load > :not(:last-child) { margin-bottom: var(--space-1, 4px); }
 .cp-requirement-form__load-row {
   display: flex;
   align-items: center;
@@ -147,8 +160,12 @@
    passes the `error` prop; it adds className="border-red-500" only, so the ring stays yu-cyan. As in the source, the
    hover (gray-400) and focus (transparent) variants still beat that red border — stated here so bundle order cannot matter. */
 .cp-requirement-form__field--error .cp-input__field { border-color: var(--red-500, #fb2c36); }
-.cp-requirement-form__field--error .cp-input__field:hover,
 .cp-requirement-form__field--error .cp-input__field.is-hover { border-color: var(--gray-400, #99a1af); }
+@media (hover: hover) {
+  .cp-requirement-form__field--error .cp-input__field:hover {
+    border-color: var(--gray-400, #99a1af);
+  }
+}
 .cp-requirement-form__field--error .cp-input__field:focus,
 .cp-requirement-form__field--error .cp-input__field.is-focus { border-color: var(--transparent, #00000000); }
 /* Field error line: text-xs text-red-500 mt-1 */
@@ -187,12 +204,16 @@
   background-color: var(--amber-100, #fef3c6);
   border: 1px solid var(--amber-300, #ffd230);
   border-radius: var(--radius-sm, 4px);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-requirement-form__suggest-button:hover,
 .cp-requirement-form__suggest-button.is-hover { background-color: var(--amber-200, #fee685); }
+@media (hover: hover) {
+  .cp-requirement-form__suggest-button:hover {
+    background-color: var(--amber-200, #fee685);
+  }
+}
 
 /* Cutoff select block: mb-3 */
 .cp-requirement-form__cutoff { margin-bottom: var(--space-3, 12px); }
@@ -248,10 +269,15 @@
   color: var(--white, #ffffff);
   box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-.cp-requirement-form__button--primary:hover,
 .cp-requirement-form__button--primary.is-hover {
   background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-requirement-form__button--primary:hover {
+    background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 .cp-requirement-form__button--primary:focus-visible,
 .cp-requirement-form__button--primary.is-focus {
@@ -265,8 +291,12 @@
   border: 1px solid var(--gray-300, #d1d5dc);
   background-color: var(--white, #ffffff);
 }
-.cp-requirement-form__button--outline:hover,
 .cp-requirement-form__button--outline.is-hover { background-color: var(--gray-50, #f9fafb); }
+@media (hover: hover) {
+  .cp-requirement-form__button--outline:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
+}
 /* isLoading spinner: mr-2 h-4 w-4 animate-spin; circle opacity-25, arc opacity-75 */
 .cp-requirement-form__spinner {
   margin-right: var(--space-2, 8px);

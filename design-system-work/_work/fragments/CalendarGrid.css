@@ -64,7 +64,7 @@
   letter-spacing: inherit;
   appearance: button;
   cursor: default;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -81,20 +81,21 @@
   gap: var(--space-2, 8px);
   margin-bottom: var(--space-4, 16px);
 }
-/* Chip base: "px-3 py-1 rounded-full text-sm font-medium transition-colors". Flex items stretch, so an
-   active chip (no border) is still 30px tall but its label sits 1px higher than its neighbours. */
+/* Chip base: "px-3 py-1 rounded-full text-sm font-medium transition-colors". border-*-200 sets only the
+   color, so an active category chip has no border: it is 28px on its own and stretches to the row's 30px,
+   with its label at the same height as its neighbours (a <button> centres its content). */
 .cp-calendar__chip {
   margin: 0;
   padding: var(--space-1, 4px) var(--space-3, 12px);
   border: 0 solid;
   border-radius: var(--radius-full, 9999px);
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   color: inherit;
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   letter-spacing: inherit;
   appearance: button;
   cursor: default;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -104,9 +105,13 @@
   background-color: var(--white, #ffffff);
   color: var(--gray-700, #364153);
 }
-.cp-calendar__chip:not(.is-active):hover,
 .cp-calendar__chip:not(.is-active).is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-calendar__chip:not(.is-active):hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 /* Active 전체: "bg-blue-600 text-white" */
 .cp-calendar__chip--all.is-active {
@@ -180,20 +185,24 @@
   padding: var(--space-2, 8px);
   border: 0 solid;
   border-radius: var(--radius-lg, 8px);
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   color: inherit;
   font: inherit;
   appearance: button;
   cursor: default;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-calendar__nav-btn:hover,
 .cp-calendar__nav-btn.is-hover,
-.cp-calendar__icon-btn:hover,
 .cp-calendar__icon-btn.is-hover {
   background-color: var(--gray-100, #f3f4f6);
+}
+@media (hover: hover) {
+  .cp-calendar__nav-btn:hover,
+.cp-calendar__icon-btn:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
 }
 .cp-calendar__nav-icon {
   display: block;
@@ -213,19 +222,23 @@
   padding: var(--space-1, 4px) var(--space-3, 12px);
   border: 1px solid var(--gray-300, #d1d5dc);
   border-radius: var(--radius-lg, 8px);
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   color: inherit;
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   letter-spacing: inherit;
   appearance: button;
   cursor: default;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-calendar__today-btn:hover,
 .cp-calendar__today-btn.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-calendar__today-btn:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 /* <h2 className="text-lg md:text-xl font-semibold text-gray-500 mr-2">{year}년</h2> */
 .cp-calendar__year {
@@ -250,6 +263,13 @@
 }
 .cp-calendar__weekday--sun { color: var(--red-600, #e7000b); }
 .cp-calendar__weekday--sat { color: var(--blue-600, #155dfc); }
+/* Loading header (isLoading branch): "text-center text-sm font-medium text-gray-600 py-2" — 14px/20px at every
+   width, gray-600 for all seven days (일/토 included), no bottom rule. Use with .cp-calendar__weekday. */
+.cp-calendar__weekday--loading {
+  border-bottom: 0;
+  font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
+  color: var(--gray-600, #4a5565);
+}
 /* Leading empty cells before day 1: "min-h-[90px] md:aspect-square border border-gray-100 md:border-0" */
 .cp-calendar__empty {
   min-height: 90px;
@@ -264,34 +284,53 @@
   background-color: var(--white, #ffffff);
   cursor: pointer;
   overflow: hidden;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-calendar__day:hover,
 .cp-calendar__day.is-hover {
   background-color: var(--gray-50, #f9fafb);
 }
+@media (hover: hover) {
+  .cp-calendar__day:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
+}
 /* today: "bg-blue-50 border-blue-400 md:border-2 md:border-blue-500" — no hover class */
 .cp-calendar__day--today,
-.cp-calendar__day--today:hover,
 .cp-calendar__day--today.is-hover {
   background-color: var(--blue-50, #eff6ff);
   border-color: var(--blue-400, #51a2ff);
 }
+@media (hover: hover) {
+  .cp-calendar__day--today:hover {
+    background-color: var(--blue-50, #eff6ff);
+    border-color: var(--blue-400, #51a2ff);
+  }
+}
 /* selected: "bg-amber-50/50 border-amber-300 md:border-2 md:border-amber-400 md:bg-white md:hover:bg-gray-50" */
 .cp-calendar__day--selected,
-.cp-calendar__day--selected:hover,
 .cp-calendar__day--selected.is-hover {
   background-color: var(--amber-50-a50, #fffbeb80);
   border-color: var(--amber-300, #ffd230);
 }
+@media (hover: hover) {
+  .cp-calendar__day--selected:hover {
+    background-color: var(--amber-50-a50, #fffbeb80);
+    border-color: var(--amber-300, #ffd230);
+  }
+}
 /* today + selected: "bg-blue-100 md:bg-blue-50 border-amber-400 md:border-2 md:border-blue-500 md:ring-2 md:ring-amber-400 md:ring-offset-0" — no hover class */
 .cp-calendar__day--today.cp-calendar__day--selected,
-.cp-calendar__day--today.cp-calendar__day--selected:hover,
 .cp-calendar__day--today.cp-calendar__day--selected.is-hover {
   background-color: var(--blue-100, #dbeafe);
   border-color: var(--amber-400, #ffb900);
+}
+@media (hover: hover) {
+  .cp-calendar__day--today.cp-calendar__day--selected:hover {
+    background-color: var(--blue-100, #dbeafe);
+    border-color: var(--amber-400, #ffb900);
+  }
 }
 /* Day number: "text-[10px] md:text-sm font-medium mb-0.5 md:mb-1" (10px keeps the inherited 1.5 line-height = 15px) */
 .cp-calendar__num {
@@ -307,12 +346,16 @@
 .cp-calendar__events {
   display: none;
 }
-.cp-calendar__events > * + * {
-  margin-top: var(--space-0-5, 2px);
+/* "space-y-0.5", Tailwind v4 semantics: margin-bottom on every element child except the DOM-last. The children are
+   the up-to-three chip <div>s and the conditional "+N" <div> (rendered only when dayEvents.length > 3); none carries
+   a margin of its own, and the wrapper is display: block at md (display: none below). */
+.cp-calendar__events > :not(:last-child) {
+  margin-bottom: var(--space-0-5, 2px);
 }
 .cp-calendar__event {
   padding: var(--space-0-5, 2px) var(--space-1, 4px);
-  border: 0 solid;
+  border-width: 0;
+  border-style: solid;
   border-radius: var(--radius-sm, 4px);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -335,8 +378,10 @@
   display: block;
   pointer-events: none;
 }
-.cp-calendar__micro-list > * + * {
-  margin-top: 1px;
+/* "space-y-px", Tailwind v4 semantics: margin-bottom 1px on every element child except the DOM-last. Children are
+   the micro chip <div>s and the conditional "+N" <div>; none has a margin of its own. (No spacing token is 1px.) */
+.cp-calendar__micro-list > :not(:last-child) {
+  margin-bottom: 1px;
 }
 .cp-calendar__micro {
   padding: 0 var(--space-0-5, 2px);
@@ -358,16 +403,21 @@
   color: var(--gray-400, #99a1af);
 }
 
-/* ---------------------------------------------------------------- Badges: "px-2 py-1 rounded text-xs font-medium" (+ whitespace-nowrap in list rows); "px-2 py-0.5" in the mobile panel */
+/* ---------------------------------------------------------------- Badges: "px-2 py-1 rounded text-xs font-medium" in the detail Card;
+   + whitespace-nowrap in list rows (--nowrap); "px-2 py-0.5 … whitespace-nowrap" in the mobile panel (--sm carries both) */
 .cp-calendar__badge {
   display: inline-block;
   padding: var(--space-1, 4px) var(--space-2, 8px);
-  border: 0 solid;
+  border-width: 0;
+  border-style: solid;
   border-radius: var(--radius-sm, 4px);
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
 }
 .cp-calendar__badge--nowrap { white-space: nowrap; }
-.cp-calendar__badge--sm { padding: var(--space-0-5, 2px) var(--space-2, 8px); }
+.cp-calendar__badge--sm {
+  padding: var(--space-0-5, 2px) var(--space-2, 8px);
+  white-space: nowrap;
+}
 
 /* ---------------------------------------------------------------- Mobile selected-day panel: <div className="md:hidden mb-4"><Card><CardContent className="p-4"> */
 .cp-calendar__day-panel {
@@ -392,9 +442,6 @@
 .cp-calendar__icon-btn--sm {
   padding: var(--space-1, 4px);
 }
-.cp-calendar__icon-btn-icon--muted {
-  color: var(--gray-500, #6a7282);
-}
 /* <p className="text-sm text-gray-400 text-center py-4">이 날의 일정이 없습니다.</p> */
 .cp-calendar__panel-empty {
   margin: 0;
@@ -403,9 +450,12 @@
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-400, #99a1af);
 }
-.cp-calendar__panel-list > * + *,
-.cp-calendar__list > * + * {
-  margin-top: var(--space-2, 8px);
+/* Three <div className="space-y-2"> stacks, Tailwind v4 semantics: margin-bottom on every element child except the
+   DOM-last. .cp-calendar__panel-list = the mobile panel's rows; .cp-calendar__list = the 이번 달 일정 event rows and,
+   while loading, its five .cp-calendar__list-skeleton rows. No row carries a margin of its own. */
+.cp-calendar__panel-list > :not(:last-child),
+.cp-calendar__list > :not(:last-child) {
+  margin-bottom: var(--space-2, 8px);
 }
 /* row: "flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-100" */
 .cp-calendar__panel-row {
@@ -416,13 +466,17 @@
   border: 1px solid var(--gray-100, #f3f4f6);
   border-radius: var(--radius-lg, 8px);
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-calendar__panel-row:hover,
 .cp-calendar__panel-row.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-calendar__panel-row:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 .cp-calendar__panel-main {
   flex: 1;
@@ -501,9 +555,13 @@
   display: flex;
   gap: var(--space-2, 8px);
 }
-.cp-calendar__icon-btn--danger:hover,
 .cp-calendar__icon-btn--danger.is-hover {
   background-color: var(--red-50, #fef2f2);
+}
+@media (hover: hover) {
+  .cp-calendar__icon-btn--danger:hover {
+    background-color: var(--red-50, #fef2f2);
+  }
 }
 .cp-calendar__icon-btn-icon {
   display: block;
@@ -513,6 +571,10 @@
 }
 .cp-calendar__icon-btn-icon--danger {
   color: var(--red-600, #e7000b);
+}
+/* Mobile panel close: <X className="w-4 h-4 text-gray-500" /> — after the base rule so gray-500 wins */
+.cp-calendar__icon-btn-icon--muted {
+  color: var(--gray-500, #6a7282);
 }
 
 /* ---------------------------------------------------------------- 이번 달 일정: <Card><CardContent className="p-4 md:p-6"> */
@@ -546,13 +608,17 @@
   border: 1px solid var(--gray-200, #e5e7eb);
   border-radius: var(--radius-lg, 8px);
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-calendar__row:hover,
 .cp-calendar__row.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-calendar__row:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 .cp-calendar__row-main {
   flex: 1;
@@ -618,9 +684,11 @@
   height: var(--icon-lg, 20px);
   color: inherit;
 }
-/* <form className="space-y-4"> */
-.cp-calendar__form > * + * {
-  margin-top: var(--space-4, 16px);
+/* <form className="space-y-4">, Tailwind v4 semantics: margin-bottom on every element child except the DOM-last,
+   which is always the "flex gap-3 pt-4" footer. None of the six children (four field <div>s, the date grid, the
+   checkbox row) carries a margin of its own. */
+.cp-calendar__form > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
 /* <label className="block text-sm font-medium text-gray-700 mb-1"> ; required mark <span className="text-red-500">*</span> */
 .cp-calendar__label {
@@ -641,7 +709,7 @@
   padding: var(--space-2, 8px) var(--space-3, 12px);
   border: 1px solid var(--gray-300, #d1d5dc);
   border-radius: var(--radius-lg, 8px);
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   color: inherit;
   font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   letter-spacing: inherit;
@@ -693,18 +761,22 @@
   letter-spacing: inherit;
   appearance: button;
   cursor: default;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
 .cp-calendar__cancel {
   border: 1px solid var(--gray-300, #d1d5dc);
-  background-color: var(--transparent, transparent);
+  background-color: var(--transparent, #00000000);
   color: inherit;
 }
-.cp-calendar__cancel:hover,
 .cp-calendar__cancel.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-calendar__cancel:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 .cp-calendar__submit {
   background-color: var(--yu-navy, #153974);
@@ -743,30 +815,49 @@
      but which utility wins in Tailwind's output is not guaranteed. */
   .cp-calendar--admin .cp-calendar__day { cursor: pointer; }
   .cp-calendar__day--today,
-  .cp-calendar__day--today:hover,
   .cp-calendar__day--today.is-hover {
     border-width: 2px;
     border-color: var(--blue-500, #2b7fff);
+  }
+  @media (hover: hover) {
+    .cp-calendar__day--today:hover {
+      border-width: 2px;
+      border-color: var(--blue-500, #2b7fff);
+    }
   }
   .cp-calendar__day--selected {
     border-width: 2px;
     border-color: var(--amber-400, #ffb900);
     background-color: var(--white, #ffffff);
   }
-  .cp-calendar__day--selected:hover,
   .cp-calendar__day--selected.is-hover {
     border-width: 2px;
     border-color: var(--amber-400, #ffb900);
     background-color: var(--gray-50, #f9fafb);
   }
+  @media (hover: hover) {
+    .cp-calendar__day--selected:hover {
+      border-width: 2px;
+      border-color: var(--amber-400, #ffb900);
+      background-color: var(--gray-50, #f9fafb);
+    }
+  }
   .cp-calendar__day--today.cp-calendar__day--selected,
-  .cp-calendar__day--today.cp-calendar__day--selected:hover,
   .cp-calendar__day--today.cp-calendar__day--selected.is-hover {
     background-color: var(--blue-50, #eff6ff);
     border-width: 2px;
     border-color: var(--blue-500, #2b7fff);
     /* md:ring-2 md:ring-amber-400 md:ring-offset-0 → a 2px amber ring outside the border, inside the 4px grid gap */
     box-shadow: 0 0 0 2px var(--amber-400, #ffb900);
+  }
+  @media (hover: hover) {
+    .cp-calendar__day--today.cp-calendar__day--selected:hover {
+      background-color: var(--blue-50, #eff6ff);
+      border-width: 2px;
+      border-color: var(--blue-500, #2b7fff);
+      /* md:ring-2 md:ring-amber-400 md:ring-offset-0 → a 2px amber ring outside the border, inside the 4px grid gap */
+      box-shadow: 0 0 0 2px var(--amber-400, #ffb900);
+    }
   }
   .cp-calendar__num {
     margin-bottom: var(--space-1, 4px);

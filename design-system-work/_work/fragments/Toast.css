@@ -98,8 +98,10 @@
 .cp-toast__delta {
   margin-top: var(--space-1, 4px);
 }
-.cp-toast__delta > * + * {
-  margin-top: var(--space-1, 4px);
+/* <div className="mt-1 space-y-1">, v4 semantics: 4px margin-bottom on every row except the DOM-last. The first row renders only when
+   categoryPct is set; alone, the second row gets no margin. The rows carry no margin of their own. */
+.cp-toast__delta > :not(:last-child) {
+  margin-bottom: var(--space-1, 4px);
 }
 
 /* Delta row: flex items-center gap-1.5 text-xs (12px, unitless line-height calc(1 / 0.75) = 16px) */
@@ -185,23 +187,39 @@
   padding: var(--space-1, 4px) var(--space-2, 8px);
   border-radius: var(--radius-md, 6px);
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-toast__action:hover,
 .cp-toast__action.is-hover {
   background-color: var(--gray-50, #f9fafb);
 }
+@media (hover: hover) {
+  .cp-toast__action:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
+}
 .cp-toast--success .cp-toast__action { color: var(--green-600, #00a63e); }
-.cp-toast--success .cp-toast__action:hover,
 .cp-toast--success .cp-toast__action.is-hover { color: var(--green-700, #008236); }
+@media (hover: hover) {
+  .cp-toast--success .cp-toast__action:hover {
+    color: var(--green-700, #008236);
+  }
+}
 .cp-toast--info .cp-toast__action { color: var(--yu-navy, #153974); }
-.cp-toast--info .cp-toast__action:hover,
 .cp-toast--info .cp-toast__action.is-hover { color: var(--yu-navy-hover, #003e7e); }
+@media (hover: hover) {
+  .cp-toast--info .cp-toast__action:hover {
+    color: var(--yu-navy-hover, #003e7e);
+  }
+}
 .cp-toast--warning .cp-toast__action { color: var(--amber-600, #e17100); }
-.cp-toast--warning .cp-toast__action:hover,
 .cp-toast--warning .cp-toast__action.is-hover { color: var(--amber-700, #bb4d00); }
+@media (hover: hover) {
+  .cp-toast--warning .cp-toast__action:hover {
+    color: var(--amber-700, #bb4d00);
+  }
+}
 
 /* Close button: p-0.5 text-gray-400 hover:text-gray-600 transition-colors, aria-label="닫기" */
 .cp-toast__close {
@@ -214,13 +232,17 @@
   padding: var(--space-0-5, 2px);
   font: inherit;
   color: var(--gray-400, #99a1af);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-toast__close:hover,
 .cp-toast__close.is-hover {
   color: var(--gray-600, #4a5565);
+}
+@media (hover: hover) {
+  .cp-toast__close:hover {
+    color: var(--gray-600, #4a5565);
+  }
 }
 
 /* Close icon: the inline heroicons-v1 X, w-4 h-4, fill currentColor; preflight makes svg display:block. */

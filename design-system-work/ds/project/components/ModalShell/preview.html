@@ -1,4 +1,4 @@
-<!-- @dsCard group="Patterns" height=688 -->
+<!-- @dsCard group="Patterns" height=1040 -->
 <!doctype html>
 <html lang="ko">
 <head>
@@ -9,6 +9,8 @@
   .row { display: flex; align-items: flex-start; gap: 16px; }
   .row + .row { margin-top: 20px; }
   .cell { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  /* A row with fewer than three cells keeps the one-third cell width of the full rows. */
+  .row--partial > .cell { flex: 0 0 calc((100% - 32px) / 3); }
   /* Each stage stands in for the viewport: a gray-50 dashboard page under the overlay. container-type: size lets
      the panels' 90vh / 85vh clamps measure the stage (cqh under the staged modifier). */
   .stage { position: relative; height: 240px; overflow: hidden; border-radius: 8px; background: var(--gray-50, #f9fafb); container-type: size; }
@@ -36,13 +38,13 @@
           <form class="cp-modal__body cp-modal__body--custom-course">
             <div class="cp-modal__actions cp-modal__actions--split">
               <button type="button" class="cp-button cp-button--ghost">취소</button>
-              <button type="button" class="cp-button cp-button--default">추가</button>
+              <button type="button" class="cp-button cp-button--default" disabled>추가</button>
             </div>
           </form>
         </div>
       </div>
     </div>
-    <p class="cap">(a) CustomCourseForm.tsx · bg-black/50 + p-4 gutter · rounded-lg shadow-xl max-w-md max-h-[90vh] · header px-6 py-4 with border-b gray-200 · Button ghost + default, flex-1</p>
+    <p class="cap">(a) CustomCourseForm.tsx · bg-black/50 + p-4 gutter · rounded-lg shadow-xl max-w-md max-h-[90vh] · header px-6 py-4 with border-b gray-200 · Button ghost + default, flex-1 · 추가 disabled as it opens (category starts '')</p>
   </div>
 
   <!-- (b) AddSemesterDialog.tsx -->
@@ -119,10 +121,29 @@
         </div>
       </div>
     </div>
-    <p class="cap">(d) admin/courses/page.tsx · bg-black/50, no gutter · rounded-2xl p-6 shadow-xl max-w-lg · h2 text-lg bold, X p-1 slate-400 · justify-end: 취소 slate-200, 추가 cyan (departments form: no X, ghost 취소)</p>
+    <p class="cap">(d) admin/courses/page.tsx · bg-black/50, no gutter · rounded-2xl p-6 shadow-xl max-w-lg · h2 text-lg bold, X p-1 slate-400 · justify-end: 취소 slate-200, 추가 cyan</p>
   </div>
 
-  <!-- (d2) admin/departments/page.tsx delete confirm -->
+  <!-- (d2) admin/departments/page.tsx create/edit form modal -->
+  <div class="cell">
+    <div class="stage">
+      <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
+      <div class="cp-modal cp-modal--staged">
+        <div class="cp-modal__panel cp-modal__panel--admin-form">
+          <h2 class="cp-modal__title cp-modal__title--bold">학과 추가</h2>
+          <form class="cp-modal__body--admin-departments">
+            <div class="cp-modal__actions cp-modal__actions--admin-departments">
+              <button type="button" class="cp-admin__btn cp-admin__btn--cancel-departments">취소</button>
+              <button type="button" class="cp-admin__btn cp-modal__submit--admin cp-modal__submit--admin-departments">추가</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <p class="cap">(d) admin/departments/page.tsx form · bg-black/50, no gutter · rounded-2xl p-6 shadow-xl max-w-lg, no max-h, no X · lone h2 text-lg bold, form mt-4 · justify-end gap-3: ghost 취소, 추가 cyan with transition-colors</p>
+  </div>
+
+  <!-- (d3) admin/departments/page.tsx delete confirm -->
   <div class="cell">
     <div class="stage">
       <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
@@ -139,6 +160,10 @@
     </div>
     <p class="cap">(d) admin/departments/page.tsx confirm · bg-black/50, no gutter · rounded-2xl p-6 shadow-xl max-w-sm · h2 text-lg bold, body text-sm slate-600 · mt-4 justify-end: ghost 취소, red-600 삭제</p>
   </div>
+
+</div>
+
+<div class="row row--partial">
 
   <!-- (e) calendar/page.tsx event form -->
   <div class="cell">

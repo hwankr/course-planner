@@ -1,4 +1,4 @@
-<!-- @dsCard group="Patterns" height=1180 -->
+<!-- @dsCard group="Patterns" height=1920 -->
 <!doctype html>
 <html lang="ko">
 <head>
@@ -53,7 +53,7 @@
       </div>
 
       <div class="cp-admin__menus">
-        <a href="/admin/courses" class="cp-admin__menu-link">
+        <a href="#" class="cp-admin__menu-link">
           <div class="cp-card cp-admin__menu-card">
             <div class="cp-card__header">
               <h3 class="cp-card__title cp-admin__menu-title">과목 관리</h3>
@@ -61,7 +61,7 @@
             </div>
           </div>
         </a>
-        <a href="/admin/departments" class="cp-admin__menu-link">
+        <a href="#" class="cp-admin__menu-link">
           <div class="cp-card cp-admin__menu-card is-hover">
             <div class="cp-card__header">
               <h3 class="cp-card__title cp-admin__menu-title">학과 관리</h3>
@@ -81,9 +81,9 @@
     <div class="cp-admin">
       <div class="cp-admin__filters">
         <div class="cp-admin__search cp-input cp-input--soft">
-          <svg class="lucide lucide-search cp-admin__search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <svg class="lucide lucide-search cp-admin__search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
           <input class="cp-input__field" type="text" placeholder="과목명 또는 코드 검색" value="CSE">
-          <button type="button" class="cp-admin__search-clear"><svg class="lucide lucide-x cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+          <button type="button" class="cp-admin__search-clear"><svg class="lucide lucide-x cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
         </div>
         <div class="cp-input cp-input--soft">
           <select class="cp-input__field">
@@ -101,6 +101,12 @@
             <option>교양선택</option>
             <option>자유선택</option>
             <option>교직</option>
+          </select>
+        </div>
+        <div class="cp-input cp-input--soft">
+          <select class="cp-input__field">
+            <option value="2025">2025년</option>
+            <option value="2026" selected>2026년</option>
           </select>
         </div>
       </div>
@@ -123,8 +129,8 @@
                 </div>
               </div>
               <div class="cp-admin__row-actions">
-                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
-                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
               </div>
             </div>
           </div>
@@ -147,8 +153,8 @@
                 </div>
               </div>
               <div class="cp-admin__row-actions">
-                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit is-hover" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
-                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete is-hover" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit is-hover" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete is-hover" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
               </div>
             </div>
           </div>
@@ -171,7 +177,7 @@
                 </div>
               </div>
               <div class="cp-admin__row-actions">
-                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
                 <div class="cp-admin__confirm-inline">
                   <button type="button" class="cp-admin__btn cp-admin__btn--danger-courses-inline">삭제</button>
                   <button type="button" class="cp-admin__btn cp-admin__btn--cancel-courses-inline">취소</button>
@@ -183,7 +189,125 @@
       </div>
     </div>
   </div>
-  <p class="cap">admin/courses/page.tsx · soft search (pl-9 pr-8, icon left-3, X right-2) + soft selects · Card rows, p-5 · row 2: icon buttons .is-hover · row 3: deletingId → [삭제][취소]</p>
+  <p class="cap">admin/courses/page.tsx · soft search (intrinsic width, pl-9 pr-8, icon left-3, X right-2) + soft selects 학과 · 카테고리 · 연도 · Card rows, p-5 · row 2: icon buttons .is-hover · row 3: deletingId → [삭제][취소]</p>
+</div>
+
+<!-- admin/departments/page.tsx: items-center filter row + department row -->
+<div class="section">
+  <div class="stage">
+    <div class="cp-admin">
+      <div class="cp-admin__filters cp-admin__filters--center">
+        <div class="cp-admin__search cp-admin__search--departments cp-input cp-input--soft">
+          <svg class="lucide lucide-search cp-admin__search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input class="cp-input__field" type="text" placeholder="학과명 또는 코드로 검색..." value="컴퓨터">
+          <button type="button" class="cp-admin__search-clear"><svg class="lucide lucide-x cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        </div>
+      </div>
+
+      <div class="cp-admin__list">
+        <div class="cp-card cp-admin__row">
+          <div class="cp-card__content cp-admin__row-content cp-admin__row-content--dept">
+            <div class="cp-admin__row-info">
+              <div class="cp-admin__row-title">
+                <span class="cp-admin__badge cp-admin__badge--dept-code">CSE</span>
+                <span class="cp-admin__dept-name">컴퓨터공학과</span>
+              </div>
+              <p class="cp-admin__dept-college">공과대학</p>
+            </div>
+            <div class="cp-admin__row-actions cp-admin__row-actions--dept">
+              <button type="button" class="cp-admin__icon-button cp-admin__icon-button--edit" title="수정"><svg class="lucide lucide-pencil cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
+              <button type="button" class="cp-admin__icon-button cp-admin__icon-button--delete" title="삭제"><svg class="lucide lucide-trash-2 cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">admin/departments/page.tsx · items-center row: search w-full in flex-1 min-w-[200px], pl-10 pr-9, X right-3 (학과 추가 button not shown) · row: blue-100 code pill, slate-900 name, slate-400 college, actions ml-4 shrink-0</p>
+</div>
+
+<!-- admin/users/page.tsx: filter row + user rows -->
+<div class="section">
+  <div class="stage">
+    <div class="cp-admin">
+      <div class="cp-admin__filters">
+        <div class="cp-admin__search cp-admin__search--users cp-input cp-input--soft">
+          <svg class="lucide lucide-search cp-admin__search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+          <input class="cp-input__field" type="text" placeholder="이름 또는 이메일 검색...">
+        </div>
+        <div class="cp-input cp-input--soft">
+          <select class="cp-input__field">
+            <option value="" selected>전체 역할</option>
+            <option value="student">학생</option>
+            <option value="admin">관리자</option>
+          </select>
+        </div>
+        <div class="cp-input cp-input--soft">
+          <select class="cp-input__field">
+            <option value="" selected>전체 학과</option>
+            <option>컴퓨터공학과</option>
+          </select>
+        </div>
+        <div class="cp-input cp-input--soft">
+          <select class="cp-input__field">
+            <option value="recent" selected>최근 가입순</option>
+            <option value="lastLogin">최근 접속순</option>
+            <option value="name">이름순</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cp-admin__list">
+        <div class="cp-card cp-admin__row">
+          <div class="cp-card__content cp-admin__row-content">
+            <div class="cp-admin__row-flex cp-admin__row-flex--user">
+              <div class="cp-admin__row-info cp-admin__row-info--user">
+                <div class="cp-admin__row-title">
+                  <span class="cp-admin__user-name">이영희</span>
+                  <span class="cp-admin__badge cp-admin__badge--role-admin"><svg class="lucide lucide-shield cp-admin__badge-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>관리자</span>
+                  <span class="cp-admin__badge cp-admin__badge--provider-email">이메일</span>
+                </div>
+                <div class="cp-admin__row-meta cp-admin__row-meta--user">
+                  <span>admin@example.com</span>
+                  <span>2025년 3월 2일</span>
+                </div>
+              </div>
+              <div class="cp-admin__row-actions cp-admin__row-actions--user">
+                <button type="button" class="cp-admin__btn cp-admin__btn--role-admin">학생으로 변경</button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--expand" title="상세 정보"><svg class="lucide lucide-chevron-down cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cp-card cp-admin__row">
+          <div class="cp-card__content cp-admin__row-content">
+            <div class="cp-admin__row-flex cp-admin__row-flex--user">
+              <div class="cp-admin__row-info cp-admin__row-info--user">
+                <div class="cp-admin__row-title">
+                  <span class="cp-admin__user-name">김민수</span>
+                  <span class="cp-admin__badge cp-admin__badge--student-id">22012345</span>
+                  <span class="cp-admin__badge cp-admin__badge--role-student"><svg class="lucide lucide-user cp-admin__badge-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>학생</span>
+                  <span class="cp-admin__badge cp-admin__badge--provider-google">Google</span>
+                </div>
+                <div class="cp-admin__row-meta cp-admin__row-meta--user">
+                  <span>minsu@example.com</span>
+                  <span>컴퓨터공학과</span>
+                  <span>2022학번</span>
+                  <span>2025년 2월 18일</span>
+                </div>
+              </div>
+              <div class="cp-admin__row-actions cp-admin__row-actions--user">
+                <button type="button" class="cp-admin__btn cp-admin__btn--role-student is-hover">관리자로 변경</button>
+                <button type="button" class="cp-admin__icon-button cp-admin__icon-button--expand is-hover" title="상세 정보"><svg class="lucide lucide-chevron-down cp-admin__icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">admin/users/page.tsx · search w-full in flex-1 min-w-[200px] max-w-sm, pl-10 pr-3, no clear · admin row: Shield pill, 이메일, 학생으로 변경 · student row: studentId, User pill, Google, 관리자로 변경 and 상세 정보 .is-hover</p>
 </div>
 
 <!-- departments/page.tsx confirm modal · courses empty box · loading tiles -->
@@ -207,7 +331,7 @@
       <div class="col col--empty">
         <div class="cp-admin">
           <div class="cp-admin__empty">
-            <svg class="lucide lucide-book-open cp-admin__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+            <svg class="lucide lucide-book-open cp-admin__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
             <p class="cp-admin__empty-text">등록된 과목이 없습니다.</p>
           </div>
         </div>
@@ -258,6 +382,35 @@
     </div>
   </div>
   <p class="cap">Four 취소 recipes, rest · .is-hover, named by source file; none sets a focus style.</p>
+</div>
+
+<!-- the three 삭제 recipes, rest · .is-hover (users also .is-disabled) -->
+<div class="section">
+  <div class="recipes">
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-courses-inline">삭제</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-courses-inline is-hover">삭제</button>
+      </div>
+      <p class="cap">courses/page.tsx · inline delete pair · red-600 → red-700 · xs · no transition</p>
+    </div>
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-departments">삭제</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-departments is-hover">삭제</button>
+      </div>
+      <p class="cap">departments/page.tsx · 학과 삭제 modal · red-600 → red-700 · sm · transition-colors</p>
+    </div>
+    <div class="recipe">
+      <div class="pair">
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-users">삭제 확인</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-users is-hover">삭제 확인</button>
+        <button type="button" class="cp-admin__btn cp-admin__btn--danger-users is-disabled">삭제 중...</button>
+      </div>
+      <p class="cap">users/page.tsx · delete confirm · red-600 → red-700 · xs · transition-colors · .is-disabled = disabled:opacity-50 while deleting</p>
+    </div>
+  </div>
+  <p class="cap">Three 삭제 recipes, rest · .is-hover (users also .is-disabled), named by source file; none sets a focus style.</p>
 </div>
 
 </body>

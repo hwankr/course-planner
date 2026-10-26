@@ -23,7 +23,9 @@
   padding: var(--space-3, 12px);
   border-bottom: 1px solid var(--gray-200, #e5e7eb);
 }
-.cp-course-catalog__header > * + * { margin-top: var(--space-2-5, 10px); }
+/* "space-y-2.5", Tailwind v4 semantics: 10px below every child except the DOM-last. Children: title row, search row,
+   filters — the last two are not rendered while collapsed (or the search row on the 공통 tab); none has a margin of its own. */
+.cp-course-catalog__header > :not(:last-child) { margin-bottom: var(--space-2-5, 10px); }
 
 /* Row 1: flex items-center justify-between gap-2 */
 .cp-course-catalog__title-row {
@@ -80,21 +82,26 @@
   background: transparent;
   color: var(--gray-300, #d1d5dc);
   font: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-course-catalog__help:hover,
 .cp-course-catalog__help.is-hover { color: var(--gray-500, #6a7282); }
+@media (hover: hover) {
+  .cp-course-catalog__help:hover {
+    color: var(--gray-500, #6a7282);
+  }
+}
 
 /* Lucide / heroicons svgs: preflight makes svg display:block */
 .cp-course-catalog__icon { display: block; }
 .cp-course-catalog__icon--sm { width: var(--icon-sm, 14px); height: var(--icon-sm, 14px); }
 .cp-course-catalog__icon--lg { width: var(--icon-lg, 20px); height: var(--icon-lg, 20px); }
 
-/* showCurriculumInfo note: text-[11px] text-amber-600 bg-amber-50 rounded px-2 py-1 mt-1 */
+/* showCurriculumInfo note: text-[11px] text-amber-600 bg-amber-50 rounded px-2 py-1 mt-1 — the third child of the
+   heading's "min-w-0" div, which has no space-y, so only its own mt-1 applies (4px under the subtitle row). */
 .cp-course-catalog__note {
-  margin: calc(var(--space-3, 12px) + var(--space-1, 4px)) 0 0; /* space-y-3 (12px) + mt-1 */
+  margin: var(--space-1, 4px) 0 0; /* mt-1 */
   padding: var(--space-1, 4px) var(--space-2, 8px);
   border-radius: var(--radius-sm, 4px);
   background-color: var(--amber-50, #fffbeb);
@@ -136,12 +143,16 @@
   background-color: var(--gray-100, #f3f4f6);
   color: var(--gray-500, #6a7282);
   font: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-course-catalog__view-btn:hover,
 .cp-course-catalog__view-btn.is-hover { background-color: var(--gray-200, #e5e7eb); }
+@media (hover: hover) {
+  .cp-course-catalog__view-btn:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
+}
 .cp-course-catalog__view-btn.is-active {
   background-color: var(--yu-navy, #153974);
   color: var(--white, #ffffff);
@@ -157,12 +168,16 @@
   background-color: var(--emerald-500, #00bc7d);
   color: var(--white, #ffffff);
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-course-catalog__add:hover,
 .cp-course-catalog__add.is-hover { background-color: var(--emerald-600, #009966); }
+@media (hover: hover) {
+  .cp-course-catalog__add:hover {
+    background-color: var(--emerald-600, #009966);
+  }
+}
 
 /* Collapse: p-1 hover:bg-gray-100 rounded transition-colors */
 .cp-course-catalog__collapse {
@@ -174,12 +189,16 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-course-catalog__collapse:hover,
 .cp-course-catalog__collapse.is-hover { background-color: var(--gray-100, #f3f4f6); }
+@media (hover: hover) {
+  .cp-course-catalog__collapse:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
+}
 
 /* Chevron (heroicons v1 solid chevron-down): w-5 h-5 text-gray-600 transition-transform, rotate-180 when collapsed */
 .cp-course-catalog__chevron {
@@ -200,8 +219,9 @@
   gap: var(--space-2, 8px);
 }
 
-/* ---------- Row 3: filters (space-y-1.5) ---------- */
-.cp-course-catalog__filters > * + * { margin-top: var(--space-1-5, 6px); }
+/* ---------- Row 3: filters "space-y-1.5" ---------- */
+/* Tailwind v4 semantics: 6px below every row except the DOM-last. On the 공통 tab only the 학과 row renders, so it gets none. */
+.cp-course-catalog__filters > :not(:last-child) { margin-bottom: var(--space-1-5, 6px); }
 
 /* Rows: flex items-center gap-1 (dept: pb-1; year/semester: gap-x-3 gap-y-1 flex-wrap; category: flex-wrap) */
 .cp-course-catalog__filter-row {
@@ -251,12 +271,16 @@
   background-color: var(--yu-navy-a10, #1539741a);
   color: var(--yu-navy, #153974);
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-course-catalog__chip:hover,
 .cp-course-catalog__chip.is-hover { background-color: var(--yu-navy-a20, #15397433); }
+@media (hover: hover) {
+  .cp-course-catalog__chip:hover {
+    background-color: var(--yu-navy-a20, #15397433);
+  }
+}
 .cp-course-catalog__chip.is-active {
   background-color: var(--yu-navy, #153974);
   color: var(--white, #ffffff);
@@ -264,57 +288,97 @@
 
 /* 복수전공 (deptFilter secondary, majorType double): purple-50 / purple-600 / hover purple-100 / active purple-500 */
 .cp-course-catalog__chip--purple { background-color: var(--purple-50, #faf5ff); color: var(--purple-600, #9810fa); }
-.cp-course-catalog__chip--purple:hover,
 .cp-course-catalog__chip--purple.is-hover { background-color: var(--purple-100, #f3e8ff); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--purple:hover {
+    background-color: var(--purple-100, #f3e8ff);
+  }
+}
 .cp-course-catalog__chip--purple.is-active { background-color: var(--purple-500, #ad46ff); color: var(--white, #ffffff); }
 
 /* 부전공 (minor) and 전공선택: orange-50 / orange-600 / hover orange-100 / active orange-500 */
 .cp-course-catalog__chip--orange { background-color: var(--orange-50, #fff7ed); color: var(--orange-600, #f54900); }
-.cp-course-catalog__chip--orange:hover,
 .cp-course-catalog__chip--orange.is-hover { background-color: var(--orange-100, #ffedd4); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--orange:hover {
+    background-color: var(--orange-100, #ffedd4);
+  }
+}
 .cp-course-catalog__chip--orange.is-active { background-color: var(--orange-500, #ff6900); color: var(--white, #ffffff); }
 
 /* 공통: indigo-50 / indigo-600 / hover indigo-100 / active indigo-500 */
 .cp-course-catalog__chip--indigo { background-color: var(--indigo-50, #eef2ff); color: var(--indigo-600, #4f39f6); }
-.cp-course-catalog__chip--indigo:hover,
 .cp-course-catalog__chip--indigo.is-hover { background-color: var(--indigo-100, #e0e7ff); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--indigo:hover {
+    background-color: var(--indigo-100, #e0e7ff);
+  }
+}
 .cp-course-catalog__chip--indigo.is-active { background-color: var(--indigo-500, #615fff); color: var(--white, #ffffff); }
 
 /* 학기 chips: emerald-50 / emerald-600 / hover emerald-100 / active emerald-500 */
 .cp-course-catalog__chip--emerald { background-color: var(--emerald-50, #ecfdf5); color: var(--emerald-600, #009966); }
-.cp-course-catalog__chip--emerald:hover,
 .cp-course-catalog__chip--emerald.is-hover { background-color: var(--emerald-100, #d0fae5); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--emerald:hover {
+    background-color: var(--emerald-100, #d0fae5);
+  }
+}
 .cp-course-catalog__chip--emerald.is-active { background-color: var(--emerald-500, #00bc7d); color: var(--white, #ffffff); }
 
 /* 이수 category chips (chipColors): 전공핵심 red, 전공필수 rose, 전공선택 orange (above), 교양필수 blue, 교양선택 green, 교직 violet, 자유선택 gray */
 .cp-course-catalog__chip--red { background-color: var(--red-50, #fef2f2); color: var(--red-600, #e7000b); }
-.cp-course-catalog__chip--red:hover,
 .cp-course-catalog__chip--red.is-hover { background-color: var(--red-100, #ffe2e2); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--red:hover {
+    background-color: var(--red-100, #ffe2e2);
+  }
+}
 .cp-course-catalog__chip--red.is-active { background-color: var(--red-500, #fb2c36); color: var(--white, #ffffff); }
 
 .cp-course-catalog__chip--rose { background-color: var(--rose-50, #fff1f2); color: var(--rose-600, #ec003f); }
-.cp-course-catalog__chip--rose:hover,
 .cp-course-catalog__chip--rose.is-hover { background-color: var(--rose-100, #ffe4e6); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--rose:hover {
+    background-color: var(--rose-100, #ffe4e6);
+  }
+}
 .cp-course-catalog__chip--rose.is-active { background-color: var(--rose-500, #ff2056); color: var(--white, #ffffff); }
 
 .cp-course-catalog__chip--blue { background-color: var(--blue-50, #eff6ff); color: var(--blue-600, #155dfc); }
-.cp-course-catalog__chip--blue:hover,
 .cp-course-catalog__chip--blue.is-hover { background-color: var(--blue-100, #dbeafe); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--blue:hover {
+    background-color: var(--blue-100, #dbeafe);
+  }
+}
 .cp-course-catalog__chip--blue.is-active { background-color: var(--blue-500, #2b7fff); color: var(--white, #ffffff); }
 
 .cp-course-catalog__chip--green { background-color: var(--green-50, #f0fdf4); color: var(--green-600, #00a63e); }
-.cp-course-catalog__chip--green:hover,
 .cp-course-catalog__chip--green.is-hover { background-color: var(--green-100, #dcfce7); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--green:hover {
+    background-color: var(--green-100, #dcfce7);
+  }
+}
 .cp-course-catalog__chip--green.is-active { background-color: var(--green-500, #00c950); color: var(--white, #ffffff); }
 
 .cp-course-catalog__chip--violet { background-color: var(--violet-50, #f5f3ff); color: var(--violet-600, #7f22fe); }
-.cp-course-catalog__chip--violet:hover,
 .cp-course-catalog__chip--violet.is-hover { background-color: var(--violet-100, #ede9fe); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--violet:hover {
+    background-color: var(--violet-100, #ede9fe);
+  }
+}
 .cp-course-catalog__chip--violet.is-active { background-color: var(--violet-500, #8e51ff); color: var(--white, #ffffff); }
 
 .cp-course-catalog__chip--gray { background-color: var(--gray-100, #f3f4f6); color: var(--gray-600, #4a5565); }
-.cp-course-catalog__chip--gray:hover,
 .cp-course-catalog__chip--gray.is-hover { background-color: var(--gray-200, #e5e7eb); }
+@media (hover: hover) {
+  .cp-course-catalog__chip--gray:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
+}
 .cp-course-catalog__chip--gray.is-active { background-color: var(--gray-500, #6a7282); color: var(--white, #ffffff); }
 
 /* ---------- Banners (full-width strips under the header) ---------- */
@@ -332,8 +396,12 @@
   font-weight: 500;
   text-decoration: underline;
 }
-.cp-course-catalog__banner-link:hover,
 .cp-course-catalog__banner-link.is-hover { color: var(--amber-800, #973c00); }
+@media (hover: hover) {
+  .cp-course-catalog__banner-link:hover {
+    color: var(--amber-800, #973c00);
+  }
+}
 
 /* Focus banner: px-4 py-2 bg-[#153974]/5 border-b border-[#153974]/20 text-xs text-[#153974]; the semester name is font-medium */
 .cp-course-catalog__banner--focus {
@@ -411,18 +479,20 @@
   font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
 }
 
-/* Group list: flex-1 overflow-y-auto max-h-[320px] pt-2 + space-y-0.5 (list) | space-y-2 (card) */
+/* Group list: "flex-1 overflow-y-auto max-h-[320px] pt-2" + "space-y-0.5" (list) | "space-y-2" (card) */
 .cp-course-catalog__group-list {
   flex: 1 1 0%;
   overflow-y: auto;
   max-height: 320px;
   padding-top: var(--space-2, 8px);
 }
-.cp-course-catalog__group-list--list > * + * { margin-top: var(--space-0-5, 2px); }
-.cp-course-catalog__group-list--card > * + * { margin-top: var(--space-2, 8px); }
+/* Tailwind v4 semantics: margin below every item except the DOM-last; the items (.cp-course-catalog__item) carry no margin. */
+.cp-course-catalog__group-list--list > :not(:last-child) { margin-bottom: var(--space-0-5, 2px); }
+.cp-course-catalog__group-list--card > :not(:last-child) { margin-bottom: var(--space-2, 8px); }
 
-/* Flat view (search or any filter active): space-y-0.5 (list) | flex flex-wrap gap-3 (card) */
-.cp-course-catalog__flat--list > * + * { margin-top: var(--space-0-5, 2px); }
+/* Flat view (search or any filter active): "space-y-0.5" (list) | "flex flex-wrap gap-3" (card).
+   List: Tailwind v4 semantics, 2px below every item except the DOM-last. */
+.cp-course-catalog__flat--list > :not(:last-child) { margin-bottom: var(--space-0-5, 2px); }
 .cp-course-catalog__flat--card {
   display: flex;
   flex-wrap: wrap;
@@ -449,8 +519,12 @@
   border-radius: var(--radius-sm, 4px);
   font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
 }
-.cp-course-catalog__row:hover,
 .cp-course-catalog__row.is-hover { background-color: var(--gray-50, #f9fafb); }
+@media (hover: hover) {
+  .cp-course-catalog__row:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
+}
 
 /* Row badge: text-[10px] px-1 py-0.5 rounded font-medium whitespace-nowrap; colors = CourseCard's categoryColors (fallback gray-100/gray-600) */
 .cp-course-catalog__badge {
@@ -518,8 +592,12 @@
   color: var(--white, #ffffff);
   font: 700 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
 }
-.cp-course-catalog__add-btn:hover,
 .cp-course-catalog__add-btn.is-hover { background-color: var(--yu-navy-hover, #003e7e); }
+@media (hover: hover) {
+  .cp-course-catalog__add-btn:hover {
+    background-color: var(--yu-navy-hover, #003e7e);
+  }
+}
 .cp-course-catalog__add-btn:disabled,
 .cp-course-catalog__add-btn.is-adding {
   background-color: var(--gray-300, #d1d5dc);
@@ -536,7 +614,7 @@
   height: var(--icon-xl, 24px);
   font: 700 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -570,7 +648,10 @@
 }
 
 /* ---------- 공통 tab: quick-add grid (documented, not in the preview) ---------- */
-.cp-course-catalog__quick > * + * { margin-top: var(--space-3, 12px); }
+/* "space-y-3", Tailwind v4 semantics: 12px below every child except the DOM-last (the footnote). Children: warning
+   (only while nothing is focused), hint, grid, footnote. At (0,2,0) this beats the `margin: 0` reset on __quick-hint
+   below, as Tailwind's utilities layer beats preflight. */
+.cp-course-catalog__quick > :not(:last-child) { margin-bottom: var(--space-3, 12px); }
 /* !focusedSemester warning: text-center text-sm text-amber-600 bg-amber-50 rounded-lg p-3 */
 .cp-course-catalog__quick-warning {
   padding: var(--space-3, 12px);
@@ -615,28 +696,44 @@
   color: var(--white, #ffffff);
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-course-catalog__quick-btn:hover,
 .cp-course-catalog__quick-btn.is-hover { background-color: var(--gray-600, #4a5565); }
+@media (hover: hover) {
+  .cp-course-catalog__quick-btn:hover {
+    background-color: var(--gray-600, #4a5565);
+  }
+}
 /* 교양필수 blue · 교양선택 green · 자유선택 gray (base above) · 교직 violet */
 .cp-course-catalog__quick-card--general-required { border-color: var(--blue-200, #bedbff); background-color: var(--blue-50, #eff6ff); }
 .cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-title { color: var(--blue-700, #1447e6); }
 .cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn { background-color: var(--blue-500, #2b7fff); }
-.cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn:hover,
 .cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn.is-hover { background-color: var(--blue-600, #155dfc); }
+@media (hover: hover) {
+  .cp-course-catalog__quick-card--general-required .cp-course-catalog__quick-btn:hover {
+    background-color: var(--blue-600, #155dfc);
+  }
+}
 .cp-course-catalog__quick-card--general-elective { border-color: var(--green-200, #b9f8cf); background-color: var(--green-50, #f0fdf4); }
 .cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-title { color: var(--green-700, #008236); }
 .cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn { background-color: var(--green-500, #00c950); }
-.cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn:hover,
 .cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn.is-hover { background-color: var(--green-600, #00a63e); }
+@media (hover: hover) {
+  .cp-course-catalog__quick-card--general-elective .cp-course-catalog__quick-btn:hover {
+    background-color: var(--green-600, #00a63e);
+  }
+}
 .cp-course-catalog__quick-card--teaching { border-color: var(--violet-200, #ddd6ff); background-color: var(--violet-50, #f5f3ff); }
 .cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-title { color: var(--violet-700, #7008e7); }
 .cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn { background-color: var(--violet-500, #8e51ff); }
-.cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn:hover,
 .cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn.is-hover { background-color: var(--violet-600, #7f22fe); }
+@media (hover: hover) {
+  .cp-course-catalog__quick-card--teaching .cp-course-catalog__quick-btn:hover {
+    background-color: var(--violet-600, #7f22fe);
+  }
+}
 /* !focusedSemester: bg-gray-200 text-gray-400 cursor-not-allowed · isCreating: bg-gray-300 text-gray-500 cursor-wait, label "..." */
 /* the source styles these states by class (no disabled: variant), so :disabled itself carries no styling */
 .cp-course-catalog__quick-card .cp-course-catalog__quick-btn.is-disabled {
@@ -649,8 +746,10 @@
   color: var(--gray-500, #6a7282);
   cursor: wait;
 }
+/* Footnote <p>: "text-[11px] text-gray-400 mt-1" — the DOM-last child, so space-y-3 gives it nothing; its own 4px top
+   margin collapses with the grid's 12px bottom margin (block flow), leaving the 12px gap Tailwind v4 renders. */
 .cp-course-catalog__quick-footnote {
-  margin: calc(var(--space-3, 12px) + var(--space-1, 4px)) 0 0; /* space-y-3 (12px) + mt-1 */
+  margin: var(--space-1, 4px) 0 0; /* mt-1 */
   color: var(--gray-400, #99a1af);
   font: 400 11px/16.5px var(--font-body, Arial, Helvetica, sans-serif);
 }

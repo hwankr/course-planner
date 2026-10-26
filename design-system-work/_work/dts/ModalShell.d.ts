@@ -1,6 +1,7 @@
 /**
  * ModalShell — documentation-only types for the modal-shell PATTERN: the overlay + panel markup the app
- * repeats inline around six dialogs. No shell component exists in the source; these are the props of the
+ * repeats inline around seven dialogs (six panel recipes; the admin/courses and admin/departments create/edit
+ * forms share admin-form). No shell component exists in the source; these are the props of the
  * three components that render one, the page state the admin and calendar pages key theirs on, and the
  * recipe names the stylesheet uses.
  */
@@ -23,7 +24,7 @@ export interface ModalShellProps {
   recipe: ModalShellRecipe;
   /** Closes the dialog; (b) and (c) also call it on backdrop click and Escape. */
   onClose: () => void;
-  /** Header text: `커스텀 과목 추가`, `학기 추가`, `익명 수강계획 전체 보기`, `과목 추가`/`과목 수정`, `학과 삭제`, `일정 추가`/`일정 수정`. */
+  /** Header text: `커스텀 과목 추가`, `학기 추가`, `익명 수강계획 전체 보기`, `과목 추가`/`과목 수정`, `학과 추가`/`학과 수정`, `학과 삭제`, `일정 추가`/`일정 수정`. */
   title: string;
   /** Optional body-sm gray-500 line under the title; only (a) and (c) render one. */
   subtitle?: string;
@@ -82,8 +83,14 @@ export interface InlineModalPageState {
   deleteConfirmId: string | null;
   /** calendar: the event form modal is open. */
   showEventForm: boolean;
-  /** admin pages: disables the submit button and swaps its label to 저장 중.... */
+  /** admin pages: disables the submit button (and the departments form's 취소) and swaps its label to 저장 중.... */
   isSaving: boolean;
+  /** admin/courses: switches the 과목 추가→과목 수정 title and the 추가→수정 submit label (CourseItem: see AdminList). */
+  editingCourse: CourseItem | null;
+  /** admin/departments: switches the 학과 추가→학과 수정 title and the 추가→수정 submit label. */
+  editingId: string | null;
+  /** calendar: switches the 일정 추가→일정 수정 title and the 추가→수정 submit label (CalendarEvent: see CalendarGrid). */
+  editingEvent: CalendarEvent | null;
 }
 
 /** Re-exported from src/types for the signatures above. */
@@ -93,8 +100,8 @@ export type RequirementCategory =
   | 'major_elective'
   | 'general_required'
   | 'general_elective'
-  | 'teaching'
-  | 'free_elective';
+  | 'free_elective'
+  | 'teaching';
 
 /** Semester term as AddSemesterDialog uses it. */
 export type Term = 'spring' | 'fall';

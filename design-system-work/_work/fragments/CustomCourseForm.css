@@ -63,10 +63,11 @@
   margin: 0;
   padding: var(--space-6, 24px);
 }
-/* space-y-4 per the brief: 16px above every child after the first. :not(:first-child) lifts this rule to (0,2,0)
-   so it wins over the `margin: 0` resets on the <p> elements below (Tailwind itself wins through its utilities layer). */
-.cp-custom-course-form__body > :not(:first-child) {
-  margin-top: var(--space-4, 16px);
+/* "space-y-4", Tailwind v4 semantics: 16px below every child except the DOM-last (the footer). Children: three field
+   <div>s, the notice <p>, the optional no-department and error <p>s, the footer. :not(:last-child) lifts this rule to
+   (0,2,0) so it wins over the `margin: 0` resets on the <p> elements below (Tailwind itself wins through its utilities layer). */
+.cp-custom-course-form__body > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
 
 /* Field wrapper <div> — no classes in the source. */

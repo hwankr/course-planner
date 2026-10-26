@@ -231,13 +231,17 @@
 /* AllPlansModal: "p-2 rounded-lg hover:bg-gray-200 transition-colors" aria-label="닫기" */
 .cp-modal__close--all-plans {
   padding: var(--space-2, 8px);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-modal__close--all-plans:hover,
 .cp-modal__close--all-plans.is-hover {
   background-color: var(--gray-200, #e5e7eb);
+}
+@media (hover: hover) {
+  .cp-modal__close--all-plans:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
 }
 
 /* admin/courses: "rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer" — no
@@ -247,22 +251,31 @@
   color: var(--slate-400, #90a1b9);
   cursor: pointer;
 }
-.cp-modal__close--admin:hover,
 .cp-modal__close--admin.is-hover {
   background-color: var(--slate-100, #f1f5f9);
   color: var(--slate-600, #45556c);
+}
+@media (hover: hover) {
+  .cp-modal__close--admin:hover {
+    background-color: var(--slate-100, #f1f5f9);
+    color: var(--slate-600, #45556c);
+  }
 }
 
 /* calendar: "p-2 rounded-lg hover:bg-gray-100 transition-colors" — the X inherits the Card's gray-900. */
 .cp-modal__close--calendar {
   padding: var(--space-2, 8px);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-modal__close--calendar:hover,
 .cp-modal__close--calendar.is-hover {
   background-color: var(--gray-100, #f3f4f6);
+}
+@media (hover: hover) {
+  .cp-modal__close--calendar:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
 }
 
 /* Lucide X "w-5 h-5" (icon-lg); AllPlansModal colors it text-gray-500 (the others inherit). */
@@ -280,6 +293,9 @@
    CustomCourseForm <form className="p-6 space-y-4">; admin/courses <form className="space-y-4">;
    admin/departments <form className="mt-4 space-y-4">; AddSemesterDialog <form className="space-y-6">;
    calendar <form className="space-y-4">; AllPlansModal content <div className="flex-1 overflow-y-auto px-6 py-4">.
+   space-y-* uses Tailwind v4 semantics: margin-bottom on every element child except the DOM-last. In all five
+   forms the DOM-last child is the always-rendered action row, the conditional children (CustomCourseForm's two
+   notices, AddSemesterDialog's duplicate warning) sit before it, and no direct child carries a margin of its own.
    --------------------------------------------------------------------------------------------- */
 .cp-modal__body--custom-course {
   padding: var(--space-6, 24px);
@@ -287,14 +303,14 @@
 .cp-modal__body--admin-departments {
   margin-top: var(--space-4, 16px);
 }
-.cp-modal__body--custom-course > * + *,
-.cp-modal__body--admin-courses > * + *,
-.cp-modal__body--admin-departments > * + *,
-.cp-modal__body--calendar > * + * {
-  margin-top: var(--space-4, 16px);
+.cp-modal__body--custom-course > :not(:last-child),
+.cp-modal__body--admin-courses > :not(:last-child),
+.cp-modal__body--admin-departments > :not(:last-child),
+.cp-modal__body--calendar > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
-.cp-modal__body--add-semester > * + * {
-  margin-top: var(--space-6, 24px);
+.cp-modal__body--add-semester > :not(:last-child) {
+  margin-bottom: var(--space-6, 24px);
 }
 .cp-modal__content {
   flex: 1 1 0%;
@@ -356,16 +372,20 @@
   background-color: var(--yu-cyan, #00aaca);
   color: var(--white, #ffffff);
 }
-.cp-modal__submit--admin:hover,
 .cp-modal__submit--admin.is-hover {
   background-color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-modal__submit--admin:hover {
+    background-color: var(--yu-navy, #153974);
+  }
 }
 .cp-modal__submit--admin:disabled,
 .cp-modal__submit--admin.is-disabled {
   opacity: var(--opacity-disabled, 0.5);
 }
 .cp-modal__submit--admin-departments {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }

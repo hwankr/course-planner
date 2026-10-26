@@ -4,11 +4,11 @@ The statistics page's three data-view Cards — the 인기 과목 순위 ranking
 
 - Use it on the department statistics route (`/statistics`) only: ranked course popularity, per-semester averages, and the anonymous-plan entry points that open AnonymousPlanModal (a plan tile) and AllPlansModal (전체 N개 수강계획 보기).
 - Use the guest variant when `isGuest` is true: the header stays, the plan grid is replaced by a locked message and the 구글로 로그인 / 회원가입하기 pair.
-- Don't use it for the planner's requirement progress (RequirementsSummary draws its own 6px slate tracks), for stat tiles that need big-number type (these tiles are text only), or as a generic card header: the `p-6 border-b` header here is inline markup, not CardHeader.
+- Don't use it for the planner's requirement progress (RequirementsSummary draws its own gray-100 stacked tracks (10px, 8px or 6px)), for stat tiles that need big-number type (these tiles are text only), or as a generic card header: the `p-6 border-b` header here is inline markup, not CardHeader.
 
 ## What the consumer provides
 
-- No props: `StatisticsPage` is a Next.js client page. It reads `useDepartmentStats(departmentId)` → `DepartmentCourseStats` (`departmentName`, `totalStudents`, `updatedAt`, `courseStats: CourseStat[]`, `semesterDistribution: SemesterDistribution[]`), `useAnonymousPlans(departmentId, 1, 3, !isGuest)` → `{ plans: AnonymousPlanSummary[]; total: number }`, and `isGuest` / `loginWithGoogle` from `useAuth()`.
+- No props: `StatisticsPage` is a Next.js client page. It reads `useDepartmentStats(departmentId)` → `{ data: DepartmentCourseStats | null; message?: string }` (the Cards use `data`: `departmentName`, `totalStudents`, `updatedAt`, `courseStats: CourseStat[]`, `semesterDistribution: SemesterDistribution[]`), `useAnonymousPlans(departmentId, 1, 3, !isGuest)` → `{ plans: AnonymousPlanSummary[]; total: number; page: number; limit: number }`, and `isGuest` / `loginWithGoogle` from `useAuth()`.
 - Local state: `visibleCount` (3, +5 per 더보기, back to 3 on 접기 or a filter change), `selectedCategory` and `selectedSemester` (produce `filteredCourses`; rank = index + 1 within that list), `selectedPlanId`, `isAllPlansModalOpen`.
 - `CATEGORY_LABELS` and `CATEGORY_COLORS` (`Record<RequirementCategory, string>`) are module constants in the page, not shared with the planner.
 - Container: each view is a `<Card>` (`mb-8` on the first two) inside `container mx-auto px-4 py-8 max-w-7xl` on the gray-50 dashboard frame. Compose `<div class="cp-card cp-statistics">` and reuse the Card shell; do not restyle it.
@@ -19,7 +19,7 @@ The statistics page's three data-view Cards — the 인기 과목 순위 ranking
 - Ranking list: `divide-y` → 1px `border-default` under every row but the last. Row padding `space-4`; hover fills `gray-50` over `duration-fast` `ease-standard` with no click handler (mirror `.is-hover`). Inner flex `items-start`, gap `space-4`.
 - Rank circle: `icon-2xl` (32px) round, `yu-navy → yu-blue` oklab gradient to bottom right, `body-sm` at weight 700 in `white` (11.2:1 at the navy end, 5.5:1 at the blue end), `flex-shrink: 0`.
 - Course name `<h3>`: `body` size at weight 600, `gray-900` (17.7:1), truncates. Meta `{code} · {credits}학점`: `body-sm` in `gray-600` (7.6:1).
-- Category badge: inline-flex, padding `space-0-5` × `space-2-5`, `radius-full`, `caption-medium`, nowrap. Fill/text from the category aliases: 전공핵심 `category-major-required-bg`/`-text` (red-100/red-700, 5.3:1), 전공필수 rose-100/rose-700 (5.0:1), 전공선택 orange-100/orange-700 (4.6:1), 교양필수 blue-100/blue-700 (5.6:1), 교양선택 green-100/green-700 (4.5:1), 교직 violet-100/violet-700 (6.2:1), 자유선택 gray-100/gray-600 (7.2:1).
+- Category badge: inline-flex, padding `space-0-5` × `space-2-5`, `radius-full`, `caption-medium`, nowrap. Fill/text from the category aliases: 전공핵심 `category-major-required-bg`/`-text` (red-100/red-700, 5.3:1), 전공필수 rose-100/rose-700 (5.0:1), 전공선택 orange-100/orange-700 (4.6:1), 교양필수 blue-100/blue-700 (5.6:1), 교양선택 green-100/green-700 (4.5:1), 교직 violet-100/violet-700 (6.1:1), 자유선택 gray-100/gray-600 (6.9:1).
 - Progress: track `space-2` (8px) tall, `gray-200`, `radius-full`, `overflow: hidden`, `space-1` below; fill `height: 100%`, `yu-navy → yu-blue → yu-cyan` oklab gradient to right, width = `{percentage}%` inline, `transition: all` over `duration-slow`. The track is 1.2:1 on white: decorative; the percentage text carries the value.
 - Stats line: `body-sm`; `{percentage.toFixed(1)}%` at weight 600 in `yu-blue` (5.5:1), `({studentCount}명)` in `gray-500` (4.8:1).
 - Show-more footer (only when more than 3 courses match): padding `space-4`, top hairline `border-default`. 더보기 `<button>`: full width, padding `space-2-5` × 0, `body-sm-medium` in `yu-blue`, `radius-lg`, transparent, no pointer cursor; hover fills `blue-50` (5.1:1; mirror `.is-hover`). 접기 (`--collapse`) is `gray-500` with a `gray-50` hover.
@@ -48,7 +48,7 @@ The statistics page's three data-view Cards — the 인기 과목 순위 ranking
 - The progress bar is two plain `<div>`s: no `role="progressbar"`, `aria-valuenow` or label; the visible {n}% text is the only exposure of the value.
 - Plan tiles, 더보기 / 접기, 전체 N개 수강계획 보기 and 구글로 로그인 are plain `<button>`s named by their text, with no `aria-haspopup`, `aria-expanded` or `aria-controls`; 회원가입하기 is a Next `<Link>` to `/register`.
 - No `cursor: pointer` and no focus-visible styling on any of them; only the browser default focus ring shows. Ranking rows change color on hover but are not interactive.
-- Icons (BookOpen, BarChart3, Info, Users, ChevronRight, Loader2) carry no `aria-hidden` or title in the source, and the spinner has no text alternative.
+- Icons (BookOpen, BarChart3, Info, Users, ChevronRight, Loader2) render with lucide-react's default aria-hidden="true" and no title; the Loader2 spinner is therefore hidden from assistive tech and has no text alternative.
 - Contrast misses kept from the source: `gray-400` anonymity note 2.6:1; `gray-200` plan-tile border and progress track 1.2:1.
 
 ## Not reproduced
@@ -56,6 +56,6 @@ The statistics page's three data-view Cards — the 인기 과목 순위 ranking
 - Data fetching (`useDepartmentStats`, `useAnonymousPlans`); the page header, the guest and info banners, the filter chip card and the DEPARTMENT_NOT_SET / error / no-data page states (separate inline markup outside this pattern).
 - Category and semester filtering, `visibleCount` paging (+5 per 더보기, reset to 3 by 접기 or a filter change), rank numbers restarting at 1 after a filter, and the 300ms width animation of the progress fill.
 - Opening AnonymousPlanModal from a plan tile and AllPlansModal from 전체 N개 수강계획 보기; `loginWithGoogle`.
-- The preview shows three rows, four tiles and three plans with `.is-hover` mirrors at rest, forces the 4-up tile layout with `.is-lg`, and omits the plans loading spinner and the empty states (styled in the fragment, not previewed).
+- The preview shows three rows, four tiles and three plans with `.is-hover` mirrors at rest, forces the 4-up tile layout with `.is-lg`, and omits the 접기 (`--collapse`) footer button, the plans loading spinner and the empty states (styled in the fragment, not previewed).
 
 Pattern extracted from inline markup in `src/app/(dashboard)/statistics/page.tsx` (Card shell from `src/components/ui/Card.tsx`); no component exists in the source

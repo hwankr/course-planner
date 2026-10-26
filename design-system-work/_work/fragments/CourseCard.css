@@ -21,9 +21,14 @@
   cursor: move;
 }
 
-.cp-course-card:hover,
 .cp-course-card.is-hover {
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+@media (hover: hover) {
+  .cp-course-card:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* Status surfaces (statusColors). planned is the default when course.status is missing. */
@@ -165,15 +170,21 @@
 /* Toggle button variant: hover:bg-gray-50 hover:border-gray-400 transition-colors cursor-pointer */
 .cp-course-card__status--button {
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
-.cp-course-card__status--button:hover,
 .cp-course-card__status--button.is-hover {
   background-color: var(--gray-50, #f9fafb);
   border-color: var(--gray-400, #99a1af);
+}
+
+@media (hover: hover) {
+  .cp-course-card__status--button:hover {
+    background-color: var(--gray-50, #f9fafb);
+    border-color: var(--gray-400, #99a1af);
+  }
 }
 
 /* Compact filled status pill: px-1.5 py-0.5 rounded text-[9px] font-medium flex-shrink-0 cursor-pointer transition-all */
@@ -218,9 +229,13 @@
 }
 
 /* hover:ring-2 hover:ring-offset-1 hover:ring-gray-300 (offset color is Tailwind's default white) */
-.cp-course-card__pill:hover,
 .cp-course-card__pill.is-hover {
   box-shadow: 0 0 0 1px var(--white, #ffffff), 0 0 0 3px var(--gray-300, #d1d5dc);
+}
+@media (hover: hover) {
+  .cp-course-card__pill:hover {
+    box-shadow: 0 0 0 1px var(--white, #ffffff), 0 0 0 3px var(--gray-300, #d1d5dc);
+  }
 }
 
 /* Name and credits */
@@ -259,14 +274,19 @@
   background-color: transparent;
   color: inherit;
   font: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
-.cp-course-card__remove:hover,
 .cp-course-card__remove.is-hover {
   background-color: var(--white, #ffffff);
+}
+
+@media (hover: hover) {
+  .cp-course-card__remove:hover {
+    background-color: var(--white, #ffffff);
+  }
 }
 
 .cp-course-card--compact .cp-course-card__remove {
@@ -283,9 +303,14 @@
   color: var(--gray-400, #99a1af);
 }
 
-.cp-course-card__remove-icon:hover,
 .cp-course-card__remove-icon.is-hover {
   color: var(--red-500, #fb2c36);
+}
+
+@media (hover: hover) {
+  .cp-course-card__remove-icon:hover {
+    color: var(--red-500, #fb2c36);
+  }
 }
 
 .cp-course-card--compact .cp-course-card__remove-icon {

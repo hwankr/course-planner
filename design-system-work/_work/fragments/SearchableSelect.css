@@ -81,9 +81,13 @@
 }
 
 /* hover:text-gray-600 */
-.cp-searchable-select__clear:hover,
 .cp-searchable-select__clear.is-hover {
   color: var(--gray-600, #4a5565);
+}
+@media (hover: hover) {
+  .cp-searchable-select__clear:hover {
+    color: var(--gray-600, #4a5565);
+  }
 }
 
 /* Element = the inline heroicon-v1 X <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">. */
@@ -155,9 +159,13 @@
 
 /* hover:bg-gray-100 — declared AFTER the selected rule on purpose: in v4 the hover variant (&:hover) outranks the
    plain bg utility, so a hovered selected row turns gray-100 while keeping its yu-navy medium text. */
-.cp-searchable-select__option:hover,
 .cp-searchable-select__option.is-hover {
   background-color: var(--gray-100, #f3f4f6);
+}
+@media (hover: hover) {
+  .cp-searchable-select__option:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
 }
 
 /* Element = the empty row <div className="px-3 py-2 text-sm text-gray-500 text-center">검색 결과가 없습니다.</div>,

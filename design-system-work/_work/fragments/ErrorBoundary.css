@@ -36,9 +36,11 @@
   color: var(--red-600, #e7000b);
 }
 
-/* Text block: space-y-2 — 8px between heading, body and details */
-.cp-error-boundary__text > * + * {
-  margin-top: var(--space-2, 8px);
+/* Text block: <div className="space-y-2">, v4 semantics: 8px margin-bottom on every child except the DOM-last (the
+   heading, plus the body when the dev-only details follow). At (0,2,0) it beats the `margin: 0` resets on the
+   heading and body below, as Tailwind's utilities layer beats preflight. */
+.cp-error-boundary__text > :not(:last-child) {
+  margin-bottom: var(--space-2, 8px);
 }
 
 /* Heading: text-xl font-semibold text-gray-900 (preflight zeroes h2 margin and font) */
@@ -55,8 +57,9 @@
   color: var(--gray-600, #4a5565);
 }
 
-/* Dev-only details: mt-4 text-left. Declared after the space-y rule at equal specificity so the
-   16px top margin wins over the 8px sibling margin, as it does in the source. */
+/* Dev-only details: mt-4 text-left. Whenever it renders it is the DOM-last child of the space-y-2 block, so the
+   rule above gives it nothing; its own 16px margin-top collapses with the body's 8px margin-bottom → 16px, as in
+   the source. */
 .cp-error-boundary__details {
   margin-top: var(--space-4, 16px);
   text-align: left;
@@ -69,9 +72,13 @@
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-500, #6a7282);
 }
-.cp-error-boundary__summary:hover,
 .cp-error-boundary__summary.is-hover {
   color: var(--gray-700, #364153);
+}
+@media (hover: hover) {
+  .cp-error-boundary__summary:hover {
+    color: var(--gray-700, #364153);
+  }
 }
 
 /* Stack dump: mt-2 overflow-auto rounded bg-gray-100 p-2 text-xs text-gray-700. Preflight gives <pre>
@@ -105,13 +112,17 @@
   background-color: var(--yu-navy, #153974);
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--white, #ffffff);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-error-boundary__retry:hover,
 .cp-error-boundary__retry.is-hover {
   background-color: var(--yu-navy-hover, #003e7e);
+}
+@media (hover: hover) {
+  .cp-error-boundary__retry:hover {
+    background-color: var(--yu-navy-hover, #003e7e);
+  }
 }
 /* focus: (any focus, not focus-visible) — 2px yu-cyan ring outside a 2px white offset (Tailwind's default offset color) */
 .cp-error-boundary__retry:focus,

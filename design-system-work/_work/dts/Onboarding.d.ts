@@ -117,14 +117,14 @@ export interface MajorTypeToggleProps {
   onChange: (next: MajorType) => void;
 }
 
-/** Profile banner data (profile/page.tsx, authenticated view only). */
+/** Profile banner data — the banner fields of profile/page.tsx `interface UserProfile` (authenticated view only). */
 export interface ProfileBannerProps {
-  /** userProfile.name ?? session.user.name; the avatar shows its first character upper-cased (fallback 'U'), the heading the name (fallback 사용자). */
-  name?: string;
-  /** Renders the yu-navy department badge when set. */
-  department?: Pick<OnboardingDepartment, '_id' | 'code' | 'name'> | null;
-  /** Renders the yu-cyan {year}년 입학 badge when set. */
-  enrollmentYear?: number | null;
+  /** Required in UserProfile; avatar = first character upper-cased. When empty or still loading, heading and initial fall back to session.user.name, then 사용자 / 'U'. */
+  name: string;
+  /** Required, nullable; renders the yu-navy department badge when its name is set. */
+  department: Pick<OnboardingDepartment, '_id' | 'code' | 'name'> | null;
+  /** Required, nullable; renders the yu-cyan {year}년 입학 badge when truthy. */
+  enrollmentYear: number | null;
   /** 'double' → purple 복수전공 badge, 'minor' → orange 부전공 badge, 'single' or undefined → no badge. */
   majorType?: MajorType;
   /** Appended to the major-type badge as ": {name}" when set. */

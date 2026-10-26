@@ -2,7 +2,7 @@ The tinted banner the app writes inline wherever a page has to say something bes
 
 ## Use it for / don't use it for
 
-- Use the amber family for anything a visitor can act on but has not: guest mode (layout strip, statistics guest callout), a blocked login path (in-app browser notice), a form that still needs a choice (CustomCourseForm warning strip, RequirementForm cutoff suggestion). Give it one action at most: an amber button, an underlined amber link, or both side by side.
+- Use the amber family for anything a visitor can act on but has not: guest mode (layout strip, statistics guest callout), a blocked login path (in-app browser notice), a form that still needs a choice (CustomCourseForm warning strip, RequirementForm cutoff suggestion). Give it at most one action pair: an amber button, an underlined amber link, or the two side by side.
 - Use the blue family to explain scope or point to help without asking for anything (statistics data-scope callout, RequirementForm help banner, CustomCourseForm focused-semester strip).
 - Use the red boxes only for a failed request, in place of the content that failed: `radius-md` and `p-3` inside a form (login), `radius-2xl` and `p-6` centered where a list would be (admin).
 - Use the green reply box only inside a feedback item that has `adminReply`; the pill names the author, the box carries the text.
@@ -11,7 +11,7 @@ The tinted banner the app writes inline wherever a page has to say something bes
 ## What the consumer provides
 
 - No props: every recipe is markup written in place and toggled by page state — `isGuest` (layout strip, statistics guest), `error: string` (login), `error` from `useQuery` (admin), `inAppInfo.isInApp` with `isIOS` and `appName: string | null` (login notice), `focusedSemester: { year; term } | null` (CustomCourseForm either/or), `showCutoffSuggestion && suggestedCutoff` (RequirementForm box), `fb.adminReply?: string` and `fb.adminReplyAt?: string` (feedback).
-- Handlers: `loginWithGoogle` from `useAuth()` on the two 구글로 로그인 buttons, `openInExternalBrowser()` on 외부 브라우저에서 열기, `setPriorCutoff(\`${year}-${term}\`)` on the suggestion button; links are `next/link` to `/register` and `/help/graduation-guide`.
+- Handlers: `loginWithGoogle` from `useAuth()` on the two 구글로 로그인 buttons, `openInExternalBrowser()` on 외부 브라우저에서 열기, `` setPriorCutoff(`${suggestedCutoff.year}-${suggestedCutoff.term}`) `` on the suggestion button; links are `next/link` to `/register` and `/help/graduation-guide`.
 - Containers: the strip spans the page between the header and `<main>`; the statistics callouts sit in the `max-w-7xl` column above the filter Card; the login pieces sit inside the 448px form panel; the admin banner fills the admin content column; the two strips and the help/suggestion boxes sit inside the `space-y-4` / `space-y-5` form bodies; the reply box sits inside a feedback item on its `green-50-a30` surface.
 - Placement margins the pages add (`margin-bottom: space-6` statistics, `margin-top: space-4` login notice, `margin-top: space-3` reply, `margin-bottom: space-3` suggestion) are page rhythm and are not in the block.
 
@@ -27,7 +27,7 @@ The tinted banner the app writes inline wherever a page has to say something bes
 - Requirement suggestion (`.cp-callout--req-suggest`): padding `space-2` × `space-3`, fill `amber-50`, 1px `amber-200`, `radius-md`, `caption` text in `amber-800`; button `margin-top: space-1-5`, padding `space-1` × `space-2`, `caption-medium` in `amber-800` on `amber-100` (6.4:1), 1px `amber-300`, `radius-sm`, `transition-colors`; hover `amber-200` (5.7:1).
 - Reply (`.cp-callout--reply`): padding `space-3`, fill `white`, 1px `green-200`, `radius-lg`; head `flex items-center gap: space-1-5`, `margin-bottom: space-1-5`; pill padding `space-0-5` × `space-2`, `radius-full`, `green-100` fill, `green-700` text at 600 12px (4.5:1); date `caption` in `slate-400` — 2.6:1 on white, kept, flagged; text 14px/1.625 in `slate-700` (10.4:1), `white-space: pre-wrap`.
 - In-app notice (`.cp-callout--inapp`): padding `space-4`, fill `amber-50`, 1px `amber-200`, `radius-lg`; title `body-sm-medium` in `amber-800`, `margin-bottom: space-2`; iOS hint `caption` in `amber-700` (4.9:1) with 700-weight runs; Android button full width, `margin-top: space-1`, padding `space-2` × 0 (36px tall), `body-sm-medium` in `amber-900` on `amber-100` (8.1:1), `radius-md`, `transition-colors`, hover `amber-200` (7.3:1).
-- Every container hairline (`amber-200`, `blue-200`, `blue-100`, `red-200`, `green-200`, `amber-300`) sits at 1.1–1.5:1 on its fill; the fill carries the tone, the line is decorative.
+- Every container hairline (`amber-200`, `blue-200`, `blue-100`, `red-200`, `green-200`, `amber-300`) sits at 1.1–1.3:1 on its fill; the fill carries the tone, the line is decorative.
 - No recipe styles `:focus`, `:active` or `:disabled`; no button sets `cursor-pointer`.
 
 ## Copy
@@ -46,7 +46,7 @@ The tinted banner the app writes inline wherever a page has to say something bes
 
 - Every recipe is a plain `<div>` or `<p>`: none carries `role="alert"`, `role="status"` or `aria-live`, so the login and admin errors, the in-app notice and the suggestion box appear without announcement.
 - Icons are lucide-react SVGs passed only a `className`; the pages add no `aria-hidden`, `title` or `aria-label`, so the icons' exposure is whatever the library renders.
-- Actions are native `<button>`s (the two 구글로 로그인 buttons set no `type`; the suggestion and Android buttons set `type="button"` inside their forms) and `next/link` anchors; all are Tab-reachable with Enter/Space, with only the browser's default focus outline and the default cursor.
+- Actions are native `<button>`s (the two 구글로 로그인 buttons set no `type`; the suggestion button sets `type="button"` inside RequirementForm's `<form>`; the Android button sets `type="button"` but sits outside the login form) and `next/link` anchors; all are Tab-reachable; the buttons activate with Enter or Space, the links with Enter. All show only the browser's default focus outline and the default cursor.
 - Emphasis: the department name is a real `<strong>`; the `font-medium` semester and the `font-bold` iOS runs are `<span>`s with no semantics.
 - Contrast misses listed above: `white` on `amber-600`, `red-600` on `red-50` (twice), `amber-600` on `amber-50`, `gray-500` and `yu-cyan` on `blue-50`, `slate-400` on `white`.
 

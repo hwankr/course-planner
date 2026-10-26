@@ -80,13 +80,17 @@
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-anonymous-plan-modal__close:hover,
 .cp-anonymous-plan-modal__close.is-hover {
   background-color: var(--gray-200, #e5e7eb);
+}
+@media (hover: hover) {
+  .cp-anonymous-plan-modal__close:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
 }
 /* X "w-5 h-5 text-gray-500" (4.6:1 on gray-50; 3.9:1 on the gray-200 hover fill — source pair, kept, flagged). */
 .cp-anonymous-plan-modal__close-icon {
@@ -157,8 +161,9 @@
   color: var(--gray-400, #99a1af);
 }
 
-/* Loaded (data): year groups "space-y-6"; each group is an unclassed <div> holding the heading and the grid. */
-.cp-anonymous-plan-modal__years > * + * { margin-top: var(--space-6, 24px); }
+/* Loaded (data): year groups "space-y-6"; each group is an unclassed <div> holding the heading and the grid.
+   Tailwind v4 semantics: 24px below every group except the DOM-last; the groups carry no margin of their own. */
+.cp-anonymous-plan-modal__years > :not(:last-child) { margin-bottom: var(--space-6, 24px); }
 
 /* <h3> "text-sm font-semibold text-gray-600 mb-2" — "{year}학년" (7.6:1 on white) */
 .cp-anonymous-plan-modal__year-title {

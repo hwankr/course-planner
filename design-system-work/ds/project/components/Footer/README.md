@@ -23,14 +23,14 @@ Full-width site footer on the deep `footer-navy` ground: a 1px blue hairline on 
   - Wordmark: `text-lg` at weight 700 (18px/28px, the `heading-4` size in bold) in `white` (14.8:1). At md (768–1023px) the column is 154px, narrower than logo (≈125px) + 8px gap + wordmark (≈137px), so the span shrinks to its min-content and wraps one syllable per line (6 lines); at lg (1024–1279px) the 218px column wraps it to two lines; it sits on one line from xl (1280px, 282px column). Kept exact, flagged.
   - Blurb `<p>`: `body-sm` in `gray-400` with `leading-relaxed` and `margin-bottom: space-3`. Empty in the source, so it renders no height and its margin collapses into the link's `space-4`. Kept exact.
   - CopyEmail: a bare `<button>` (preflight resets, `cursor: pointer`) in `body-sm` `gray-400` (5.7:1 on `footer-navy`); hover `white`, `transition-colors` over `duration-fast` with `ease-standard`. Mirror `.is-hover`. Label `Contact : {email}`, `title="클릭하여 복사"`.
-  - Copied state: for 2000 ms after a click a trailing `<span>` `복사됨!` appears, `margin-left: space-2`, `caption` size in `yu-cyan` (5.4:1 on `footer-navy`). The button text itself keeps its color.
+  - Copied state: for 2000 ms after a click a trailing `<span>` `복사됨!` appears, `margin-left: space-2`, `caption` size in `yu-cyan` (5.3:1 on `footer-navy`). The button text itself keeps its color.
 - Link columns (Service, Support, Legal):
   - Heading `<h4>`: `overline` (600 12px/16px, `letter-spacing: 0.1em`, uppercase) in `white`; `margin-bottom: space-5`.
-  - List: `body-sm` in `gray-400` (5.7:1), `space-3` between items. Links inherit the color; hover `yu-cyan` (5.4:1) with `transition-colors`. Mirror `.is-hover`. No underline and no focus style beyond the browser default.
-  - Disclaimer (Legal only): `margin-top: space-4`, `caption` size at `leading-relaxed` (12px/19.5px) in `gray-500`. 3.05:1 on `footer-navy` in the source, misses 4.5:1; kept, flagged.
+  - List: `body-sm` in `gray-400` (5.7:1), `space-3` between items. Links inherit the color; hover `yu-cyan` (5.3:1) with `transition-colors`. Mirror `.is-hover`. No underline and no focus style beyond the browser default.
+  - Disclaimer (Legal only): `margin-top: space-4`, `caption` size at `leading-relaxed` (12px/19.5px) in `gray-500`. 3.1:1 on `footer-navy` in the source, misses 4.5:1; kept, flagged.
 - Bottom bar: 1px top border in `white-a10` (1.3:1, decorative), `padding-top: space-6`; a column below md, a row with `justify-content: space-between` from md; `align-items: center`, `gap: space-4`.
-  - Copyright: `caption` in `gray-500` (3.05:1; kept, flagged).
-  - Icon row: flex with `space-5` between children (a single child in the source). The mail link is `gray-500` (3.05:1, meets 3:1 for a non-text icon by a hair), hover `white`, `transition-colors`; Lucide `mail` at `icon-md` (16px), 2px stroke in `currentColor`. Mirror `.is-hover`.
+  - Copyright: `caption` in `gray-500` (3.1:1; kept, flagged).
+  - Icon row: flex with `space-5` between children (a single child in the source). The mail link is `gray-500` (3.1:1, meets 3:1 for a non-text icon by a hair), hover `white`, `transition-colors`; Lucide `mail` at `icon-md` (16px), 2px stroke in `currentColor`. Mirror `.is-hover`.
 - Bottom gradient bar: height `space-1` (4px), `linear-gradient(to right in oklab, yu-navy, yu-blue, yu-cyan)`.
 
 ## Copy

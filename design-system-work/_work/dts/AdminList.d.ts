@@ -38,13 +38,17 @@ export interface AdminStats {
 
 /** Department reference embedded in a course row and listed in the 전체 학과 select. */
 export interface DepartmentItem {
+  /** Option value in the 전체 학과 select and the departmentFilter match key. */
   _id: string;
+  /** Not rendered by the course row or the select. */
   code: string;
+  /** Option label in the 전체 학과 select; first item of the course meta line. */
   name: string;
 }
 
 /** One courses-page row (GET /api/courses). */
 export interface CourseItem {
+  /** React key; deletingId compares against it to swap in the inline [삭제][취소] pair. */
   _id: string;
   /** Bold slate-800 lead of the title line. */
   code: string;
@@ -60,13 +64,17 @@ export interface CourseItem {
   category?: RequirementCategory;
   /** Optional; meta line `{recommendedYear}학년 권장`. */
   recommendedYear?: number;
+  /** Not rendered by the list. */
   recommendedSemester?: Semester;
+  /** Not rendered by the list; prefills the edit form. */
   description?: string;
+  /** Not rendered by the list. */
   isActive: boolean;
 }
 
 /** One departments-page row (GET /api/departments). */
 export interface Department {
+  /** React key; deleteConfirmId set to it opens the 학과 삭제 modal. */
   _id: string;
   /** blue-100 / blue-700 code pill. */
   code: string;
@@ -74,18 +82,23 @@ export interface Department {
   name: string;
   /** Optional slate-400 caption under the name. */
   college?: string;
+  /** Not rendered by the list. */
   isActive: boolean;
+  /** Not rendered by the list. */
   createdAt: string;
+  /** Not rendered by the list. */
   updatedAt: string;
 }
 
 /** One users-page row (GET /api/admin/users). */
 export interface UserItem {
+  /** React key; expandedUserId / deleteConfirmId compare against it. */
   _id: string;
   /** Medium slate-900, truncated. */
   name: string;
   /** First item of the slate-400 meta line. */
   email: string;
+  /** Its name is the meta line's second item when set; '미설정' in the detail panel when absent. */
   department?: { _id: string; code: string; name: string };
   /** Meta line `{enrollmentYear}학번` when set. */
   enrollmentYear?: number;
@@ -95,7 +108,9 @@ export interface UserItem {
   role: 'student' | 'admin';
   /** 'google' → yellow-100/yellow-700 'Google' pill; 'credentials' → gray-100/gray-700 '이메일'. */
   provider: 'credentials' | 'google';
+  /** 마지막 접속 in the detail panel; '기록 없음' when absent. */
   lastLoginAt?: string;
+  /** Last item of the meta line as a ko-KR date (e.g. 2025년 3월 2일); also 가입일 in the detail panel. */
   createdAt: string;
 }
 
@@ -103,11 +118,11 @@ export interface UserItem {
 export interface AdminListProps {
   /** Dashboard year select; default DEFAULT_CURRICULUM_YEAR (2026), options 2025 | 2026. */
   selectedYear: number;
-  /** Dashboard counts; while undefined (query loading) each number is a slate-200 pulse bar. */
+  /** Dashboard counts; each value shows a slate-200 pulse bar while `isLoading`, and 0 when undefined after loading. */
   stats?: AdminStats;
   /** Dashboard menu Cards; the `adminMenus` const. */
   menus: AdminMenu[];
-  /** Search text; courses placeholder 과목명 또는 코드 검색, users 이름 또는 이메일 검색..., departments 학과명 또는 코드로 검색.... Default ''. Non-empty shows the clear X (courses, departments). */
+  /** Search text; courses placeholder 과목명 또는 코드 검색, users 이름 또는 이메일 검색..., departments 학과명 또는 코드로 검색.... Default ''. Non-empty shows the clear X (courses, departments). Named `searchTerm` on courses; users and departments name the state `search`. */
   searchTerm: string;
   /** Courses and users: selected department `_id`, '' = 전체 학과. Default ''. */
   departmentFilter: string;
@@ -115,10 +130,10 @@ export interface AdminListProps {
   categoryFilter: RequirementCategory | '';
   /** Courses: curriculum year, default 2026. */
   yearFilter: number;
-  /** Users: '' = 전체 역할 | 'student' | 'admin'. Default ''. */
-  roleFilter: '' | 'student' | 'admin';
-  /** Users: 'recent' (최근 가입순, default) | 'lastLogin' (최근 접속순) | 'name' (이름순). */
-  sortOption: 'recent' | 'lastLogin' | 'name';
+  /** Users: useState(''), typed string. Options '' (전체 역할) | 'student' (학생) | 'admin' (관리자). */
+  roleFilter: string; // '' | 'student' | 'admin' (options)
+  /** Users: useState('recent'), typed string. Options 'recent' (최근 가입순, default) | 'lastLogin' (최근 접속순) | 'name' (이름순). */
+  sortOption: string; // 'recent' (default) | 'lastLogin' | 'name'
   /** Rows of the current page. */
   items: CourseItem[] | Department[] | UserItem[];
   /** Courses: the row whose Trash2 button is swapped for the inline [삭제][취소] pair. Default null. */
@@ -129,6 +144,7 @@ export interface AdminListProps {
   expandedUserId: string | null;
   /** TanStack Query flags: isLoading → pulse tiles; error → red-50 banner; neither and no rows → empty box. */
   isLoading: boolean;
+  /** Truthy → red-50 error box. */
   error?: Error | null;
 }
 

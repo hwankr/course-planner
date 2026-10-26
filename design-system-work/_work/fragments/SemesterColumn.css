@@ -24,9 +24,13 @@
   transition-duration: var(--duration-slow, 300ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-semester-column:hover,
 .cp-semester-column.is-hover {
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-semester-column:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* compact: "min-h-[180px]" (no h-full) — the only mode the planner page uses */
@@ -40,9 +44,13 @@
   border-color: var(--yu-cyan, #00aaca);
   box-shadow: 0 0 0 2px var(--yu-cyan, #00aaca), var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-.cp-semester-column.is-focus:hover,
 .cp-semester-column.is-focus.is-hover {
   box-shadow: 0 0 0 2px var(--yu-cyan, #00aaca), var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-semester-column.is-focus:hover {
+    box-shadow: 0 0 0 2px var(--yu-cyan, #00aaca), var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* isOver (dnd-kit drop target): "ring-2 ring-[#00AACA]/50 bg-[#00AACA]/5". Declared after is-focus because twMerge keeps
@@ -51,9 +59,13 @@
   background: var(--yu-cyan-a5, #00aaca0d);
   box-shadow: 0 0 0 2px var(--yu-cyan-a50, #00aaca80), var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-.cp-semester-column.is-over:hover,
 .cp-semester-column.is-over.is-hover {
   box-shadow: 0 0 0 2px var(--yu-cyan-a50, #00aaca80), var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-semester-column.is-over:hover {
+    box-shadow: 0 0 0 2px var(--yu-cyan-a50, #00aaca80), var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* Header: "p-4 border-b cursor-pointer transition-colors bg-gray-50" (focused: bg-[#153974]/5). border-b is currentColor = gray-900. */
@@ -62,7 +74,7 @@
   border-bottom: 1px solid var(--border-default, #101828);
   background: var(--gray-50, #f9fafb);
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -114,14 +126,22 @@
   background: transparent;
   color: inherit;
   font: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-semester-column__icon-btn--clear:hover,
 .cp-semester-column__icon-btn--clear.is-hover { background: var(--amber-100, #fef3c6); }
-.cp-semester-column__icon-btn--delete:hover,
+@media (hover: hover) {
+  .cp-semester-column__icon-btn--clear:hover {
+    background: var(--amber-100, #fef3c6);
+  }
+}
 .cp-semester-column__icon-btn--delete.is-hover { background: var(--red-100, #ffe2e2); }
+@media (hover: hover) {
+  .cp-semester-column__icon-btn--delete:hover {
+    background: var(--red-100, #ffe2e2);
+  }
+}
 
 /* heroicons-v1 solid 20x20: "w-4 h-4 text-gray-400 hover:text-amber-500 | hover:text-red-500" (hover is on the svg itself, no transition) */
 .cp-semester-column__icon {
@@ -130,10 +150,18 @@
   height: var(--icon-md, 16px);
   color: var(--gray-400, #99a1af);
 }
-.cp-semester-column__icon--clear:hover,
 .cp-semester-column__icon--clear.is-hover { color: var(--amber-500, #fe9a00); }
-.cp-semester-column__icon--delete:hover,
+@media (hover: hover) {
+  .cp-semester-column__icon--clear:hover {
+    color: var(--amber-500, #fe9a00);
+  }
+}
 .cp-semester-column__icon--delete.is-hover { color: var(--red-500, #fb2c36); }
+@media (hover: hover) {
+  .cp-semester-column__icon--delete:hover {
+    color: var(--red-500, #fb2c36);
+  }
+}
 
 /* Focus badge: "text-xs px-2 py-1 bg-[#153974] text-white rounded-full font-medium" */
 .cp-semester-column__badge {
@@ -148,7 +176,7 @@
 .cp-semester-column__body {
   flex: 1 1 0%;
   padding: var(--space-4, 16px);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -201,11 +229,19 @@
   text-align: center;
 }
 .cp-semester-column__more { color: var(--yu-blue, #3069b3); }
-.cp-semester-column__more:hover,
 .cp-semester-column__more.is-hover { color: var(--yu-navy, #153974); }
+@media (hover: hover) {
+  .cp-semester-column__more:hover {
+    color: var(--yu-navy, #153974);
+  }
+}
 /* "접기": "w-full text-xs text-gray-400 hover:text-gray-600 py-1 text-center" */
 .cp-semester-column__less { color: var(--gray-400, #99a1af); }
-.cp-semester-column__less:hover,
 .cp-semester-column__less.is-hover { color: var(--gray-600, #4a5565); }
+@media (hover: hover) {
+  .cp-semester-column__less:hover {
+    color: var(--gray-600, #4a5565);
+  }
+}
 
 /* Rows inside __item are compact CourseCards (.cp-course-card .cp-course-card--compact .cp-course-card--{status}); their styles live in the CourseCard fragment. */

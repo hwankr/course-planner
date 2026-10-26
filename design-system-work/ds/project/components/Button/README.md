@@ -23,8 +23,8 @@ The app's one button: a native `<button>` styled by cva with six variants and fo
 - Sizes: default `control-md` (40px) with padding `space-2` × `space-4`; `sm` `control-sm` (36px), padding 0 × `space-3`; `lg` `control-lg` (44px), padding 0 × `space-8`; `icon` a `control-md` square with no padding.
 - `default`: fill `linear-gradient(to right in oklab, yu-navy, yu-blue)`, label `white`, `shadow-sm`; hover shifts the gradient to `yu-navy-hover → yu-navy` and lifts to `shadow-md`. White reads 11.2:1 on `yu-navy` and 5.5:1 on `yu-blue`.
 - `destructive`: fill `red-600`, label `white` (4.8:1); hover `red-700` (6.4:1).
-- `outline`: 1px `gray-300` border on a `white` fill; the label inherits `color` (body `foreground`, 18:1); hover fill `gray-50`. The `gray-300` border is 1.5:1 on white and misses 3:1 in the source — kept, flagged.
-- `secondary`: fill `gray-100`, label `gray-900` (16:1); hover `gray-200`.
+- `outline`: 1px `gray-300` border on a `white` fill; the label inherits `color` (body `foreground`, 17.9:1); hover fill `gray-50`. The `gray-300` border is 1.5:1 on white and misses 3:1 in the source — kept, flagged.
+- `secondary`: fill `gray-100`, label `gray-900` (16.1:1); hover `gray-200`.
 - `ghost`: no fill, label inherits `color`; hover fill `gray-100`.
 - `link`: label `yu-navy` (11.2:1), `text-underline-offset` 4px, underline on hover; it keeps the full button box.
 - Active: `transform: scale(0.98)` while pressed.

@@ -38,9 +38,13 @@
   font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   transition: box-shadow var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-add-semester-dialog__panel:hover,
 .cp-add-semester-dialog__panel.is-hover {
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-add-semester-dialog__panel:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* CardContent "p-6 pt-0" with className "pt-6": tailwind-merge keeps pt-6, so 24px on every side. */
@@ -54,12 +58,13 @@
   font: 600 24px/32px var(--font-body, Arial, Helvetica, sans-serif);
 }
 
-/* <form class="space-y-6">: the field groups, the warning and the footer stack 24px apart. */
+/* <form className="space-y-6">: the two field groups, the warning (only while isDuplicate) and the footer stack 24px apart.
+   Tailwind v4 semantics: 24px below every child except the DOM-last (the footer); no child has a margin of its own. */
 .cp-add-semester-dialog__form {
   margin: 0;
 }
-.cp-add-semester-dialog__form > * + * {
-  margin-top: var(--space-6, 24px);
+.cp-add-semester-dialog__form > :not(:last-child) {
+  margin-bottom: var(--space-6, 24px);
 }
 
 /* Field label: "block text-sm font-medium text-gray-700 mb-2" — body-sm-medium in gray-700. No htmlFor. */
@@ -97,7 +102,7 @@
   text-transform: none;
   letter-spacing: inherit;
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -113,18 +118,28 @@
   font: 500 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
 }
 /* Unselected hover: "hover:border-gray-400" (2.6:1 on white — source pair, flagged). */
-.cp-add-semester-dialog__segment:hover,
 .cp-add-semester-dialog__segment.is-hover {
   border-color: var(--gray-400, #99a1af);
+}
+@media (hover: hover) {
+  .cp-add-semester-dialog__segment:hover {
+    border-color: var(--gray-400, #99a1af);
+  }
 }
 /* Selected (year === grade / term === value): "border-[#153974] bg-[#153974]/10 text-[#153974]".
    This branch carries no hover class, so hovering a selected segment changes nothing. */
 .cp-add-semester-dialog__segment.is-selected,
-.cp-add-semester-dialog__segment.is-selected:hover,
 .cp-add-semester-dialog__segment.is-selected.is-hover {
   border-color: var(--yu-navy, #153974);
   background-color: var(--yu-navy-a10, #1539741a);
   color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-add-semester-dialog__segment.is-selected:hover {
+    border-color: var(--yu-navy, #153974);
+    background-color: var(--yu-navy-a10, #1539741a);
+    color: var(--yu-navy, #153974);
+  }
 }
 /* isLoading: every segment gets `disabled` and "opacity-50 cursor-not-allowed" replaces cursor-pointer. */
 .cp-add-semester-dialog__segment:disabled,
@@ -200,10 +215,15 @@
   color: var(--white, #ffffff);
   box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-.cp-add-semester-dialog__button--primary:hover,
 .cp-add-semester-dialog__button--primary.is-hover {
   background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-add-semester-dialog__button--primary:hover {
+    background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 .cp-add-semester-dialog__button--primary:focus-visible,
 .cp-add-semester-dialog__button--primary.is-focus {
@@ -216,9 +236,13 @@
   border: 1px solid var(--gray-300, #d1d5dc);
   background-color: var(--white, #ffffff);
 }
-.cp-add-semester-dialog__button--outline:hover,
 .cp-add-semester-dialog__button--outline.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-add-semester-dialog__button--outline:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 
 /* isLoading spinner inside 추가: "mr-2 h-4 w-4 animate-spin"; circle opacity-25, arc opacity-75; text 로딩중... follows. */
@@ -239,9 +263,14 @@
   to { transform: rotate(360deg); }
 }
 
-.cp-add-semester-dialog__button--primary:hover:focus-visible,
 .cp-add-semester-dialog__button--primary.is-hover:focus-visible,
-.cp-add-semester-dialog__button--primary:hover.is-focus,
 .cp-add-semester-dialog__button--primary.is-hover.is-focus {
   box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor, var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+
+@media (hover: hover) {
+  .cp-add-semester-dialog__button--primary:hover:focus-visible,
+.cp-add-semester-dialog__button--primary:hover.is-focus {
+    box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor, var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }

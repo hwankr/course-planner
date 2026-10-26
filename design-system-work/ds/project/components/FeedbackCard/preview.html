@@ -1,4 +1,4 @@
-<!-- @dsCard group="Patterns" height=1490 -->
+<!-- @dsCard group="Patterns" height=1980 -->
 <!doctype html>
 <html lang="ko">
 <head>
@@ -22,128 +22,142 @@
 <div class="row">
 
   <div class="cell">
-    <div class="cp-feedback">
-      <div class="cp-feedback__eyebrow cp-feedback__eyebrow--cyan">
-        <svg class="lucide lucide-send cp-feedback__eyebrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+    <div class="cp-feedback-card">
+      <div class="cp-feedback-card__eyebrow cp-feedback-card__eyebrow--cyan">
+        <svg class="lucide lucide-send cp-feedback-card__eyebrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
         빠른 문의
       </div>
-      <h2 class="cp-feedback__title">문의 남기기</h2>
-      <p class="cp-feedback__lead">간단한 문의사항을 남겨주세요. 관리자가 확인합니다.</p>
-      <div class="cp-feedback__form">
-        <textarea class="cp-feedback__textarea" rows="4" placeholder="문의 내용을 입력하세요"></textarea>
-        <div class="cp-feedback__form-footer">
-          <span class="cp-feedback__counter">0/2000</span>
-          <button type="button" class="cp-feedback__submit" disabled>
-            <svg class="lucide lucide-send cp-feedback__submit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+      <h2 class="cp-feedback-card__title">문의 남기기</h2>
+      <p class="cp-feedback-card__lead">간단한 문의사항을 남겨주세요. 관리자가 확인합니다.</p>
+      <div class="cp-feedback-card__form">
+        <textarea class="cp-feedback-card__textarea" rows="4" placeholder="문의 내용을 입력하세요"></textarea>
+        <div class="cp-feedback-card__form-footer">
+          <span class="cp-feedback-card__counter">0/2000</span>
+          <button type="button" class="cp-feedback-card__submit" disabled>
+            <svg class="lucide lucide-send cp-feedback-card__submit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
             5자 이상 입력해주세요
           </button>
         </div>
       </div>
     </div>
-    <p class="cap">빠른 문의 form card, initial state: empty textarea with its slate-400 placeholder, 0/2000, submit disabled (opacity .5, label 5자 이상 입력해주세요)</p>
+    <p class="cap">빠른 문의 form card (help/feedback/page.tsx), initial state: empty textarea (help/feedback/page.tsx recipe: rounded-xl px-4 py-3) with its slate-400 placeholder, 0/2000, submit disabled (opacity .5, label 5자 이상 입력해주세요)</p>
 
     <div class="strip">
-      <button type="button" class="cp-feedback__submit">
-        <svg class="lucide lucide-send cp-feedback__submit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+      <button type="button" class="cp-feedback-card__submit">
+        <svg class="lucide lucide-send cp-feedback-card__submit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
         문의 남기기
       </button>
-      <button type="button" class="cp-feedback__submit is-hover">
-        <svg class="lucide lucide-send cp-feedback__submit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
+      <button type="button" class="cp-feedback-card__submit is-hover">
+        <svg class="lucide lucide-send cp-feedback-card__submit-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/></svg>
         문의 남기기
       </button>
-      <button type="button" class="cp-feedback__submit" disabled>
-        <svg class="lucide lucide-loader-2 cp-feedback__submit-icon cp-feedback__spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      <button type="button" class="cp-feedback-card__submit" disabled>
+        <svg class="lucide lucide-loader-2 cp-feedback-card__submit-icon cp-feedback-card__spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
         전송 중...
       </button>
     </div>
-    <p class="cap">submit: enabled (≥5 chars) · .is-hover (yu-blue-dark) · isPending (disabled + Loader2 animate-spin, 전송 중...)</p>
+    <p class="cap">submit (help/feedback/page.tsx): enabled (≥5 chars) · .is-hover (yu-blue-dark) · isPending (disabled + Loader2 animate-spin, 전송 중...)</p>
   </div>
 
   <div class="cell">
-    <div class="cp-feedback">
-      <div class="cp-feedback__eyebrow cp-feedback__eyebrow--purple">
-        <svg class="lucide lucide-message-square-text cp-feedback__eyebrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>
+    <div class="cp-feedback-card">
+      <div class="cp-feedback-card__eyebrow cp-feedback-card__eyebrow--purple">
+        <svg class="lucide lucide-message-square-text cp-feedback-card__eyebrow-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>
         내 문의 내역
       </div>
-      <h2 class="cp-feedback__title">문의 내역 확인</h2>
-      <p class="cp-feedback__lead">내가 남긴 문의와 관리자 답변을 확인할 수 있습니다.</p>
-      <div class="cp-feedback__list">
+      <h2 class="cp-feedback-card__title">문의 내역 확인</h2>
+      <p class="cp-feedback-card__lead">내가 남긴 문의와 관리자 답변을 확인할 수 있습니다.</p>
+      <div class="cp-feedback-card__list">
 
-        <div class="cp-feedback__item">
-          <div class="cp-feedback__item-head">
-            <div class="cp-feedback__item-meta">
-              <span class="cp-feedback__status cp-feedback__status--pending">
-                <svg class="lucide lucide-clock cp-feedback__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
+        <div class="cp-feedback-card__item">
+          <div class="cp-feedback-card__item-head">
+            <div class="cp-feedback-card__item-meta">
+              <span class="cp-feedback-card__status cp-feedback-card__status--pending">
+                <svg class="lucide lucide-clock cp-feedback-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
                 대기중
               </span>
-              <span class="cp-feedback__date">2026년 10월 20일 오후 02:13</span>
+              <span class="cp-feedback-card__date">2026년 10월 20일 오후 02:13</span>
             </div>
-            <button type="button" class="cp-feedback__delete" title="문의 삭제">
-              <svg class="lucide lucide-trash-2 cp-feedback__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <button type="button" class="cp-feedback-card__delete" title="문의 삭제">
+              <svg class="lucide lucide-trash-2 cp-feedback-card__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
-          <p class="cp-feedback__message">성적 입력 후 졸업요건 진행률이 바로 갱신되지 않습니다. 새로고침해야 반영되는데 확인 부탁드립니다.</p>
+          <p class="cp-feedback-card__message">성적 입력 후 졸업요건 진행률이 바로 갱신되지 않습니다. 새로고침해야 반영되는데 확인 부탁드립니다.</p>
         </div>
 
-        <div class="cp-feedback__item cp-feedback__item--replied">
-          <div class="cp-feedback__item-head">
-            <div class="cp-feedback__item-meta">
-              <span class="cp-feedback__status cp-feedback__status--resolved">
-                <svg class="lucide lucide-check-circle cp-feedback__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        <div class="cp-feedback-card__item cp-feedback-card__item--replied">
+          <div class="cp-feedback-card__item-head">
+            <div class="cp-feedback-card__item-meta">
+              <span class="cp-feedback-card__status cp-feedback-card__status--resolved">
+                <svg class="lucide lucide-check-circle cp-feedback-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
                 해결됨
               </span>
-              <span class="cp-feedback__date">2026년 10월 14일 오전 09:45</span>
+              <span class="cp-feedback-card__date">2026년 10월 14일 오전 09:45</span>
             </div>
-            <button type="button" class="cp-feedback__delete is-hover" title="문의 삭제">
-              <svg class="lucide lucide-trash-2 cp-feedback__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <button type="button" class="cp-feedback-card__delete is-hover" title="문의 삭제">
+              <svg class="lucide lucide-trash-2 cp-feedback-card__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
           </div>
-          <p class="cp-feedback__message">복수전공 학과를 추가했는데 졸업요건 탭에 복수전공 항목이 보이지 않습니다.</p>
-          <div class="cp-feedback__reply">
-            <div class="cp-feedback__reply-head">
-              <span class="cp-feedback__reply-pill">관리자 답변</span>
-              <span class="cp-feedback__date">2026년 10월 15일 오전 11:02</span>
+          <p class="cp-feedback-card__message">복수전공 학과를 추가했는데 졸업요건 탭에 복수전공 항목이 보이지 않습니다.</p>
+          <div class="cp-feedback-card__reply">
+            <div class="cp-feedback-card__reply-head">
+              <span class="cp-feedback-card__reply-pill">관리자 답변</span>
+              <span class="cp-feedback-card__date">2026년 10월 15일 오전 11:02</span>
             </div>
-            <p class="cp-feedback__reply-text">안녕하세요. 복수전공 요건은 프로필에서 학과를 저장한 뒤 졸업요건 페이지를 새로고침하면 표시됩니다. 불편을 드려 죄송합니다.</p>
+            <p class="cp-feedback-card__reply-text">안녕하세요. 복수전공 요건은 프로필에서 학과를 저장한 뒤 졸업요건 페이지를 새로고침하면 표시됩니다. 불편을 드려 죄송합니다.</p>
           </div>
         </div>
 
       </div>
     </div>
-    <p class="cap">내 문의 내역 list card: pending item (대기중 yellow pill, Clock) · replied item (해결됨 green pill, green-400 left rail on green-50-a30, white reply box with green-200 border) · second 문의 삭제 button .is-hover</p>
+    <p class="cap">내 문의 내역 list card (help/feedback/page.tsx): pending item (대기중 yellow pill, Clock) · replied item (해결됨 green pill, green-400 left rail on green-50-a30, reply box in the help/feedback/page.tsx recipe: white, green-200 border, no icon in the pill) · second 문의 삭제 button .is-hover</p>
   </div>
 
 </div>
 
 <div class="row">
   <div class="cell">
-    <div class="cp-feedback__gate">
-      <p class="cp-feedback__gate-text">문의를 남기려면 로그인이 필요합니다.</p>
-      <a class="cp-feedback__gate-link" href="#login">로그인하기</a>
+    <div class="cp-feedback-card__gate">
+      <p class="cp-feedback-card__gate-text">문의를 남기려면 로그인이 필요합니다.</p>
+      <a class="cp-feedback-card__gate-link" href="#login">로그인하기</a>
     </div>
-    <p class="cap">form card, signed-out branch (showMyFeedback false)</p>
+    <p class="cap">form card, signed-out branch, showMyFeedback false (help/feedback/page.tsx)</p>
   </div>
   <div class="cell">
-    <div class="cp-feedback__empty">
-      <svg class="lucide lucide-message-square-text cp-feedback__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>
-      <p class="cp-feedback__empty-text">아직 문의 내역이 없습니다.</p>
+    <div class="cp-feedback-card__empty">
+      <svg class="lucide lucide-message-square-text cp-feedback-card__empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/><path d="M7 11h10"/><path d="M7 15h6"/><path d="M7 7h8"/></svg>
+      <p class="cp-feedback-card__empty-text">아직 문의 내역이 없습니다.</p>
     </div>
     <p class="cap">내 문의 내역, empty (help/feedback/page.tsx)</p>
   </div>
   <div class="cell">
-    <div class="cp-feedback__admin-empty">
-      <svg class="lucide lucide-message-square cp-feedback__admin-empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>
-      <p class="cp-feedback__admin-empty-text">피드백이 없습니다.</p>
+    <div class="cp-feedback-card__admin-empty">
+      <svg class="lucide lucide-message-square cp-feedback-card__admin-empty-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/></svg>
+      <p class="cp-feedback-card__admin-empty-text">피드백이 없습니다.</p>
     </div>
     <p class="cap">피드백 관리, empty (admin/feedback/page.tsx)</p>
   </div>
   <div class="cell">
-    <div class="cp-feedback__admin-error">피드백 목록을 불러오는데 실패했습니다.</div>
+    <div class="cp-feedback-card__admin-error">피드백 목록을 불러오는데 실패했습니다.</div>
     <p class="cap">피드백 관리, query error (admin/feedback/page.tsx)</p>
-    <div class="cp-feedback__list" style="margin-top: 0">
-      <div class="cp-feedback__skeleton"></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="cp-feedback-card__list" style="margin-top: 0">
+      <div class="cp-feedback-card__skeleton"></div>
+      <div class="cp-feedback-card__skeleton"></div>
     </div>
-    <p class="cap">내 문의 내역 loading skeleton (h-24 animate-pulse slate-100)</p>
+    <p class="cap">내 문의 내역 loading, feedbackLoading: help/feedback/page.tsx (h-24 rounded-xl slate-100, space-y-3)</p>
+  </div>
+  <div class="cell">
+    <div class="cp-feedback-card__admin-loading">
+      <div class="cp-feedback-card__skeleton cp-feedback-card__skeleton--admin"></div>
+      <div class="cp-feedback-card__skeleton cp-feedback-card__skeleton--admin"></div>
+      <div class="cp-feedback-card__skeleton cp-feedback-card__skeleton--admin"></div>
+    </div>
+    <p class="cap">피드백 관리 loading, isLoading: admin/feedback/page.tsx (h-32 rounded-2xl slate-200, space-y-4)</p>
   </div>
 </div>
 
@@ -152,87 +166,87 @@
   <div class="row">
 
     <div class="cell">
-      <div class="cp-card cp-feedback__admin">
+      <div class="cp-card cp-feedback-card__admin">
         <div class="cp-card__content">
-          <div class="cp-feedback__admin-head">
-            <div class="cp-feedback__admin-tags">
-              <span class="cp-feedback__category cp-feedback__category--bug">버그</span>
-              <span class="cp-feedback__status cp-feedback__status--pending">
-                <svg class="lucide lucide-clock cp-feedback__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
+          <div class="cp-feedback-card__admin-head">
+            <div class="cp-feedback-card__admin-tags">
+              <span class="cp-feedback-card__category cp-feedback-card__category--bug">버그</span>
+              <span class="cp-feedback-card__status cp-feedback-card__status--pending">
+                <svg class="lucide lucide-clock cp-feedback-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
                 대기중
               </span>
             </div>
-            <div class="cp-feedback__admin-actions">
-              <button type="button" class="cp-feedback__toggle cp-feedback__toggle--resolve">답변 없이 해결</button>
-              <button type="button" class="cp-feedback__delete" title="피드백 삭제">
-                <svg class="lucide lucide-trash-2 cp-feedback__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <div class="cp-feedback-card__admin-actions">
+              <button type="button" class="cp-feedback-card__toggle cp-feedback-card__toggle--resolve">답변 없이 해결</button>
+              <button type="button" class="cp-feedback-card__delete" title="피드백 삭제">
+                <svg class="lucide lucide-trash-2 cp-feedback-card__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </div>
           </div>
-          <div class="cp-feedback__admin-body">
-            <p class="cp-feedback__message cp-feedback__message--admin cp-feedback__message--clamped">학기별 수강계획에서 과목을 드래그해 다른 학기로 옮기면 간혹 두 학기에 동시에 표시됩니다. 새로고침하면 정상으로 돌아오지만, 이 상태에서 PDF로 내보내면 중복된 과목이 그대로 출력됩니다. 크롬 최신 버전, 윈도우 11 환경이며 재현 빈도는 10번 중 2~3번 정도입니다. 로그를 보내드릴 수 있으니 필요하시면 말씀해 주세요.</p>
-            <button type="button" class="cp-feedback__more">더보기 <svg class="lucide lucide-chevron-down cp-feedback__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="cp-feedback-card__admin-body">
+            <p class="cp-feedback-card__message cp-feedback-card__message--admin cp-feedback-card__message--clamped">학기별 수강계획에서 과목을 드래그해 다른 학기로 옮기면 간혹 두 학기에 동시에 표시됩니다. 새로고침하면 정상으로 돌아오지만, 이 상태에서 PDF로 내보내면 중복된 과목이 그대로 출력됩니다. 크롬 최신 버전, 윈도우 11 환경이며 재현 빈도는 10번 중 2~3번 정도입니다. 로그를 보내드릴 수 있으니 필요하시면 말씀해 주세요.</p>
+            <button type="button" class="cp-feedback-card__more">더보기 <svg class="lucide lucide-chevron-down cp-feedback-card__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
           </div>
-          <div class="cp-feedback__reply-form">
-            <textarea class="cp-feedback__textarea cp-feedback__textarea--sm is-focus" rows="2" placeholder="답변을 입력하세요...">확인했습니다. 성적 저장 후 진행률 갱신이 지연되는 문제를 수정하여 다음 배포에 반영하겠습니다.</textarea>
-            <div class="cp-feedback__reply-form-footer">
-              <span class="cp-feedback__counter">53/2000</span>
-              <div class="cp-feedback__reply-actions">
-                <button type="button" class="cp-feedback__cancel">취소</button>
-                <button type="button" class="cp-feedback__send">
-                  <svg class="lucide lucide-reply cp-feedback__send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 18v-2a4 4 0 0 0-4-4H4"/><path d="m9 17-5-5 5-5"/></svg>
+          <div class="cp-feedback-card__reply-form">
+            <textarea class="cp-feedback-card__textarea cp-feedback-card__textarea--sm is-focus" rows="2" placeholder="답변을 입력하세요...">확인했습니다. 성적 저장 후 진행률 갱신이 지연되는 문제를 수정하여 다음 배포에 반영하겠습니다.</textarea>
+            <div class="cp-feedback-card__reply-form-footer">
+              <span class="cp-feedback-card__counter">53/2000</span>
+              <div class="cp-feedback-card__reply-actions">
+                <button type="button" class="cp-feedback-card__cancel">취소</button>
+                <button type="button" class="cp-feedback-card__send">
+                  <svg class="lucide lucide-reply cp-feedback-card__send-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 18v-2a4 4 0 0 0-4-4H4"/><path d="m9 17-5-5 5-5"/></svg>
                   답변 및 해결 처리
                 </button>
               </div>
             </div>
           </div>
-          <div class="cp-feedback__admin-meta">
+          <div class="cp-feedback-card__admin-meta">
             <span>홍길동 (hong@yu.ac.kr)</span>
             <span>2026년 10월 20일 오후 02:13</span>
           </div>
         </div>
       </div>
-      <p class="cap">admin item, pending: 버그 category pill · 대기중 · 답변 없이 해결 (green-600) · message line-clamp-3 + 더보기 · reply textarea (rounded-lg recipe) .is-focus with 53/2000, 취소, 답변 및 해결 처리 · meta name (email) · date</p>
+      <p class="cap">admin item, pending (admin/feedback/page.tsx): 버그 category pill · 대기중 · 답변 없이 해결 (green-600) · message line-clamp-3 + 더보기 · reply textarea in the admin/feedback/page.tsx recipe (rounded-lg px-3 py-2) .is-focus with 53/2000, 취소, 답변 및 해결 처리 · meta name (email) · date</p>
     </div>
 
     <div class="cell">
-      <div class="cp-card cp-feedback__admin">
+      <div class="cp-card cp-feedback-card__admin">
         <div class="cp-card__content">
-          <div class="cp-feedback__admin-head">
-            <div class="cp-feedback__admin-tags">
-              <span class="cp-feedback__category cp-feedback__category--feature">기능 요청</span>
-              <span class="cp-feedback__status cp-feedback__status--resolved">
-                <svg class="lucide lucide-check-circle cp-feedback__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+          <div class="cp-feedback-card__admin-head">
+            <div class="cp-feedback-card__admin-tags">
+              <span class="cp-feedback-card__category cp-feedback-card__category--feature">기능 요청</span>
+              <span class="cp-feedback-card__status cp-feedback-card__status--resolved">
+                <svg class="lucide lucide-check-circle cp-feedback-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
                 해결됨
               </span>
             </div>
-            <div class="cp-feedback__admin-actions">
-              <button type="button" class="cp-feedback__toggle cp-feedback__toggle--reopen is-hover">대기로 변경</button>
-              <button type="button" class="cp-feedback__delete" title="피드백 삭제">
-                <svg class="lucide lucide-trash-2 cp-feedback__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <div class="cp-feedback-card__admin-actions">
+              <button type="button" class="cp-feedback-card__toggle cp-feedback-card__toggle--reopen is-hover">대기로 변경</button>
+              <button type="button" class="cp-feedback-card__delete" title="피드백 삭제">
+                <svg class="lucide lucide-trash-2 cp-feedback-card__delete-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
               </button>
             </div>
           </div>
-          <div class="cp-feedback__admin-body">
-            <p class="cp-feedback__message cp-feedback__message--admin">학기 카드에서 과목을 바로 삭제할 수 있는 버튼이 있으면 좋겠습니다.</p>
+          <div class="cp-feedback-card__admin-body">
+            <p class="cp-feedback-card__message cp-feedback-card__message--admin">학기 카드에서 과목을 바로 삭제할 수 있는 버튼이 있으면 좋겠습니다.</p>
           </div>
-          <div class="cp-feedback__reply cp-feedback__reply--admin">
-            <div class="cp-feedback__reply-head">
-              <span class="cp-feedback__reply-pill">
-                <svg class="lucide lucide-reply cp-feedback__reply-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 18v-2a4 4 0 0 0-4-4H4"/><path d="m9 17-5-5 5-5"/></svg>
+          <div class="cp-feedback-card__reply cp-feedback-card__reply--admin">
+            <div class="cp-feedback-card__reply-head">
+              <span class="cp-feedback-card__reply-pill">
+                <svg class="lucide lucide-reply cp-feedback-card__reply-pill-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 18v-2a4 4 0 0 0-4-4H4"/><path d="m9 17-5-5 5-5"/></svg>
                 관리자 답변
               </span>
-              <span class="cp-feedback__date">2026년 10월 15일 오전 11:02</span>
+              <span class="cp-feedback-card__date">2026년 10월 15일 오전 11:02</span>
             </div>
-            <p class="cp-feedback__reply-text">좋은 의견 감사합니다. 과목 카드에 마우스를 올리면 나타나는 삭제 버튼을 다음 업데이트에 추가할 예정입니다.</p>
+            <p class="cp-feedback-card__reply-text">좋은 의견 감사합니다. 과목 카드에 마우스를 올리면 나타나는 삭제 버튼을 다음 업데이트에 추가할 예정입니다.</p>
           </div>
-          <div class="cp-feedback__admin-meta">
+          <div class="cp-feedback-card__admin-meta">
             <span>익명</span>
             <span>2026년 10월 12일 오후 06:30</span>
           </div>
         </div>
       </div>
-      <p class="cap">admin item, resolved: 기능 요청 pill · 해결됨 · 대기로 변경 .is-hover (slate-300) · reply box in green-50 with Reply icon in the pill · meta 익명 · date</p>
+      <p class="cap">admin item, resolved (admin/feedback/page.tsx): 기능 요청 pill · 해결됨 · 대기로 변경 .is-hover (slate-300) · reply box in the admin/feedback/page.tsx recipe: green-50 fill, Reply icon in the pill · meta 익명 · date</p>
     </div>
 
   </div>
@@ -240,26 +254,26 @@
   <div class="row">
     <div class="cell">
       <div class="strip">
-        <span class="cp-feedback__category cp-feedback__category--bug">버그</span>
-        <span class="cp-feedback__category cp-feedback__category--feature">기능 요청</span>
-        <span class="cp-feedback__category cp-feedback__category--data-error">데이터 오류</span>
-        <span class="cp-feedback__category cp-feedback__category--other">기타</span>
-        <span class="cp-feedback__category cp-feedback__category--contact">문의</span>
-        <span class="cp-feedback__status cp-feedback__status--pending">
-          <svg class="lucide lucide-clock cp-feedback__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
+        <span class="cp-feedback-card__category cp-feedback-card__category--bug">버그</span>
+        <span class="cp-feedback-card__category cp-feedback-card__category--feature">기능 요청</span>
+        <span class="cp-feedback-card__category cp-feedback-card__category--data-error">데이터 오류</span>
+        <span class="cp-feedback-card__category cp-feedback-card__category--other">기타</span>
+        <span class="cp-feedback-card__category cp-feedback-card__category--contact">문의</span>
+        <span class="cp-feedback-card__status cp-feedback-card__status--pending">
+          <svg class="lucide lucide-clock cp-feedback-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
           대기중
         </span>
-        <span class="cp-feedback__status cp-feedback__status--resolved">
-          <svg class="lucide lucide-check-circle cp-feedback__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
+        <span class="cp-feedback-card__status cp-feedback-card__status--resolved">
+          <svg class="lucide lucide-check-circle cp-feedback-card__status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
           해결됨
         </span>
-        <button type="button" class="cp-feedback__send" disabled>
-          <svg class="lucide lucide-loader-2 cp-feedback__send-icon cp-feedback__spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <button type="button" class="cp-feedback-card__send" disabled>
+          <svg class="lucide lucide-loader-2 cp-feedback-card__send-icon cp-feedback-card__spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
           전송 중...
         </button>
-        <button type="button" class="cp-feedback__more">접기 <svg class="lucide lucide-chevron-up cp-feedback__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        <button type="button" class="cp-feedback-card__more">접기 <svg class="lucide lucide-chevron-up cp-feedback-card__more-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
       </div>
-      <p class="cap">CATEGORY_COLORS pills: bug · feature · data-error · other · contact — status pills 대기중 · 해결됨 — 답변 button while isReplying (disabled + Loader2) — expanded toggle 접기</p>
+      <p class="cap">admin/feedback/page.tsx: CATEGORY_COLORS pills: bug · feature · data-error · other · contact — status pills 대기중 · 해결됨 — 답변 button while isReplying (disabled + Loader2) — expanded toggle 접기</p>
     </div>
   </div>
 </div>

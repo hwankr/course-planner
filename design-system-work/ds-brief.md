@@ -66,8 +66,12 @@ Create folders as needed (`mkdir -p`). Do not touch any other file. Do not write
 
 - Spacing step = 4px: `0.5`→2px, `1`→4, `1.5`→6, `2`→8, `2.5`→10, `3`→12, `3.5`→14, `4`→16,
   `5`→20, `6`→24, `7`→28, `8`→32, `9`→36, `10`→40, `11`→44, `12`→48, `16`→64, `20`→80, `24`→96,
-  `60`→240 (max-h-60), `64`→256. `px-3` = padding-left/right 12px; `space-y-2` = 8px margin-top on
-  every sibling after the first; `gap-2` = gap 8px. `w-full` = width 100%.
+  `60`→240 (max-h-60), `64`→256. `px-3` = padding-left/right 12px; `space-y-2` = 8px margin-bottom on
+  every child except the DOM-last one (v4: `:where(.parent > :not(:last-child)) { margin-block-end }`,
+  zero specificity in the utilities layer, so a child's own `mt-*`/`mb-*` wins; block-flow margins
+  then collapse, flex/grid margins add; a hidden last child still counts as last). Write
+  `.parent > :not(:last-child) { margin-bottom }` and reproduce any child margin explicitly after it.
+  `space-x-*` is the same on `margin-inline-end`. Ground truth for any class: `node tools/tw.mjs <class>`; `gap-2` = gap 8px. `w-full` = width 100%.
 - Text: `text-xs` 12px/16px · `text-sm` 14px/20px · `text-base` 16px/24px · `text-lg` 18px/28px ·
   `text-xl` 20px/28px · `text-2xl` 24px/32px · `text-3xl` 30px/36px · `text-4xl` 36px/40px ·
   `text-5xl` 48px/1 · `text-[10px]` 10px (line-height stays inherited: 1.5 → write 15px) ·
@@ -96,7 +100,9 @@ Create folders as needed (`mkdir -p`). Do not touch any other file. Do not write
 - Gradients: v4 interpolates in oklab: `bg-gradient-to-r from-[#153974] to-[#3069B3]` →
   `background-image: linear-gradient(to right in oklab, var(--yu-navy, #153974), var(--yu-blue, #3069b3))`;
   `to-br` → `to bottom right in oklab`; `via-` adds a middle stop.
-- Motion: `transition-colors` → `transition: color, background-color, border-color, text-decoration-color, fill, stroke 150ms cubic-bezier(0.4,0,0.2,1)`;
+- Motion: `transition-colors` → `transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke`
+  (v4 also lists `--tw-gradient-from/via/to`, omitted: the bundle has no such properties), `transition-duration: 150ms`,
+  `transition-timing-function: cubic-bezier(0.4,0,0.2,1)`;
   `transition-all` → `all 150ms …`; `transition-shadow` → `box-shadow …`; `duration-200` → 200ms,
   `duration-300` → 300ms. `active:scale-[0.98]` → `transform: scale(0.98)`. `animate-spin` →
   `spin 1s linear infinite` (define `@keyframes cp-spin { to { transform: rotate(360deg) } }` in the
@@ -106,6 +112,9 @@ Create folders as needed (`mkdir -p`). Do not touch any other file. Do not write
   `disabled:cursor-not-allowed`, `opacity-60`.
 - `h-10` 40px (`control-md`), `h-9` 36px (`control-sm`), `h-11` 44px (`control-lg`);
   icons `h-4 w-4` 16px (`icon-md`), `h-3 w-3` 12px, `h-3.5 w-3.5` 14px, `h-5 w-5` 20px, `h-6 w-6` 24px, `h-8 w-8` 32px.
+- Hover under v4: every `hover:` / `group-hover:` rule sits inside `@media (hover: hover)`, so touch
+  screens never get it. Put real `:hover` selectors in such a block and keep the `.is-hover` mirror
+  outside it (`node tools/hover-media.mjs` does this for a whole fragment).
 - Preflight facts: buttons and inputs inherit `font: inherit`, `color: inherit`; buttons have NO
   pointer cursor unless `cursor-pointer`/`cursor-move` is set; `<h1>…<h6>` and `<p>` have no margins;
   images are `display:block; max-width:100%`.

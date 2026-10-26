@@ -50,8 +50,8 @@ export interface UnreadCountResponse {
 
 /** What the header reads from useAuth(). */
 export interface AppHeaderAuthState {
-  /** next-auth session user; `name` drives the avatar initial and the user menu, `role === 'admin'` yields isAdmin. */
-  user?: { id?: string; name?: string | null; role?: 'student' | 'admin' } | null;
+  /** next-auth session user (`session?.user`, undefined without a session); `name` drives the avatar initial and the user menu, `role === 'admin'` yields isAdmin. */
+  user?: { id: string; email: string; name: string; image?: string; role?: 'student' | 'admin' };
   /** True once the session status is 'authenticated'; gates the bell and the notification queries. */
   isAuthenticated: boolean;
   /** Shows the 관리자 pill and turns the badge yellow-400 / yellow-900. */

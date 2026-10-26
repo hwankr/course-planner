@@ -16,9 +16,13 @@
 .cp-card *::after {
   box-sizing: border-box;
 }
-.cp-card:hover,
 .cp-card.is-hover {
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-card:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* CardHeader: "flex flex-col space-y-1.5 p-6" */
@@ -27,8 +31,13 @@
   flex-direction: column;
   padding: var(--space-6, 24px);
 }
-.cp-card__header > * + * {
-  margin-top: var(--space-1-5, 6px);
+/* space-y-1.5 under Tailwind v4 (`:where(& > :not(:last-child))`): 6px margin-bottom on every element child except
+   the DOM-last one, so CardTitle → CardDescription is 6px and a lone child gets nothing. Written at (0,2,0), so it
+   also beats the `.cp-card__title` / `.cp-card__description` `margin: 0` resets below, as v4's utilities layer beats
+   preflight. The header is a flex column (no collapsing): a child's own block margin adds to the 6px, and a child
+   with its own margin-bottom (none in the source) would have to restate it after this rule. */
+.cp-card__header > :not(:last-child) {
+  margin-bottom: var(--space-1-5, 6px);
 }
 
 /* CardTitle (<h3>): "text-2xl font-semibold leading-none tracking-tight" — heading-2 size at 600 */

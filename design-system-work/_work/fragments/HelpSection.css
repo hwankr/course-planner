@@ -42,13 +42,14 @@
   .cp-help__card { padding: var(--space-7, 28px); }
   .cp-help__card--roomy { padding: var(--space-8, 32px); }
 }
-/* The guide header and its sections sit in a mt-8 space-y-6 stack instead of mb-8 margins. */
+/* The guide carries no mb-8: its header is followed by the "mt-8 space-y-6" stack (.cp-help__stack), and its STEP 3
+   section sits inside that stack, which spaces it instead. */
 .cp-help__card--flush {
   margin-bottom: 0;
 }
 
 /* Back / nav links: "inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]".
-   yu-cyan text on white is 2.8:1 in the source — kept, flagged. */
+   yu-cyan text is 2.8:1 on white (header) and about 2.5:1 on the shell's slate-100 end (bottom nav) in the source — kept, flagged. */
 .cp-help__link {
   display: inline-flex;
   align-items: center;
@@ -56,26 +57,35 @@
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--yu-cyan, #00aaca);
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-help__link:hover,
 .cp-help__link.is-hover {
   color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-help__link:hover {
+    color: var(--yu-navy, #153974);
+  }
 }
 /* Header back link carries mb-4 */
 .cp-help__link--back {
   margin-bottom: var(--space-4, 16px);
 }
-/* Guide header back link: "text-sm text-slate-600 hover:text-[#00AACA]" — weight 400, the hover inverted to cyan. */
+/* Guide header back link: "text-sm text-slate-600 hover:text-[#00AACA]" — weight 400, the hover inverted to cyan
+   (yu-cyan on white 2.8:1 — kept, flagged). */
 .cp-help__link--muted {
   font-weight: 400;
   color: var(--slate-600, #45556c);
 }
-.cp-help__link--muted:hover,
 .cp-help__link--muted.is-hover {
   color: var(--yu-cyan, #00aaca);
+}
+@media (hover: hover) {
+  .cp-help__link--muted:hover {
+    color: var(--yu-cyan, #00aaca);
+  }
 }
 /* ArrowLeft / ExternalLink className="h-4 w-4" */
 .cp-help__link-icon {
@@ -140,10 +150,10 @@
   gap: var(--space-3, 12px);
   margin-bottom: var(--space-5, 20px);
 }
-/* Icon tile: "flex h-10 w-10 items-center justify-center rounded-lg" + a tint */
+/* Icon tile: "flex h-10 w-10 items-center justify-center rounded-lg" + a tint. No shrink-0 in the source, so as a flex item
+   it keeps the default flex 0 1 auto and narrows when a long heading wraps (e.g. the guide's h2 at 375px). */
 .cp-help__tile {
   display: flex;
-  flex: none;
   align-items: center;
   justify-content: center;
   width: var(--control-md, 40px);
@@ -211,7 +221,8 @@
   font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--yu-navy, #153974);
 }
-/* ul: "space-y-1 text-sm text-slate-600" — the bullets are literal "• " characters in the text, no list-style. */
+/* ul: "space-y-1 text-sm text-slate-600" — the bullets are literal "• " characters in the text, no list-style.
+   space-y-1 in v4 semantics: margin-bottom on every <li> except the last; the <li>s carry no margin of their own. */
 .cp-help__list {
   margin: 0;
   padding: 0;
@@ -219,16 +230,17 @@
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--slate-600, #45556c);
 }
-.cp-help__list > * + * {
-  margin-top: var(--space-1, 4px);
+.cp-help__list > :not(:last-child) {
+  margin-bottom: var(--space-1, 4px);
 }
 
-/* Numbered rows (help): "mb-4 space-y-3" of "rounded-lg bg-slate-50 p-3" */
+/* Numbered rows (help): "mb-4 space-y-3" of "rounded-lg bg-slate-50 p-3".
+   space-y-3 in v4 semantics: margin-bottom on every row except the last; the rows carry no margin of their own. */
 .cp-help__steps {
   margin-bottom: var(--space-4, 16px);
 }
-.cp-help__steps > * + * {
-  margin-top: var(--space-3, 12px);
+.cp-help__steps > :not(:last-child) {
+  margin-bottom: var(--space-3, 12px);
 }
 .cp-help__step {
   padding: var(--space-3, 12px);
@@ -250,17 +262,23 @@
   .cp-help__step-text { font-size: 16px; line-height: 24px; }
 }
 
-/* Image frame around ZoomableImage: "overflow-hidden rounded-xl border border-slate-200" (+ mt-4 on single frames) */
+/* Image frame around ZoomableImage (.cp-zoomable-image, from ZoomableImage.css): "overflow-hidden rounded-xl border border-slate-200" */
 .cp-help__figure {
   overflow: hidden;
-  margin-top: var(--space-4, 16px);
   border: 1px solid var(--slate-200, #e2e8f0);
   border-radius: var(--radius-xl, 12px);
 }
-.cp-help__figure > img {
-  display: block;
-  width: 100%;
-  height: auto;
+/* Single frames carry "mt-4" (시작하기, 졸업요건 추적) */
+.cp-help__figure--spaced {
+  margin-top: var(--space-4, 16px);
+}
+/* Frame stacks: "space-y-4" (수강 계획 세우기) and "mt-4 space-y-4" (학과 통계); the frames inside have no margin of their own
+   (use plain .cp-help__figure here, not --spaced). v4 semantics: margin-bottom on every frame except the last. */
+.cp-help__figures > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
+}
+.cp-help__figures--spaced {
+  margin-top: var(--space-4, 16px);
 }
 
 /* Guide link card: "mb-4 flex items-center gap-2 rounded-xl border border-[#00AACA]/30 bg-[#00AACA]/5 p-4 text-sm font-medium
@@ -277,14 +295,19 @@
   color: var(--yu-navy, #153974);
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-help__link-card:hover,
 .cp-help__link-card.is-hover {
   border-color: var(--yu-cyan-a50, #00aaca80);
   background-color: var(--yu-cyan-a10, #00aaca1a);
+}
+@media (hover: hover) {
+  .cp-help__link-card:hover {
+    border-color: var(--yu-cyan-a50, #00aaca80);
+    background-color: var(--yu-cyan-a10, #00aaca1a);
+  }
 }
 /* ExternalLink className="h-4 w-4 text-[#00AACA]" */
 .cp-help__link-card-icon {
@@ -324,32 +347,41 @@
   color: var(--white, #ffffff);
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-help__cta:hover,
 .cp-help__cta.is-hover {
   background-color: var(--yu-blue-dark, #1a4a8f);
 }
+@media (hover: hover) {
+  .cp-help__cta:hover {
+    background-color: var(--yu-blue-dark, #1a4a8f);
+  }
+}
 
-/* Bottom nav: "flex flex-wrap justify-center gap-4"; the guide's is "mt-8 text-center" with one link. */
+/* Bottom nav (help): "flex flex-wrap justify-center gap-4" */
 .cp-help__nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-4, 16px);
 }
-.cp-help__nav--spaced {
+/* Guide nav: "mt-8 text-center" — a block box; its one inline-flex link sits in the inherited 16px/24px line box. */
+.cp-help__nav--guide {
+  display: block;
   margin-top: var(--space-8, 32px);
+  text-align: center;
 }
 
-/* Guide stack: "mt-8 space-y-6" */
+/* Guide stack: "mt-8 space-y-6" of <section>s (the STEP panes, then STEP 3 as .cp-help__card--flush), none with a margin
+   utility of its own. v4 semantics: margin-bottom on every section except the DOM-last one; (0,2,0) also beats the
+   .cp-help__card / --flush margin-bottom on a card that is not last. */
 .cp-help__stack {
   margin-top: var(--space-8, 32px);
 }
-.cp-help__stack > * + * {
-  margin-top: var(--space-6, 24px);
+.cp-help__stack > :not(:last-child) {
+  margin-bottom: var(--space-6, 24px);
 }
 
 /* Guide STEP section: "overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" */
@@ -379,7 +411,7 @@
   .cp-help__pane-text { padding: var(--space-7, 28px); }
 }
 /* Description "mt-3 text-sm leading-relaxed text-slate-600 md:text-base" — the guide's descriptions are empty strings,
-   so this renders as an empty paragraph that still adds its 12px margin. */
+   so this renders as an empty paragraph whose 12px margin collapses into the list's 16px mt-4 (adds no space). */
 .cp-help__pane-desc {
   margin: var(--space-3, 12px) 0 0;
   font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
@@ -388,14 +420,15 @@
 @media (min-width: 48rem) {
   .cp-help__pane-desc { font-size: 16px; }
 }
-/* ol: "mt-4 space-y-2" of li "flex items-start gap-3 rounded-lg bg-slate-50 p-3" */
+/* ol: "mt-4 space-y-2" of li "flex items-start gap-3 rounded-lg bg-slate-50 p-3".
+   space-y-2 in v4 semantics: margin-bottom on every <li> except the last; the <li>s carry no margin of their own. */
 .cp-help__ol {
   margin: var(--space-4, 16px) 0 0;
   padding: 0;
   list-style: none;
 }
-.cp-help__ol > * + * {
-  margin-top: var(--space-2, 8px);
+.cp-help__ol > :not(:last-child) {
+  margin-bottom: var(--space-2, 8px);
 }
 .cp-help__ol-item {
   display: flex;
@@ -454,6 +487,12 @@
 .cp-help__pane-grid.is-lg .cp-help__zoom {
   aspect-ratio: 1 / 1;
 }
+/* STEP 3 screenshot: "group relative block aspect-[1425/436] w-full cursor-zoom-in" — fixed wide ratio, no lg switch
+   (declared after the lg rule so it always wins). */
+.cp-help__zoom--wide,
+.cp-help__pane-grid.is-lg .cp-help__zoom--wide {
+  aspect-ratio: 1425 / 436;
+}
 /* next/image fill + "object-contain transition-transform duration-200 group-hover:scale-[1.01]" */
 .cp-help__zoom-img {
   position: absolute;
@@ -463,9 +502,13 @@
   object-fit: contain;
   transition: transform var(--duration-base, 200ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-help__zoom:hover .cp-help__zoom-img,
 .cp-help__zoom.is-hover .cp-help__zoom-img {
   transform: scale(1.01);
+}
+@media (hover: hover) {
+  .cp-help__zoom:hover .cp-help__zoom-img {
+    transform: scale(1.01);
+  }
 }
 /* Hint: "absolute bottom-3 right-3 rounded-full bg-slate-900/75 px-2.5 py-1 text-xs font-medium text-white opacity-0
    transition-opacity group-hover:opacity-100" */
@@ -481,12 +524,16 @@
   opacity: 0;
   transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-help__zoom:hover .cp-help__zoom-hint,
 .cp-help__zoom.is-hover .cp-help__zoom-hint {
   opacity: 1;
 }
+@media (hover: hover) {
+  .cp-help__zoom:hover .cp-help__zoom-hint {
+    opacity: 1;
+  }
+}
 /* Caption: "border-t border-slate-200 bg-white px-4 py-3 text-sm text-slate-600" — the guide's captions are empty strings,
-   so the source renders a 45px empty white strip under each image. */
+   so the source renders a 25px empty white strip (1px top rule + 2×12px padding, no line box) under each image. */
 .cp-help__pane-caption {
   margin: 0;
   padding: var(--space-3, 12px) var(--space-4, 16px);
@@ -494,7 +541,15 @@
   background-color: var(--white, #ffffff);
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--slate-600, #45556c);
-  min-height: 45px;
+}
+
+/* STEP 3 screenshot frame: "mt-5 overflow-hidden rounded-xl border border-slate-200 bg-slate-50" around a .cp-help__zoom--wide button */
+.cp-help__shot {
+  margin-top: var(--space-5, 20px);
+  overflow: hidden;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: var(--radius-xl, 12px);
+  background-color: var(--slate-50, #f8fafc);
 }
 
 /* Audit items: "mt-5 grid gap-3 md:grid-cols-2" of "rounded-xl border border-slate-200 bg-slate-50 p-4" */

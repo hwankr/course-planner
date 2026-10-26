@@ -965,8 +965,8 @@ export interface UnreadCountResponse {
 
 /** What the header reads from useAuth(). */
 export interface AppHeaderAuthState {
-  /** next-auth session user; `name` drives the avatar initial and the user menu, `role === 'admin'` yields isAdmin. */
-  user?: { id?: string; name?: string | null; role?: 'student' | 'admin' } | null;
+  /** next-auth session user (`session?.user`, undefined without a session); `name` drives the avatar initial and the user menu, `role === 'admin'` yields isAdmin. */
+  user?: { id: string; email: string; name: string; image?: string; role?: 'student' | 'admin' };
   /** True once the session status is 'authenticated'; gates the bell and the notification queries. */
   isAuthenticated: boolean;
   /** Shows the 관리자 pill and turns the badge yellow-400 / yellow-900. */
@@ -1065,23 +1065,23 @@ export declare function RegisterPage(): JSX.Element;
  * each page's JSX reads, plus the recipe names used by the stylesheet.
  */
 
-/** Which page's header the markup follows. 'planner-export' is the compact duplicate rendered only while isExporting. */
-export type PageHeaderRecipe = 'planner' | 'planner-export' | 'statistics' | 'admin';
+/** Which page's header the markup follows (matches the .cp-page-header--{recipe} modifier). 'export-only' is the planner's compact duplicate rendered only while isExporting. */
+export type PageHeaderRecipe = 'planner' | 'export-only' | 'statistics' | 'admin';
 
 /** MajorType from src/types — chooses the second badge: 'double' → 복수전공 (purple), 'minor' → 부전공 (orange), 'single' → none. */
 export type PageHeaderMajorType = 'single' | 'double' | 'minor';
 
 /** src/app/(dashboard)/planner/page.tsx — values the header JSX reads (session + useDepartments() for members, useGuestProfileStore for guests). */
 export interface PlannerPageHeaderProps {
-  /** Primary department badge (yu-navy-a10 / yu-navy); when undefined the 학과를 설정해주세요 link to /profile renders instead. */
-  departmentName?: string;
+  /** Primary department badge (yu-navy-a10 / yu-navy); when falsy (undefined, or null for a guest without a department) the 학과를 설정해주세요 link to /profile renders instead. Members: departments.find(...)?.name; guests: useGuestProfileStore's string | null. */
+  departmentName?: string | null;
   /** session.user.majorType || 'single' for members, the guest store's majorType for guests. */
   headerMajorType: PageHeaderMajorType;
-  /** Text after 복수전공: / 부전공:; the second badge renders only when this and a non-'single' majorType are set. */
-  secondaryDepartmentName?: string;
+  /** Text after 복수전공: / 부전공: (falsy → no second badge). In the main header the second badge needs departmentName as well, because with no department the link replaces the whole row. In the export-only header it needs only this and a non-'single' majorType. */
+  secondaryDepartmentName?: string | null;
   /** activePlan.semesters.length > 0 — shows 내보내기 and 초기화; the actions row itself always renders. */
   hasSemesters: boolean;
-  /** Opens the PNG 이미지 / PDF 문서 menu under 내보내기; closed on outside mousedown / touchstart. */
+  /** Opens the PNG 이미지 / PDF 문서 menu under 내보내기; closes on outside mousedown / touchstart, after an item is chosen, or when the trigger is pressed again (not on Escape). */
   showExportMenu: boolean;
   /** Disables 내보내기, swaps its label for the gray-600 arc + 내보내는 중..., and renders the export-only header into the capture. */
   isExporting: boolean;
@@ -1122,7 +1122,7 @@ export interface AdminPageHeaderProps {
 export interface PageHeaderProps {
   /** Recipe to render. */
   recipe: PageHeaderRecipe;
-  /** Planner data when recipe is 'planner' or 'planner-export' (the export variant uses only the badge fields). */
+  /** Planner data when recipe is 'planner' or 'export-only' (the export-only variant uses only the badge fields). */
   planner?: PlannerPageHeaderProps;
   /** Statistics data when recipe is 'statistics'. */
   statistics?: StatisticsPageHeaderProps;
@@ -1133,9 +1133,9 @@ export interface PageHeaderProps {
 // ----- FilterChips -----
 /**
  * FilterChips — documentation-only types for the filter-chip PATTERN: rows of toggle <button>s written
- * inline in five places (planner 학년 pills, CourseCatalog 이수 chips, statistics gradient chips, calendar
- * pill chips, admin 개설 학기 toggles). No component exists in the source; these are the option unions
- * each page maps over, the local state it keeps, and the recipe names used by the stylesheet.
+ * inline in five places (planner 학년 pills, CourseCatalog 학과 · 학년 · 학기 · 이수 chips, statistics gradient
+ * chips, calendar pill chips, admin 개설 학기 toggles). No component exists in the source; these are the option
+ * unions each page maps over, the local state it keeps (with its initial value), and a name for each recipe.
  */
 
 /** src/types/index.ts — the seven 이수구분 values (labels: 전공핵심 전공필수 전공선택 교양필수 교양선택 자유선택 교직). */
@@ -1157,18 +1157,18 @@ export type Term = 'spring' | 'fall';
 /** src/types/index.ts — calendar categories (labels: 학사 수강신청 시험 공휴일 기타). */
 export type AcademicEventCategory = 'academic' | 'registration' | 'exam' | 'holiday' | 'other';
 
-/** The five recipes, named by source; statistics has two sizes. */
+/** The five recipes, named by source; statistics has two sizes. Each member notes its CSS class. */
 export type FilterChipRecipe =
-  | 'planner-year'
-  | 'catalog-category'
-  | 'statistics-category'
-  | 'statistics-semester'
-  | 'calendar-category'
-  | 'admin-semester';
+  | 'planner-year' // .cp-filter-chips__chip--planner
+  | 'catalog-category' // .cp-course-catalog__chip(--purple, --orange, --indigo, --emerald, --red…--gray); same box for the 학과, 학년, 학기 and 이수 rows
+  | 'statistics-category' // .cp-filter-chips__chip--stat
+  | 'statistics-semester' // .cp-filter-chips__chip--stat-sm
+  | 'calendar-category' // .cp-calendar__chip(--all…--other)
+  | 'admin-semester'; // .cp-filter-chips__chip--admin
 
 /** The shape every recipe is built from: a local state value, an option list and a setter wired to onClick. */
 export interface FilterChipsProps<TValue> {
-  /** Options rendered in order; the first is the 전체 sentinel in every recipe except admin-semester. */
+  /** Options rendered in order; the first is the 전체 sentinel in every recipe except admin-semester and the catalog 학과 row. */
   options: ReadonlyArray<{ value: TValue; label: string }>;
   /** Current selection; a chip is active when `value === option.value` (admin: `value.includes(option.value)`). */
   value: TValue | TValue[];
@@ -1178,7 +1178,7 @@ export interface FilterChipsProps<TValue> {
 
 /** src/app/(dashboard)/planner/page.tsx */
 export interface PlannerYearFilterState {
-  /** null = 전체; set by a pill click and by handleSemesterFocus to the focused semester's year. */
+  /** null = 전체; set by a pill click, and by clicking a semester column (handleSemesterFocus) to that semester's year, whether the click focuses or unfocuses it. @default null */
   semesterYearFilter: number | null;
   /** Pill options after 전체: `Array.from(semestersByYear.keys()).sort()`; the row renders only when the map is non-empty. */
   years: number[];
@@ -1186,17 +1186,27 @@ export interface PlannerYearFilterState {
 
 /** src/components/features/CourseCatalog.tsx */
 export interface CatalogCategoryFilterState {
-  /** undefined = 전체. */
+  /** undefined = 전체. @default undefined */
   categoryFilter: RequirementCategory | undefined;
-  /** Categories present in the fetched courses, in fixed order; the only chips rendered after 전체. Hidden on the 공통 tab. */
+  /** Categories present in the fetched courses, in fixed order; the only chips rendered after 전체. The row is hidden on the 공통 tab and while the catalog is collapsed (접기). */
   usedCategories: RequirementCategory[];
+}
+
+/** src/components/features/CourseCatalog.tsx — the 학과 row and the 학년 | 학기 row above 이수 (same chip box) */
+export interface CatalogDeptYearSemesterFilterState {
+  /** 내 학과/주전공 (yu-navy, only with userDepartment), 복수전공 (purple) or 부전공 (orange) when a secondary department is set and majorType !== 'single', 공통 (indigo). @default userDepartment ? 'primary' : 'common' */
+  deptFilter: 'primary' | 'secondary' | 'common';
+  /** undefined = 전체; options [undefined, 1, 2, 3, 4, 5, 6] (yu-navy). Reset to undefined on the 공통 tab, where the row is hidden. @default undefined */
+  yearFilter: number | undefined;
+  /** undefined = 전체; options [undefined, 'spring', 'fall'] (emerald). Reset to undefined on the 공통 tab, where the row is hidden. @default undefined */
+  semesterFilter: Semester | undefined;
 }
 
 /** src/app/(dashboard)/statistics/page.tsx */
 export interface StatisticsFilterState {
-  /** 'all' = 전체; one chip per CATEGORY_LABELS key. */
+  /** 'all' = 전체 (a separate first button); one chip per CATEGORY_LABELS key. @default 'all' */
   selectedCategory: 'all' | RequirementCategory;
-  /** 'all' = 전체 학기, otherwise `${year}-${Term}`. */
+  /** 'all' = 전체 학기, otherwise `${year}-${Term}`. @default 'all' */
   selectedSemester: 'all' | string;
   /** Built from courseStats[].semesters and semesterDistribution; label `${year}학년 ${1|2}학기`. */
   semesterOptions: Array<{ value: 'all' | string; label: string }>;
@@ -1204,13 +1214,13 @@ export interface StatisticsFilterState {
 
 /** src/app/(dashboard)/calendar/page.tsx */
 export interface CalendarCategoryFilterState {
-  /** 'all' = 전체 (blue-600); a category value paints the chip with that category's colors. */
+  /** 'all' = 전체 (blue-600, a separate first button); a category value paints the chip with that category's colors. @default 'all' */
   selectedCategory: AcademicEventCategory | 'all';
 }
 
 /** src/app/(dashboard)/admin/courses/page.tsx — multi-select inside CourseFormData */
 export interface AdminSemesterToggleState {
-  /** Active chips; submit shows a warning toast while empty. */
+  /** Active chips; submit shows a warning toast while empty. @default [] (EMPTY_FORM; edit: [...course.semesters]) */
   semesters: Semester[];
   /** Adds the semester if absent, removes it if present. */
   toggleSemester: (sem: Semester) => void;
@@ -1220,21 +1230,16 @@ export interface AdminSemesterToggleState {
 /**
  * Badge — documentation-only types for the badge/pill PATTERN: inline <span>/<div>/<p> recipes the pages repeat
  * without a component. No component exists in the source; these are the values each page's JSX reads to pick a
- * recipe, plus the modifier names used by the stylesheet (.cp-badge--<recipe>).
+ * recipe, plus the modifier names used by the stylesheet (.cp-badge--<recipe>). Recipes another card already styles
+ * keep that card's classes (named in each interface below) and are not .cp-badge modifiers.
  */
 
-/** Every stylesheet recipe, named by what it labels in the source. */
+/** Every .cp-badge recipe, named by what it labels in the source. */
 export type BadgeRecipe =
   | 'admin' | 'student'                       // admin/users role (font-semibold, Shield / User h-3 w-3)
-  | 'pending' | 'resolved'                    // admin/feedback + help/feedback status (font-medium, Clock / CheckCircle h-3 w-3)
-  | 'reply'                                   // 관리자 답변 (px-2 font-semibold, Reply h-3 w-3 on the admin page only)
   | 'draft' | 'published'                     // admin/patch-notes status (font-semibold, no icon)
   | 'google' | 'email'                        // admin/users sign-in provider (font-medium)
-  | 'student-id' | 'dept-code' | 'version' | 'credits' // identity: 학번 · department code · vX.Y.Z (px-2) · N학점 (px-2)
-  | 'department' | 'double' | 'minor'         // planner header (items-center font-medium)
-  | 'eyebrow'                                 // help pages (px-3 py-1 gap-2 font-semibold), combined with an EyebrowTone
-  | 'count' | 'count-admin'                   // layout.tsx bell counter (absolute, 18px, text-[10px] font-bold)
-  | 'chip' | 'chip-patch-note' | 'chip-feedback-new' // layout.tsx 32px notification icon circles
+  | 'student-id' | 'dept-code'                // identity: 학번 (font-medium) · department code (font-semibold)
   | 'mini'                                    // admin/users plan rows (text-[10px] inline), combined with a PlanCourseStatus
   | 'legend';                                 // planner/page.tsx 예정 ↔ 이수 legend (rounded 4px), combined with 'planned' | 'completed'
 
@@ -1257,7 +1262,7 @@ export interface PlanStatusMiniBadgeProps {
   status: PlanCourseStatus;
 }
 
-/** src/app/(dashboard)/admin/feedback/page.tsx and help/feedback/page.tsx — FeedbackStatus. */
+/** admin/feedback reads FeedbackStatus = 'pending' | 'resolved' (STATUS_LABELS); help/feedback reads MyFeedbackItem.status: 'pending' | 'resolved' with an inline label ternary. Styled by FeedbackCard's .cp-feedback-card__status--pending / --resolved (관리자 답변: .cp-feedback-card__reply-pill). */
 export interface FeedbackStatusBadgeProps {
   /** 'pending' → 대기중 with Clock (yellow-100 / yellow-700); 'resolved' → 해결됨 with CheckCircle (green-100 / green-700). */
   status: 'pending' | 'resolved';
@@ -1267,21 +1272,21 @@ export interface FeedbackStatusBadgeProps {
 export interface PatchNoteStatusBadgeProps {
   /** 'draft' → 초안 (yellow-100 / yellow-700); 'published' → 발행됨 (green-100 / green-700). */
   status: 'draft' | 'published';
-  /** Optional version string (e.g. v1.0.0) rendered as the blue px-2 badge before the status. */
+  /** Optional version string (e.g. v1.0.0) rendered as the blue px-2 badge before the status (PatchNotes .cp-patch-notes__version). */
   version?: string;
 }
 
-/** src/app/(dashboard)/planner/page.tsx — values the header badge row reads (session + useDepartments, or the guest profile store). */
+/** src/app/(dashboard)/planner/page.tsx — values the header badge row reads (session + useDepartments, or the guest profile store). Styled by PageHeader's .cp-page-header__badge--department / --double / --minor. */
 export interface PlannerHeaderBadgesProps {
   /** Primary badge text (yu-navy-a10 / yu-navy); when undefined the 학과를 설정해주세요 link renders instead. */
   departmentName?: string;
   /** 'double' → 복수전공: … (purple-100 / purple-700) · 'minor' → 부전공: … (orange-100 / orange-700) · 'single' → no second badge. */
-  majorType: 'single' | 'double' | 'minor';
-  /** Text after the 복수전공: / 부전공: prefix; the second badge renders only when this and a non-'single' majorType are set. */
+  headerMajorType: 'single' | 'double' | 'minor';
+  /** Text after the 복수전공: / 부전공: prefix; the second badge renders when headerMajorType !== 'single' and this is set; in the main header departmentName must also be set (the export header does not check it). */
   secondaryDepartmentName?: string;
 }
 
-/** Color pair of an eyebrow pill. */
+/** Color pair of an eyebrow pill: HelpSection .cp-help__eyebrow (slate) / --navy, FeedbackCard .cp-feedback-card__eyebrow--cyan / --purple. */
 export type EyebrowTone =
   | 'slate'   // bg-slate-100 text-slate-700 — 도움말 가이드, Contact, STEP 1 / STEP 2
   | 'cyan'    // bg-[#00AACA]/10 text-[#00AACA] — 빠른 문의
@@ -1296,11 +1301,11 @@ export interface EyebrowBadgeProps {
   label: string;
   /** Lucide icon rendered at h-3.5 w-3.5 before the label (HelpCircle, MessageSquare, Send, MessageSquareText, GraduationCap); STEP pills have none. */
   icon?: string;
-  /** help and help/feedback add mb-3 (the --eyebrow-spaced modifier); graduation-guide renders a <p> without it. */
+  /** help and help/feedback <div>s add mb-3 (built into .cp-help__eyebrow and .cp-feedback-card__eyebrow); graduation-guide <p>s go without it (.cp-help__eyebrow--flush). */
   spaced?: boolean;
 }
 
-/** src/app/(dashboard)/layout.tsx — the unread counter on the bell button. */
+/** src/app/(dashboard)/layout.tsx — the unread counter on the bell button (AppHeader .cp-app-header__badge / --admin). */
 export interface BellCountBadgeProps {
   /** Rendered only when > 0; shows the number, or 99+ past 99. */
   unreadCount: number;
@@ -1308,7 +1313,7 @@ export interface BellCountBadgeProps {
   isAdmin: boolean;
 }
 
-/** src/app/(dashboard)/layout.tsx — NotificationItem.type picks the 32px icon circle of a panel row. */
+/** src/app/(dashboard)/layout.tsx — NotificationItem.type picks the 32px icon circle of a panel row (AppHeader .cp-app-header__notice-chip / --patch-note / --feedback-new). */
 export interface NotificationChipProps {
   /** 'patch-note' → purple-100 + Megaphone purple-600 · 'feedback-new' → yellow-100 + MessageSquareText yellow-600 · any other string → blue-100 + MessageSquareText blue-600. */
   type: 'patch-note' | 'feedback-new' | string;
@@ -1317,7 +1322,7 @@ export interface NotificationChipProps {
 export interface BadgeProps {
   /** Recipe to render. */
   recipe: BadgeRecipe;
-  /** Text content (none for 'chip' recipes). */
+  /** Text content. */
   children?: string;
 }
 
@@ -1347,7 +1352,7 @@ export type CalloutRecipe =
 /** Color family a recipe draws from: amber (guest / warning), blue (info), red (error), green (admin reply). */
 export type CalloutTone = 'amber' | 'blue' | 'red' | 'green';
 
-/** Lucide icon a recipe leads with; the login, admin, form-strip and reply recipes have none. */
+/** Lucide icon a recipe leads with; the login-error, inapp, admin-error, form-info, form-warning, req-suggest and reply recipes have none. */
 export type CalloutIcon = 'log-in' | 'info' | 'alert-triangle' | 'help-circle';
 
 /** The shape every recipe is built from — a container, optional icon, one or two lines, at most one action pair. */
@@ -1375,7 +1380,7 @@ export interface StatisticsCalloutState {
   /** From useAuth(); shows the amber guest callout. */
   isGuest: boolean;
   /** From useAuth(); onClick of the amber 구글로 로그인 button. */
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<void>;
   /** stats.departmentName — the <strong> run in the info callout. */
   departmentName: string;
 }
@@ -1385,7 +1390,7 @@ export interface GuestStripState {
   /** From useAuth(). */
   isGuest: boolean;
   /** onClick of the underlined 구글로 로그인 <button>; 회원가입하기 is a Link to /register. */
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<void>;
 }
 
 /** src/app/(auth)/login/page.tsx — login-error above the fields, inapp in place of the Google Button. */
@@ -1444,7 +1449,7 @@ export interface FeedbackReplyState {
 
 /** Props Next.js passes to src/app/(dashboard)/error.tsx and src/app/global-error.tsx. */
 export interface ErrorPageProps {
-  /** The thrown error; `digest` is Next's hash for server-side errors. `message` renders only when NODE_ENV !== 'production'. */
+  /** The thrown error; `digest` is Next's hash for server-side errors. (dashboard)/error.tsx renders `message` in a <details> only when NODE_ENV !== 'production'; global-error.tsx never shows it. */
   error: Error & { digest?: string };
   /** Re-renders the failed segment; both files call it from the 다시 시도 button. */
   reset: () => void;
@@ -1452,7 +1457,7 @@ export interface ErrorPageProps {
 
 /** src/components/providers/OnboardingGuard.tsx */
 export interface OnboardingGuardProps {
-  /** Rendered once the stores are hydrated and the session is authenticated and onboarded; the arc spinner shows meanwhile. */
+  /** Rendered for onboarded users or guests, and for users not yet onboarded on /onboarding or /help; the arc shows while stores hydrate or (non-guest) the session loads; null while redirecting. */
   children: React.ReactNode;
 }
 
@@ -1584,11 +1589,11 @@ export interface StatisticsProps {
   /** Guest mode: swaps the plan grid for the locked message and the CTA pair. */
   isGuest: boolean;
   /** First page (3) of anonymous plans and the total; undefined while loading. Member variant only. */
-  plansData?: { plans: AnonymousPlanSummary[]; total: number };
+  plansData?: { plans: AnonymousPlanSummary[]; total: number; page: number; limit: number };
   /** Shows the centered Loader2 in place of the plan grid. */
   plansLoading: boolean;
   /** 구글로 로그인 handler from useAuth(). */
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<void>;
   /** Plan tile click: opens AnonymousPlanModal for that id. */
   onSelectPlan: (anonymousId: string) => void;
   /** 전체 {total}개 수강계획 보기: opens AllPlansModal (the button renders only when total > 3). */
@@ -1723,14 +1728,14 @@ export interface MajorTypeToggleProps {
   onChange: (next: MajorType) => void;
 }
 
-/** Profile banner data (profile/page.tsx, authenticated view only). */
+/** Profile banner data — the banner fields of profile/page.tsx `interface UserProfile` (authenticated view only). */
 export interface ProfileBannerProps {
-  /** userProfile.name ?? session.user.name; the avatar shows its first character upper-cased (fallback 'U'), the heading the name (fallback 사용자). */
-  name?: string;
-  /** Renders the yu-navy department badge when set. */
-  department?: Pick<OnboardingDepartment, '_id' | 'code' | 'name'> | null;
-  /** Renders the yu-cyan {year}년 입학 badge when set. */
-  enrollmentYear?: number | null;
+  /** Required in UserProfile; avatar = first character upper-cased. When empty or still loading, heading and initial fall back to session.user.name, then 사용자 / 'U'. */
+  name: string;
+  /** Required, nullable; renders the yu-navy department badge when its name is set. */
+  department: Pick<OnboardingDepartment, '_id' | 'code' | 'name'> | null;
+  /** Required, nullable; renders the yu-cyan {year}년 입학 badge when truthy. */
+  enrollmentYear: number | null;
   /** 'double' → purple 복수전공 badge, 'minor' → orange 부전공 badge, 'single' or undefined → no badge. */
   majorType?: MajorType;
   /** Appended to the major-type badge as ": {name}" when set. */
@@ -1815,7 +1820,7 @@ export interface CalendarGridProps {
   calendarDays: (Date | null)[];
   /** Non-system events of the month sorted by startDate; feeds 이번 달 일정. */
   sortedEvents: CalendarEvent[];
-  /** From useAuth(); shows 일정 추가 and edit/delete, and makes desktop cells clickable. */
+  /** From useAuth(); shows 일정 추가 and edit/delete, makes a cell click open the prefilled form (any width) and adds md:cursor-pointer. */
   isAdmin: boolean;
   /** TanStack isLoading; swaps the grid for 35 pulsing cells and the list for five h-16 rows. */
   isLoading: boolean;
@@ -1825,6 +1830,8 @@ export interface CalendarGridProps {
   editingEvent: CalendarEvent | null;
   /** Controlled form values. */
   formData: EventFormData;
+  /** create or update mutation pending; disables submit and shows 저장 중... */
+  isSaving: boolean;
   /** Prev/next chevron; also clears selectedEvent and selectedDate. */
   onNavigateMonth: (direction: 'prev' | 'next') => void;
   /** 오늘 button; jumps to the current month and clears both selections. */
@@ -1843,6 +1850,14 @@ export interface CalendarGridProps {
   onDeleteEvent: (id: string) => Promise<void>;
   /** Form submit; validates title and startDate, then create or update. */
   onSubmitEvent: (e: React.FormEvent) => Promise<void>;
+  /** Modal X and 취소; setShowEventForm(false). */
+  onCloseForm: () => void;
+  /** Detail Card X; setSelectedEvent(null). */
+  onCloseDetail: () => void;
+  /** Mobile day panel X; setSelectedDate(null). */
+  onClearSelectedDate: () => void;
+  /** Every form field's onChange; setFormData({ ...formData, [field]: value }). */
+  onFormChange: (data: EventFormData) => void;
 }
 
 // ----- HelpSection -----
@@ -1852,48 +1867,66 @@ export interface CalendarGridProps {
  * and the guide maps over the FlowStep data below (copied from the guide source).
  */
 
-import type { LucideIcon } from 'lucide-react';
+import type { Search, BookOpen } from 'lucide-react';
 
 /** Icon tile tint used by section headings: navy = bg-[#153974]/10, blue = bg-[#3069B3]/10, cyan = bg-[#00AACA]/10, purple = bg-purple-100. */
 export type HelpTileTint = 'navy' | 'blue' | 'cyan' | 'purple';
 
+/** The data the graduation guide renders (module-level constants in graduation-guide/page.tsx, not props of a component). */
+export interface HelpSectionProps {
+  /** The two-pane STEP sections, in order (const flowSections: FlowStep[]). */
+  flowSections: FlowStep[];
+  /** The STEP 3 audit boxes, in order (const auditCheckItems, untyped in the source). */
+  auditCheckItems: AuditCheckItem[];
+}
+
 /** One step section of the graduation guide (interface FlowStep in graduation-guide/page.tsx). */
 export interface FlowStep {
-  /** Stable key, e.g. 'homepage-portal'. */
+  /** Stable React key, e.g. 'homepage-portal'. */
   id: string;
-  /** Eyebrow pill text, e.g. 'STEP 1'. */
+  /** Text-only eyebrow pill above the heading, e.g. 'STEP 1'. */
   badge: string;
-  /** h2 text beside the icon tile. */
+  /** h2 text beside the icon tile; also builds the zoom button's aria-label "{title} 이미지 확대 보기". */
   title: string;
-  /** Paragraph under the title; empty in the source, which still renders an empty <p> with mt-3. */
+  /** Paragraph under the title; empty in the source, which still renders an empty <p> whose mt-3 collapses into the list's mt-4. */
   description: string;
   /** Rows of the ordered list, numbered in yu-navy circles. */
   steps: string[];
   /** Screenshot shown in the media pane and the lightbox. */
   imageSrc: string;
+  /** Alt text of the pane image and the lightbox image. */
   imageAlt: string;
-  /** Text of the white strip under the image; empty in the source, which leaves a 45px empty strip. */
+  /** Text of the white strip under the image; empty in the source, which leaves a 25px empty strip (1px top rule + 2×12px padding). */
   imageCaption: string;
+  /** Intrinsic width passed to the lightbox's next/image. */
   imageWidth: number;
+  /** Intrinsic height passed to the lightbox's next/image. */
   imageHeight: number;
-  /** Lucide icon for the tile (Search, BookOpen in the source). */
-  icon: LucideIcon;
-  /** Tailwind classes for the icon color and tile fill, e.g. 'text-[#153974]' and 'bg-[#153974]/10'. */
+  /** Lucide component rendered in the tile at h-5 w-5. */
+  icon: typeof Search | typeof BookOpen;
+  /** Tailwind text color class for the icon, e.g. 'text-[#153974]'. */
   iconColorClass: string;
+  /** Tailwind background class for the tile, e.g. 'bg-[#153974]/10'. */
   iconBgClass: string;
 }
 
-/** One audit box (auditCheckItems in graduation-guide/page.tsx). */
+/** One audit box (items of auditCheckItems in graduation-guide/page.tsx). */
 export interface AuditCheckItem {
+  /** h3 text in yu-navy, e.g. '졸업기준 학점'. */
   title: string;
+  /** One-sentence explanation under the title in slate-600. */
   description: string;
 }
 
-/** The guide's lightbox state (interface ZoomImage); null when closed. Escape closes it and body scroll is locked while open. */
+/** The guide's lightbox state (interface ZoomImage); null when closed. Escape or a backdrop pointerdown/click closes it; body scroll is locked while open. */
 export interface ZoomImage {
+  /** Image URL shown in the lightbox. */
   src: string;
+  /** Alt text of the lightbox image. */
   alt: string;
+  /** Intrinsic width for next/image. */
   width: number;
+  /** Intrinsic height for next/image. */
   height: number;
 }
 
@@ -1938,13 +1971,17 @@ export interface AdminStats {
 
 /** Department reference embedded in a course row and listed in the 전체 학과 select. */
 export interface DepartmentItem {
+  /** Option value in the 전체 학과 select and the departmentFilter match key. */
   _id: string;
+  /** Not rendered by the course row or the select. */
   code: string;
+  /** Option label in the 전체 학과 select; first item of the course meta line. */
   name: string;
 }
 
 /** One courses-page row (GET /api/courses). */
 export interface CourseItem {
+  /** React key; deletingId compares against it to swap in the inline [삭제][취소] pair. */
   _id: string;
   /** Bold slate-800 lead of the title line. */
   code: string;
@@ -1960,13 +1997,17 @@ export interface CourseItem {
   category?: RequirementCategory;
   /** Optional; meta line `{recommendedYear}학년 권장`. */
   recommendedYear?: number;
+  /** Not rendered by the list. */
   recommendedSemester?: Semester;
+  /** Not rendered by the list; prefills the edit form. */
   description?: string;
+  /** Not rendered by the list. */
   isActive: boolean;
 }
 
 /** One departments-page row (GET /api/departments). */
 export interface Department {
+  /** React key; deleteConfirmId set to it opens the 학과 삭제 modal. */
   _id: string;
   /** blue-100 / blue-700 code pill. */
   code: string;
@@ -1974,18 +2015,23 @@ export interface Department {
   name: string;
   /** Optional slate-400 caption under the name. */
   college?: string;
+  /** Not rendered by the list. */
   isActive: boolean;
+  /** Not rendered by the list. */
   createdAt: string;
+  /** Not rendered by the list. */
   updatedAt: string;
 }
 
 /** One users-page row (GET /api/admin/users). */
 export interface UserItem {
+  /** React key; expandedUserId / deleteConfirmId compare against it. */
   _id: string;
   /** Medium slate-900, truncated. */
   name: string;
   /** First item of the slate-400 meta line. */
   email: string;
+  /** Its name is the meta line's second item when set; '미설정' in the detail panel when absent. */
   department?: { _id: string; code: string; name: string };
   /** Meta line `{enrollmentYear}학번` when set. */
   enrollmentYear?: number;
@@ -1995,7 +2041,9 @@ export interface UserItem {
   role: 'student' | 'admin';
   /** 'google' → yellow-100/yellow-700 'Google' pill; 'credentials' → gray-100/gray-700 '이메일'. */
   provider: 'credentials' | 'google';
+  /** 마지막 접속 in the detail panel; '기록 없음' when absent. */
   lastLoginAt?: string;
+  /** Last item of the meta line as a ko-KR date (e.g. 2025년 3월 2일); also 가입일 in the detail panel. */
   createdAt: string;
 }
 
@@ -2003,11 +2051,11 @@ export interface UserItem {
 export interface AdminListProps {
   /** Dashboard year select; default DEFAULT_CURRICULUM_YEAR (2026), options 2025 | 2026. */
   selectedYear: number;
-  /** Dashboard counts; while undefined (query loading) each number is a slate-200 pulse bar. */
+  /** Dashboard counts; each value shows a slate-200 pulse bar while `isLoading`, and 0 when undefined after loading. */
   stats?: AdminStats;
   /** Dashboard menu Cards; the `adminMenus` const. */
   menus: AdminMenu[];
-  /** Search text; courses placeholder 과목명 또는 코드 검색, users 이름 또는 이메일 검색..., departments 학과명 또는 코드로 검색.... Default ''. Non-empty shows the clear X (courses, departments). */
+  /** Search text; courses placeholder 과목명 또는 코드 검색, users 이름 또는 이메일 검색..., departments 학과명 또는 코드로 검색.... Default ''. Non-empty shows the clear X (courses, departments). Named `searchTerm` on courses; users and departments name the state `search`. */
   searchTerm: string;
   /** Courses and users: selected department `_id`, '' = 전체 학과. Default ''. */
   departmentFilter: string;
@@ -2015,10 +2063,10 @@ export interface AdminListProps {
   categoryFilter: RequirementCategory | '';
   /** Courses: curriculum year, default 2026. */
   yearFilter: number;
-  /** Users: '' = 전체 역할 | 'student' | 'admin'. Default ''. */
-  roleFilter: '' | 'student' | 'admin';
-  /** Users: 'recent' (최근 가입순, default) | 'lastLogin' (최근 접속순) | 'name' (이름순). */
-  sortOption: 'recent' | 'lastLogin' | 'name';
+  /** Users: useState(''), typed string. Options '' (전체 역할) | 'student' (학생) | 'admin' (관리자). */
+  roleFilter: string; // '' | 'student' | 'admin' (options)
+  /** Users: useState('recent'), typed string. Options 'recent' (최근 가입순, default) | 'lastLogin' (최근 접속순) | 'name' (이름순). */
+  sortOption: string; // 'recent' (default) | 'lastLogin' | 'name'
   /** Rows of the current page. */
   items: CourseItem[] | Department[] | UserItem[];
   /** Courses: the row whose Trash2 button is swapped for the inline [삭제][취소] pair. Default null. */
@@ -2029,6 +2077,7 @@ export interface AdminListProps {
   expandedUserId: string | null;
   /** TanStack Query flags: isLoading → pulse tiles; error → red-50 banner; neither and no rows → empty box. */
   isLoading: boolean;
+  /** Truthy → red-50 error box. */
   error?: Error | null;
 }
 
@@ -2110,8 +2159,8 @@ export interface FeedbackCardProps {
   showMyFeedback: boolean;
   /** True while GET /api/feedback/my loads: two h-24 pulse skeletons stand in for the list. */
   feedbackLoading: boolean;
-  /** The user's items; undefined or empty renders 아직 문의 내역이 없습니다.. */
-  myFeedbacks?: MyFeedbackItem[];
+  /** useQuery data; undefined or empty data renders 아직 문의 내역이 없습니다.. */
+  myFeedbacks?: { success: boolean; data: MyFeedbackItem[] };
   /** True while DELETE /api/feedback/:id runs: every 문의 삭제 button fades to 50%. */
   isDeleting: boolean;
 }
@@ -2122,12 +2171,12 @@ export interface AdminFeedbackItemProps {
   item: FeedbackItem;
   /** expandedIds.has(item._id): full message and 접기 instead of line-clamp-3 and 더보기 (only when message.length > 150). */
   isExpanded: boolean;
-  /** replyingId === item._id && replyContent.length > 0: reveals the counter, 취소 and 답변 및 해결 처리 row under the textarea. */
-  isReplying: boolean;
+  /** Id of the row being typed into; footer shows when replyingId === item._id && replyContent.length > 0. */
+  replyingId: string | null;
   /** Reply draft, sliced to 2000; 답변 및 해결 처리 is disabled until replyContent.trim().length >= 1. */
   replyContent: string;
-  /** True while PATCH { adminReply } runs: textarea and 취소 disabled, submit shows Loader2 + 전송 중.... */
-  isSubmittingReply: boolean;
+  /** True while PATCH { adminReply } runs (submitReply isPending): textarea and 취소 disabled, 답변 및 해결 처리 shows Loader2 + 전송 중.... */
+  isReplying: boolean;
   /** True while DELETE runs: the 피드백 삭제 button fades to 50%. */
   isDeletingFeedback: boolean;
 }
@@ -2163,8 +2212,8 @@ export interface ProfileIdentity {
   enrollmentYear?: number;
   /** userProfile.curriculumYear || DEFAULT_CURRICULUM_YEAR (2026). */
   curriculumYear?: number;
-  /** Drives the third badge, the extra 복수전공/부전공 row and the toggle pair. */
-  majorType: ProfileMajorType;
+  /** userProfile.majorType (optional in the source); drives the third badge and the extra 복수전공/부전공 row. Undefined behaves like 'single': no badge, no extra row. */
+  majorType?: ProfileMajorType;
   /** Name after 복수전공: / 부전공:; the row falls back to 학과 미설정. */
   secondaryDepartment?: { name: string };
 }
@@ -2187,6 +2236,22 @@ export interface ProfilePageState {
   majorTypeDraft: ProfileMajorType;
   /** Disables 회원 탈퇴 and swaps its label for 삭제 중... */
   isDeleting: boolean;
+  /** useQuery isLoading for ['user', 'me']; disables the pencil / x toggle in the 기본 정보 header. */
+  isLoadingProfile: boolean;
+  /** updateMutation.isPending: both 저장 Buttons (기본 정보 form, 전공 설정) read 저장 중... and are disabled. */
+  isSaving: boolean;
+  /** updateMutation.isError: red-500 text-sm line under 저장 showing updateMutation.error.message, else 저장에 실패했습니다. */
+  saveError?: string;
+}
+
+/** The pattern as one documented unit; the page itself takes no props and reads these values inline. */
+export interface ProfileCardProps {
+  /** Banner and 기본 정보 row values. */
+  identity: ProfileIdentity;
+  /** 계정 정보 values. */
+  account: ProfileAccount;
+  /** Local UI state. */
+  state: ProfilePageState;
 }
 
 // ----- PatchNotes -----
@@ -2197,7 +2262,7 @@ export interface ProfilePageState {
  * IPatchNoteResponse rows fetched from /api/patch-notes. Data types are copied from src/types/index.ts.
  */
 
-/** Publication state kept by the admin; the student pages only ever receive 'published' rows and never render it. */
+/** Publication state kept by the admin. Not rendered by either page; non-admins receive only published rows (findPublished, max 20), while admin sessions also receive drafts, shown identically. */
 export type PatchNoteStatus = 'draft' | 'published';
 
 /** One announcement as the API returns it (src/types/index.ts). */
@@ -2206,7 +2271,7 @@ export interface IPatchNoteResponse {
   _id: string;
   /** Row title (truncate) and detail <h1>. */
   title: string;
-  /** Body text; the list shows truncate(content, 100) + '...', the detail renders it whitespace-pre-wrap. */
+  /** Body text; the list shows truncate(content, 100) (first 100 chars + '...' only when longer), the detail renders it whitespace-pre-wrap. */
   content: string;
   /** Optional version label; the blue-100 / blue-700 pill renders only when set. */
   version?: string;
@@ -2257,7 +2322,8 @@ export type PatchNotesTruncate = (text: string, max?: number) => string;
 // ----- ModalShell -----
 /**
  * ModalShell — documentation-only types for the modal-shell PATTERN: the overlay + panel markup the app
- * repeats inline around six dialogs. No shell component exists in the source; these are the props of the
+ * repeats inline around seven dialogs (six panel recipes; the admin/courses and admin/departments create/edit
+ * forms share admin-form). No shell component exists in the source; these are the props of the
  * three components that render one, the page state the admin and calendar pages key theirs on, and the
  * recipe names the stylesheet uses.
  */
@@ -2280,7 +2346,7 @@ export interface ModalShellProps {
   recipe: ModalShellRecipe;
   /** Closes the dialog; (b) and (c) also call it on backdrop click and Escape. */
   onClose: () => void;
-  /** Header text: `커스텀 과목 추가`, `학기 추가`, `익명 수강계획 전체 보기`, `과목 추가`/`과목 수정`, `학과 삭제`, `일정 추가`/`일정 수정`. */
+  /** Header text: `커스텀 과목 추가`, `학기 추가`, `익명 수강계획 전체 보기`, `과목 추가`/`과목 수정`, `학과 추가`/`학과 수정`, `학과 삭제`, `일정 추가`/`일정 수정`. */
   title: string;
   /** Optional body-sm gray-500 line under the title; only (a) and (c) render one. */
   subtitle?: string;
@@ -2339,8 +2405,14 @@ export interface InlineModalPageState {
   deleteConfirmId: string | null;
   /** calendar: the event form modal is open. */
   showEventForm: boolean;
-  /** admin pages: disables the submit button and swaps its label to 저장 중.... */
+  /** admin pages: disables the submit button (and the departments form's 취소) and swaps its label to 저장 중.... */
   isSaving: boolean;
+  /** admin/courses: switches the 과목 추가→과목 수정 title and the 추가→수정 submit label (CourseItem: see AdminList). */
+  editingCourse: CourseItem | null;
+  /** admin/departments: switches the 학과 추가→학과 수정 title and the 추가→수정 submit label. */
+  editingId: string | null;
+  /** calendar: switches the 일정 추가→일정 수정 title and the 추가→수정 submit label (CalendarEvent: see CalendarGrid). */
+  editingEvent: CalendarEvent | null;
 }
 
 /** Re-exported from src/types for the signatures above. */
@@ -2350,8 +2422,8 @@ export type RequirementCategory =
   | 'major_elective'
   | 'general_required'
   | 'general_elective'
-  | 'teaching'
-  | 'free_elective';
+  | 'free_elective'
+  | 'teaching';
 
 /** Semester term as AddSemesterDialog uses it. */
 export type Term = 'spring' | 'fall';

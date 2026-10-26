@@ -113,13 +113,17 @@
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-400, #99a1af);
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-footer__copy-email:hover,
 .cp-footer__copy-email.is-hover {
   color: var(--white, #ffffff);
+}
+@media (hover: hover) {
+  .cp-footer__copy-email:hover {
+    color: var(--white, #ffffff);
+  }
 }
 
 /* Copied feedback, rendered for 2000 ms after a click: <span class="ml-2 text-xs text-[#00AACA]">복사됨!</span> */
@@ -138,7 +142,8 @@
   color: var(--white, #ffffff);
 }
 
-/* Link list: <ul class="space-y-3 text-sm text-gray-400"> (preflight: no bullets, no margin, no padding) */
+/* Link list: <ul class="space-y-3 text-sm text-gray-400"> (preflight: no bullets, no margin, no padding).
+   space-y-3 in v4 semantics: margin-bottom on every <li> except the last; the <li>s carry no margin of their own. */
 .cp-footer__list {
   margin: 0;
   padding: 0;
@@ -146,21 +151,25 @@
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-400, #99a1af);
 }
-.cp-footer__list > * + * {
-  margin-top: var(--space-3, 12px);
+.cp-footer__list > :not(:last-child) {
+  margin-bottom: var(--space-3, 12px);
 }
 
 /* Link: hover:text-[#00AACA] transition-colors; the resting gray-400 is inherited from the list */
 .cp-footer__link {
   color: inherit;
   text-decoration: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-footer__link:hover,
 .cp-footer__link.is-hover {
   color: var(--yu-cyan, #00aaca);
+}
+@media (hover: hover) {
+  .cp-footer__link:hover {
+    color: var(--yu-cyan, #00aaca);
+  }
 }
 
 /* Disclaimer under Legal: <p class="mt-4 text-xs text-gray-500 leading-relaxed"> */
@@ -191,25 +200,30 @@
   color: var(--gray-500, #6a7282);
 }
 
-/* Icon row: <div class="flex space-x-5"> (a single child in the source, so the spacing never shows) */
+/* Icon row: <div class="flex space-x-5"> (a single child in the source, so the spacing never shows).
+   space-x-5 in v4 semantics: margin-right (margin-inline-end) on every element child except the DOM-last one. */
 .cp-footer__social {
   display: flex;
 }
-.cp-footer__social > * + * {
-  margin-left: var(--space-5, 20px);
+.cp-footer__social > :not(:last-child) {
+  margin-right: var(--space-5, 20px);
 }
 
 /* Mail link: <a href="mailto:…" class="text-gray-500 hover:text-white transition-colors"> */
 .cp-footer__icon-link {
   color: var(--gray-500, #6a7282);
   text-decoration: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-footer__icon-link:hover,
 .cp-footer__icon-link.is-hover {
   color: var(--white, #ffffff);
+}
+@media (hover: hover) {
+  .cp-footer__icon-link:hover {
+    color: var(--white, #ffffff);
+  }
 }
 
 /* Mail icon: lucide <Mail class="w-4 h-4" />, 2px stroke in currentColor; preflight makes svg display:block */

@@ -19,8 +19,8 @@ export interface ProfileIdentity {
   enrollmentYear?: number;
   /** userProfile.curriculumYear || DEFAULT_CURRICULUM_YEAR (2026). */
   curriculumYear?: number;
-  /** Drives the third badge, the extra 복수전공/부전공 row and the toggle pair. */
-  majorType: ProfileMajorType;
+  /** userProfile.majorType (optional in the source); drives the third badge and the extra 복수전공/부전공 row. Undefined behaves like 'single': no badge, no extra row. */
+  majorType?: ProfileMajorType;
   /** Name after 복수전공: / 부전공:; the row falls back to 학과 미설정. */
   secondaryDepartment?: { name: string };
 }
@@ -43,4 +43,20 @@ export interface ProfilePageState {
   majorTypeDraft: ProfileMajorType;
   /** Disables 회원 탈퇴 and swaps its label for 삭제 중... */
   isDeleting: boolean;
+  /** useQuery isLoading for ['user', 'me']; disables the pencil / x toggle in the 기본 정보 header. */
+  isLoadingProfile: boolean;
+  /** updateMutation.isPending: both 저장 Buttons (기본 정보 form, 전공 설정) read 저장 중... and are disabled. */
+  isSaving: boolean;
+  /** updateMutation.isError: red-500 text-sm line under 저장 showing updateMutation.error.message, else 저장에 실패했습니다. */
+  saveError?: string;
+}
+
+/** The pattern as one documented unit; the page itself takes no props and reads these values inline. */
+export interface ProfileCardProps {
+  /** Banner and 기본 정보 row values. */
+  identity: ProfileIdentity;
+  /** 계정 정보 values. */
+  account: ProfileAccount;
+  /** Local UI state. */
+  state: ProfilePageState;
 }

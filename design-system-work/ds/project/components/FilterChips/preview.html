@@ -1,4 +1,4 @@
-<!-- @dsCard group="Patterns" height=585 -->
+<!-- @dsCard group="Patterns" height=709 -->
 <!doctype html>
 <html lang="ko">
 <head>
@@ -13,6 +13,8 @@
   .cell--admin { flex: 0 0 360px; }
   .stage { box-sizing: border-box; flex: 1 1 auto; padding: 12px; background: var(--gray-50, #f9fafb); }
   .stage--white { background: var(--white, #ffffff); }
+  /* preview only: separates the catalog's in-app block from the block that shows every active color */
+  .stage .cp-course-catalog__filters + .cp-course-catalog__filters { margin-top: 12px; }
   /* preview only: the trailing mb-4 of the last calendar row belongs to the month Card below it in the app */
   .stage--cal .cp-calendar__filters:last-child { margin-bottom: 0; }
   .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
@@ -40,6 +42,31 @@
     <div class="stage stage--white">
       <div class="cp-filter-chips">
         <div class="cp-course-catalog__filters">
+          <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--dept">
+            <span class="cp-course-catalog__filter-label">학과</span>
+            <button type="button" class="cp-course-catalog__chip is-active">주전공</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--purple">복수전공</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--indigo">공통</button>
+          </div>
+          <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--year-sem">
+            <div class="cp-course-catalog__filter-group">
+              <span class="cp-course-catalog__filter-label cp-course-catalog__filter-label--fixed">학년</span>
+              <button type="button" class="cp-course-catalog__chip is-active">전체</button>
+              <button type="button" class="cp-course-catalog__chip">1</button>
+              <button type="button" class="cp-course-catalog__chip">2</button>
+              <button type="button" class="cp-course-catalog__chip">3</button>
+              <button type="button" class="cp-course-catalog__chip">4</button>
+              <button type="button" class="cp-course-catalog__chip">5</button>
+              <button type="button" class="cp-course-catalog__chip">6</button>
+            </div>
+            <div class="cp-course-catalog__divider"></div>
+            <div class="cp-course-catalog__filter-group">
+              <span class="cp-course-catalog__filter-label cp-course-catalog__filter-label--fixed">학기</span>
+              <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald is-active">전체</button>
+              <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald">1학기</button>
+              <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--emerald">2학기</button>
+            </div>
+          </div>
           <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--category">
             <span class="cp-course-catalog__filter-label">이수</span>
             <button type="button" class="cp-course-catalog__chip is-active">전체</button>
@@ -50,6 +77,15 @@
             <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--green">교양선택</button>
             <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--violet">교직</button>
             <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--gray">자유선택</button>
+          </div>
+        </div>
+        <div class="cp-course-catalog__filters">
+          <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--dept">
+            <span class="cp-course-catalog__filter-label">학과</span>
+            <button type="button" class="cp-course-catalog__chip">주전공</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--purple is-active">복수전공</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--orange is-active">부전공</button>
+            <button type="button" class="cp-course-catalog__chip cp-course-catalog__chip--indigo is-active">공통</button>
           </div>
           <div class="cp-course-catalog__filter-row cp-course-catalog__filter-row--category">
             <span class="cp-course-catalog__filter-label">이수</span>
@@ -65,7 +101,7 @@
         </div>
       </div>
     </div>
-    <p class="cap">CourseCatalog.tsx · 이수 chips in the white catalog header · top: 전체 active, seven inactive (교양필수 in hover) · bottom: every category active (one at a time in the app)</p>
+    <p class="cap">CourseCatalog.tsx · filter rows in the white catalog header · top block as in the app: 학과 (주전공 active, 복수전공 purple, 공통 indigo), 학년 | 학기 (navy and emerald, space-7 labels, gray-200 divider), 이수 (전체 active, 교양필수 in hover) · bottom block: every 학과 and 이수 color active (one per row in the app; 복수전공 and 부전공 never render together)</p>
   </div>
 </div>
 

@@ -22,9 +22,13 @@
   font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
   transition: box-shadow var(--duration-slow, 300ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-read-only-semester-column:hover,
 .cp-read-only-semester-column.is-hover {
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-read-only-semester-column:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* Header: "p-3 border-b bg-gray-50 cursor-pointer" (compact: p-2). border-b is currentColor = gray-900.
@@ -83,9 +87,10 @@
   color: var(--gray-400, #99a1af);
 }
 
-/* Course list (rendered only while expanded): "p-3 space-y-1.5" (compact: p-2) */
+/* Course list (rendered only while expanded): "p-3 space-y-1.5" (compact: p-2).
+   space-y-1.5, Tailwind v4 semantics: 6px below every row except the DOM-last; the rows carry no margin of their own. */
 .cp-read-only-semester-column__list { padding: var(--space-3, 12px); }
-.cp-read-only-semester-column__list > * + * { margin-top: var(--space-1-5, 6px); }
+.cp-read-only-semester-column__list > :not(:last-child) { margin-bottom: var(--space-1-5, 6px); }
 .cp-read-only-semester-column--compact .cp-read-only-semester-column__list { padding: var(--space-2, 8px); }
 
 /* Row: "flex items-center gap-2 p-2 rounded-md bg-white border border-gray-100" */

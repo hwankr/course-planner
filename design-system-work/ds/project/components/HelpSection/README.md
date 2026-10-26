@@ -12,44 +12,50 @@ The in-app help article layout: a slate gradient page with a 1024px column of wh
 There is no component; each page writes the markup inline.
 
 - Article: a header (back link, eyebrow, `h1`, optional lead) and an ordered list of sections, each with an icon tile tint (`navy`, `blue`, `cyan`, `purple`), a Lucide icon, an `h2`, paragraphs and optional comparison boxes, step rows, link cards and screenshots.
-- Guide sections (graduation guide): `badge` (STEP 1 …), `title`, `description`, `steps: string[]`, `imageSrc`, `imageAlt`, `imageCaption`, image size, `icon`, `iconColorClass`, `iconBgClass` — see `FlowStep` in the types.
-- Screenshots go through ZoomableImage on the help page and through a local zoom button plus lightbox on the guide.
-- Container: `.cp-help` is the full-height shell; `.cp-help__inner` the `container-5xl` column with `space-4` / `space-6` gutters.
+- Guide sections (graduation guide), `interface FlowStep`: `id: string`, `badge: string`, `title: string`, `description: string`, `steps: string[]`, `imageSrc: string`, `imageAlt: string`, `imageCaption: string`, `imageWidth: number`, `imageHeight: number`, `icon: typeof Search | typeof BookOpen`, `iconColorClass: string`, `iconBgClass: string`. The audit boxes map `auditCheckItems` (`title`, `description`).
+- Screenshots go through ZoomableImage on the help page (`.cp-zoomable-image` inside `.cp-help__figure`) and through a local zoom button plus lightbox on the guide.
+- Container: `.cp-help` is the gradient shell; add `.cp-help--full` for the help page's min-h-screen (the guide has none). `.cp-help__inner` is the `container-5xl` column with `space-4` / `space-6` gutters.
 
 ## Anatomy and states
 
 - Shell: `linear-gradient(to bottom in oklab, slate-50, white, slate-100)`; column padding `space-6` top, `space-12` bottom, `space-4` sides, becoming `space-10` top and `space-6` sides from `md`.
 - Section card: `white`, 1px `slate-200`, `radius-2xl`, `shadow-sm`, `space-6` padding (`space-7` from `md`, `space-8` for the guide header), `space-8` apart. The guide stacks its sections `space-6` apart instead.
-- Back and nav links: `body-sm-medium` in `yu-cyan` (2.8:1 on white — kept, flagged) turning `yu-navy` on hover over `duration-fast`, with a 16px `arrow-left` or `external-link`. The guide header's back link is `body-sm` in `slate-600`, hovering to `yu-cyan`.
-- Eyebrow: a `radius-full` pill, `space-1` × `space-3`, 12px at 600, a 14px icon — `slate-700` on `slate-100` (도움말 가이드, STEP n) or `yu-navy` on `yu-navy-a5` (졸업 정보 가이드).
+- Back and nav links: `body-sm-medium` in `yu-cyan` turning `yu-navy` on hover over `duration-fast`, with a 16px `arrow-left` or `external-link`. yu-cyan on white is 2.8:1 (header link) and about 2.5:1 on the slate-100 end of the shell (bottom nav) — kept, flagged. The guide header's back link is `body-sm` in `slate-600`, hovering to `yu-cyan`; that hover is 2.8:1 on white — kept, flagged.
+- Eyebrow: a `radius-full` pill, `space-1` × `space-3`, 12px at 600 — `slate-700` on `slate-100` (도움말 가이드, STEP n) or `yu-navy` on `yu-navy-a5` (졸업 정보 가이드). The 14px icon appears on 도움말 가이드 and 졸업 정보 가이드 only; STEP n badges are text-only. In both headers the pill is an inline sibling of the back link, so it sits on the link's line, to its right.
 - Title: 30px → 36px (`md`) bold `yu-navy`; the guide adds `tracking-tight`. Lead: `body-sm` in `slate-500`.
-- Section heading: a 40px `radius-lg` tile beside the `heading-2` bold `yu-navy` heading, `space-3` apart, `space-5` below. Tiles: `yu-navy` on `yu-navy-a10`, `yu-blue` on `yu-blue-a10`, `yu-cyan` on `yu-cyan-a10`, `purple-600` on `purple-100`; icons 20px.
+- Section heading: a 40px `radius-lg` tile beside the `heading-2` bold `yu-navy` heading, `space-3` apart, `space-5` below. Tiles: `yu-navy` on `yu-navy-a10`, `yu-blue` on `yu-blue-a10`, `yu-cyan` on `yu-cyan-a10`, `purple-600` on `purple-100`; icons 20px. The tile has no shrink-0, so it narrows when a long guide heading wraps on a phone.
 - Prose: 14px → 16px (`md`) at `leading-relaxed` (1.625) in `slate-600`, `space-4` below.
 - Comparison boxes: two columns from `md`, `space-4` gap; each `radius-xl`, `space-4` padding — 비회원 on `slate-50` with a `slate-200` border, 회원 on `yu-cyan-a5` with a `yu-cyan-a30` border; a 16px semibold `yu-navy` title and a `body-sm` `slate-600` list whose bullets are typed "• " characters.
 - Numbered rows: `slate-50` blocks, `radius-lg`, `space-3` padding, `space-3` apart; a semibold `yu-navy` "1." then the step at 14px → 16px in `slate-600`. The guide's ordered list instead puts a 20px `yu-navy` circle with a white 12px bold number beside 14px `leading-relaxed` `slate-700` text, rows `space-2` apart.
-- Screenshot frame: `radius-xl`, 1px `slate-200`, clipped; the image fills the width.
+- Screenshot frame: `radius-xl`, 1px `slate-200`, clipped, holding a ZoomableImage thumbnail that fills the width. Single frames take `space-4` above (`.cp-help__figure--spaced`); stacked frames sit in `.cp-help__figures`, `space-4` apart (`.cp-help__figures--spaced` adds `space-4` above).
+- Thumbnail hints (ZoomableImage): below `md` an always-visible `black-a40` pill with a 12px `zoom-in` and 11px `white-a80` "탭하여 확대"; from `md` a `yu-navy-a90` pill (`space-2` × `space-4`, `body-sm-medium` white, `shadow-lg`, 16px `zoom-in`, "클릭하여 확대") that fades in on hover while the overlay dims to `black-a10`.
 - Guide link card: `yu-cyan-a5` fill, `yu-cyan-a30` border, `radius-xl`, `space-4` padding, `body-sm-medium` in `yu-navy` with a 16px `yu-cyan` `external-link`; hover deepens to `yu-cyan-a10` fill and `yu-cyan-a50` border.
 - Contact block: the same cyan tint at `radius-2xl` and `space-6`, centered — a `slate-600` question over a `yu-navy` CTA (`radius-xl`, `space-2-5` × `space-6`, `body-sm-medium` white, hover `yu-blue-dark`).
-- Two-pane STEP section (`lg` and up, mirrored in the preview with `.is-lg`): columns 1.05fr / 1fr; the text pane pads `space-6` → `space-7`; the media pane is `slate-50` with a `slate-200` left rule (top rule when stacked) holding a square (4:3 when stacked) zoom button whose image scales to 1.01 on hover over `duration-base`, and a `slate-900-a75` "클릭하여 확대" pill that fades in at bottom-right; below it a white caption strip with a `slate-200` top rule.
+- Bottom nav: help centers its two links in a wrapping flex row `space-4` apart; the guide's nav is a centered block (`space-8` above) whose one link sits in a 24px line box.
+- Two-pane STEP section (`lg` and up, mirrored in the preview with `.is-lg`): columns 1.05fr / 1fr; the text pane pads `space-6` → `space-7`; the media pane is `slate-50` with a `slate-200` left rule (top rule when stacked) holding a square (4:3 when stacked) zoom button whose image scales to 1.01 on hover over `duration-base`, and a `slate-900-a75` "클릭하여 확대" pill that fades in at bottom-right; below it a white caption strip with a `slate-200` top rule (25px when empty: 1px rule + 2×12px padding).
+- STEP 3 screenshot: a `.cp-help__shot` frame (`space-5` above, `radius-xl`, 1px `slate-200`, `slate-50` fill) around a zoom button fixed at 1425:436 at every width (`.cp-help__zoom--wide`, no `lg` switch), with the same hover scale and hint.
 - Audit boxes: two columns from `md`, `space-3` gap, `slate-50` with `slate-200` borders, a 16px semibold `yu-navy` title over 14px relaxed `slate-600` text.
 
 ## Copy
 
-도움말 가이드 · YU 수강 플래너 사용 가이드 · 수강 플래너의 주요 기능을 빠르게 알아보세요 · 플래너로 돌아가기 · 시작하기 · 수강 계획 세우기 · 졸업요건 추적 · 학과 통계 · 프로필 관리 · 비회원 / 회원 (• 바로 사용 가능 · • 브라우저 저장 · • 통계 공유 불가 / • Google 로그인 · • 데이터 동기화 · • 통계 공유 가능) · 영남대학교 포털에서 졸업요건 조회하는 방법 → · 궁금한 점이나 오류를 발견하셨나요? · 문의 및 피드백 보내기 · 플래너로 이동 · 졸업요건 조회 가이드 · 졸업 정보 가이드 · 영남대학교 졸업기준·취득학점 확인 방법 · STEP 1 · 홈페이지 로그인 후 포털 이동 · STEP 2 · 종합정보시스템에서 졸업모의사정 이동 · STEP 3. 졸업모의사정에서 확인할 항목 · 클릭하여 확대 · 페이지 내 이동 (nav label).
+도움말 가이드 · YU 수강 플래너 사용 가이드 · 수강 플래너의 주요 기능을 빠르게 알아보세요 · 플래너로 돌아가기 · 시작하기 · 수강 계획 세우기 · 졸업요건 추적 · 학과 통계 · 프로필 관리 · 비회원 / 회원 (• 바로 사용 가능 · • 브라우저 저장 · • 통계 공유 불가 / • Google 로그인 · • 데이터 동기화 · • 통계 공유 가능) · 영남대학교 포털에서 졸업요건 조회하는 방법 → · 궁금한 점이나 오류를 발견하셨나요? · 문의 및 피드백 보내기 · 플래너로 이동 · 졸업요건 조회 가이드 · 졸업 정보 가이드 · 영남대학교 졸업기준·취득학점 확인 방법 · STEP 1 · 홈페이지 로그인 후 포털 이동 · STEP 2 · 종합정보시스템에서 졸업모의사정 이동 · STEP 3. 졸업모의사정에서 확인할 항목 · 클릭하여 확대 · 탭하여 확대 (ZoomableImage, below `md`) · {title} 이미지 확대 보기 · 졸업모의사정 이미지 확대 보기 (aria-labels) · 닫기 / 확대 이미지 닫기 (lightbox close) · 페이지 내 이동 (nav label).
 
-Help prose is 합니다체 with periods; step rows are "Label: sentence" without a final period. The help page writes 졸업요건 without a space and 입학년도; elsewhere the product writes 졸업 요건 and 입학연도 (see Voice and copy).
+Help prose is 합니다체 with periods; step rows are "Label: sentence" without a final period. The product mixes 졸업요건 and 졸업 요건, and 입학년도 and 입학연도; the help page uses 졸업요건 and 입학년도.
 
 ## Accessibility
 
 - One `h1` per page, `h2` per section, `h3` in the boxes; the guide wraps its bottom links in `<nav aria-label="페이지 내 이동">`.
-- The guide's zoom buttons carry `aria-label="{title} 이미지 확대 보기"`; its lightbox closes on Escape and locks body scroll. The help page's screenshots go through ZoomableImage, whose thumbnail is a clickable `<div>` with no keyboard access.
+- The guide's STEP section zoom buttons carry `aria-label="{title} 이미지 확대 보기"`; STEP 3's carries the fixed "졸업모의사정 이미지 확대 보기".
+- The guide's lightbox is `role="dialog" aria-modal="true"` with no `aria-label`; opening it does not move focus and nothing traps it. It closes on Escape and on backdrop pointerdown or click, and locks body scroll while open.
+- The help page's screenshots go through ZoomableImage, whose thumbnail is a clickable `<div>` with no keyboard access.
 - The 비회원 / 회원 lists use typed "• " characters inside list items, so screen readers announce "bullet" before each item.
 - Lucide icons render with `aria-hidden="true"`.
 
 ## Not reproduced
 
-- The ZoomableImage lightbox on the help page and the guide's own lightbox (`slate-950-a85` backdrop, `white` 15% close chip, framed image); only the thumbnails and the guide's hover hint are shown.
-- Sections 학과 통계 and 프로필 관리, the remaining screenshots, STEP 2 and two of the four audit boxes; they repeat the shown recipes.
-- The guide's empty `description` and `imageCaption` strings are rendered as in the source (an empty paragraph and a 45px empty white strip), not filled in.
+- The ZoomableImage lightbox on the help page and the guide's own lightbox (`slate-950-a85` backdrop, `white` 15% close chip, framed image); the preview shows the thumbnails with their hint overlays at rest and the guide's hover hint.
+- The guide header link's `yu-cyan` hover state.
+- Sections 학과 통계 and 프로필 관리, the remaining screenshots, STEP 2 and two of the four audit boxes; they repeat the shown recipes, and the frame stacks (`.cp-help__figures`) are not rendered.
+- The guide's empty `description` and `imageCaption` strings are rendered as in the source (an empty paragraph whose margin collapses into the list's, and a 25px empty white strip: 1px top rule + 2×12px padding), not filled in.
 
 Pattern extracted from inline markup in `src/app/(dashboard)/help/page.tsx`, `src/app/(dashboard)/help/graduation-guide/page.tsx`; no component exists in the source

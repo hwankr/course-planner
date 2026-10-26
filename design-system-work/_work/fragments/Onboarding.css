@@ -28,7 +28,9 @@
   max-width: var(--container-2xl, 672px);
   margin: 0 auto;
 }
-/* space-y-8 under Tailwind v4: margin-bottom on every child but the last (`:where(& > :not(:last-child))`). */
+/* "w-full max-w-2xl mx-auto space-y-8", Tailwind v4 semantics: 32px margin-bottom on every element child except the
+   DOM-last (`:where(& > :not(:last-child))`). Children: the header, the stepper and the step Card (always last);
+   none carries a block margin of its own. */
 .cp-onboarding__stack > :not(:last-child) {
   margin-bottom: var(--space-8, 32px);
 }
@@ -53,7 +55,7 @@
   margin: var(--space-2, 8px) 0 0;
   color: var(--gray-600, #4a5565);
 }
-/* <p class="text-sm text-gray-400 mt-1"> — 2.6:1 on white / gray-50 in the source, kept. */
+/* <p class="text-sm text-gray-400 mt-1"> — 2.5:1 on the gray-50 frame in the source, kept. */
 .cp-onboarding__caption {
   margin: var(--space-1, 4px) 0 0;
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
@@ -61,7 +63,9 @@
 }
 
 /* ---------------------------------------------------------------- Stepper
-   <div class="space-y-2"> wrapping the circle row and the label row. */
+   <div class="space-y-2"> wrapping the circle row and the label row, Tailwind v4 semantics: 8px margin-bottom on
+   every element child except the DOM-last, i.e. on the circle row only (its own mx-auto is inline-axis; the (0,1,0)
+   `margin: 0 auto` below loses the bottom margin to this rule). The label row's own mt-2 is left alone. */
 .cp-onboarding__stepper > :not(:last-child) {
   margin-bottom: var(--space-2, 8px);
 }
@@ -141,11 +145,11 @@
   margin: var(--space-2, 8px) auto 0;
   padding: 0;
 }
-/* <span class="text-xs font-medium transition-colors duration-300"> — gray-400 until reached (2.6:1, kept), then yu-navy. */
+/* <span class="text-xs font-medium transition-colors duration-300"> — gray-400 until reached (2.5:1 on gray-50, kept), then yu-navy. */
 .cp-onboarding__step-label {
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-400, #99a1af);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-slow, 300ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
@@ -172,15 +176,13 @@
   align-items: center;
   gap: var(--space-2, 8px);
 }
-/* Step 2 wraps that row with the year picker: <div class="flex items-center justify-between"> */
+/* Step 2 wraps that row with the year picker: <div class="flex items-center justify-between">. As the CardHeader's
+   first child, followed by the help line, it takes the header's space-y-1.5 6px margin-bottom from Card.css
+   (`.cp-card__header > :not(:last-child)`, v4 semantics); it has no block margin of its own. */
 .cp-onboarding__card-head-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-/* CardHeader is flex-col with space-y-1.5: the row carries margin-bottom 6px when the help line follows (v4). */
-.cp-card__header > .cp-onboarding__card-head-row:not(:last-child) {
-  margin-bottom: var(--space-1-5, 6px);
 }
 /* <School className="w-5 h-5 text-[#153974]" /> · <GraduationCap className="w-5 h-5 text-emerald-600" /> (3.7:1 on white) */
 .cp-onboarding__card-icon {
@@ -222,28 +224,43 @@
   border-color: var(--yu-navy, #153974);
   box-shadow: 0 0 0 1px var(--yu-navy, #153974);
 }
-/* Help line under the title row: <p class="text-xs text-gray-500 mt-1"> — Card.css gives header children a 6px
-   margin-top (its space-y-1.5 emulation); the source's mt-1 replaces it with 4px, and the row's 6px margin-bottom
-   above still applies (flex column: no collapsing), so the line sits 10px under the row as in the app. */
-.cp-onboarding__help,
-.cp-card__header > .cp-onboarding__help {
+/* Help line under the title row: <p class="text-xs text-gray-500 mt-1">, the CardHeader's DOM-last child. Under v4
+   the header's space-y-1.5 puts 6px margin-bottom on the row above (Card.css) and never touches this line, which
+   keeps its own 4px mt-1; the header is a flex column (no collapsing), so the two add up and the line sits 10px
+   under the row, as in the app. The scoped rule restates mt-1 after Card.css's (0,2,0) header rule. */
+.cp-onboarding__help {
   margin: var(--space-1, 4px) 0 0;
   font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-500, #6a7282);
+}
+.cp-card__header > .cp-onboarding__help {
+  margin-top: var(--space-1, 4px);
 }
 /* <Link class="text-[#00AACA] hover:text-[#153974] underline"> — yu-cyan is 2.8:1 on white in the source, kept. */
 .cp-onboarding__help-link {
   color: var(--yu-cyan, #00aaca);
   text-decoration-line: underline;
 }
-.cp-onboarding__help-link:hover,
 .cp-onboarding__help-link.is-hover {
   color: var(--yu-navy, #153974);
 }
+@media (hover: hover) {
+  .cp-onboarding__help-link:hover {
+    color: var(--yu-navy, #153974);
+  }
+}
 
-/* CardContent className="space-y-4" (step 1) / "space-y-6" (step 2): block children, margin-bottom on all but the last. */
-.cp-onboarding__content--gap-4 > :not(:last-child) { margin-bottom: var(--space-4, 16px); }
-.cp-onboarding__content--gap-6 > :not(:last-child) { margin-bottom: var(--space-6, 24px); }
+/* <CardContent className="space-y-4"> (step 1) / <CardContent className="space-y-6"> (step 2), Tailwind v4 semantics:
+   margin-bottom on every element child except the DOM-last, which is always the actions row. The conditional children
+   (toggle block, 복수전공/부전공 학과, warning, autofill notice, error line) only add or drop a gap. None carries a block
+   margin of its own; the notice's and the error line's `margin: 0` resets are (0,1,0) and lose to these (0,2,0) rules,
+   as v4's utilities layer beats preflight. */
+.cp-onboarding__content--gap-4 > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
+}
+.cp-onboarding__content--gap-6 > :not(:last-child) {
+  margin-bottom: var(--space-6, 24px);
+}
 
 /* ---------------------------------------------------------------- Fields */
 /* <label class="block text-sm font-medium text-gray-700 mb-1"> — the step-1 labels (학과, 입학연도, 복수전공 학과). */
@@ -317,15 +334,25 @@
 }
 /* Off + hover: hover:border-purple-400 hover:text-purple-600 / hover:border-orange-400 hover:text-orange-600.
    Only the off class string carries hover: utilities, so on and disabled toggles do not react. */
-.cp-onboarding__toggle--double:not(.is-on):not(:disabled):not(.is-disabled):hover,
 .cp-onboarding__toggle--double:not(.is-on):not(:disabled):not(.is-disabled).is-hover {
   border-color: var(--purple-400, #c27aff);
   color: var(--purple-600, #9810fa);
 }
-.cp-onboarding__toggle--minor:not(.is-on):not(:disabled):not(.is-disabled):hover,
+@media (hover: hover) {
+  .cp-onboarding__toggle--double:not(.is-on):not(:disabled):not(.is-disabled):hover {
+    border-color: var(--purple-400, #c27aff);
+    color: var(--purple-600, #9810fa);
+  }
+}
 .cp-onboarding__toggle--minor:not(.is-on):not(:disabled):not(.is-disabled).is-hover {
   border-color: var(--orange-400, #ff8904);
   color: var(--orange-600, #f54900);
+}
+@media (hover: hover) {
+  .cp-onboarding__toggle--minor:not(.is-on):not(:disabled):not(.is-disabled):hover {
+    border-color: var(--orange-400, #ff8904);
+    color: var(--orange-600, #f54900);
+  }
 }
 /* On: bg-purple-500 text-white border-purple-500 shadow-sm (4.1:1, kept) / bg-orange-500 … (2.9:1, kept) */
 .cp-onboarding__toggle--double.is-on {
@@ -362,7 +389,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-/* <div class="space-y-4"> column */
+/* <div class="space-y-4"> column, Tailwind v4 semantics: 16px margin-bottom on every element child except the DOM-last.
+   Children: the column head and the field <div>s; none carries a block margin of its own (the helpers' mt-0.5 sits
+   inside a field). */
 .cp-onboarding__column > :not(:last-child) {
   margin-bottom: var(--space-4, 16px);
 }
@@ -515,12 +544,12 @@
   border-radius: var(--radius-full, 9999px);
   font: 500 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
 }
-/* bg-[#153974]/10 text-[#153974] (9.4:1) */
+/* bg-[#153974]/10 text-[#153974] (9.0:1 over the gray-50 frame) */
 .cp-onboarding__badge--dept {
   background-color: var(--yu-navy-a10, #1539741a);
   color: var(--yu-navy, #153974);
 }
-/* bg-[#00AACA]/10 text-[#00AACA] — 2.5:1 on its tint in the source, kept. */
+/* bg-[#00AACA]/10 text-[#00AACA] — 2.4:1 on its tint over the gray-50 frame in the source, kept. */
 .cp-onboarding__badge--year {
   background-color: var(--yu-cyan-a10, #00aaca1a);
   color: var(--yu-cyan, #00aaca);

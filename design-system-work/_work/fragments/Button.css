@@ -47,10 +47,15 @@
   color: var(--white, #ffffff);
   box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-.cp-button--default:hover,
 .cp-button--default.is-hover {
   background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-button--default:hover {
+    background-image: linear-gradient(to right in oklab, var(--yu-navy-hover, #003e7e), var(--yu-navy, #153974));
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* Variant: destructive */
@@ -58,9 +63,13 @@
   background-color: var(--red-600, #e7000b);
   color: var(--white, #ffffff);
 }
-.cp-button--destructive:hover,
 .cp-button--destructive.is-hover {
   background-color: var(--red-700, #c10007);
+}
+@media (hover: hover) {
+  .cp-button--destructive:hover {
+    background-color: var(--red-700, #c10007);
+  }
 }
 
 /* Variant: outline — label color is inherited (no text-* class in the source). */
@@ -68,9 +77,13 @@
   border: 1px solid var(--gray-300, #d1d5dc);
   background-color: var(--white, #ffffff);
 }
-.cp-button--outline:hover,
 .cp-button--outline.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-button--outline:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 
 /* Variant: secondary */
@@ -78,15 +91,23 @@
   background-color: var(--gray-100, #f3f4f6);
   color: var(--gray-900, #101828);
 }
-.cp-button--secondary:hover,
 .cp-button--secondary.is-hover {
   background-color: var(--gray-200, #e5e7eb);
 }
+@media (hover: hover) {
+  .cp-button--secondary:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
+}
 
 /* Variant: ghost — transparent at rest, label color inherited. */
-.cp-button--ghost:hover,
 .cp-button--ghost.is-hover {
   background-color: var(--gray-100, #f3f4f6);
+}
+@media (hover: hover) {
+  .cp-button--ghost:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
 }
 
 /* Variant: link — keeps the button box; underline-offset-4 = 4px. */
@@ -94,9 +115,13 @@
   color: var(--yu-navy, #153974);
   text-underline-offset: 4px;
 }
-.cp-button--link:hover,
 .cp-button--link.is-hover {
   text-decoration-line: underline;
+}
+@media (hover: hover) {
+  .cp-button--link:hover {
+    text-decoration-line: underline;
+  }
 }
 
 /* Press: active:scale-[0.98] */
@@ -118,12 +143,17 @@
   box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor,
     var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-.cp-button--default:hover:focus-visible,
 .cp-button--default.is-hover:focus-visible,
-.cp-button--default:hover.is-focus,
 .cp-button--default.is-hover.is-focus {
   box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor,
     var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-button--default:hover:focus-visible,
+.cp-button--default:hover.is-focus {
+    box-shadow: 0 0 0 2px var(--white, #ffffff), 0 0 0 4px currentColor,
+    var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* Disabled (also set while isLoading): disabled:pointer-events-none disabled:opacity-50 — hover and active cannot fire. */

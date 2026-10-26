@@ -79,13 +79,17 @@
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-all-plans-modal__close:hover,
 .cp-all-plans-modal__close.is-hover {
   background-color: var(--gray-200, #e5e7eb);
+}
+@media (hover: hover) {
+  .cp-all-plans-modal__close:hover {
+    background-color: var(--gray-200, #e5e7eb);
+  }
 }
 /* X "w-5 h-5 text-gray-500" (4.6:1 on gray-50; 3.9:1 on the gray-200 hover fill — source pair, kept, flagged). */
 .cp-all-plans-modal__close-icon {
@@ -147,10 +151,15 @@
   text-align: left;
   transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-all-plans-modal__plan:hover,
 .cp-all-plans-modal__plan.is-hover {
   border-color: var(--yu-blue, #3069b3);
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-all-plans-modal__plan:hover {
+    border-color: var(--yu-blue, #3069b3);
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 
 /* Card head: "flex items-center gap-2 mb-3" */
@@ -187,7 +196,8 @@
   color: var(--gray-600, #4a5565);
 }
 .cp-all-plans-modal__plan-line { margin: 0; }
-.cp-all-plans-modal__plan-meta > * + * { margin-top: var(--space-1, 4px); }
+/* "space-y-1", Tailwind v4 semantics: 4px below every line except the DOM-last; (0,2,0) beats the preflight-style reset above. */
+.cp-all-plans-modal__plan-meta > :not(:last-child) { margin-bottom: var(--space-1, 4px); }
 
 /* Anonymity note (only when the page has plans): "text-xs text-gray-400 mt-4 flex items-center gap-1" with Info "w-3.5 h-3.5".
    gray-400 on white is 2.6:1 — source pair, kept, flagged. */
@@ -227,14 +237,19 @@
   font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   letter-spacing: inherit;
   appearance: button;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-all-plans-modal__more-button:hover,
 .cp-all-plans-modal__more-button.is-hover {
   background-color: var(--yu-blue, #3069b3);
   color: var(--white, #ffffff);
+}
+@media (hover: hover) {
+  .cp-all-plans-modal__more-button:hover {
+    background-color: var(--yu-blue, #3069b3);
+    color: var(--white, #ffffff);
+  }
 }
 .cp-all-plans-modal__more-button:disabled,
 .cp-all-plans-modal__more-button.is-disabled {

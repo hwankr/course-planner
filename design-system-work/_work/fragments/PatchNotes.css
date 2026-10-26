@@ -1,7 +1,9 @@
 /* PatchNotes — pattern hand-translated from src/app/(dashboard)/patch-notes/page.tsx and src/app/(dashboard)/patch-notes/[id]/page.tsx; the list rows and the detail card are the Card primitive (.cp-card from Card.css) — only the pattern's own rules live here */
 
-/* Block = the page root of both pages (and of their skeletons): max-w-2xl mx-auto space-y-4. It sits in the dashboard
-   <main> on the gray-50 frame and inherits the body font (Arial 16px/1.5) and the foreground color. */
+/* Block = the page root of every branch of both pages: max-w-2xl mx-auto. It sits in the dashboard
+   <main> on the gray-50 frame and inherits the body font (Arial 16px/1.5) and the foreground color.
+   Only the data and skeleton roots add space-y-4 (.cp-patch-notes--stack); the error roots
+   (page.tsx L46, [id]/page.tsx L60) are max-w-2xl mx-auto alone. */
 .cp-patch-notes {
   box-sizing: border-box;
   max-width: var(--container-2xl, 672px);
@@ -14,9 +16,13 @@
 .cp-patch-notes *::after {
   box-sizing: border-box;
 }
-/* space-y-4 */
-.cp-patch-notes > * + * {
-  margin-top: var(--space-4, 16px);
+/* "space-y-4" — data and skeleton roots only. v4 semantics: margin-bottom on every element child except the DOM-last
+   one; no child carries a margin utility of its own. On the list page the last child is always the flex list (rendered
+   even when empty, after the empty box). On the detail page the first child is the inline-flex 목록으로 link: the
+   margin applies to that atomic inline box and deepens its line box, so the Card sits exactly space-4 below the link
+   (a margin-top on the Card would add it below the 24px strut line instead, about 5px lower). */
+.cp-patch-notes--stack > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
 
 /* ---- Header row: list page header and detail card header, both "flex items-center gap-3" ---- */
@@ -141,7 +147,7 @@
   font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--slate-400, #90a1b9);
 }
-/* Excerpt <p>: text-sm text-slate-600 leading-relaxed — truncate(content, 100) + "..." (no pre-wrap: line breaks collapse) */
+/* Excerpt <p>: text-sm text-slate-600 leading-relaxed — truncate(content, 100): unchanged up to 100 chars, else the first 100 + "..." (no pre-wrap: line breaks collapse) */
 .cp-patch-notes__excerpt {
   margin: 0;
   font: 400 14px/1.625 var(--font-body, Arial, Helvetica, sans-serif);
@@ -157,7 +163,7 @@
   color: var(--slate-300, #cad5e2);
 }
 
-/* ---- Loading skeleton (animate-pulse rounded-* bg-slate-200), stacked by the root's space-y-4 ---- */
+/* ---- Loading skeleton (animate-pulse rounded-* bg-slate-200), stacked by the skeleton root's space-y-4 (.cp-patch-notes--stack) ---- */
 /* list page: h-8 w-40 rounded-lg title (160px — no spacing token covers w-40) */
 .cp-patch-notes__skeleton-title {
   height: var(--space-8, 32px);
@@ -230,15 +236,19 @@
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--yu-cyan, #00aaca);
   text-decoration: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-patch-notes__back:hover,
 .cp-patch-notes__back.is-hover {
   color: var(--yu-navy, #153974);
 }
-/* the error branch renders the link outside the space-y root and adds mb-4 */
+@media (hover: hover) {
+  .cp-patch-notes__back:hover {
+    color: var(--yu-navy, #153974);
+  }
+}
+/* mb-4: the error branch's root is max-w-2xl mx-auto without space-y-4, so the link carries margin-bottom: space-4 */
 .cp-patch-notes__back--error {
   margin-bottom: var(--space-4, 16px);
 }

@@ -18,7 +18,7 @@ Modal for adding a user-defined course to the focused semester: a `black-a50` ov
 
 - Overlay `.cp-custom-course-form`: `position: fixed; inset: 0`, fill `black-a50`, flex-centered, `z-modal`, padding `space-4`. `--staged` is a preview-only modifier that pins it to a relative stage instead of the viewport.
 - Panel `__panel`: fill `white`, `radius-lg`, `shadow-xl`, width 100% up to `container-md` (448px), `max-height: 90vh` with vertical scroll. The panel sets no text color of its own; the Input, select and 취소 label inherit the body `foreground` (17.9:1 on `white`); every other text part sets its color below.
-- Header `__header`: padding `space-4` × `space-6`, bottom hairline `gray-200` (`line-neutral`; 1.2:1 on `white`, decorative, kept). Title `__title` `heading-4` (600 18px/28px) in `gray-900` (17.8:1); subtitle `__subtitle` `body-sm` in `gray-500` (4.8:1) with `space-1` above.
+- Header `__header`: padding `space-4` × `space-6`, bottom hairline `gray-200` (`line-neutral`; 1.2:1 on `white`, decorative, kept). Title `__title` `heading-4` (600 18px/28px) in `gray-900` (17.7:1); subtitle `__subtitle` `body-sm` in `gray-500` (4.8:1) with `space-1` above.
 - Body `__body` (the `<form>`): padding `space-6`; `space-4` between every pair of children.
 - Label `__label`: block, `body-sm-medium` in `gray-700` (10.3:1), `space-1` below. Asterisk `__required` in `red-500` — 3.8:1 on `white` in the source, kept, flagged.
 - 과목명 and 학점 are the Input component (`.cp-input__field`): `control-md`, `gray-300` hairline (1.5:1, flagged in the Input card) → `gray-400` on hover, border transparent plus a 2px `yu-cyan` ring on focus (2.8:1, flagged), `gray-400` placeholder 예: 데이터베이스. 학점 is `type="number"`, min 1, max 12, initial 3.

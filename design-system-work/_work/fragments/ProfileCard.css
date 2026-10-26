@@ -17,9 +17,10 @@
 .cp-profile *::after {
   box-sizing: border-box;
 }
-/* space-y-6 between the page title block, the banner wrapper and each Card */
-.cp-profile > * + * {
-  margin-top: var(--space-6, 24px);
+/* "max-w-2xl mx-auto space-y-6", Tailwind v4 semantics: 24px margin-bottom on every child but the DOM-last one
+   (the page title block, the banner wrapper and each Card but the last). None of them carries its own block margin. */
+.cp-profile > :not(:last-child) {
+  margin-bottom: var(--space-6, 24px);
 }
 
 /* Page title block: <h1 className="text-2xl font-bold text-gray-900">프로필</h1><p className="text-gray-600 mt-1">개인 정보를 관리하세요.</p> */
@@ -122,13 +123,13 @@
 }
 /* majorType === 'double': bg-purple-100 text-purple-700 */
 .cp-profile__badge--double {
-  background-color: var(--dept-double-major-bg, #f3e8ff);
-  color: var(--dept-double-major-text, #8200db);
+  background-color: var(--purple-100, #f3e8ff);
+  color: var(--purple-700, #8200db);
 }
 /* majorType === 'minor': bg-orange-100 text-orange-700 */
 .cp-profile__badge--minor {
-  background-color: var(--dept-minor-bg, #ffedd4);
-  color: var(--dept-minor-text, #ca3500);
+  background-color: var(--orange-100, #ffedd4);
+  color: var(--orange-700, #ca3500);
 }
 /* Building2 / CalendarDays className="w-3 h-3" */
 .cp-profile__badge-icon {
@@ -166,15 +167,17 @@
 .cp-profile__card--delay-100 { animation-delay: 100ms; }
 .cp-profile__card--delay-200 { animation-delay: 200ms; }
 
-/* 기본 정보 header: CardHeader className="flex flex-row items-center justify-between". CardHeader's own space-y-1.5
-   still applies: Tailwind v4 writes it as 6px margin-block-end on :not(:last-child), i.e. on the title group,
-   so the title sits 3px above the centre line of the 36px ghost Button and the header is 84px tall. */
+/* 기본 정보 header: CardHeader className="flex flex-row items-center justify-between". CardHeader's own
+   "flex flex-col space-y-1.5 p-6" space-y-1.5 still applies, Tailwind v4 semantics: 6px margin-bottom on every child but
+   the DOM-last one, i.e. on the title group and not on the Button, so the title sits 3px above the centre line of the
+   36px ghost Button and the header is 84px tall. The `> *` reset clears any top margin Card.css's CardHeader rule gives
+   these two children (v4 sets margin-block-start: 0 there). */
 .cp-card__header.cp-profile__card-header--split {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
 }
-.cp-card__header.cp-profile__card-header--split > * + * {
+.cp-card__header.cp-profile__card-header--split > * {
   margin-top: 0;
 }
 .cp-card__header.cp-profile__card-header--split > :not(:last-child) {
@@ -207,9 +210,10 @@
    Key-value rows (기본 정보 read-only, 계정 정보)
    --------------------------------------------------------------------------------------------- */
 
-/* <div className="space-y-3"> */
-.cp-profile__rows > * + * {
-  margin-top: var(--space-3, 12px);
+/* <div className="space-y-3">, Tailwind v4 semantics: 12px margin-bottom on every row but the DOM-last one. The rows
+   carry no block margin of their own; the optional 복수전공/부전공 row, when rendered, is the last one. */
+.cp-profile__rows > :not(:last-child) {
+  margin-bottom: var(--space-3, 12px);
 }
 
 /* <div className="flex justify-between py-2 border-b"> — bare border-b is currentColor, i.e. the Card's gray-900.
@@ -220,7 +224,8 @@
   padding: var(--space-2, 8px) 0;
   border-bottom: 1px solid var(--border-default, #101828);
 }
-/* The final row of each list is written without border-b (복수전공/부전공 in 기본 정보, 권한 and 데이터 저장 in 계정 정보). */
+/* Rows written without border-b: 권한 (계정 정보) and 데이터 저장 (guest 계정 정보), and the optional 복수전공/부전공 row in
+   기본 정보. The 학과 row always carries border-b, so for single-major users 기본 정보 ends on its gray-900 hairline. */
 .cp-profile__row--last {
   border-bottom: 0;
 }
@@ -283,9 +288,11 @@
    Edit form (기본 정보 while isEditing; the whole guest 기본 정보 Card)
    --------------------------------------------------------------------------------------------- */
 
-/* <form className="space-y-4"> */
-.cp-profile__form > * + * {
-  margin-top: var(--space-4, 16px);
+/* <form className="space-y-4">, Tailwind v4 semantics: 16px margin-bottom on every child but the DOM-last one — the
+   four field <div>s and the 저장 Button (inline-flex: the margin deepens its line box). The mutation error line,
+   rendered only on a failed save, is then the last child and keeps just its own mt-2 (.cp-profile__error--spaced). */
+.cp-profile__form > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
 
 /* <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1"> — no htmlFor, not wrapping. */
@@ -331,24 +338,26 @@
 }
 
 /* Mutation error <p className="text-sm text-red-500"> (전공 설정) — 3.8:1 on white in the source; kept.
-   In the 기본 정보 form it is "text-sm text-red-500 mt-2": v4's space-y-4 margin-block-end on the Button plus mt-2
-   puts it 24px below the Button. */
+   In the 기본 정보 form it is "text-sm text-red-500 mt-2": v4's space-y-4 margin-bottom on the inline-flex Button
+   (16px, in its line box, so it does not collapse) plus this own mt-2 put it 24px below the Button. */
 .cp-profile__error {
   margin: 0;
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--red-500, #fb2c36);
 }
 .cp-profile__error--spaced {
-  margin-top: calc(var(--space-4, 16px) + var(--space-2, 8px));
+  margin-top: var(--space-2, 8px);
 }
 
 /* ---------------------------------------------------------------------------------------------
    전공 설정 body — major-type toggle pair
    --------------------------------------------------------------------------------------------- */
 
-/* <div className="space-y-4"> */
-.cp-profile__stack > * + * {
-  margin-top: var(--space-4, 16px);
+/* <div className="space-y-4">, Tailwind v4 semantics: 16px margin-bottom on every child but the DOM-last one — the
+   toggle group, the 복수전공/부전공 학과 field (rendered only while majorType !== 'single') and the 저장 Button when the
+   mutation error line (.cp-profile__error, no own margin; signed-in only) follows it. No child has its own block margin. */
+.cp-profile__stack > :not(:last-child) {
+  margin-bottom: var(--space-4, 16px);
 }
 
 /* <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>;
@@ -389,42 +398,76 @@
   transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
 /* 복수전공 rest hover: hover:border-purple-400 hover:text-purple-600 */
-.cp-profile__toggle--double:hover,
 .cp-profile__toggle--double.is-hover {
   border-color: var(--purple-400, #c27aff);
   color: var(--purple-600, #9810fa);
 }
+@media (hover: hover) {
+  .cp-profile__toggle--double:hover {
+    border-color: var(--purple-400, #c27aff);
+    color: var(--purple-600, #9810fa);
+  }
+}
 /* 부전공 rest hover: hover:border-orange-400 hover:text-orange-600 — orange-600 is 3.6:1 on white; kept. */
-.cp-profile__toggle--minor:hover,
 .cp-profile__toggle--minor.is-hover {
   border-color: var(--orange-400, #ff8904);
   color: var(--orange-600, #f54900);
 }
-/* majorType === 'double': bg-purple-500 text-white border-purple-500 shadow-sm (no hover classes) — white on purple-500 is 4.1:1; kept. */
-.cp-profile__toggle--double.is-active,
-.cp-profile__toggle--double.is-active:hover {
+@media (hover: hover) {
+  .cp-profile__toggle--minor:hover {
+    border-color: var(--orange-400, #ff8904);
+    color: var(--orange-600, #f54900);
+  }
+}
+/* On state is data, not a pseudo-class: formData.majorType === 'double' → .is-selected.
+   bg-purple-500 text-white border-purple-500 shadow-sm (no hover classes) — white on purple-500 is 4.1:1; kept, flagged. */
+.cp-profile__toggle--double.is-selected {
   background-color: var(--purple-500, #ad46ff);
   border-color: var(--purple-500, #ad46ff);
   color: var(--white, #ffffff);
   box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
-/* majorType === 'minor': bg-orange-500 text-white border-orange-500 shadow-sm (no hover classes) — white on orange-500 is 2.9:1; kept. */
-.cp-profile__toggle--minor.is-active,
-.cp-profile__toggle--minor.is-active:hover {
+@media (hover: hover) {
+  .cp-profile__toggle--double.is-selected:hover {
+    background-color: var(--purple-500, #ad46ff);
+    border-color: var(--purple-500, #ad46ff);
+    color: var(--white, #ffffff);
+    box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  }
+}
+/* formData.majorType === 'minor' → .is-selected: bg-orange-500 text-white border-orange-500 shadow-sm (no hover classes)
+   — white on orange-500 is 2.9:1; kept, flagged. */
+.cp-profile__toggle--minor.is-selected {
   background-color: var(--orange-500, #ff6900);
   border-color: var(--orange-500, #ff6900);
   color: var(--white, #ffffff);
   box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
 }
+@media (hover: hover) {
+  .cp-profile__toggle--minor.is-selected:hover {
+    background-color: var(--orange-500, #ff6900);
+    border-color: var(--orange-500, #ff6900);
+    color: var(--white, #ffffff);
+    box-shadow: var(--shadow-sm, 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1));
+  }
+}
 /* 부전공 while 복수전공 is active: disabled, bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed, no hover classes. */
 .cp-profile__toggle:disabled,
-.cp-profile__toggle.is-disabled,
-.cp-profile__toggle:disabled:hover {
+.cp-profile__toggle.is-disabled {
   background-color: var(--gray-100, #f3f4f6);
   border-color: var(--gray-200, #e5e7eb);
   color: var(--gray-400, #99a1af);
   box-shadow: none;
   cursor: not-allowed;
+}
+@media (hover: hover) {
+  .cp-profile__toggle:disabled:hover {
+    background-color: var(--gray-100, #f3f4f6);
+    border-color: var(--gray-200, #e5e7eb);
+    color: var(--gray-400, #99a1af);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
 }
 
 /* <span className="flex items-center justify-center gap-1.5"> — Check + 복수전공 / 부전공 when active, "+ … 추가" at rest */
@@ -466,10 +509,15 @@
   border-color: var(--red-300, #ffa2a2);
   color: var(--red-600, #e7000b);
 }
-.cp-button.cp-profile__danger-button:hover,
 .cp-button.cp-profile__danger-button.is-hover {
   background-color: var(--red-50, #fef2f2);
   border-color: var(--red-400, #ff6467);
+}
+@media (hover: hover) {
+  .cp-button.cp-profile__danger-button:hover {
+    background-color: var(--red-50, #fef2f2);
+    border-color: var(--red-400, #ff6467);
+  }
 }
 
 /* Entrance keyframes from globals.css (fadeIn / fadeInUp), prefixed. */
@@ -480,4 +528,15 @@
 @keyframes cp-fade-in-up {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* globals.css REDUCED MOTION SUPPORT: .animate-fade-in, .animate-fade-in-up { animation: none !important;
+   opacity: 1 !important; transform: none !important; } */
+@media (prefers-reduced-motion: reduce) {
+  .cp-profile__banner-wrap--enter,
+  .cp-profile__card--enter {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }

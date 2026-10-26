@@ -12,14 +12,19 @@
   font: 400 16px/1.5 var(--font-body, Arial, Helvetica, sans-serif);
   -webkit-font-smoothing: antialiased;
 }
-.cp-requirements-summary:hover,
 .cp-requirements-summary.is-hover {
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-requirements-summary:hover {
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 .cp-requirements-summary *,
 .cp-requirements-summary *::before,
 .cp-requirements-summary *::after { box-sizing: border-box; }
-.cp-requirements-summary p { margin: 0; }
+/* Preflight-style <p> reset at zero specificity, so the class rules below (mt-1.5, mt-0.5, mb-3, mb-2) win as utilities do in v4. */
+:where(.cp-requirements-summary) p { margin: 0; }
 
 /* State modifiers on the Card */
 .cp-requirements-summary--error { border-color: var(--red-200, #ffc9c9); }   /* border-red-200 */
@@ -174,7 +179,9 @@
   padding-top: var(--space-3, 12px);
   border-top: 1px solid var(--border-default, #101828);
 }
-.cp-requirements-summary__details > * + * { margin-top: var(--space-2-5, 10px); }
+/* "space-y-2.5", Tailwind v4 semantics: 10px below every TrackRow wrapper <div> (.cp-requirements-summary__track) except
+   the DOM-last (교양, always rendered); the conditional 주전공최소 / 복수전공 / 부전공 rows sit in between. No own margins. */
+.cp-requirements-summary__details > :not(:last-child) { margin-bottom: var(--space-2-5, 10px); }
 
 /* TrackRow */
 .cp-requirements-summary__track-row { display: flex; align-items: center; gap: var(--space-2, 8px); }         /* flex items-center gap-2 */
@@ -228,10 +235,14 @@
   background: var(--yu-navy-a10, #1539741a);
   border: 0;
   border-radius: var(--radius-md, 6px);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-requirements-summary__edit:hover,
 .cp-requirements-summary__edit.is-hover { background: var(--yu-navy-a20, #15397433); }
+@media (hover: hover) {
+  .cp-requirements-summary__edit:hover {
+    background: var(--yu-navy-a20, #15397433);
+  }
+}
 .cp-requirements-summary__edit-icon { width: var(--icon-xs, 12px); height: var(--icon-xs, 12px); display: block; }  /* w-3 h-3 */

@@ -150,14 +150,19 @@
   white-space: nowrap;
   color: var(--gray-600, #4a5565);
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-app-header__nav-link:hover,
 .cp-app-header__nav-link.is-hover {
   background-color: var(--gray-50, #f9fafb);
   color: var(--gray-900, #101828);
+}
+@media (hover: hover) {
+  .cp-app-header__nav-link:hover {
+    background-color: var(--gray-50, #f9fafb);
+    color: var(--gray-900, #101828);
+  }
 }
 .cp-app-header__nav-link.is-current {
   background-color: var(--yu-navy-a10, #1539741a);
@@ -250,13 +255,17 @@
   text-align: left;
   color: var(--gray-600, #4a5565);
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-app-header__dropdown-item:hover,
 .cp-app-header__dropdown-item.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-app-header__dropdown-item:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 .cp-app-header__dropdown-item.is-current {
   background-color: var(--yu-navy-a10, #1539741a);
@@ -290,13 +299,17 @@
   letter-spacing: inherit;
   color: var(--yu-cyan, #00aaca);
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-app-header__mark-read:hover,
 .cp-app-header__mark-read.is-hover {
   color: var(--yu-navy, #153974);
+}
+@media (hover: hover) {
+  .cp-app-header__mark-read:hover {
+    color: var(--yu-navy, #153974);
+  }
 }
 .cp-app-header__mark-read-icon {
   display: block;
@@ -334,16 +347,20 @@
   border-bottom: 1px solid var(--gray-50, #f9fafb);
   color: inherit;
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
 .cp-app-header__notice:last-child {
   border-bottom-width: 0;
 }
-.cp-app-header__notice:hover,
 .cp-app-header__notice.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-app-header__notice:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 /* Icon chip: <div class="flex-shrink-0 mt-0.5"><div class="w-8 h-8 rounded-full flex items-center justify-center bg-…"> */
 .cp-app-header__notice-icon-wrap {
@@ -409,13 +426,17 @@
   color: inherit;
   font: inherit;
   cursor: pointer;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-app-header__bell:hover,
 .cp-app-header__bell.is-hover {
   background-color: var(--gray-100, #f3f4f6);
+}
+@media (hover: hover) {
+  .cp-app-header__bell:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
 }
 /* Bell icon: w-5 h-5, text-gray-400 at zero unread, text-gray-700 once unreadCount > 0 */
 .cp-app-header__bell-icon {
@@ -462,13 +483,17 @@
   color: inherit;
   font: inherit;
   letter-spacing: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-app-header__user:hover,
 .cp-app-header__user.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-app-header__user:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 /* Avatar: w-8 h-8 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center text-white text-xs font-medium — holds user.name.charAt(0) */
 .cp-app-header__avatar {
@@ -541,9 +566,13 @@
   color: var(--gray-600, #4a5565);
   font: inherit;
 }
-.cp-app-header__mobile-toggle:hover,
 .cp-app-header__mobile-toggle.is-hover {
   background-color: var(--gray-100, #f3f4f6);
+}
+@media (hover: hover) {
+  .cp-app-header__mobile-toggle:hover {
+    background-color: var(--gray-100, #f3f4f6);
+  }
 }
 .cp-app-header__mobile-toggle-icon {
   display: block;
@@ -585,14 +614,19 @@
   letter-spacing: inherit;
   color: var(--gray-600, #4a5565);
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-app-header__mobile-item:hover,
 .cp-app-header__mobile-item.is-hover {
   background-color: var(--gray-50, #f9fafb);
   color: var(--gray-900, #101828);
+}
+@media (hover: hover) {
+  .cp-app-header__mobile-item:hover {
+    background-color: var(--gray-50, #f9fafb);
+    color: var(--gray-900, #101828);
+  }
 }
 .cp-app-header__mobile-item.is-current {
   background-color: var(--yu-navy-a10, #1539741a);
@@ -624,6 +658,11 @@
 .cp-app-header__mobile-support-chevron {
   width: var(--icon-md, 16px);
   height: var(--icon-md, 16px);
+  transition: transform var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+/* ChevronDown 'transition-transform', supportMenuOpen && 'rotate-180' */
+.cp-app-header__mobile-support.is-open > .cp-app-header__mobile-support-chevron {
+  transform: rotate(180deg);
 }
 /* Separator: <div class="border-t my-1"> (currentColor = foreground) */
 .cp-app-header__mobile-sep {
@@ -706,7 +745,11 @@
   color: var(--amber-900, #7b3306);
   text-decoration-line: underline;
 }
-.cp-app-header__guest-link:hover,
 .cp-app-header__guest-link.is-hover {
   color: var(--amber-700, #bb4d00);
+}
+@media (hover: hover) {
+  .cp-app-header__guest-link:hover {
+    color: var(--amber-700, #bb4d00);
+  }
 }

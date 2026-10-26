@@ -85,11 +85,11 @@ export interface StatisticsProps {
   /** Guest mode: swaps the plan grid for the locked message and the CTA pair. */
   isGuest: boolean;
   /** First page (3) of anonymous plans and the total; undefined while loading. Member variant only. */
-  plansData?: { plans: AnonymousPlanSummary[]; total: number };
+  plansData?: { plans: AnonymousPlanSummary[]; total: number; page: number; limit: number };
   /** Shows the centered Loader2 in place of the plan grid. */
   plansLoading: boolean;
   /** 구글로 로그인 handler from useAuth(). */
-  loginWithGoogle: () => void;
+  loginWithGoogle: () => Promise<void>;
   /** Plan tile click: opens AnonymousPlanModal for that id. */
   onSelectPlan: (anonymousId: string) => void;
   /** 전체 {total}개 수강계획 보기: opens AllPlansModal (the button renders only when total > 3). */

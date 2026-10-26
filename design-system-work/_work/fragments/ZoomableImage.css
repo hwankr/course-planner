@@ -44,9 +44,13 @@
   background-color: var(--transparent, #00000000);
   transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-zoomable-image:hover .cp-zoomable-image__hint,
 .cp-zoomable-image.is-hover .cp-zoomable-image__hint {
   background-color: var(--black-a10, #0000001a);
+}
+@media (hover: hover) {
+  .cp-zoomable-image:hover .cp-zoomable-image__hint {
+    background-color: var(--black-a10, #0000001a);
+  }
 }
 
 /* Mobile overlay: shown below md (md:hidden). Desktop overlay: "hidden md:flex". */
@@ -104,9 +108,13 @@
   opacity: 0;
   transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-zoomable-image:hover .cp-zoomable-image__pill--desktop,
 .cp-zoomable-image.is-hover .cp-zoomable-image__pill--desktop {
   opacity: 1;
+}
+@media (hover: hover) {
+  .cp-zoomable-image:hover .cp-zoomable-image__pill--desktop {
+    opacity: 1;
+  }
 }
 
 /* Lucide icons sized by class: ZoomIn h-3 w-3 (mobile), h-4 w-4 (desktop), X h-6 w-6 (close). Stroke currentColor. */
@@ -168,13 +176,17 @@
   background-color: var(--white-a10, #ffffff1a);
   color: var(--white, #ffffff);
   font: inherit;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-zoomable-image__close:hover,
 .cp-zoomable-image__close.is-hover {
   background-color: var(--white-a20, #ffffff33);
+}
+@media (hover: hover) {
+  .cp-zoomable-image__close:hover {
+    background-color: var(--white-a20, #ffffff33);
+  }
 }
 .cp-zoomable-image__close:active,
 .cp-zoomable-image__close.is-active {

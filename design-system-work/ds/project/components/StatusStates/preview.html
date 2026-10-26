@@ -1,4 +1,4 @@
-<!-- @dsCard group="Patterns" height=1010 -->
+<!-- @dsCard group="Patterns" height=1370 -->
 <!doctype html>
 <html lang="ko">
 <head>
@@ -10,7 +10,7 @@
   .row + .row { margin-top: 24px; }
   .cell { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 0; }
   .cell--spinners { flex: 0 0 416px; }
-  .cell--page { flex: 0 0 270px; }
+  .cell--admin { flex: 0 0 240px; }
   .stage { box-sizing: border-box; flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--gray-50, #f9fafb); }
   .stage--white { background: var(--white, #ffffff); }
   .stage--top { align-items: flex-start; }
@@ -19,7 +19,6 @@
   .fill { width: 100%; }
   .spin-grid { display: flex; align-items: center; gap: 24px; }
   .skel-grid { display: flex; align-items: flex-start; gap: 16px; width: 100%; }
-  .skel-grid > .skel-admin { flex: 0 0 192px; }
   .skel-grid > .skel-card { flex: 1 1 0; min-width: 0; }
   .skel-grid > .skel-cell { flex: 0 0 90px; }
   .cap { margin: 0; font: 400 12px/16px var(--font-body, Arial, Helvetica, sans-serif); color: var(--gray-500, #6a7282); }
@@ -48,10 +47,6 @@
   <div class="cell">
     <div class="stage stage--top">
       <div class="cp-status skel-grid">
-        <div class="cp-status__skeleton-stack skel-admin">
-          <div class="cp-status__skeleton cp-status__skeleton--title"></div>
-          <div class="cp-status__skeleton cp-status__skeleton--block"></div>
-        </div>
         <div class="skel-card">
           <div class="cp-card">
             <div class="cp-card__content cp-status__skeleton-host">
@@ -62,40 +57,29 @@
         <div class="cp-status__skeleton cp-status__skeleton--cell skel-cell"></div>
       </div>
     </div>
-    <p class="cap">Skeletons (animate-pulse) · admin/courses h-8 w-48 + h-24 slate-200 · RequirementsSummary h-4 gray-200 bar in CardContent py-3 · calendar gray-100 cell, gray-200 border</p>
+    <p class="cap">Skeletons (animate-pulse) · RequirementsSummary h-4 gray-200 bar in CardContent py-3 · calendar gray-100 cell, gray-200 border</p>
   </div>
 </div>
 
 <div class="row">
-  <div class="cell cell--page">
-    <div class="stage stage--bare">
-      <div class="cp-status cp-status__page cp-status__page--min-400">
-        <div class="cp-status__well cp-status__well--danger">
-          <svg class="cp-status__glyph cp-status__glyph--danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-        </div>
-        <div class="cp-status__text">
-          <h2 class="cp-status__title">문제가 발생했습니다</h2>
-          <p class="cp-status__body">일시적인 오류가 발생했습니다. 다시 시도해주세요.</p>
-        </div>
-        <button type="button" class="cp-status__action">다시 시도</button>
+  <div class="cell cell--admin">
+    <div class="stage stage--top">
+      <div class="cp-status cp-status__skeleton-stack fill">
+        <div class="cp-status__skeleton cp-status__skeleton--title"></div>
+        <div class="cp-status__skeleton cp-status__skeleton--block-lg"></div>
       </div>
     </div>
-    <p class="cap">(dashboard)/error.tsx · min-h-[400px] on gray-50 · global-error.tsx: same column at min-h-screen, 심각한 오류가 발생했습니다, no focus ring</p>
+    <p class="cap">admin/courses auth guard: h-8 w-48 + h-64</p>
   </div>
-  <div class="cell cell--page">
-    <div class="stage stage--white stage--bare">
-      <div class="cp-status cp-status__page">
-        <div class="cp-status__well cp-status__well--info">
-          <svg class="cp-status__glyph cp-status__glyph--brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        </div>
-        <div class="cp-status__text">
-          <h2 class="cp-status__title">페이지를 찾을 수 없습니다</h2>
-          <p class="cp-status__body">요청하신 페이지가 존재하지 않거나 이동되었습니다.</p>
-        </div>
-        <a class="cp-status__action is-hover" href="#">수강 플래너로 이동</a>
+  <div class="cell cell--admin">
+    <div class="stage stage--top">
+      <div class="cp-status cp-status__skeleton-stack fill">
+        <div class="cp-status__skeleton cp-status__skeleton--block"></div>
+        <div class="cp-status__skeleton cp-status__skeleton--block"></div>
+        <div class="cp-status__skeleton cp-status__skeleton--block"></div>
       </div>
     </div>
-    <p class="cap">not-found.tsx · min-h-screen on the white root body (shown at column height) · Link in hover (yu-navy-hover)</p>
+    <p class="cap">admin/courses list: 3 × h-24, space-y-4</p>
   </div>
   <div class="cell">
     <div class="stage stage--top">
@@ -109,6 +93,52 @@
       </div>
     </div>
     <p class="cap">statistics/page.tsx · Card max-w-2xl p-8 · gray-400 BarChart3 64px (2.6:1, flagged) · siblings: red-500 AlertCircle, blue-100 well + yu-blue Info</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="cell">
+    <div class="stage stage--bare">
+      <div class="cp-status cp-status__page cp-status__page--min-400">
+        <div class="cp-status__well cp-status__well--danger">
+          <svg class="cp-status__glyph cp-status__glyph--danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <div class="cp-status__text">
+          <h2 class="cp-status__title">문제가 발생했습니다</h2>
+          <p class="cp-status__body">일시적인 오류가 발생했습니다. 다시 시도해주세요.</p>
+        </div>
+        <button type="button" class="cp-status__action">다시 시도</button>
+      </div>
+    </div>
+    <p class="cap">(dashboard)/error.tsx · min-h-[400px] on gray-50</p>
+  </div>
+  <div class="cell">
+    <div class="stage stage--white stage--bare">
+      <div class="cp-status cp-status__page">
+        <div class="cp-status__well cp-status__well--danger">
+          <svg class="cp-status__glyph cp-status__glyph--danger" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h2 class="cp-status__title">심각한 오류가 발생했습니다</h2>
+        <p class="cp-status__body">예상치 못한 오류가 발생했습니다. 페이지를 새로고침해주세요.</p>
+        <button type="button" class="cp-status__action cp-status__action--plain">다시 시도</button>
+      </div>
+    </div>
+    <p class="cap">global-error.tsx · own &lt;body&gt; (background) · min-h-screen (shown at column height) · no space-y-2 wrapper, h2 and p 16px apart · no focus classes</p>
+  </div>
+  <div class="cell">
+    <div class="stage stage--bare">
+      <div class="cp-status cp-status__page">
+        <div class="cp-status__well cp-status__well--info">
+          <svg class="cp-status__glyph cp-status__glyph--brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div class="cp-status__text">
+          <h2 class="cp-status__title">페이지를 찾을 수 없습니다</h2>
+          <p class="cp-status__body">요청하신 페이지가 존재하지 않거나 이동되었습니다.</p>
+        </div>
+        <a class="cp-status__action is-hover" href="#">수강 플래너로 이동</a>
+      </div>
+    </div>
+    <p class="cap">not-found.tsx · min-h-screen inside the root layout's bg-gray-50 wrapper (shown at column height) · Link in hover (yu-navy-hover)</p>
   </div>
 </div>
 

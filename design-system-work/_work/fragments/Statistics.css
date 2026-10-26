@@ -1,8 +1,10 @@
 /* Statistics — pattern extracted from the inline markup of src/app/(dashboard)/statistics/page.tsx (the 인기 과목 순위, 학기별 평균 수강 현황 and 익명 수강계획 열람 Cards and the guest CTA pair); the shell is .cp-card from src/components/ui/Card.tsx (icons: lucide BookOpen, BarChart3, Info, Users, ChevronRight, Loader2) */
 
 /* Block = the <Card> element itself: <div class="cp-card cp-statistics">. .cp-card already sets the white fill, the gray-900
-   hairline, radius-lg, shadow-sm → shadow-md on hover, border-box on every descendant and the inherited body type
-   (400 16px/24px, color gray-900). The page adds mb-8 on the first two Cards; that is page rhythm, not part of the pattern. */
+   hairline, radius-lg, shadow-sm → shadow-md on hover, border-box on every descendant and color gray-900; it sets no type.
+   In the app the inherited 400 16px/24px comes from preflight (html line-height 1.5 at the 16px default) on the Arial body,
+   so .cp-statistics__empty, whose bare filtered-empty text inherits it, states it. The page adds mb-8 on the first two
+   Cards; that is page rhythm, not part of the pattern. */
 .cp-statistics {
   display: block;
 }
@@ -56,13 +58,17 @@
 /* Row "p-4 hover:bg-gray-50 transition-colors" — a hover wash with no click handler. */
 .cp-statistics__row {
   padding: var(--space-4, 16px);
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-statistics__row:hover,
 .cp-statistics__row.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-statistics__row:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 /* "flex items-start gap-4" */
 .cp-statistics__row-inner {
@@ -142,9 +148,9 @@
 .cp-statistics__badge--general-required { background-color: var(--category-general-required-bg, #dbeafe); color: var(--category-general-required-text, #1447e6); }
 /* 교양선택 "bg-green-100 text-green-700" (4.5:1) */
 .cp-statistics__badge--general-elective { background-color: var(--category-general-elective-bg, #dcfce7); color: var(--category-general-elective-text, #008236); }
-/* 교직 "bg-violet-100 text-violet-700" (6.2:1) */
+/* 교직 "bg-violet-100 text-violet-700" (6.1:1) */
 .cp-statistics__badge--teaching         { background-color: var(--category-teaching-bg, #ede9fe);         color: var(--category-teaching-text, #7008e7); }
-/* 자유선택 "bg-gray-100 text-gray-600" (7.2:1) */
+/* 자유선택 "bg-gray-100 text-gray-600" (6.9:1) */
 .cp-statistics__badge--free-elective    { background-color: var(--category-free-elective-bg, #f3f4f6);    color: var(--category-free-elective-text, #4a5565); }
 
 /* Progress: wrapper "mb-1"; track "h-2 bg-gray-200 rounded-full overflow-hidden" (h-2 is the 8px spacing step; 1.2:1 on white,
@@ -200,21 +206,29 @@
   font: 500 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   letter-spacing: inherit;
   text-align: center;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-statistics__more:hover,
 .cp-statistics__more.is-hover {
   background-color: var(--blue-50, #eff6ff);
+}
+@media (hover: hover) {
+  .cp-statistics__more:hover {
+    background-color: var(--blue-50, #eff6ff);
+  }
 }
 /* 접기 (remainingCount === 0): "text-gray-500 hover:bg-gray-50" instead. */
 .cp-statistics__more--collapse {
   color: var(--gray-500, #6a7282);
 }
-.cp-statistics__more--collapse:hover,
 .cp-statistics__more--collapse.is-hover {
   background-color: var(--gray-50, #f9fafb);
+}
+@media (hover: hover) {
+  .cp-statistics__more--collapse:hover {
+    background-color: var(--gray-50, #f9fafb);
+  }
 }
 
 /* Note footer (whenever rows exist): "p-4 bg-gray-50 border-t" with <p> "text-sm text-gray-600 flex items-center gap-1"
@@ -239,10 +253,12 @@
 }
 
 /* Empty list "p-8 text-center text-gray-500" (ranking) and "text-center py-12 text-gray-500" (plans, --plans).
-   <p> "font-medium mb-1" then <p> "text-sm"; the filtered-empty string is a bare text node in the container. */
+   <p> "font-medium mb-1" then <p> "text-sm"; the filtered-empty string is a bare text node in the container, so the
+   container states the inherited body type (400 16px/24px). */
 .cp-statistics__empty {
   padding: var(--space-8, 32px);
   text-align: center;
+  font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-500, #6a7282);
 }
 .cp-statistics__empty--plans {
@@ -341,10 +357,15 @@
   text-align: left;
   transition: all var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-statistics__plan:hover,
 .cp-statistics__plan.is-hover {
   border-color: var(--yu-blue, #3069b3);
   box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+}
+@media (hover: hover) {
+  .cp-statistics__plan:hover {
+    border-color: var(--yu-blue, #3069b3);
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1));
+  }
 }
 /* "flex items-center gap-2 mb-3" — letter avatar (.cp-statistics__avatar) + name. */
 .cp-statistics__plan-head {
@@ -358,7 +379,8 @@
   font: 600 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-900, #101828);
 }
-/* "space-y-1 text-sm text-gray-600" — <p> "{n}개 학기" and <p> "{n}개 과목 · {n}학점". */
+/* "space-y-1 text-sm text-gray-600" — <p> "{n}개 학기" and <p> "{n}개 과목 · {n}학점". space-y-1 with Tailwind v4
+   semantics: 4px margin-bottom on every child but the DOM-last one, i.e. on the first <p>; neither <p> has its own margin. */
 .cp-statistics__plan-meta {
   font: 400 14px/20px var(--font-body, Arial, Helvetica, sans-serif);
   color: var(--gray-600, #4a5565);
@@ -366,8 +388,8 @@
 .cp-statistics__plan-line {
   margin: 0;
 }
-.cp-statistics__plan-meta > * + * {
-  margin-top: var(--space-1, 4px);
+.cp-statistics__plan-meta > :not(:last-child) {
+  margin-bottom: var(--space-1, 4px);
 }
 
 /* Anonymity note (only when plans exist): "text-xs text-gray-400 mt-4 flex items-center gap-1" with Info "w-3.5 h-3.5".
@@ -410,14 +432,19 @@
   font: 400 16px/24px var(--font-body, Arial, Helvetica, sans-serif);
   letter-spacing: inherit;
   text-decoration: none;
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke;
   transition-duration: var(--duration-fast, 150ms);
   transition-timing-function: var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-statistics__outline-button:hover,
 .cp-statistics__outline-button.is-hover {
   background-color: var(--yu-blue, #3069b3);
   color: var(--white, #ffffff);
+}
+@media (hover: hover) {
+  .cp-statistics__outline-button:hover {
+    background-color: var(--yu-blue, #3069b3);
+    color: var(--white, #ffffff);
+  }
 }
 .cp-statistics__outline-button--sm {
   padding: var(--space-2-5, 10px) var(--space-5, 20px);
@@ -481,9 +508,13 @@
   letter-spacing: inherit;
   transition: opacity var(--duration-fast, 150ms) var(--ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
 }
-.cp-statistics__cta:hover,
 .cp-statistics__cta.is-hover {
   opacity: var(--opacity-hover-wash, 0.9);
+}
+@media (hover: hover) {
+  .cp-statistics__cta:hover {
+    opacity: var(--opacity-hover-wash, 0.9);
+  }
 }
 
 @keyframes cp-spin {

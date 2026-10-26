@@ -5,7 +5,7 @@
  * IPatchNoteResponse rows fetched from /api/patch-notes. Data types are copied from src/types/index.ts.
  */
 
-/** Publication state kept by the admin; the student pages only ever receive 'published' rows and never render it. */
+/** Publication state kept by the admin. Not rendered by either page; non-admins receive only published rows (findPublished, max 20), while admin sessions also receive drafts, shown identically. */
 export type PatchNoteStatus = 'draft' | 'published';
 
 /** One announcement as the API returns it (src/types/index.ts). */
@@ -14,7 +14,7 @@ export interface IPatchNoteResponse {
   _id: string;
   /** Row title (truncate) and detail <h1>. */
   title: string;
-  /** Body text; the list shows truncate(content, 100) + '...', the detail renders it whitespace-pre-wrap. */
+  /** Body text; the list shows truncate(content, 100) (first 100 chars + '...' only when longer), the detail renders it whitespace-pre-wrap. */
   content: string;
   /** Optional version label; the blue-100 / blue-700 pill renders only when set. */
   version?: string;
