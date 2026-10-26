@@ -14,7 +14,7 @@
   /* Each stage stands in for the viewport: a gray-50 dashboard page under the overlay. container-type: size lets
      the panels' 90vh / 85vh clamps measure the stage (cqh under the staged modifier). */
   .stage { position: relative; height: 240px; overflow: hidden; border-radius: 8px; background: var(--gray-50, #f9fafb); container-type: size; }
-  /* Page stand-in so the 50% alpha has something to show through (the opaque calendar overlay hides it). */
+  /* Page stand-in so the 50% alpha has something to show through. */
   .scenery { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
   .scenery__bar { height: 28px; border-radius: 6px; border: 1px solid var(--gray-200, #e5e7eb); background: var(--white, #ffffff); }
   .scenery__card { flex: 1 1 auto; border-radius: 8px; border: 1px solid var(--gray-200, #e5e7eb); background: var(--white, #ffffff); }
@@ -169,7 +169,7 @@
   <div class="cell">
     <div class="stage">
       <div class="scenery" aria-hidden="true"><div class="scenery__bar"></div><div class="scenery__card"></div></div>
-      <div class="cp-modal cp-modal--gutter cp-modal--opaque cp-modal--staged">
+      <div class="cp-modal cp-modal--gutter cp-modal--staged">
         <div class="cp-card cp-modal__panel cp-modal__panel--calendar-event cp-modal__panel--scroll">
           <div class="cp-card__content cp-modal__card-body">
             <div class="cp-modal__header cp-modal__header--calendar">
@@ -188,7 +188,7 @@
         </div>
       </div>
     </div>
-    <p class="cap">(e) calendar/page.tsx · bg-black bg-opacity-50 — bg-opacity-* no longer exists in Tailwind v4 (v4: bg-black/50), so the overlay is opaque black · Card max-w-lg, CardContent p-6, h3 text-xl navy · 취소 outline, 추가 navy</p>
+    <p class="cap">(e) calendar/page.tsx · bg-black/50 with the p-4 gutter · Card max-w-lg, CardContent p-6, h3 text-xl navy · 취소 outline, 추가 navy</p>
   </div>
 
 </div>

@@ -82,7 +82,7 @@ Create folders as needed (`mkdir -p`). Do not touch any other file. Do not write
 - Radii: `rounded` 4px (`radius-sm`), `rounded-md` 6px, `rounded-lg` 8px, `rounded-xl` 12px,
   `rounded-2xl` 16px, `rounded-full` 9999px, `rounded-[2px]` 2px (`radius-xs`).
 - Shadows (names are tokens): `shadow-sm` and bare `shadow` → `shadow-sm`; `shadow-md`, `shadow-lg`,
-  `shadow-xl`, `shadow-2xl`; `.shadow-glow`, `.card-hover` → `shadow-glow`, `shadow-card-hover`.
+  `shadow-xl`, `shadow-2xl`; `.shadow-glow` → `shadow-glow`.
 - **Borders under v4**: `border` = `1px solid currentColor` (NOT gray-200). So `Card`
   (`text-gray-900`) really draws a `gray-900` hairline; write `border: 1px solid var(--border-default, #101828)`
   unless a color class is present (`border-gray-300` → `var(--gray-300, #d1d5dc)`). `border-2` 2px,

@@ -8955,8 +8955,7 @@
 }
 
 /* ---------------------------------------------------------------- Event form modal
-   Overlay "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50": bg-opacity-*
-   was removed in Tailwind v4, so nothing lowers the alpha and the overlay renders OPAQUE black. Kept exact, flagged. */
+   Overlay "fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50". */
 .cp-calendar__overlay {
   position: fixed;
   inset: 0;
@@ -8965,7 +8964,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4, 16px);
-  background-color: var(--black, #000000);
+  background-color: var(--black-a50, #00000080);
 }
 /* <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto"> <CardContent className="p-6"> */
 .cp-card.cp-calendar__modal {
@@ -12040,12 +12039,6 @@
 /* AllPlansModal only: z-40, so its AnonymousPlanModal detail (z-50) can stack above it. */
 .cp-modal--under {
   z-index: var(--z-overlay, 40);
-}
-
-/* calendar/page.tsx: "bg-black bg-opacity-50". bg-opacity-* was removed in Tailwind v4 (the v4 spelling
-   is bg-black/50), so nothing lowers the alpha and the overlay renders OPAQUE black. Kept exact, flagged. */
-.cp-modal--opaque {
-  background-color: var(--black, #000000);
 }
 
 /* Preview-only modifier (not in the source): pin the overlay to a position: relative stage instead of the

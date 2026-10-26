@@ -2335,10 +2335,10 @@ export type ModalShellRecipe =
   | 'all-plans'       // AllPlansModal.tsx — rounded-xl shadow-2xl max-w-4xl, gray-50 bands, z-40
   | 'admin-form'      // admin/courses + admin/departments — rounded-2xl p-6 shadow-xl max-w-lg
   | 'admin-confirm'   // admin/departments — rounded-2xl p-6 shadow-xl max-w-sm
-  | 'calendar-event'; // calendar/page.tsx — Card panel, max-w-lg, opaque overlay
+  | 'calendar-event'; // calendar/page.tsx — Card panel, max-w-lg, p-4 gutter
 
-/** Overlay fill: bg-black/50 with or without the p-4 gutter, or the calendar's v3 `bg-black bg-opacity-50` that compiles to solid black under Tailwind v4. */
-export type ModalOverlayRecipe = 'black-a50' | 'black-a50-gutter' | 'opaque-black';
+/** Overlay fill: bg-black/50, with or without the p-4 gutter. */
+export type ModalOverlayRecipe = 'black-a50' | 'black-a50-gutter';
 
 /** The contract every shell shares, as the pages use it (not an interface in the source). */
 export interface ModalShellProps {

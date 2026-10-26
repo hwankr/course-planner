@@ -3,7 +3,7 @@
 This folder holds the working files behind the **Course Planner Design System** artifact, so a new session can finish it without the original conversation.
 
 - Artifact (the deliverable): https://claude.ai/artifact/VpB7z78jR5GSQTBuQdpCcy — type "Design System", private to its owner.
-- Built from: this repository at commit `b3e587f`, Tailwind CSS 4.1.18, lucide-react 0.563.0.
+- Built from: this repository at commit `013d3bc` (first built from `b3e587f`; `013d3bc` restored the calendar modal's 50% backdrop and removed unused globals.css helpers), Tailwind CSS 4.1.18, lucide-react 0.563.0.
 - Last published: see `ds/project/design-system.json` → `lastChange`.
 
 Nothing in this folder is part of the app. `tsconfig.json` and `eslint.config.mjs` exclude `design-system-work/` so it never reaches `next build` or `npm run lint`.
@@ -96,7 +96,7 @@ Rules from the Design System type, learned the hard way:
 ## Conventions to keep
 
 - Code is the truth. Values are exact Tailwind v4 values; a bare `border` is `1px solid currentColor` (`border-default`, gray-900 on Cards) — this is how the product renders, not a mistake to fix.
-- Source defects are documented in READMEs and token notes, never silently corrected (contrast misses, dead `animate-in` classes, the hero CTA gradient, the v3 `bg-opacity-50` overlay).
+- Source defects are documented in READMEs and token notes, never silently corrected (contrast misses, dead `animate-in` classes, the hero CTA gradient).
 - Every CSS value is `var(--token, exact-literal)`; `assemble.mjs` checks both the name and the literal.
 - Tailwind v4 semantics, checked with `tools/tw.mjs`: `space-y-*`/`space-x-*` are `.parent > :not(:last-child) { margin-bottom / margin-right }` with any child's own margin reproduced after it; real `:hover` rules live in `@media (hover: hover)`; `transition-colors` includes `outline-color`.
 - Contrast figures come from `tools/contrast.mjs` (half-up to one decimal, never rounded up onto a 3.0 / 4.5 / 7.0 threshold it misses); misses kept from the source read "kept, flagged".

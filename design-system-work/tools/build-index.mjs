@@ -35,7 +35,7 @@ const index = {
   assetGroups,
   blobs: existing ? (existing.blobs || {}) : {},
   docs: existing ? (existing.docs || { readme: 'project/README.md', sections: [] }) : { readme: 'project/README.md', sections: [] },
-  lastChange: { by, at: now, via: 'Claude Code · GitHub hwankr/course-planner@b3e587f', note },
+  lastChange: { by, at: now, via: 'Claude Code · GitHub hwankr/course-planner@013d3bc', note },
 };
 fs.writeFileSync(path.join(DS, 'design-system.json'), JSON.stringify(index, null, 2) + '\n');
 console.log('wrote design-system.json:', groups.map(g => `${g}=${assetGroups[g].order.length}`).join(' '));

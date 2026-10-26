@@ -8,12 +8,12 @@ Motion lives in two registers. Product screens (planner, forms, admin) move almo
 | --- | --- | --- |
 | `duration-fast` | 150ms | Every bare `transition-colors` (151 of 153 uses; 2 onboarding step labels add `duration-300`) — links, nav, chips, icon buttons |
 | `duration-base` | 200ms | Button and Input `transition-all duration-200`, `.drag-scroll-active`, compact column collapse |
-| `duration-slow` | 300ms | Card `transition-shadow duration-300`, scale-in / slide-up / slide-down (and the unused `.card-hover`) |
+| `duration-slow` | 300ms | Card `transition-shadow duration-300`, scale-in / slide-up / slide-down |
 | `duration-enter` | 500ms | `fadeInDown`, `slideInLeft`, `slideInRight` |
 | `duration-enter-long` | 600ms | `fadeIn`, `fadeInUp` (the common entrance, 17 uses, 8 of them profile cards), `bounceSoft` |
 | `duration-scroll` | 700ms | `.animate-on-scroll` reveal |
 | `duration-ambient` | 3s | `float`; loops: `pulseSoft` 2s, `shimmer` 2s, `gradientShift` 8s, `gradientFlow` 4s, `cursorBlink` 1s |
-| `ease-standard` | cubic-bezier(0.4, 0, 0.2, 1) | Tailwind default; `.animate-on-scroll` (and the unused `.card-hover`) |
+| `ease-standard` | cubic-bezier(0.4, 0, 0.2, 1) | Tailwind default; `.animate-on-scroll` |
 | `ease-out` | cubic-bezier(0, 0, 0.58, 1) | Every entrance utility (CSS keyword `ease-out both`) |
 | `ease-in-out` | cubic-bezier(0.42, 0, 0.58, 1) | `float`, `pulseSoft` (CSS keyword) |
 
@@ -47,7 +47,7 @@ Stagger with `.anim-delay-100` … `.anim-delay-700` (100 ms steps; the `anim-de
 
 ## Hover and press
 
-- Card: `shadow-sm` → `shadow-md` over 300 ms. globals.css also defines `.card-hover` (lift `translateY(−4px)`, `shadow-card-hover`), but no page applies it.
+- Card: `shadow-sm` → `shadow-md` over 300 ms.
 - Button: `active:scale-[0.98]`, 200 ms `transition-all`; the primary gradient darkens to `yu-navy-hover` → `yu-navy` and the shadow grows `shadow-sm` → `shadow-md`.
 - Links and icon buttons: color only, 150 ms.
 - Compact status pill: `hover:ring-2 hover:ring-offset-1 hover:ring-gray-300`.

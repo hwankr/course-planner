@@ -35,12 +35,6 @@
   z-index: var(--z-overlay, 40);
 }
 
-/* calendar/page.tsx: "bg-black bg-opacity-50". bg-opacity-* was removed in Tailwind v4 (the v4 spelling
-   is bg-black/50), so nothing lowers the alpha and the overlay renders OPAQUE black. Kept exact, flagged. */
-.cp-modal--opaque {
-  background-color: var(--black, #000000);
-}
-
 /* Preview-only modifier (not in the source): pin the overlay to a position: relative stage instead of the
    viewport. The vh clamps on the panels become cqh when the stage declares container-type: size. */
 .cp-modal--staged {

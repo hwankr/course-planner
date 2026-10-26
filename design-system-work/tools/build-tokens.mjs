@@ -28,15 +28,11 @@ const colors = [
   c('yu-blue-dark', '#1a4a8f', 'Hover fill of the help and feedback primary buttons (hover:bg-[#1a4a8f]), the feedback mail tile gradient end and the terms back-link hover. 8.7:1 on white.'),
   c('yu-blue-dark-alt', '#1a4a94', 'Hover fill of the admin requirements primary button (hover:bg-[#1a4a94]). Near-duplicate of yu-blue-dark (#1a4a8f) — treat as the same role; prefer yu-blue-dark in new work.'),
   c('yu-theme-color', '#154878', 'PWA theme_color from manifest.ts: browser chrome and status bar in the installed app. Not used in page styles.'),
-  c('yu-cyan-light', '#4dd9f0', 'First and last stop of .text-gradient-typing (the landing hero typewriter line, page.tsx:211); also the middle stop of .text-gradient-light, which no page applies.'),
-  c('yu-cyan-lighter', '#80e8ff', 'Final stop of .text-gradient-light (yu-cyan → yu-cyan-light → yu-cyan-lighter), defined in globals.css but applied by no page. Kept for completeness.'),
+  c('yu-cyan-light', '#4dd9f0', 'First and last stop of .text-gradient-typing (the landing hero typewriter line, page.tsx:211).'),
   c('yu-tint-sky', '#f0f7ff', 'Landing page light gradient via stop (from-white via-[#f0f7ff] to-[#e8f4fd]) behind the closing CTA section (section#features, 수강 계획을 시작하세요); the feature rows above sit on plain white.'),
   c('yu-tint-ice', '#e8f4fd', 'Landing page light gradient end stop (to-[#e8f4fd]).'),
   c('gradient-typing-blue', '#60a5fa', 'Stop of .text-gradient-typing only (landing hero typewriter headline).'),
   c('gradient-typing-violet', '#a78bfa', 'Stop of .text-gradient-typing only (landing hero typewriter headline). The one violet in the brand palette; do not reuse elsewhere.'),
-  c('gradient-warm-amber', '#f59e0b', 'Stop of .text-gradient-warm, defined in globals.css but not used by any page. Kept for completeness.'),
-  c('gradient-warm-red', '#ef4444', 'Stop of .text-gradient-warm (unused in pages).'),
-  c('gradient-warm-pink', '#ec4899', 'Stop of .text-gradient-warm (unused in pages).'),
   c('footer-navy', '#0d2654', 'Footer body background (bg-[#0d2654]) — darker than yu-navy; the landing hero and flow gradients start darker still (yu-navy-deepest, landing-navy-stop). White, gray-400 and gray-500 text sit on it; gray-500 fine print reaches only about 3.1:1 (kept exact, flagged).'),
   c('landing-navy-stop', '#0f2847', 'Landing page diagonal section gradient start (from-[#0f2847] to-[#153974], bg-gradient-to-br, clip-diagonal-both).'),
   c('progress-hatch-dark', '#93c5fd', 'Dark stripe of PLANNED_STRIPES in RequirementsSummary: the hatched 예정 (planned credits) segment of every StackedBar (total, 전공, 핵심 sub-rows, 복수전공, 부전공, 교양) and its legend swatch (repeating-linear-gradient 135deg, 3px stripes repeating every 6px). A Tailwind v3 blue-300 value kept as a literal.'),
@@ -66,8 +62,6 @@ const colors = [
   c('yu-cyan-a40', '#00aaca66', '.text-gradient-typing drop-shadow (0 0 20px rgba(0,170,202,0.4)) under the hero typewriter line.'),
   c('yu-navy-deepest-a60', '#0a1e3d99', 'Hero wash gradient start (from-[#0a1e3d]/60) over the screenshot mosaic.'),
   c('yu-navy-deepest-a80', '#0a1e3dcc', 'Hero wash gradient end (to-[#0a1e3d]/80).'),
-  c('white-a85', '#ffffffd9', '.glass-strong background (rgba(255,255,255,0.85)) with a 20px backdrop blur. No page applies .glass-strong; kept as defined in globals.css.'),
-  c('white-a50', '#ffffff80', '.glass-strong 1px border (unused helper, see white-a85).'),
   c('white-a30', '#ffffff4d', '.glass 1px border; active:bg-white/30 on the lightbox close button.'),
   c('white-a15', '#ffffff26', '.divider-horizontal-gradient mid stop (rgba(255,255,255,0.15)) on the dark flow band.'),
   c('white-a6', '#ffffff0f', '.deco-number-light outline stroke on navy (rgba(255,255,255,0.06)).'),
@@ -89,8 +83,8 @@ const colors = [
   c('white-a40', alpha(tw.white, 0.4), 'text-white/40: the faintest line on dark surfaces, the hero notice under the CTAs (비회원은 데이터가 저장되지 않습니다, text-sm); the footer copyright is gray-500. Decorative-grade contrast only.'),
   c('white-a20', alpha(tw.white, 0.2), 'bg-white/20: the three blurred floating orbs on the login/register brand panel and the ZoomableImage close-button hover; border-white/20: the hero badge outline and the graduation-guide lightbox image frame. rgba(255,255,255,0.2) is also the mid stop of .divider-vertical-gradient in the dark flow section.'),
   c('white-a10', alpha(tw.white, 0.1), 'bg-white/10, border-white/10: the quietest glass fill and hairline on dark surfaces; the hero badge and the lightbox close button at rest.'),
-  p('black', 'Mostly through alpha: overlays and the .bg-dots / .bg-grid patterns. One solid use: the calendar event-form modal backdrop is bg-black bg-opacity-50, and bg-opacity-* does not exist in Tailwind v4, so that backdrop renders opaque black (source bug, flagged).'),
-  c('black-a50', alpha(tw.black, 0.5), 'bg-black/50: modal backdrop (7 uses).'),
+  p('black', 'Only through alpha: modal overlays (black-a50) and the .bg-dots / .bg-grid patterns.'),
+  c('black-a50', alpha(tw.black, 0.5), 'bg-black/50: modal backdrop (8 uses, including the calendar event form).'),
   c('black-a40', alpha(tw.black, 0.4), 'bg-black/40: the lighter backdrop of the admin requirements form and delete-confirm modals; also the mobile 탭하여 확대 hint pill on ZoomableImage thumbnails (the zoom lightbox itself is black-a95).'),
   c('black-a10', alpha(tw.black, 0.1), 'bg-black/10: hover wash over images; bg-black/0 is its resting state.'),
   c('black-a95', alpha(tw.black, 0.95), 'bg-black/95: the ZoomableImage lightbox backdrop.'),
@@ -369,7 +363,6 @@ const shadow = { note: 'Tailwind v4 shadows plus two custom ones from globals.cs
   c('shadow-xl', '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)', 'Modal panels (CustomCourseForm and the admin dialogs).'),
   c('shadow-2xl', '0 25px 50px -12px rgb(0 0 0 / 0.25)', 'The AllPlansModal and AnonymousPlanModal panels (its only 2 uses); the landing screenshots and the auth form panel carry no shadow-2xl.'),
   c('shadow-glow', '0 4px 24px rgba(21, 57, 116, 0.2), 0 0 48px rgba(0, 170, 202, 0.08)', '.shadow-glow: the closing-section 바로 시작하기 Button (size lg) on the landing page, its only use (the hero CTA uses shadow-lg shadow-black/20) — a navy glow with a faint cyan halo.'),
-  c('shadow-card-hover', '0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04)', '.card-hover:hover in globals.css (lift 4px plus this shadow). No page applies .card-hover; kept as defined.'),
 ] };
 
 // ---------------------------------------------------------------- size (control and icon sizes)
@@ -403,14 +396,14 @@ const size = { note: 'Fixed sizes from h-*/w-* utilities and max-w-* containers.
 const duration = { note: 'Durations from transition/animation utilities and globals.css keyframes.', tokens: [
   c('duration-fast', '150ms', 'Tailwind default transition (transition-colors without a duration: 151 of 153 uses; the 2 onboarding step labels add duration-300).'),
   c('duration-base', '200ms', 'Button and Input transition-all duration-200; .drag-scroll-active fade.'),
-  c('duration-slow', '300ms', 'Card shadow transition; animate-scale-in, slide-up, slide-down; the unused .card-hover.'),
+  c('duration-slow', '300ms', 'Card shadow transition; animate-scale-in, slide-up, slide-down.'),
   c('duration-enter', '500ms', 'fadeInDown, slideInLeft, slideInRight entrances.'),
   c('duration-enter-long', '600ms', 'fadeIn and fadeInUp entrances (animate-fade-in-up, 17 uses); bounceSoft.'),
   c('duration-scroll', '700ms', '.animate-on-scroll reveal (opacity and transform).'),
   c('duration-ambient', '3s', 'float loop; pulseSoft is 2s, gradientShift 8s, shimmer 2s, cursorBlink 1s.'),
 ] };
 const easing = { note: 'Timing functions used by the app.', tokens: [
-  c('ease-standard', 'cubic-bezier(0.4, 0, 0.2, 1)', 'Tailwind default and the .animate-on-scroll curve (also the unused .card-hover).'),
+  c('ease-standard', 'cubic-bezier(0.4, 0, 0.2, 1)', 'Tailwind default and the .animate-on-scroll curve.'),
   c('ease-out', 'cubic-bezier(0, 0, 0.58, 1)', 'The CSS ease-out keyword, used by every entrance keyframe class in globals.css (fadeIn, fadeInUp, fadeInDown, slideIn*, scaleIn, slideUp/Down: ease-out both). Not Tailwind\'s ease-out utility (cubic-bezier(0, 0, 0.2, 1)), which no element uses.'),
   c('ease-in-out', 'cubic-bezier(0.42, 0, 0.58, 1)', 'The CSS ease-in-out keyword, used by the float and pulseSoft loops in globals.css. Not Tailwind\'s ease-in-out utility (cubic-bezier(0.4, 0, 0.2, 1) = ease-standard).'),
 ] };
@@ -435,7 +428,7 @@ const tokens = {
   meta: {
     source: 'github',
     repo: 'hwankr/course-planner',
-    ref: 'claude/design-system-extraction-t0lw70@b3e587f',
+    ref: 'claude/design-system-extraction-t0lw70@013d3bc',
     package: '.',
     tailwind: '4.1.18 (no tailwind.config; defaults + arbitrary values)',
     paths: {
@@ -444,7 +437,7 @@ const tokens = {
       assets: ['public/yu-logo.svg', 'public/yu-logo-white.svg', 'public/icon-*.png', 'src/app/apple-icon.png', 'src/app/opengraph-image.png', 'public/help/*.png'],
       docs: ['CLAUDE.md', 'README.md'],
     },
-    synced: '2026-10-22',
+    synced: '2026-10-26',
   },
   color: {
     themes: [{ id: 'light', name: 'Light' }],

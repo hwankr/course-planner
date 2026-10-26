@@ -581,8 +581,8 @@
   },
   "lastChange": {
     "by": "hwankr",
-    "at": "2026-10-26T04:22:46.017Z",
-    "via": "Claude Code · GitHub hwankr/course-planner@b3e587f",
-    "note": "Verified the last 15 cards line by line; audited the bundle against Tailwind 4.1.18 output (v4 sibling spacing, hover media, transitions); recomputed contrast; fact-checked section docs and token notes"
+    "at": "2026-10-26T06:44:01.416Z",
+    "via": "Claude Code · GitHub hwankr/course-planner@013d3bc",
+    "note": "Synced with app fix 013d3bc: calendar modal backdrop is now bg-black/50; removed the unused globals.css helpers and their tokens"
   }
 }
