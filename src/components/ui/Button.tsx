@@ -4,27 +4,45 @@ import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
+// 채운(primary) 버튼은 화면에 하나, 나머지는 글자 버튼. 그림자·그라데이션 없음.
+// 전환은 색과 투명도만 (150–200ms ease-out).
+const PRIMARY = 'rounded-[12px] bg-primary text-white hover:bg-primary-hover';
+const OUTLINE = 'rounded-[12px] border border-line-3 bg-white text-ink hover:bg-fill';
+const TEXT = 'rounded-[8px] bg-transparent text-ink hover:text-primary';
+const TEXT_DANGER = 'rounded-[8px] bg-transparent text-negative hover:text-negative-hover';
+const TEXT_PRIMARY = 'rounded-[8px] bg-transparent text-primary hover:text-primary-hover';
+
 const buttonVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center gap-1.5 whitespace-nowrap font-semibold transition-colors duration-150 ease-out cursor-pointer disabled:pointer-events-none disabled:opacity-40',
   {
     variants: {
       variant: {
-        default: 'bg-gradient-to-r from-[#153974] to-[#3069B3] text-white shadow-sm hover:from-[#003E7E] hover:to-[#153974] hover:shadow-md',
-        destructive: 'bg-red-600 text-white hover:bg-red-700',
-        outline: 'border border-gray-300 bg-white hover:bg-gray-50',
-        secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
-        ghost: 'hover:bg-gray-100',
-        link: 'text-[#153974] underline-offset-4 hover:underline',
+        primary: PRIMARY,
+        outline: OUTLINE,
+        text: TEXT,
+        textDanger: TEXT_DANGER,
+        textPrimary: TEXT_PRIMARY,
+        // 기존 호출처 호환 alias
+        default: PRIMARY,
+        destructive: TEXT_DANGER,
+        secondary: 'rounded-[10px] bg-fill text-ink hover:bg-line-2',
+        ghost: TEXT,
+        link: `${TEXT_PRIMARY} hover:underline underline-offset-4`,
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10',
+        sm: 'h-9 px-3 text-[14px]',
+        default: 'h-10 px-4 text-[14px]',
+        lg: 'h-12 px-[22px] text-[15px]',
+        cta: 'h-14 px-6 text-[16px]',
+        icon: 'h-10 w-10 text-[14px]',
       },
     },
+    compoundVariants: [
+      // 글자 버튼은 좌우 여백을 줄인다 (디자인: padding 0 10px, 높이 36–40)
+      { variant: ['text', 'textDanger', 'textPrimary', 'ghost', 'destructive', 'link'], size: ['sm', 'default'], className: 'px-2.5' },
+    ],
     defaultVariants: {
-      variant: 'default',
+      variant: 'primary',
       size: 'default',
     },
   }
@@ -43,15 +61,17 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || isLoading}
+        aria-busy={isLoading || undefined}
         {...props}
       >
         {isLoading ? (
           <>
             <svg
-              className="mr-2 h-4 w-4 animate-spin"
+              className="h-4 w-4 animate-spin"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
+              aria-hidden="true"
             >
               <circle
                 className="opacity-25"

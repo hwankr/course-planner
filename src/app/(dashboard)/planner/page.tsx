@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { DndContext, DragOverlay, pointerWithin, closestCenter, useSensor, useSensors, MouseSensor, TouchSensor, type DragStartEvent, type DragEndEvent, type CollisionDetection } from '@dnd-kit/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { useMyPlan, useAddCourse, useRemoveCourse, useMoveCourse, useAddSemester, useRemoveSemester, useClearSemester, useResetPlan } from '@/hooks/usePlans';
 import { usePlannerExport } from '@/hooks/usePlannerExport';
-import { Download } from 'lucide-react';
+import { ChevronRight, Download, Plus } from 'lucide-react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
 import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
@@ -14,14 +14,17 @@ import { useAutoScrollOnDrag, smoothScrollTo } from '@/hooks/useAutoScrollOnDrag
 import { CourseCard } from '@/components/features/CourseCard';
 import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
+import { SEMESTER_META_WRAP_CLASS, SemesterMeta } from '@/components/features/SemesterMeta';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
 import { AddSemesterDialog } from '@/components/features/AddSemesterDialog';
 import { RequirementsSummary } from '@/components/features/RequirementsSummary';
-import { Button } from '@/components/ui';
+import { Button, PageHeader, SectionHeader } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 import type { Term, ICourse, RequirementCategory } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
-import { graduationRequirementKeys } from '@/hooks/useGraduationRequirements';
+import { graduationRequirementKeys, useGraduationRequirement } from '@/hooks/useGraduationRequirements';
 import { computeGraduationDelta, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
 import type { GraduationRequirementInput } from '@/types';
 import { useSession } from 'next-auth/react';
@@ -45,6 +48,44 @@ const smartCollision: CollisionDetection = (args) => {
   }
   return centerCollisions;
 };
+
+// md(768px) 이상은 데스크톱 레이아웃(사이드바 + 학기 그리드 + 과목 리스트), 미만은 모바일 레이아웃
+const DESKTOP_QUERY = '(min-width: 768px)';
+function subscribeDesktop(onChange: () => void) {
+  const mql = window.matchMedia(DESKTOP_QUERY);
+  mql.addEventListener('change', onChange);
+  return () => mql.removeEventListener('change', onChange);
+}
+function useIsDesktop() {
+  return useSyncExternalStore(
+    subscribeDesktop,
+    () => window.matchMedia(DESKTOP_QUERY).matches,
+    () => true
+  );
+}
+
+type YearSemester = { courses: Array<{ credits: number; status: 'planned' | 'enrolled' | 'completed' | 'failed' }> };
+
+/** 학년 머리줄 메타: "24학점 · 수강중 15 · 예정 9" / "21학점 · 모두 이수" */
+function getYearMeta(semesters: YearSemester[]) {
+  const courses = semesters.flatMap((s) => s.courses);
+  const sum = (status: string) => courses.filter((c) => c.status === status).reduce((t, c) => t + c.credits, 0);
+  const parts = [`${courses.reduce((t, c) => t + c.credits, 0)}학점`];
+  if (courses.length > 0 && courses.every((c) => c.status === 'completed')) {
+    parts.push('모두 이수');
+  } else {
+    const enrolled = sum('enrolled');
+    const planned = sum('planned');
+    const failed = courses.filter((c) => c.status === 'failed').length;
+    if (enrolled) parts.push(`수강중 ${enrolled}`);
+    if (planned) parts.push(`예정 ${planned}`);
+    if (failed) parts.push(`재수강 ${failed}과목`);
+  }
+  return parts.join(' · ');
+}
+
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 // Helper to parse droppableId
 function parseSemesterId(droppableId: string): { year: number; term: Term } | null {
@@ -74,6 +115,18 @@ export default function PlannerPage() {
     ? guestSecondaryDepartmentName
     : departments.find(d => d._id === session?.user?.secondaryDepartment)?.name;
 
+  // 졸업 요건 기준 연도 (요건이 없으면 커리큘럼 연도)
+  const { data: requirementData } = useGraduationRequirement();
+  const guestCurriculumYear = useGuestProfileStore((s) => s.curriculumYear);
+  const requirementYear = requirementData?.requirementYear
+    ?? (isGuest ? guestCurriculumYear : session?.user?.curriculumYear)
+    ?? DEFAULT_CURRICULUM_YEAR;
+
+  const isDesktop = useIsDesktop();
+  // 모바일: 선택 학기 화면 ↔ 전체 학기 목록, 과목 리스트 바텀 시트
+  const [mobileShowAll, setMobileShowAll] = useState(false);
+  const [isCatalogSheetOpen, setIsCatalogSheetOpen] = useState(false);
+
   const [isAddSemesterOpen, setIsAddSemesterOpen] = useState(false);
   const [semesterYearFilter, setSemesterYearFilter] = useState<number | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -94,6 +147,7 @@ export default function PlannerPage() {
   const requirementsSummaryRef = useRef<HTMLDivElement>(null);
   const semesterGridRef = useRef<HTMLDivElement>(null);
   const courseCatalogRef = useRef<HTMLDivElement>(null);
+  const catalogSheetTriggerRef = useRef<HTMLButtonElement>(null);
   const scrollBackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const exportRef = useRef<HTMLDivElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
@@ -147,6 +201,11 @@ export default function PlannerPage() {
       }
     },
   });
+
+  // 내보내기 캡처 중에는 화면 폭과 관계없이 데스크톱 레이아웃으로 그린다
+  const useDesktopLayout = isDesktop || isExporting;
+  // 시트는 모바일 레이아웃에서만 그려지므로 포커스 트랩·키 처리도 실제로 그려진 동안에만 건다
+  const isCatalogSheetShown = isCatalogSheetOpen && !useDesktopLayout;
 
   // Auto-scroll to semester grid on mobile drag
   const { handleDragStartScroll, handleDragEndRestore, isDragScrollActiveRef } = useAutoScrollOnDrag(semesterGridRef, courseCatalogRef);
@@ -361,16 +420,74 @@ export default function PlannerPage() {
     };
   }, [showExportMenu]);
 
-  // Escape key clears semester focus
+  // Escape key closes the mobile catalog sheet first, otherwise clears semester focus
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      // 시트 안의 모달(커스텀 과목 등)이 먼저 Escape를 처리했으면 건너뛴다
+      if (e.key === 'Escape' && !e.defaultPrevented) {
+        if (isCatalogSheetShown) {
+          setIsCatalogSheetOpen(false);
+          return;
+        }
         setFocusedSemester(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setFocusedSemester]);
+  }, [setFocusedSemester, isCatalogSheetShown]);
+
+  // Mobile catalog sheet: focus the search input on open, keep Tab inside, return focus to the trigger on close
+  useEffect(() => {
+    if (!isCatalogSheetShown) return;
+    const sheet = courseCatalogRef.current;
+    if (!sheet) return;
+    const trigger = catalogSheetTriggerRef.current;
+    const getFocusables = () =>
+      Array.from(sheet.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+        (el) => el.getClientRects().length > 0
+      );
+
+    const search = sheet.querySelector<HTMLInputElement>('input[type="search"]');
+    (search ?? getFocusables()[0] ?? sheet).focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 시트 안에 열린 모달이 있으면 그 모달이 Tab을 가둔다
+      if (e.key !== 'Tab' || sheet.querySelector('[aria-modal="true"]')) return;
+      const items = getFocusables();
+      if (items.length === 0) {
+        e.preventDefault();
+        sheet.focus();
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      if (e.shiftKey && (active === first || active === sheet || !sheet.contains(active))) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || !sheet.contains(active))) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (trigger?.isConnected) trigger.focus();
+    };
+  }, [isCatalogSheetShown]);
+
+  // 화면 회전·창 확대로 md 이상이 되면 시트 DOM이 사라지므로 열림 상태도 닫는다.
+  // 레이아웃 전환 렌더가 먼저 일어나도 변화 이벤트를 놓치지 않도록 열림 상태 기준으로 구독한다.
+  useEffect(() => {
+    if (!isCatalogSheetOpen) return;
+    const mediaQuery = window.matchMedia(DESKTOP_QUERY);
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setIsCatalogSheetOpen(false);
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, [isCatalogSheetOpen]);
 
   // Cleanup scroll-back timeout on unmount
   useEffect(() => {
@@ -623,7 +740,8 @@ export default function PlannerPage() {
           }
         })();
         // Auto-scroll back to catalog on touch devices after successful placement
-        if (wasDragScrollActive && courseCatalogRef.current) {
+        // (모바일 바텀 시트는 고정 위치라 되돌아갈 스크롤 위치가 없다)
+        if (wasDragScrollActive && courseCatalogRef.current && isDesktop) {
           scrollBackTimeoutRef.current = setTimeout(() => {
             const el = courseCatalogRef.current;
             if (el) {
@@ -708,7 +826,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, moveCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast, handleDragEndRestore, isDragScrollActiveRef]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, moveCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast, handleDragEndRestore, isDragScrollActiveRef, isDesktop]
   );
 
   // Handle remove course from semester column
@@ -902,11 +1020,21 @@ export default function PlannerPage() {
     [activePlan, updateStatusMutation]
   );
 
+  // Remove a course from the plan wherever it is (catalog "✓ 추가됨")
+  const handleRemoveFromPlan = useCallback(
+    (courseId: string) => {
+      const semester = activePlan?.semesters.find((s) => s.courses.some((c) => c.id === courseId));
+      if (!semester) return;
+      void handleRemoveCourse(semester.year, semester.term, courseId);
+    },
+    [activePlan, handleRemoveCourse]
+  );
+
   // Loading state
   if (planLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#3069B3]"></div>
+      <div role="status" aria-label="계획을 불러오는 중" className="flex min-h-[400px] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line-2 border-t-primary" />
       </div>
     );
   }
@@ -914,49 +1042,123 @@ export default function PlannerPage() {
   // Error state
   if (planError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-        <p className="text-red-500 mb-4">계획을 불러오는데 실패했습니다.</p>
-        <Button onClick={() => window.location.reload()}>다시 시도</Button>
+      <div role="alert" className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
+        <p className="m-0 text-[15px] font-medium text-negative">계획을 불러오는데 실패했습니다.</p>
+        <Button size="lg" onClick={() => window.location.reload()}>다시 시도</Button>
       </div>
     );
   }
 
+  const hasSemesters = Boolean(activePlan && activePlan.semesters.length > 0);
+  const secondaryLabel = headerMajorType !== 'single' && secondaryDepartmentName
+    ? `${headerMajorType === 'double' ? '복수전공' : '부전공'} ${secondaryDepartmentName}`
+    : null;
+  const headerCaption = departmentName ? (
+    <>
+      {departmentName}
+      {secondaryLabel && <> · {secondaryLabel}</>} · {requirementYear}년 졸업 요건 기준
+    </>
+  ) : (
+    <Link href="/profile" className="font-semibold text-primary hover:text-primary-hover">
+      학과를 설정해주세요
+    </Link>
+  );
+
+  const showMobileFocused = !useDesktopLayout && !!focusedSemester && !mobileShowAll;
+  const focusedSemesterData = focusedSemester && activePlan
+    ? activePlan.semesters.find((s) => s.year === focusedSemester.year && s.term === focusedSemester.term)
+    : undefined;
+
+  const yearTabs = semestersByYear.size > 0 && (
+    <div
+      data-export-ignore
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-line"
+    >
+      <div role="group" aria-label="학년 필터" className="-mb-px flex gap-6 overflow-x-auto">
+        {[null, ...Array.from(semestersByYear.keys()).sort()].map((y) => {
+          const active = semesterYearFilter === y;
+          return (
+            <button
+              key={y ?? 'all'}
+              type="button"
+              onClick={() => setSemesterYearFilter(y)}
+              aria-pressed={active}
+              className={cn(
+                'h-11 shrink-0 border-b-2 px-0.5 text-[15px] transition-colors duration-150 ease-out',
+                active ? 'border-ink font-semibold text-ink' : 'border-transparent font-medium text-ink-2 hover:text-ink'
+              )}
+            >
+              {y ? `${y}학년` : '전체'}
+            </button>
+          );
+        })}
+      </div>
+      <span className="hidden pb-2 text-[13px] leading-[18px] text-ink-2 sm:inline md:pb-0">
+        학기 이름을 누르면 선택, 상태를 누르면 예정 ↔ 이수
+      </span>
+    </div>
+  );
+
+  const yearBlocks = Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => (
+    <div key={year} className="flex flex-col gap-4">
+      <SectionHeader title={`${year}학년`} meta={getYearMeta(semesters)} />
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-x-10 gap-y-6">
+        {semesters.map((semester) => (
+          <SemesterColumn
+            key={`${semester.year}-${semester.term}`}
+            semester={semester}
+            isFocused={focusedSemester?.year === semester.year && focusedSemester?.term === semester.term}
+            onFocus={() => {
+              handleSemesterFocus(semester.year, semester.term);
+              setMobileShowAll(false);
+            }}
+            onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
+            onDelete={() => handleDeleteSemester(semester.year, semester.term)}
+            onClear={() => handleClearSemester(semester.year, semester.term)}
+            onStatusChange={handleStatusChange}
+            focusHint={useDesktopLayout ? undefined : '과목 추가를 누르면 여기에 추가돼요'}
+          />
+        ))}
+      </div>
+    </div>
+  ));
+
+  const addSemesterButton = (
+    <button
+      type="button"
+      data-export-ignore
+      onClick={handleAddSemester}
+      className="inline-flex h-11 items-center gap-1.5 self-start text-[15px] font-semibold text-ink transition-colors duration-150 ease-out hover:text-primary"
+    >
+      <Plus aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
+      학기 추가
+    </button>
+  );
+
+  const renderCatalog = (headerAction?: React.ReactNode) => (
+    <CourseCatalog
+      planCourseIds={planCourseIds}
+      onClickAdd={handleClickAdd}
+      onRemove={handleRemoveFromPlan}
+      focusedSemester={focusedSemester}
+      isAddingCourse={addCourseMutation.isPending}
+      headerAction={headerAction}
+      className="h-full"
+    />
+  );
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">수강 계획</h1>
-          <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {departmentName ? (
-              <>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]">
-                  {departmentName}
-                </span>
-                {headerMajorType !== 'single' && secondaryDepartmentName && (
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                    headerMajorType === 'double'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-orange-100 text-orange-700'
-                  }`}>
-                    {headerMajorType === 'double' ? '복수전공' : '부전공'}: {secondaryDepartmentName}
-                  </span>
-                )}
-              </>
-            ) : (
-              <Link href="/profile" className="text-xs text-gray-400 hover:text-[#153974] underline">
-                학과를 설정해주세요
-              </Link>
-            )}
-          </div>
-          <p data-export-ignore className="text-gray-600 mt-1 text-sm sm:text-base">학기를 클릭하여 포커스 후, 과목 리스트에서 과목을 추가하세요.</p>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          {/* Export Button */}
-          {activePlan && activePlan.semesters.length > 0 && (
+    <div className="flex flex-col">
+      <PageHeader
+        title="수강 계획"
+        description={headerCaption}
+        className="pb-6 md:pb-7"
+        actions={hasSemesters ? (
+          <>
             <div ref={exportMenuRef} className="relative">
               <Button
-                variant="outline"
+                variant="text"
+                size="sm"
                 onClick={() => {
                   if (isGuest) {
                     useToastStore.getState().addToast({
@@ -969,30 +1171,39 @@ export default function PlannerPage() {
                   setShowExportMenu(!showExportMenu);
                 }}
                 disabled={isExporting}
-                className="text-sm"
+                aria-haspopup="menu"
+                aria-expanded={showExportMenu}
+                className="-ml-2.5 h-11 md:ml-0 md:h-9"
               >
                 {isExporting ? (
-                  <span className="flex items-center gap-1">
-                    <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-gray-600"></span>
+                  <>
+                    <span aria-hidden="true" className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-line-2 border-t-ink" />
                     내보내는 중...
-                  </span>
+                  </>
                 ) : (
-                  <span className="flex items-center gap-1">
-                    <Download className="w-4 h-4" />
+                  <>
+                    <Download aria-hidden="true" className="h-4 w-4" />
                     내보내기
-                  </span>
+                  </>
                 )}
               </Button>
               {showExportMenu && (
-                <div className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 bg-white border rounded-lg shadow-lg py-1 z-50 min-w-[140px]">
+                <div
+                  role="menu"
+                  className="absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-none border border-line-2 bg-white py-1.5 shadow-float sm:right-0 sm:left-auto"
+                >
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                    type="button"
+                    role="menuitem"
+                    className="flex h-10 w-full items-center px-3.5 text-left text-[14px] font-medium text-ink transition-colors duration-150 ease-out hover:bg-fill"
                     onClick={() => { exportAsPng(); setShowExportMenu(false); }}
                   >
                     PNG 이미지
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                    type="button"
+                    role="menuitem"
+                    className="flex h-10 w-full items-center px-3.5 text-left text-[14px] font-medium text-ink transition-colors duration-150 ease-out hover:bg-fill"
                     onClick={() => { exportAsPdf(); setShowExportMenu(false); }}
                   >
                     PDF 문서
@@ -1000,20 +1211,18 @@ export default function PlannerPage() {
                 </div>
               )}
             </div>
-          )}
-          {/* Reset Plan Button */}
-          {activePlan && activePlan.semesters.length > 0 && (
             <Button
-              variant="outline"
+              variant="textDanger"
+              size="sm"
               onClick={handleResetPlan}
               isLoading={resetPlanMutation.isPending}
-              className="text-sm text-red-600 border-red-300 hover:bg-red-50"
+              className="h-11 md:h-9"
             >
               초기화
             </Button>
-          )}
-        </div>
-      </div>
+          </>
+        ) : undefined}
+      />
 
       {/* Drag and Drop Context */}
       {activePlan && (
@@ -1023,138 +1232,167 @@ export default function PlannerPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="space-y-6" ref={exportRef}>
+          <div ref={exportRef} className="flex flex-col bg-white">
             {/* Export-only header (visible only during capture) */}
             {isExporting && (
-              <div className="pb-2">
-                <h1 className="text-xl font-bold text-gray-900">수강 계획</h1>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {departmentName && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#153974]/10 text-[#153974]">
-                      {departmentName}
-                    </span>
-                  )}
-                  {headerMajorType !== 'single' && secondaryDepartmentName && (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      headerMajorType === 'double' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
-                    }`}>
-                      {headerMajorType === 'double' ? '복수전공' : '부전공'}: {secondaryDepartmentName}
-                    </span>
-                  )}
-                </div>
+              <div className="flex flex-col gap-1.5 pb-7">
+                <h1 className="m-0 text-[26px] leading-[34px] font-bold tracking-[-0.02em] text-ink">수강 계획</h1>
+                {departmentName && (
+                  <p className="m-0 text-[14px] leading-5 text-ink-2">
+                    {departmentName}
+                    {secondaryLabel && <> · {secondaryLabel}</>} · {requirementYear}년 졸업 요건 기준
+                  </p>
+                )}
               </div>
             )}
 
-            {/* Requirements Summary Widget */}
+            {/* Requirements Summary */}
             <div ref={requirementsSummaryRef}>
               <RequirementsSummary />
             </div>
 
-            {/* Course Catalog - Full Width Top Row */}
-            <div ref={courseCatalogRef} data-export-ignore style={{ scrollMarginTop: '72px' }}>
-              <CourseCatalog
-                planCourseIds={planCourseIds}
-                onClickAdd={handleClickAdd}
-                focusedSemester={focusedSemester}
-                isAddingCourse={addCourseMutation.isPending}
-              />
-            </div>
+            {useDesktopLayout ? (
+              <div className="flex flex-col xl:flex-row xl:items-start">
+                {/* Semester Grid */}
+                <section
+                  ref={semesterGridRef}
+                  aria-label="학기별 계획"
+                  className="flex min-w-0 flex-col gap-9 pt-6 xl:flex-[999_1_560px] xl:pr-10"
+                >
+                  {yearTabs}
+                  {yearBlocks}
+                  {!hasSemesters && (
+                    <p className="m-0 text-[15px] font-medium text-ink-2">아직 학기가 없어요. 학기를 추가해 계획을 시작하세요.</p>
+                  )}
+                  {addSemesterButton}
+                </section>
 
-            {/* Semester Grid - Full Width Bottom Row */}
-            <div ref={semesterGridRef} className="space-y-4">
-              {/* Year filter for semester grid */}
-              {semestersByYear.size > 0 && (
-                <div data-export-ignore className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-                  <span className="text-[11px] font-medium text-gray-400 flex-shrink-0">학년</span>
-                  {[null, ...Array.from(semestersByYear.keys()).sort()].map((y) => (
+                {/* Course Catalog */}
+                <aside
+                  ref={courseCatalogRef}
+                  data-export-ignore
+                  aria-label="과목 리스트"
+                  style={{ scrollMarginTop: '72px' }}
+                  className={cn(
+                    'order-first flex h-[560px] min-w-0 flex-col border-b border-line-2 pt-6 pb-6',
+                    'xl:sticky xl:top-0 xl:order-none xl:h-auto xl:max-h-screen xl:max-w-[340px] xl:flex-[1_1_300px] xl:border-b-0 xl:border-l xl:border-line xl:pb-6 xl:pl-8',
+                    isExporting && 'hidden'
+                  )}
+                >
+                  {renderCatalog()}
+                </aside>
+              </div>
+            ) : (
+              <>
+                <div aria-hidden="true" className="-mx-5 h-2.5 bg-fill" />
+
+                {showMobileFocused && focusedSemester ? (
+                  <section ref={semesterGridRef} aria-labelledby="m-sem" className="flex flex-col pt-2">
+                    <div className="flex min-h-12 items-center justify-between gap-3 py-1">
+                      <h2 id="m-sem" className="m-0 min-w-0 text-[16px] leading-6 font-bold text-ink">
+                        {focusedSemester.year}학년 {focusedSemester.term === 'spring' ? '1학기' : '2학기'}
+                        <SemesterMeta courses={focusedSemesterData?.courses ?? []} className={SEMESTER_META_WRAP_CLASS} />
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => setMobileShowAll(true)}
+                        className="-mr-1 inline-flex h-11 shrink-0 items-center gap-0.5 pl-2 text-[13px] font-semibold text-ink-2 transition-colors duration-150 ease-out hover:text-ink"
+                      >
+                        전체 학기
+                        <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2.5} />
+                      </button>
+                    </div>
+                    {focusedSemesterData && (
+                      <SemesterColumn
+                        semester={focusedSemesterData}
+                        isFocused
+                        showHeader={false}
+                        rowSize="tall"
+                        onRemoveCourse={(courseId) => handleRemoveCourse(focusedSemesterData.year, focusedSemesterData.term, courseId)}
+                        onDelete={() => handleDeleteSemester(focusedSemesterData.year, focusedSemesterData.term)}
+                        onClear={() => handleClearSemester(focusedSemesterData.year, focusedSemesterData.term)}
+                        onStatusChange={handleStatusChange}
+                      />
+                    )}
                     <button
-                      key={y ?? 'all'}
-                      onClick={() => setSemesterYearFilter(y)}
-                      className={`px-2 py-0.5 text-xs rounded-full font-medium transition-colors flex-shrink-0
-                        ${semesterYearFilter === y
-                          ? 'bg-[#153974] text-white'
-                          : 'bg-[#153974]/10 text-[#153974] hover:bg-[#153974]/20'}`}
+                      ref={catalogSheetTriggerRef}
+                      type="button"
+                      onClick={() => setIsCatalogSheetOpen(true)}
+                      aria-haspopup="dialog"
+                      className="inline-flex h-[52px] items-center gap-1.5 self-start text-left text-[15px] font-semibold text-primary transition-colors duration-150 ease-out hover:text-primary-hover"
                     >
-                      {y ? `${y}학년` : '전체'}
+                      <Plus aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
+                      과목 추가
                     </button>
-                  ))}
-                </div>
-              )}
+                  </section>
+                ) : (
+                  <section ref={semesterGridRef} aria-labelledby="m-sem" className="flex flex-col gap-7 pt-2">
+                    <div className="flex flex-col">
+                      <div className="flex h-12 items-center justify-between gap-3">
+                        <h2 id="m-sem" className="m-0 text-[16px] leading-6 font-bold text-ink">전체 학기</h2>
+                        {focusedSemester && (
+                          <button
+                            type="button"
+                            onClick={() => setMobileShowAll(false)}
+                            className="-mr-1 h-11 shrink-0 pl-2 text-[13px] font-semibold text-primary transition-colors duration-150 ease-out hover:text-primary-hover"
+                          >
+                            {focusedSemester.year}학년 {focusedSemester.term === 'spring' ? '1학기' : '2학기'}로
+                          </button>
+                        )}
+                      </div>
+                      <p className="m-0 text-[13px] leading-[18px] text-ink-2">
+                        학기 이름을 눌러 과목을 추가할 학기를 고르세요. 상태를 누르면 예정 ↔ 이수로 바뀌어요.
+                      </p>
+                    </div>
+                    {yearTabs}
+                    {yearBlocks}
+                    {!hasSemesters && (
+                      <p className="m-0 text-[15px] font-medium text-ink-2">아직 학기가 없어요. 학기를 추가해 계획을 시작하세요.</p>
+                    )}
+                    {addSemesterButton}
+                  </section>
+                )}
 
-{(() => {
-                  let hintShown = false;
-                  return Array.from(filteredSemestersByYear.entries()).map(([year, semesters]) => {
-                    const showHint = !hintShown;
-                    if (showHint) hintShown = true;
-                    return (
-                  <div key={year} className="space-y-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-                        {year}학년
-                        <span className="ml-2 text-xs font-normal text-gray-400">
-                          ({semesters.reduce((total, sem) => total + sem.courses.reduce((sum, c) => sum + c.credits, 0), 0)}학점)
-                        </span>
-                      </h3>
-                      {showHint && (
-                        <span className="flex items-center gap-1 text-[10px]">
-                          <span className="px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-700">예정</span>
-                          <span className="text-gray-400">↔</span>
-                          <span className="px-1.5 py-0.5 rounded font-medium bg-emerald-100 text-emerald-700">이수</span>
-                          <span className="text-gray-400 ml-0.5">클릭하여 변경</span>
-                        </span>
+                {/* Course Catalog bottom sheet */}
+                {isCatalogSheetShown && (
+                  <>
+                    <div
+                      aria-hidden="true"
+                      onClick={() => setIsCatalogSheetOpen(false)}
+                      className={cn(
+                        'fixed inset-0 z-50 bg-black/30 transition-opacity duration-200 ease-out',
+                        activeDragData && 'opacity-0'
+                      )}
+                    />
+                    <div
+                      ref={courseCatalogRef}
+                      role="dialog"
+                      aria-modal="true"
+                      aria-label="과목 리스트"
+                      tabIndex={-1}
+                      className="fixed inset-x-0 bottom-0 z-50 outline-none flex h-[85dvh] flex-col rounded-none border-t border-line-2 bg-white px-5 pt-5 pb-[max(16px,env(safe-area-inset-bottom))] shadow-float"
+                    >
+                      {renderCatalog(
+                        <button
+                          type="button"
+                          onClick={() => setIsCatalogSheetOpen(false)}
+                          className="-my-3 -mr-2 h-11 px-2 text-[14px] font-semibold text-ink transition-colors duration-150 ease-out hover:text-primary"
+                        >
+                          닫기
+                        </button>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {semesters.map((semester) => (
-                          <div key={`${semester.year}-${semester.term}`}>
-                            <SemesterColumn
-                              semester={semester}
-                              compact={true}
-                              isFocused={focusedSemester?.year === semester.year && focusedSemester?.term === semester.term}
-                              onFocus={() => handleSemesterFocus(semester.year, semester.term)}
-                              onRemoveCourse={(courseId) => handleRemoveCourse(semester.year, semester.term, courseId)}
-                              onDelete={() => handleDeleteSemester(semester.year, semester.term)}
-                              onClear={() => handleClearSemester(semester.year, semester.term)}
-                              onStatusChange={handleStatusChange}
-                            />
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                    );
-                  });
-                })()}
-
-              {/* Add Semester Button */}
-              <div data-export-ignore className="flex justify-center py-4">
-                <Button
-                  variant="ghost"
-                  onClick={handleAddSemester}
-                  className="text-gray-500 hover:text-gray-700 border-dashed border-2 px-6 py-3"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5 mr-2"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  학기 추가
-                </Button>
-              </div>
-            </div>
+                  </>
+                )}
+              </>
+            )}
           </div>
           <DragOverlay>
             {activeDragData ? (
-              <div className="w-[250px] shadow-lg rounded-lg opacity-90 pointer-events-none">
+              <div className="pointer-events-none w-[300px] max-w-[85vw]">
                 <CourseCard
                   course={activeDragData.course as Record<string, unknown> & { code: string; name: string; credits: number }}
-                  compact={true}
+                  floating
                 />
               </div>
             ) : null}

@@ -329,8 +329,9 @@ export default function OnboardingPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">학과</label>
+                <label htmlFor="onboarding-department" className="block text-sm font-medium text-gray-700 mb-1">학과</label>
                 <SearchableSelect
+                  id="onboarding-department"
                   options={departmentOptions}
                   value={departmentId}
                   onChange={(val) => setDepartmentId(val)}
@@ -433,10 +434,11 @@ export default function OnboardingPage() {
               {/* Secondary Department (shown for double/minor) */}
               {majorType !== 'single' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="onboarding-secondary-department" className="block text-sm font-medium text-gray-700 mb-1">
                     {majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
                   </label>
                   <SearchableSelect
+                    id="onboarding-secondary-department"
                     options={departmentOptions.filter((d) => d.value !== departmentId)}
                     value={secondaryDepartmentId}
                     onChange={(val) => setSecondaryDepartmentId(val)}

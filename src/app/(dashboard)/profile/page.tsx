@@ -3,9 +3,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
+import { Button, Input, PageHeader, SearchableSelect } from '@/components/ui';
 import type { ApiResponse, MajorType } from '@/types';
 import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
@@ -13,20 +14,16 @@ import { useGuestCourseStore } from '@/stores/guestCourseStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 import * as Sentry from '@sentry/nextjs';
 import {
-  User,
-  Mail,
-  Building2,
-  CalendarDays,
-  Shield,
-  Star,
-  Pencil,
-  X,
-  Chrome,
-  Trash2,
-  Check,
-} from 'lucide-react';
+  DangerRow,
+  Field,
+  InfoRow,
+  ProfileSection,
+  SectionBand,
+  UnderlineSelect,
+} from './_components/ProfileParts';
 
 interface Department {
   _id: string;
@@ -47,6 +44,45 @@ interface UserProfile {
   curriculumYear?: number;
 }
 
+interface ProfileForm {
+  name: string;
+  enrollmentYear: string;
+  department: string;
+  majorType: MajorType;
+  secondaryDepartment: string;
+  curriculumYear: string;
+}
+
+const CURRICULUM_YEARS = ['2025', '2026'];
+
+// 기존 입력(min 2000, max 2030) 및 PATCH /api/users/me 검증 범위와 동일
+const ENROLLMENT_YEARS = Array.from({ length: 2030 - 2000 + 1 }, (_, i) => String(2030 - i));
+
+const MAJOR_TYPE_OPTIONS: { value: MajorType; label: string; description: string }[] = [
+  { value: 'single', label: '단일전공', description: '주전공 하나만 이수' },
+  { value: 'double', label: '복수전공', description: '두 번째 전공의 요건을 함께 추적' },
+  { value: 'minor', label: '부전공', description: '부전공 요건을 함께 추적' },
+];
+
+function isSameBasic(a: ProfileForm, b: ProfileForm) {
+  return (
+    a.name === b.name &&
+    a.enrollmentYear === b.enrollmentYear &&
+    a.department === b.department &&
+    a.curriculumYear === b.curriculumYear
+  );
+}
+
+/** 단일전공이면 두 번째 학과는 저장되지 않으므로 비교에서 제외한다. */
+function isSameMajor(a: ProfileForm, b: ProfileForm) {
+  return (
+    a.majorType === b.majorType &&
+    (a.majorType === 'single' || a.secondaryDepartment === b.secondaryDepartment)
+  );
+}
+
+type SaveSection = 'basic' | 'major';
+
 export default function ProfilePage() {
   const { data: session, update: updateSession } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
@@ -57,13 +93,15 @@ export default function ProfilePage() {
   const clearAllCourses = useGuestCourseStore((s) => s.clearAll);
   const resetGraduation = useGuestGraduationStore((s) => s.reset);
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [formData, setFormData] = useState({
+  const [justSaved, setJustSaved] = useState(false);
+  // 마지막 저장을 요청한 영역 — 상태 문구를 해당 영역에만 표시
+  const [saveSection, setSaveSection] = useState<SaveSection | null>(null);
+  const [formData, setFormData] = useState<ProfileForm>({
     name: '',
     enrollmentYear: '',
     department: '',
-    majorType: 'single' as MajorType,
+    majorType: 'single',
     secondaryDepartment: '',
     curriculumYear: String(DEFAULT_CURRICULUM_YEAR),
   });
@@ -139,33 +177,37 @@ export default function ProfilePage() {
     [departments]
   );
 
-  // Pre-populate form when userProfile loads
-  useEffect(() => {
-    if (userProfile) {
-      setFormData({
-        name: userProfile.name || '',
-        enrollmentYear: userProfile.enrollmentYear?.toString() || '',
-        department: userProfile.department?._id || '',
-        majorType: userProfile.majorType || 'single',
-        secondaryDepartment: userProfile.secondaryDepartment?._id || '',
-        curriculumYear: userProfile.curriculumYear?.toString() || String(DEFAULT_CURRICULUM_YEAR),
-      });
-    }
-  }, [userProfile]);
-
-  // Pre-populate form for guest
-  useEffect(() => {
+  // 저장된 값 (회원: 서버 프로필, 비회원: guestProfileStore) — 폼 초기값이자 변경 여부 기준
+  const savedForm = useMemo<ProfileForm | null>(() => {
     if (isGuest) {
-      setFormData({
+      return {
         name: guestProfile.name || '',
         enrollmentYear: guestProfile.enrollmentYear?.toString() || '',
         department: guestProfile.departmentId || '',
         majorType: guestProfile.majorType || 'single',
         secondaryDepartment: guestProfile.secondaryDepartmentId || '',
         curriculumYear: guestProfile.curriculumYear?.toString() || String(DEFAULT_CURRICULUM_YEAR),
-      });
+      };
     }
-  }, [isGuest, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId, guestProfile.majorType, guestProfile.secondaryDepartmentId, guestProfile.curriculumYear]);
+    if (userProfile) {
+      return {
+        name: userProfile.name || '',
+        enrollmentYear: userProfile.enrollmentYear?.toString() || '',
+        department: userProfile.department?._id || '',
+        majorType: userProfile.majorType || 'single',
+        secondaryDepartment: userProfile.secondaryDepartment?._id || '',
+        curriculumYear: userProfile.curriculumYear?.toString() || String(DEFAULT_CURRICULUM_YEAR),
+      };
+    }
+    return null;
+  }, [isGuest, userProfile, guestProfile.name, guestProfile.enrollmentYear, guestProfile.departmentId, guestProfile.majorType, guestProfile.secondaryDepartmentId, guestProfile.curriculumYear]);
+
+  // Pre-populate form when the saved profile loads or changes
+  useEffect(() => {
+    if (savedForm) {
+      setFormData(savedForm);
+    }
+  }, [savedForm]);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -184,16 +226,42 @@ export default function ProfilePage() {
       await queryClient.invalidateQueries({ queryKey: ['courses'] });
       // Refresh NextAuth session to update JWT with new department/curriculumYear
       await updateSession();
-      setIsEditing(false);
+      setJustSaved(true);
     },
   });
 
+  const updateForm = (patch: Partial<ProfileForm>) => {
+    setJustSaved(false);
+    if (updateMutation.isError) updateMutation.reset();
+    setFormData((prev) => ({ ...prev, ...patch }));
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    updateForm({ [e.target.name]: e.target.value } as Partial<ProfileForm>);
+  };
+
+  const handleMajorTypeChange = (majorType: MajorType) => {
+    if (majorType === formData.majorType) return;
+    updateForm({ majorType, secondaryDepartment: '' });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveSection('basic');
+    if (isGuest) {
+      // 비회원 기본 정보 저장은 전공 설정을 포함하지 않는다
+      guestProfile.setProfile({
+        name: formData.name || undefined,
+        enrollmentYear: formData.enrollmentYear ? parseInt(formData.enrollmentYear, 10) : undefined,
+        curriculumYear: formData.curriculumYear ? parseInt(formData.curriculumYear, 10) : undefined,
+        departmentId: formData.department || undefined,
+        departmentName: departments.find((d) => d._id === formData.department)?.name || undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      setJustSaved(true);
+      return;
+    }
+
     const updateData: { name?: string; department?: string; enrollmentYear?: number; curriculumYear?: number; majorType?: MajorType; secondaryDepartment?: string | null } = {};
 
     if (formData.name) updateData.name = formData.name;
@@ -206,590 +274,269 @@ export default function ProfilePage() {
     updateMutation.mutate(updateData);
   };
 
-  const departmentName = userProfile?.department?.name;
-  const enrollmentYear = userProfile?.enrollmentYear;
+  // 전공 설정 전용 저장 — majorType/두 번째 전공만 저장한다
+  const handleSaveMajor = () => {
+    if (updateMutation.isError) updateMutation.reset();
+    setSaveSection('major');
+    if (isGuest) {
+      guestProfile.setProfile({
+        majorType: formData.majorType,
+        secondaryDepartmentId: formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : undefined,
+        secondaryDepartmentName: formData.majorType !== 'single' && formData.secondaryDepartment
+          ? departments.find((d) => d._id === formData.secondaryDepartment)?.name || undefined
+          : undefined,
+      });
+      setJustSaved(true);
+      return;
+    }
 
-  if (isGuest) {
-    return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">프로필</h1>
-          <p className="text-gray-600 mt-1">프로필을 설정하면 과목 리스트가 학과별로 필터됩니다.</p>
-        </div>
+    const updateData: { majorType?: MajorType; secondaryDepartment?: string | null } = {
+      majorType: formData.majorType,
+      secondaryDepartment: formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : null,
+    };
+    updateMutation.mutate(updateData);
+  };
 
-        {/* Guest Profile Form */}
-        <Card className="animate-fade-in-up">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <User className="w-5 h-5 text-gray-600" />
-              <CardTitle>기본 정보</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                guestProfile.setProfile({
-                  name: formData.name || undefined,
-                  enrollmentYear: formData.enrollmentYear ? parseInt(formData.enrollmentYear, 10) : undefined,
-                  curriculumYear: formData.curriculumYear ? parseInt(formData.curriculumYear, 10) : undefined,
-                  departmentId: formData.department || undefined,
-                  departmentName: departments.find((d) => d._id === formData.department)?.name || undefined,
-                });
-                queryClient.invalidateQueries({ queryKey: ['courses'] });
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <User className="w-4 h-4 text-gray-400" />
-                  이름
-                </label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="이름"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  입학년도
-                </label>
-                <Input
-                  name="enrollmentYear"
-                  type="number"
-                  value={formData.enrollmentYear}
-                  onChange={handleChange}
-                  placeholder="2024"
-                  min={2000}
-                  max={2030}
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  커리큘럼 연도
-                </label>
-                <select
-                  name="curriculumYear"
-                  value={formData.curriculumYear}
-                  onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                >
-                  <option value="2025">2025</option>
-                  <option value="2026">2026</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">과목 리스트에 표시될 커리큘럼 연도를 선택합니다</p>
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  학과
-                </label>
-                <select
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                >
-                  <option value="">학과 선택</option>
-                  {departments.map((dept) => (
-                    <option key={dept._id} value={dept._id}>
-                      {dept.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Button type="submit">저장</Button>
-            </form>
-          </CardContent>
-        </Card>
+  const isBasicDirty = savedForm != null && !isSameBasic(formData, savedForm);
+  const isMajorDirty = savedForm != null && !isSameMajor(formData, savedForm);
+  // 회원 기본 정보 저장은 전공 설정까지 함께 보낸다
+  const isDirty = isGuest ? isBasicDirty : isBasicDirty || isMajorDirty;
+  const isSaving = !isGuest && updateMutation.isPending;
+  const isFormDisabled = !isGuest && isLoadingProfile;
+  const saveError = !isGuest && updateMutation.isError
+    ? updateMutation.error?.message || '저장에 실패했습니다.'
+    : null;
+  const isGoogleAccount = !!session?.user?.image;
+  const secondaryLabel = formData.majorType === 'double' ? '복수전공 학과' : '부전공 학과';
+  const primaryDepartmentName = departments.find((d) => d._id === formData.department)?.name;
 
-        {/* Major Type Settings - Guest */}
-        <Card className="animate-fade-in-up anim-delay-50 relative z-[5]">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-gray-600" />
-              <CardTitle>전공 설정</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newType = formData.majorType === 'double' ? 'single' : 'double';
-                      setFormData((prev) => ({ ...prev, majorType: newType, secondaryDepartment: '' }));
-                    }}
-                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
-                      formData.majorType === 'double'
-                        ? 'bg-purple-500 text-white border-purple-500 shadow-sm'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600'
-                    }`}
-                  >
-                    <span className="flex items-center justify-center gap-1.5">
-                      {formData.majorType === 'double' ? (
-                        <><Check className="w-4 h-4" />복수전공</>
-                      ) : '+ 복수전공 추가'}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newType = formData.majorType === 'minor' ? 'single' : 'minor';
-                      setFormData((prev) => ({ ...prev, majorType: newType, secondaryDepartment: '' }));
-                    }}
-                    disabled={formData.majorType === 'double'}
-                    className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
-                      formData.majorType === 'minor'
-                        ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
-                        : formData.majorType === 'double'
-                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600'
-                    }`}
-                  >
-                    <span className="flex items-center justify-center gap-1.5">
-                      {formData.majorType === 'minor' ? (
-                        <><Check className="w-4 h-4" />부전공</>
-                      ) : '+ 부전공 추가'}
-                    </span>
-                  </button>
-                </div>
-                {formData.majorType !== 'single' && (
-                  <p className="text-xs text-gray-500 mt-1.5">
-                    {formData.majorType === 'double' ? '복수전공' : '부전공'}을 선택했습니다. 해제하려면 다시 클릭하세요.
-                  </p>
-                )}
-              </div>
-              {formData.majorType !== 'single' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {formData.majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
-                  </label>
-                  <SearchableSelect
-                    options={departmentOptions.filter((d) => d.value !== formData.department)}
-                    value={formData.secondaryDepartment}
-                    onChange={(val) => setFormData((prev) => ({ ...prev, secondaryDepartment: val }))}
-                    placeholder="학과를 검색하세요"
-                  />
-                </div>
-              )}
-              <Button
-                onClick={() => {
-                  guestProfile.setProfile({
-                    majorType: formData.majorType,
-                    secondaryDepartmentId: formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : undefined,
-                    secondaryDepartmentName: formData.majorType !== 'single' && formData.secondaryDepartment
-                      ? departments.find((d) => d._id === formData.secondaryDepartment)?.name || undefined
-                      : undefined,
-                  });
-                }}
-              >
-                저장
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+  let statusText = '';
+  let statusClass = 'text-ink-2';
+  if (saveError && saveSection === 'basic') {
+    statusText = saveError;
+    statusClass = 'text-negative';
+  } else if (justSaved && saveSection === 'basic' && !isDirty) {
+    statusText = '저장되었습니다';
+    statusClass = 'text-positive';
+  } else if (isDirty) {
+    statusText = '저장되지 않은 변경이 있어요';
+  }
 
-        {/* Guest Info */}
-        <Card className="animate-fade-in-up anim-delay-100">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-gray-600" />
-              <CardTitle>계정 정보</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b">
-                <span className="text-gray-600">계정 유형</span>
-                <span className="font-medium text-amber-600">게스트 모드</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-600">데이터 저장</span>
-                <span className="font-medium text-gray-500">이 브라우저에만 저장</span>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Link href="/register">
-                <Button variant="outline" className="w-full">회원가입하여 데이터 영구 저장</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Account Reset */}
-        <Card className="animate-fade-in-up anim-delay-200 border-red-200">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Trash2 className="w-5 h-5 text-red-500" />
-              <CardTitle className="text-red-600">계정 초기화</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              모든 게스트 데이터(프로필, 수강계획, 커스텀 과목, 졸업요건)를 초기화합니다. 이 작업은 되돌릴 수 없습니다.
-            </p>
-            <Button
-              variant="outline"
-              onClick={handleResetGuestData}
-              className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
-            >
-              계정 초기화
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  let majorStatusText = '';
+  let majorStatusClass = 'text-ink-2';
+  if (saveError && saveSection === 'major') {
+    majorStatusText = saveError;
+    majorStatusClass = 'text-negative';
+  } else if (isMajorDirty) {
+    majorStatusText = '전공 설정이 아직 저장되지 않았어요';
+  } else if (justSaved && saveSection === 'major') {
+    majorStatusText = '저장되었습니다';
+    majorStatusClass = 'text-positive';
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">프로필</h1>
-        <p className="text-gray-600 mt-1">개인 정보를 관리하세요.</p>
-      </div>
+    <div className="flex max-w-[720px] flex-col">
+      <PageHeader
+        title="프로필"
+        description="프로필을 설정하면 과목 리스트가 학과별로 필터됩니다."
+      />
 
-      {/* Profile Header Banner */}
-      <div className="animate-fade-in">
-        <div className="h-32 rounded-xl bg-gradient-to-r from-[#153974] via-[#3069B3] to-[#00AACA] relative mb-16">
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-20 h-20 rounded-full bg-gradient-to-br from-[#153974] to-[#3069B3] flex items-center justify-center ring-4 ring-white shadow-lg">
-            <span className="text-2xl font-bold text-white">
-              {userProfile?.name?.charAt(0).toUpperCase() || session?.user?.name?.charAt(0).toUpperCase() || 'U'}
+
+      <form onSubmit={handleSubmit} className="flex flex-col" noValidate>
+        <ProfileSection id="basic-title" title="기본 정보">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-x-10 gap-y-2">
+            {!isGuest && (
+              <Field
+                label="이메일"
+                htmlFor="p-email"
+                helper={isGoogleAccount ? 'Google 계정으로 로그인됨 · 변경 불가' : '이메일 계정 · 변경 불가'}
+              >
+                <input
+                  id="p-email"
+                  type="email"
+                  value={userProfile?.email || session?.user?.email || ''}
+                  readOnly
+                  className="h-10 w-full rounded-none border-0 border-b border-line-3 bg-transparent px-0 text-[17px] font-medium text-ink-2 focus:outline-none focus-visible:outline-none"
+                />
+              </Field>
+            )}
+            <Field label="이름" htmlFor="p-name">
+              <Input
+                id="p-name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="이름"
+                autoComplete="name"
+                disabled={isFormDisabled}
+              />
+            </Field>
+            <Field label="입학년도" htmlFor="p-year">
+              <UnderlineSelect
+                id="p-year"
+                name="enrollmentYear"
+                value={formData.enrollmentYear}
+                onChange={handleChange}
+                disabled={isFormDisabled}
+              >
+                <option value="">선택 안 함</option>
+                {ENROLLMENT_YEARS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}년
+                  </option>
+                ))}
+              </UnderlineSelect>
+            </Field>
+            <Field
+              label="커리큘럼 연도"
+              htmlFor="p-curriculum"
+              helper="과목 리스트에 표시될 커리큘럼 연도를 선택합니다"
+            >
+              <UnderlineSelect
+                id="p-curriculum"
+                name="curriculumYear"
+                value={formData.curriculumYear}
+                onChange={handleChange}
+                disabled={isFormDisabled}
+              >
+                {CURRICULUM_YEARS.map((year) => (
+                  <option key={year} value={year}>
+                    {year}년
+                  </option>
+                ))}
+              </UnderlineSelect>
+            </Field>
+            <Field label="학과" htmlFor="p-dept">
+              <SearchableSelect
+                id="p-dept"
+                options={departmentOptions}
+                value={formData.department}
+                onChange={(val) => updateForm({ department: val })}
+                placeholder="학과를 검색하세요"
+                disabled={isFormDisabled}
+              />
+            </Field>
+          </div>
+
+          <div className="mt-7 flex flex-wrap items-center gap-4">
+            <Button type="submit" size="lg" disabled={isSaving || isFormDisabled}>
+              {isSaving && saveSection === 'basic' ? '저장 중...' : '저장'}
+            </Button>
+            <span role="status" aria-live="polite" className={cn('text-[13px] leading-[18px]', statusClass)}>
+              {statusText}
             </span>
           </div>
-        </div>
-        <div className="text-center mt-2">
-          <h2 className="text-xl font-bold text-gray-900">
-            {userProfile?.name || session?.user?.name || '사용자'}
-          </h2>
-          <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
-            {departmentName && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#153974]/10 text-[#153974] text-xs font-medium">
-                <Building2 className="w-3 h-3" />
-                {departmentName}
-              </span>
-            )}
-            {enrollmentYear && (
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-[#00AACA]/10 text-[#00AACA] text-xs font-medium">
-                <CalendarDays className="w-3 h-3" />
-                {enrollmentYear}년 입학
-              </span>
-            )}
-            {userProfile?.majorType && userProfile.majorType !== 'single' && (
-              <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                userProfile.majorType === 'double'
-                  ? 'bg-purple-100 text-purple-700'
-                  : 'bg-orange-100 text-orange-700'
-              }`}>
-                <Building2 className="w-3 h-3" />
-                {userProfile.majorType === 'double' ? '복수전공' : '부전공'}
-                {userProfile.secondaryDepartment ? `: ${userProfile.secondaryDepartment.name}` : ''}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
+        </ProfileSection>
 
-      {/* Basic Info */}
-      <Card className="animate-fade-in-up relative z-10">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div className="flex items-center gap-2">
-            <User className="w-5 h-5 text-gray-600" />
-            <CardTitle>기본 정보</CardTitle>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsEditing(!isEditing)}
-            disabled={isLoadingProfile}
-          >
-            {isEditing ? <X className="w-4 h-4" /> : <Pencil className="w-4 h-4" />}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <User className="w-4 h-4 text-gray-400" />
-                  이름
-                </label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="이름"
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  입학년도
-                </label>
-                <Input
-                  name="enrollmentYear"
-                  type="number"
-                  value={formData.enrollmentYear}
-                  onChange={handleChange}
-                  placeholder="2024"
-                  min={2000}
-                  max={2030}
-                />
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  커리큘럼 연도
-                </label>
-                <select
-                  name="curriculumYear"
-                  value={formData.curriculumYear}
-                  onChange={handleChange}
-                  className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                >
-                  <option value="2025">2025</option>
-                  <option value="2026">2026</option>
-                </select>
-                <p className="text-xs text-gray-500 mt-1">과목 리스트에 표시될 커리큘럼 연도를 선택합니다</p>
-              </div>
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  학과
-                </label>
-                <SearchableSelect
-                  options={departmentOptions}
-                  value={formData.department}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, department: val }))}
-                  placeholder="학과를 검색하세요"
-                />
-              </div>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? '저장 중...' : '저장'}
-              </Button>
-              {updateMutation.isError && (
-                <p className="text-sm text-red-500 mt-2">
-                  {updateMutation.error?.message || '저장에 실패했습니다.'}
-                </p>
-              )}
-            </form>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex justify-between py-2 border-b">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">이메일</span>
-                </div>
-                <span className="font-medium">{session?.user?.email}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">이름</span>
-                </div>
-                <span className="font-medium">{userProfile?.name || session?.user?.name}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">입학년도</span>
-                </div>
-                <span className={enrollmentYear ? 'font-medium' : 'text-gray-400'}>
-                  {enrollmentYear ? `${enrollmentYear}년` : '미설정'}
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <div className="flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">커리큘럼 연도</span>
-                </div>
-                <span className="font-medium">
-                  {userProfile?.curriculumYear || DEFAULT_CURRICULUM_YEAR}년
-                </span>
-              </div>
-              <div className="flex justify-between py-2 border-b">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-600">학과</span>
-                </div>
-                <span className={departmentName ? 'font-medium' : 'text-gray-400'}>
-                  {departmentName || '미설정'}
-                </span>
-              </div>
-              {userProfile?.majorType && userProfile.majorType !== 'single' && (
-                <div className="flex justify-between py-2">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-gray-400" />
-                    <span className="text-gray-600">
-                      {userProfile.majorType === 'double' ? '복수전공' : '부전공'}
-                    </span>
-                  </div>
-                  <span className="font-medium">
-                    {userProfile.secondaryDepartment?.name || '학과 미설정'}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        <SectionBand />
 
-      {/* Major Type Settings - Authenticated */}
-      <Card className="animate-fade-in-up anim-delay-50 relative z-[5]">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-gray-600" />
-            <CardTitle>전공 설정</CardTitle>
+        <ProfileSection
+          id="major-title"
+          title="전공 설정"
+          description="복수전공 / 부전공을 설정하면 졸업 요건에 두 번째 전공 트랙이 추가됩니다."
+        >
+          <div role="radiogroup" aria-labelledby="major-title" className="flex flex-col">
+            {MAJOR_TYPE_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className="flex min-h-[52px] cursor-pointer items-center gap-3.5 border-b border-line py-2"
+              >
+                <input
+                  type="radio"
+                  name="majorType"
+                  value={option.value}
+                  checked={formData.majorType === option.value}
+                  onChange={() => handleMajorTypeChange(option.value)}
+                  disabled={isFormDisabled}
+                  className="m-0 h-[18px] w-[18px] shrink-0 cursor-pointer accent-primary"
+                />
+                <span className="flex-1 text-[15px] font-medium text-ink">{option.label}</span>
+                <span className="text-right text-[13px] text-ink-2">
+                  {option.value === 'single' && primaryDepartmentName ? primaryDepartmentName : option.description}
+                </span>
+              </label>
+            ))}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, majorType: prev.majorType === 'double' ? 'single' : 'double', secondaryDepartment: '' }));
-                  }}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
-                    formData.majorType === 'double'
-                      ? 'bg-purple-500 text-white border-purple-500 shadow-sm'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-1.5">
-                    {formData.majorType === 'double' ? (
-                      <><Check className="w-4 h-4" />복수전공</>
-                    ) : '+ 복수전공 추가'}
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFormData((prev) => ({ ...prev, majorType: prev.majorType === 'minor' ? 'single' : 'minor', secondaryDepartment: '' }));
-                  }}
-                  disabled={formData.majorType === 'double'}
-                  className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
-                    formData.majorType === 'minor'
-                      ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
-                      : formData.majorType === 'double'
-                        ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600'
-                  }`}
-                >
-                  <span className="flex items-center justify-center gap-1.5">
-                    {formData.majorType === 'minor' ? (
-                      <><Check className="w-4 h-4" />부전공</>
-                    ) : '+ 부전공 추가'}
-                  </span>
-                </button>
-              </div>
-              {formData.majorType !== 'single' && (
-                <p className="text-xs text-gray-500 mt-1.5">
-                  {formData.majorType === 'double' ? '복수전공' : '부전공'}을 선택했습니다. 해제하려면 다시 클릭하세요.
-                </p>
-              )}
-            </div>
-            {formData.majorType !== 'single' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {formData.majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
-                </label>
+
+          {formData.majorType !== 'single' && (
+            <Field label={secondaryLabel} htmlFor="p-secondary-dept" accent className="max-w-[340px] pt-5">
+              <div className="[&_input]:border-primary [&_input]:shadow-[inset_0_-1px_0_var(--color-primary)]">
                 <SearchableSelect
+                  id="p-secondary-dept"
                   options={departmentOptions.filter((d) => d.value !== formData.department)}
                   value={formData.secondaryDepartment}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, secondaryDepartment: val }))}
+                  onChange={(val) => updateForm({ secondaryDepartment: val })}
                   placeholder="학과를 검색하세요"
+                  disabled={isFormDisabled}
                 />
               </div>
+            </Field>
+          )}
+
+          {/* 채운 저장 버튼은 기본 정보에 하나 — 전공 설정은 글자 버튼으로 따로 저장 */}
+          <div className={cn('flex flex-wrap items-center gap-x-3 gap-y-1', majorStatusText && 'mt-4')}>
+            <span role="status" aria-live="polite" className={cn('text-[13px] leading-[18px]', majorStatusClass)}>
+              {majorStatusText}
+            </span>
+            {(isMajorDirty || (saveError && saveSection === 'major')) && (
+              <Button
+                type="button"
+                variant="textPrimary"
+                size="sm"
+                onClick={handleSaveMajor}
+                disabled={isSaving || isFormDisabled}
+              >
+                {isSaving && saveSection === 'major' ? '저장 중...' : '변경 저장'}
+              </Button>
             )}
-            <Button
-              onClick={() => {
-                const updateData: { majorType?: MajorType; secondaryDepartment?: string | null } = {
-                  majorType: formData.majorType,
-                  secondaryDepartment: formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : null,
-                };
-                updateMutation.mutate(updateData as Parameters<typeof updateMutation.mutate>[0]);
-              }}
-              disabled={updateMutation.isPending}
+          </div>
+        </ProfileSection>
+      </form>
+
+      <SectionBand />
+
+      <ProfileSection id="account-title" title="계정 정보">
+        {isGuest ? (
+          <>
+            <InfoRow label="계정 유형">비회원</InfoRow>
+            <InfoRow label="데이터 저장">이 브라우저에만 저장</InfoRow>
+            <Link
+              href="/register"
+              className="mt-3 inline-flex min-h-11 items-center gap-1.5 self-start text-[15px] font-semibold text-primary transition-colors duration-150 ease-out hover:text-primary-hover"
             >
-              {updateMutation.isPending ? '저장 중...' : '저장'}
-            </Button>
-            {updateMutation.isError && (
-              <p className="text-sm text-red-500">
-                {updateMutation.error?.message || '저장에 실패했습니다.'}
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              회원가입하여 데이터 영구 저장
+              <ArrowRight aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
+            </Link>
+          </>
+        ) : (
+          <>
+            <InfoRow label="계정 유형">{isGoogleAccount ? 'Google 계정' : '이메일 계정'}</InfoRow>
+            <InfoRow label="데이터 저장">서버에 저장 · 모든 기기에서 동기화</InfoRow>
+            <InfoRow label="권한">{session?.user?.role === 'admin' ? '관리자' : '학생'}</InfoRow>
+          </>
+        )}
+      </ProfileSection>
 
-      {/* Account Info */}
-      <Card className="animate-fade-in-up anim-delay-100">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-gray-600" />
-            <CardTitle>계정 정보</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex justify-between py-2 border-b">
-              <span className="text-gray-600">계정 유형</span>
-              <div className="flex items-center gap-2 font-medium">
-                {session?.user?.image ? (
-                  <>
-                    <Chrome className="w-4 h-4 text-gray-400" />
-                    Google 계정
-                  </>
-                ) : (
-                  <>
-                    <Mail className="w-4 h-4 text-gray-400" />
-                    이메일 계정
-                  </>
-                )}
-              </div>
-            </div>
-            <div className="flex justify-between py-2">
-              <span className="text-gray-600">권한</span>
-              <div className="flex items-center gap-2 font-medium">
-                <Star className="w-4 h-4 text-gray-400" />
-                <span className="capitalize">{session?.user?.role || 'student'}</span>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <SectionBand />
 
-      {/* Danger Zone */}
-      <Card className="animate-fade-in-up anim-delay-200 border-red-200">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Trash2 className="w-5 h-5 text-red-500" />
-            <CardTitle className="text-red-600">위험 구역</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600 mb-4">
-            회원 탈퇴 시 모든 수강 계획, 커스텀 과목 등 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다.
-          </p>
-          <Button
-            variant="outline"
-            onClick={handleDeleteAccount}
+      <ProfileSection id="danger-title" title="계정 관리" className="pb-0">
+        {isGuest ? (
+          <DangerRow
+            title="계정 초기화"
+            description="프로필, 수강계획, 커스텀 과목, 졸업요건 등 모든 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다."
+            actionLabel="초기화"
+            onAction={handleResetGuestData}
+          />
+        ) : (
+          <DangerRow
+            title="회원 탈퇴"
+            description="모든 수강 계획, 커스텀 과목 등 계정과 관련된 모든 데이터가 영구적으로 삭제됩니다."
+            actionLabel={isDeleting ? '삭제 중...' : '탈퇴'}
+            onAction={handleDeleteAccount}
             disabled={isDeleting}
-            className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
-          >
-            {isDeleting ? '삭제 중...' : '회원 탈퇴'}
-          </Button>
-        </CardContent>
-      </Card>
+          />
+        )}
+      </ProfileSection>
     </div>
   );
 }

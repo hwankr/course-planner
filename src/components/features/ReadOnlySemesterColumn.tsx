@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui';
+import { CategoryLabel } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { SEMESTER_META_WRAP_CLASS, SemesterMeta } from './SemesterMeta';
 
 interface ReadOnlySemesterColumnProps {
   semester: {
@@ -17,94 +19,65 @@ interface ReadOnlySemesterColumnProps {
   compact?: boolean;
 }
 
-const categoryLabels: Record<string, string> = {
-  major_required: '전핵',
-  major_compulsory: '전필',
-  major_elective: '전선',
-  general_required: '교필',
-  general_elective: '교선',
-  teaching: '교직',
-  free_elective: '자선',
-};
-
-const categoryColors: Record<string, string> = {
-  major_required: 'bg-red-100 text-red-700',
-  major_compulsory: 'bg-rose-100 text-rose-700',
-  major_elective: 'bg-orange-100 text-orange-700',
-  general_required: 'bg-blue-100 text-blue-700',
-  general_elective: 'bg-green-100 text-green-700',
-  teaching: 'bg-violet-100 text-violet-700',
-  free_elective: 'bg-gray-100 text-gray-600',
-};
-
+/** 다른 사람 계획 보기용 학기: 머리줄 + 과목 행(상태·삭제 없음) */
 export function ReadOnlySemesterColumn({ semester, compact = false }: ReadOnlySemesterColumnProps) {
   const [isExpanded, setIsExpanded] = useState(!compact);
   const termLabel = semester.term === 'spring' ? '1학기' : '2학기';
-  const totalCredits = semester.courses.reduce((sum, c) => sum + c.credits, 0);
-
-  const categoryBreakdown = (() => {
-    const counts: Record<string, number> = {};
-    for (const course of semester.courses) {
-      const cat = course.category || 'free_elective';
-      counts[cat] = (counts[cat] || 0) + course.credits;
-    }
-    return ['major_required', 'major_compulsory', 'major_elective', 'general_required', 'general_elective', 'teaching', 'free_elective']
-      .filter(cat => counts[cat])
-      .map(cat => ({ key: cat, label: categoryLabels[cat], credits: counts[cat] }));
-  })();
+  const title = `${semester.year}학년 ${termLabel}`;
+  const meta = (
+    <SemesterMeta
+      courses={semester.courses}
+      showStatus={false}
+      extra={`${semester.courses.length}과목`}
+      className={SEMESTER_META_WRAP_CLASS}
+    />
+  );
 
   return (
-    <Card className="flex flex-col">
-      {/* Header */}
-      <div
-        className={`${compact ? 'p-2' : 'p-3'} border-b bg-gray-50 cursor-pointer`}
-        onClick={() => compact && setIsExpanded(!isExpanded)}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className={`${compact ? 'text-sm' : 'text-base'} font-semibold text-gray-800`}>
-              {semester.year}학년 {termLabel}
-            </h4>
-            <p className={`${compact ? 'text-xs' : 'text-sm'} text-gray-500 mt-0.5`}>
-              {totalCredits}학점 · {semester.courses.length}과목
-              {categoryBreakdown.length > 0 && (
-                <span className="text-gray-400 ml-1">
-                  ({categoryBreakdown.map(c => `${c.label}${c.credits}`).join(' · ')})
-                </span>
-              )}
-            </p>
-          </div>
-          {compact && (
-            <button className="text-gray-400 text-xs">
-              {isExpanded ? '접기' : '펼치기'}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Course List */}
-      {isExpanded && (
-        <div className={`${compact ? 'p-2' : 'p-3'} space-y-1.5`}>
-          {semester.courses.map((course, idx) => {
-            const cat = course.category || 'free_elective';
-            return (
-              <div
-                key={`${course.code}-${idx}`}
-                className="flex items-center gap-2 p-2 rounded-md bg-white border border-gray-100"
-              >
-                <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${categoryColors[cat] || categoryColors.free_elective}`}>
-                  {categoryLabels[cat] || '자선'}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{course.name}</p>
-                  <p className="text-xs text-gray-400">{course.code}</p>
-                </div>
-                <span className="text-xs text-gray-500 whitespace-nowrap">{course.credits}학점</span>
-              </div>
-            );
-          })}
-        </div>
+    <div className="flex min-w-0 flex-col">
+      {compact ? (
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+          className="flex min-h-10 items-baseline justify-between gap-3 border-b border-line-3 pt-2.5 pb-1.5 text-left text-ink"
+        >
+          <span className="min-w-0 text-[15px] leading-5 font-bold">
+            {title}
+            {meta}
+          </span>
+          <span className="shrink-0 text-[12px] font-semibold text-ink-2">{isExpanded ? '접기' : '펼치기'}</span>
+        </button>
+      ) : (
+        <h4 className="m-0 min-h-10 border-b border-line-3 pt-2.5 pb-1.5 text-[15px] leading-5 font-bold text-ink">
+          {title}
+          {meta}
+        </h4>
       )}
-    </Card>
+
+      {isExpanded && (
+        <ul className="m-0 list-none p-0">
+          {semester.courses.map((course, idx) => (
+            <li
+              key={`${course.code}-${idx}`}
+              className="flex h-[52px] items-center gap-4 border-b border-line"
+            >
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="truncate text-[15px] leading-5 font-medium text-ink">{course.name}</span>
+                <CategoryLabel category={course.category} suffix={course.code} className="min-w-0" />
+              </div>
+              <span className="w-10 shrink-0 text-right text-[14px] font-semibold tabular-nums text-ink">
+                {course.credits}학점
+              </span>
+            </li>
+          ))}
+          {semester.courses.length === 0 && (
+            <li className={cn('flex h-[52px] items-center border-b border-line text-[13px] text-ink-2')}>
+              과목이 없어요
+            </li>
+          )}
+        </ul>
+      )}
+    </div>
   );
 }

@@ -9,17 +9,11 @@ import {
   useDeleteAcademicEvent,
 } from '@/hooks/useAcademicEvents';
 import { useToastStore } from '@/stores/toastStore';
-import { Card, CardContent } from '@/components/ui';
-import {
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-  Pencil,
-  Trash2,
-  X,
-  CalendarDays,
-} from 'lucide-react';
+import { Button, PageHeader } from '@/components/ui';
+import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import type { AcademicEventCategory, CreateAcademicEventInput } from '@/types';
+import { EventFormDialog, type EventFormData } from './_components/EventFormDialog';
 
 // Unified display type for both DB events and holidays
 interface CalendarEvent {
@@ -34,6 +28,13 @@ interface CalendarEvent {
   isSystemHoliday?: boolean; // true for auto-generated Korean holidays
 }
 
+interface CalendarCell {
+  date: Date;
+  inMonth: boolean;
+}
+
+const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+
 // Helper functions
 const getDaysInMonth = (year: number, month: number) => {
   return new Date(year, month + 1, 0).getDate();
@@ -43,21 +44,18 @@ const getFirstDayOfMonth = (year: number, month: number) => {
   return new Date(year, month, 1).getDay();
 };
 
-const formatDate = (date: Date | string) => {
+/** "10.05" 형식 (디자인: 월은 그대로, 일은 두 자리) */
+const formatShortDate = (date: Date | string) => {
   const d = typeof date === 'string' ? new Date(date) : date;
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  const dayName = dayNames[d.getDay()];
-  return `${month}.${day} (${dayName})`;
+  return `${d.getMonth() + 1}.${String(d.getDate()).padStart(2, '0')}`;
 };
 
 const formatDateRange = (startDate: string, endDate?: string) => {
-  if (!endDate) return formatDate(startDate);
+  if (!endDate) return formatShortDate(startDate);
   const start = new Date(startDate);
   const end = new Date(endDate);
-  if (start.toDateString() === end.toDateString()) return formatDate(start);
-  return `${formatDate(start)} ~ ${formatDate(end)}`;
+  if (start.toDateString() === end.toDateString()) return formatShortDate(start);
+  return `${formatShortDate(start)} – ${formatShortDate(end)}`;
 };
 
 /** 로컬 타임존 기준 YYYY-MM-DD 키 반환 (toISOString은 UTC라 KST에서 하루 밀림 방지) */
@@ -76,6 +74,28 @@ const isSameDay = (date1: Date, date2: Date) => {
   );
 };
 
+/** 날짜가 일정의 [시작, 종료] 구간 안에 있는지 (장기 일정의 중간 날짜 포함) */
+const isEventOnDate = (event: CalendarEvent, date: Date) => {
+  const key = toDateKey(date);
+  const startKey = toDateKey(new Date(event.startDate));
+  const endKey = event.endDate ? toDateKey(new Date(event.endDate)) : startKey;
+  return startKey <= key && key <= endKey;
+};
+
+const getDiffDays = (event: CalendarEvent) => {
+  const start = new Date(event.startDate);
+  const end = event.endDate ? new Date(event.endDate) : start;
+  return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+};
+
+/** 보고 있는 달이 속한 학기 (3–8월 1학기, 9–2월 2학기) */
+const getSemesterLabel = (year: number, month: number) => {
+  const m = month + 1;
+  if (m >= 3 && m <= 8) return `${year}학년도 1학기`;
+  if (m >= 9) return `${year}학년도 2학기`;
+  return `${year - 1}학년도 2학기`;
+};
+
 const categoryLabels: Record<AcademicEventCategory, string> = {
   academic: '학사',
   registration: '수강신청',
@@ -84,39 +104,44 @@ const categoryLabels: Record<AcademicEventCategory, string> = {
   other: '기타',
 };
 
-const categoryColors: Record<AcademicEventCategory, string> = {
-  academic: 'bg-blue-100 text-blue-700 border-blue-200',
-  registration: 'bg-green-100 text-green-700 border-green-200',
-  exam: 'bg-red-100 text-red-700 border-red-200',
-  holiday: 'bg-rose-100 text-rose-700 border-rose-200',
-  other: 'bg-gray-100 text-gray-700 border-gray-200',
+// 분류는 6px 점으로만 구분한다 (.design-ref/Calendar)
+const categoryDotClass: Record<AcademicEventCategory, string> = {
+  academic: 'bg-primary',
+  registration: 'bg-[#E07B1F]',
+  exam: 'bg-[#7C5CD6]',
+  holiday: 'bg-negative',
+  other: 'bg-placeholder',
 };
 
-interface EventFormData {
-  title: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  category: AcademicEventCategory;
-  isHoliday: boolean;
+function EventDot({ category }: { category: AcademicEventCategory }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn('inline-block h-1.5 w-1.5 shrink-0 rounded-full', categoryDotClass[category])}
+    />
+  );
 }
+
+const EMPTY_FORM: EventFormData = {
+  title: '',
+  description: '',
+  startDate: '',
+  endDate: '',
+  category: 'academic',
+  isHoliday: false,
+};
 
 export default function CalendarPage() {
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<AcademicEventCategory | 'all'>('all');
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [formData, setFormData] = useState<EventFormData>({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    category: 'academic',
-    isHoliday: false,
-  });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    () => new Date(today.getFullYear(), today.getMonth(), today.getDate())
+  );
+  const [formData, setFormData] = useState<EventFormData>(EMPTY_FORM);
 
   const { isAdmin } = useAuth();
   const addToast = useToastStore((state) => state.addToast);
@@ -167,7 +192,7 @@ export default function CalendarPage() {
     allEvents.forEach((event) => {
       const start = new Date(event.startDate);
       const end = event.endDate ? new Date(event.endDate) : start;
-      const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      const diffDays = getDiffDays(event);
 
       if (diffDays > 7) {
         // 장기 일정(7일 초과): 시작일과 종료일에만 표시
@@ -187,27 +212,30 @@ export default function CalendarPage() {
     return map;
   }, [allEvents]);
 
-  const calendarDays = useMemo(() => {
+  // 앞뒤 달의 날짜로 주를 채운다 (흐린 숫자)
+  const calendarCells = useMemo((): CalendarCell[] => {
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);
-    const days: (Date | null)[] = [];
+    const rows = Math.ceil((firstDay + daysInMonth) / 7);
+    const cells: CalendarCell[] = [];
 
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null);
+    for (let i = 0; i < rows * 7; i++) {
+      const date = new Date(year, month, i - firstDay + 1);
+      cells.push({ date, inMonth: date.getMonth() === month });
     }
 
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(year, month, i));
-    }
-
-    return days;
+    return cells;
   }, [year, month]);
 
+  // 이번 달 목록은 시스템 공휴일도 포함한다 (수정·삭제는 선택일 목록에서 계속 막힘)
   const sortedEvents = useMemo(() => {
     return [...allEvents]
-      .filter((e) => !e.isSystemHoliday)
       .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
   }, [allEvents]);
+
+  // 달력 칸은 장기 일정을 시작·종료일에만 그리지만, 선택한 날 목록은 구간 안의 모든 일정을 보여준다
+  const getEventsOnDate = (date: Date) => allEvents.filter((e) => isEventOnDate(e, date));
+  const selectedDayEvents = selectedDate ? getEventsOnDate(selectedDate) : [];
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate((prev) => {
@@ -219,44 +247,60 @@ export default function CalendarPage() {
       }
       return newDate;
     });
-    setSelectedEvent(null);
+    setSelectedEventId(null);
     setSelectedDate(null);
   };
 
   const goToToday = () => {
     setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-    setSelectedEvent(null);
-    setSelectedDate(null);
+    setSelectedEventId(null);
+    setSelectedDate(new Date(today.getFullYear(), today.getMonth(), today.getDate()));
   };
 
-  const handleDateClick = (date: Date) => {
+  const handleAddOnDate = (date: Date) => {
     if (!isAdmin) return;
-    const dateStr = toDateKey(date);
-    setFormData({
-      title: '',
-      description: '',
-      startDate: dateStr,
-      endDate: '',
-      category: 'academic',
-      isHoliday: false,
-    });
+    setFormData({ ...EMPTY_FORM, startDate: toDateKey(date) });
     setEditingEvent(null);
     setShowEventForm(true);
   };
 
-  const handleEventClick = (event: CalendarEvent) => {
-    setSelectedEvent(event);
+  const clearSelectedDate = () => {
+    setSelectedDate(null);
+    setSelectedEventId(null);
+  };
+
+  const handleCellClick = ({ date, inMonth }: CalendarCell) => {
+    // 일반 사용자: 선택된 날짜를 다시 누르면 선택 해제
+    if (!isAdmin && selectedDate && isSameDay(date, selectedDate)) {
+      clearSelectedDate();
+      return;
+    }
+    if (!inMonth) {
+      setCurrentDate(new Date(date.getFullYear(), date.getMonth(), 1));
+    }
+    setSelectedEventId(null);
+    setSelectedDate(date);
+    // 관리자: 일정 유무와 무관하게 그 날짜로 추가 폼을 바로 연다
+    if (isAdmin) {
+      handleAddOnDate(date);
+    }
+  };
+
+  const handleCellEventClick = (date: Date, event: CalendarEvent) => {
+    setSelectedDate(date);
+    setSelectedEventId(event._id);
+  };
+
+  const handleMonthEventClick = (event: CalendarEvent) => {
+    const start = new Date(event.startDate);
+    const monthStart = new Date(year, month, 1);
+    const day = start < monthStart ? monthStart : start;
+    setSelectedDate(new Date(day.getFullYear(), day.getMonth(), day.getDate()));
+    setSelectedEventId(event._id);
   };
 
   const handleCreateEvent = () => {
-    setFormData({
-      title: '',
-      description: '',
-      startDate: '',
-      endDate: '',
-      category: 'academic',
-      isHoliday: false,
-    });
+    setFormData(EMPTY_FORM);
     setEditingEvent(null);
     setShowEventForm(true);
   };
@@ -273,7 +317,7 @@ export default function CalendarPage() {
     });
     setEditingEvent(event);
     setShowEventForm(true);
-    setSelectedEvent(null);
+    setSelectedEventId(null);
   };
 
   const handleDeleteEvent = async (id: string) => {
@@ -281,7 +325,7 @@ export default function CalendarPage() {
     try {
       await deleteMutation.mutateAsync(id);
       addToast({ type: 'success', message: '일정이 삭제되었습니다.' });
-      setSelectedEvent(null);
+      setSelectedEventId(null);
     } catch {
       addToast({ type: 'warning', message: '일정 삭제에 실패했습니다.' });
     }
@@ -317,524 +361,349 @@ export default function CalendarPage() {
     }
   };
 
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+  const toggleCategory = (cat: AcademicEventCategory) => {
+    setSelectedCategory((prev) => (prev === cat ? 'all' : cat));
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <CalendarDays className="w-8 h-8" style={{ color: '#153974' }} />
-            <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#153974' }}>
-              학사일정
-            </h1>
-          </div>
-          {isAdmin && (
-            <button
-              onClick={handleCreateEvent}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-white transition-colors"
-              style={{ backgroundColor: '#153974' }}
-            >
-              <Plus className="w-4 h-4" />
-              일정 추가
-            </button>
-          )}
-        </div>
-
-        {/* Category Filter */}
-        <div className="mb-4 flex gap-2 flex-wrap">
-          <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              selectedCategory === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-            }`}
-          >
-            전체
-          </button>
-          {(Object.keys(categoryLabels) as AcademicEventCategory[]).map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === cat
-                  ? categoryColors[cat]
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {categoryLabels[cat]}
-            </button>
-          ))}
-        </div>
-
-        {/* Calendar Card */}
-        <Card className="mb-6">
-          <CardContent className="px-1 py-4 md:p-6">
-            {/* Calendar Navigation */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => navigateMonth('prev')}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <h2 className="text-lg md:text-xl font-semibold min-w-[3rem] text-center">
-                  {month + 1}월
-                </h2>
-                <button
-                  onClick={() => navigateMonth('next')}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={goToToday}
-                  className="px-3 py-1 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-50 transition-colors ml-1"
-                >
-                  오늘
-                </button>
-              </div>
-              <h2 className="text-lg md:text-xl font-semibold text-gray-500 mr-2">
-                {year}년
-              </h2>
-            </div>
-
-            {/* Calendar Grid */}
-            {isLoading ? (
-              <div className="grid grid-cols-7 gap-0 md:gap-1">
-                {dayNames.map((day) => (
-                  <div key={day} className="text-center text-sm font-medium text-gray-600 py-2">
-                    {day}
-                  </div>
-                ))}
-                {Array.from({ length: 35 }).map((_, i) => (
-                  <div key={i} className="min-h-[90px] md:aspect-square bg-gray-100 animate-pulse border border-gray-200 md:rounded-lg" />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-7 gap-0 md:gap-1">
-                {dayNames.map((day, i) => (
-                  <div
-                    key={day}
-                    className={`text-center text-xs md:text-sm font-medium py-2 border-b border-gray-200 md:border-b-0 ${
-                      i === 0 ? 'text-red-600' : i === 6 ? 'text-blue-600' : 'text-gray-600'
-                    }`}
-                  >
-                    {day}
-                  </div>
-                ))}
-                {calendarDays.map((date, index) => {
-                  if (!date) {
-                    return <div key={`empty-${index}`} className="min-h-[90px] md:aspect-square border border-gray-100 md:border-0" />;
-                  }
-
-                  const dateStr = toDateKey(date);
-                  const dayEvents = eventsByDate.get(dateStr) || [];
-                  const isToday = isSameDay(date, today);
-                  const dayOfWeek = date.getDay();
-                  const isSelected = selectedDate && isSameDay(date, selectedDate);
-
-                  return (
-                    <div
-                      key={dateStr}
-                      onClick={() => {
-                        setSelectedDate((prev) =>
-                          prev && isSameDay(prev, date) ? null : date
-                        );
-                        handleDateClick(date);
-                      }}
-                      className={`min-h-[90px] md:aspect-square p-0.5 md:p-2 border border-gray-200 md:rounded-lg ${
-                        isToday && isSelected
-                          ? 'bg-blue-100 md:bg-blue-50 border-amber-400 md:border-2 md:border-blue-500 md:ring-2 md:ring-amber-400 md:ring-offset-0'
-                          : isToday
-                          ? 'bg-blue-50 border-blue-400 md:border-2 md:border-blue-500'
-                          : isSelected
-                          ? 'bg-amber-50/50 border-amber-300 md:border-2 md:border-amber-400 md:bg-white md:hover:bg-gray-50'
-                          : 'bg-white hover:bg-gray-50'
-                      } cursor-pointer md:cursor-default ${isAdmin ? 'md:cursor-pointer' : ''} transition-colors overflow-hidden`}
-                    >
-                      <div
-                        className={`text-[10px] md:text-sm font-medium mb-0.5 md:mb-1 ${
-                          dayOfWeek === 0
-                            ? 'text-red-600'
-                            : dayOfWeek === 6
-                            ? 'text-blue-600'
-                            : 'text-gray-700'
-                        }`}
-                      >
-                        {date.getDate()}
-                      </div>
-                      {/* Desktop: existing event text (hidden on mobile) */}
-                      <div className="hidden md:block space-y-0.5">
-                        {dayEvents.slice(0, 3).map((event, i) => {
-                          const start = new Date(event.startDate);
-                          const end = event.endDate ? new Date(event.endDate) : start;
-                          const diffDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-                          const isLong = diffDays > 7;
-                          const isStartDay = date && isSameDay(date, start);
-                          const isEndDay = date && event.endDate && isSameDay(date, end);
-
-                          // 장기 일정 라벨: 시작일엔 "~MM.DD", 종료일엔 "MM.DD~"
-                          let label = event.title;
-                          if (isLong && event.endDate) {
-                            const endM = String(end.getMonth() + 1).padStart(2, '0');
-                            const endD = String(end.getDate()).padStart(2, '0');
-                            const startM = String(start.getMonth() + 1).padStart(2, '0');
-                            const startD = String(start.getDate()).padStart(2, '0');
-                            if (isStartDay) label = `${event.title} ~${endM}.${endD}`;
-                            else if (isEndDay) label = `${startM}.${startD}~ ${event.title}`;
-                          }
-
-                          return (
-                            <div
-                              key={`${event._id}-${i}`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEventClick(event);
-                              }}
-                              className={`text-xs px-1 py-0.5 rounded truncate cursor-pointer ${
-                                categoryColors[event.category]
-                              } ${diffDays > 0 ? 'font-medium' : ''} ${isLong ? 'italic' : ''}`}
-                              title={`${event.title}${event.endDate ? ` (${formatDateRange(event.startDate, event.endDate)})` : ''}`}
-                            >
-                              {event.isHoliday && '🔴 '}
-                              {label}
-                            </div>
-                          );
-                        })}
-                        {dayEvents.length > 3 && (
-                          <div className="text-xs text-gray-500 px-1">
-                            +{dayEvents.length - 3}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Mobile: tiny text events */}
-                      <div className="md:hidden space-y-px pointer-events-none">
-                        {dayEvents.slice(0, 3).map((event, i) => (
-                          <div
-                            key={`m-${event._id}-${i}`}
-                            className={`text-[10px] leading-tight px-0.5 rounded truncate ${
-                              event.category === 'academic' ? 'text-blue-700 bg-blue-50' :
-                              event.category === 'registration' ? 'text-green-700 bg-green-50' :
-                              event.category === 'exam' ? 'text-red-700 bg-red-50' :
-                              event.category === 'holiday' ? 'text-rose-700 bg-rose-50' :
-                              'text-gray-600 bg-gray-50'
-                            }`}
-                            title={event.title}
-                          >
-                            {event.title}
-                          </div>
-                        ))}
-                        {dayEvents.length > 3 && (
-                          <div className="text-[9px] text-gray-400 px-0.5 leading-tight">
-                            +{dayEvents.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Mobile: Selected Day Events */}
-        {selectedDate && (
-          <div className="md:hidden mb-4">
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-base" style={{ color: '#153974' }}>
-                    {selectedDate.getMonth() + 1}월 {selectedDate.getDate()}일
-                    ({['일','월','화','수','목','금','토'][selectedDate.getDay()]})
-                  </h3>
+    <div>
+      <PageHeader
+        title="학사 일정"
+        description={`${getSemesterLabel(year, month)} · 날짜를 누르면 그날의 일정을 볼 수 있어요`}
+        actions={
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            {/* 범례 겸 분류 필터: '전체' 또는 분류를 누르면 해당 분류만, 다시 누르면 전체 */}
+            <div role="group" aria-label="분류 필터" className="flex flex-wrap items-center gap-x-4">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                aria-pressed={selectedCategory === 'all'}
+                className={cn(
+                  'inline-flex h-11 items-center text-[13px] transition-colors duration-150 ease-out',
+                  selectedCategory === 'all' ? 'font-semibold text-ink' : 'font-medium text-ink-2 hover:text-ink'
+                )}
+              >
+                전체
+              </button>
+              {(Object.keys(categoryLabels) as AcademicEventCategory[]).map((cat) => {
+                const active = selectedCategory === cat;
+                const dimmed = selectedCategory !== 'all' && !active;
+                return (
                   <button
-                    onClick={() => setSelectedDate(null)}
-                    className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+                    key={cat}
+                    type="button"
+                    onClick={() => toggleCategory(cat)}
+                    aria-pressed={active}
+                    className={cn(
+                      'inline-flex h-11 items-center gap-1.5 text-[13px] transition-colors duration-150 ease-out',
+                      active ? 'font-semibold text-ink' : 'font-medium text-ink-2 hover:text-ink',
+                      dimmed && 'opacity-50 hover:opacity-100'
+                    )}
                   >
-                    <X className="w-4 h-4 text-gray-500" />
+                    <EventDot category={cat} />
+                    {categoryLabels[cat]}
                   </button>
-                </div>
-                {(() => {
-                  const dateStr = toDateKey(selectedDate);
-                  const dayEvents = eventsByDate.get(dateStr) || [];
-                  if (dayEvents.length === 0) {
-                    return (
-                      <p className="text-sm text-gray-400 text-center py-4">
-                        이 날의 일정이 없습니다.
-                      </p>
-                    );
-                  }
-                  return (
-                    <div className="space-y-2">
-                      {dayEvents.map((event, i) => (
-                        <div
-                          key={`mobile-${event._id}-${i}`}
-                          onClick={() => handleEventClick(event)}
-                          className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-100"
-                        >
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap ${
-                            categoryColors[event.category]
-                          }`}>
-                            {categoryLabels[event.category]}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              {event.isHoliday && <span className="text-red-600 text-xs">🔴</span>}
-                              <span className="text-sm font-medium truncate">
-                                {event.title}
-                              </span>
-                            </div>
-                            {event.endDate && (
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                {formatDateRange(event.startDate, event.endDate)}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
+                );
+              })}
+            </div>
+            {isAdmin && (
+              <Button onClick={handleCreateEvent}>
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                일정 추가
+              </Button>
+            )}
           </div>
-        )}
+        }
+      />
 
-        {/* Selected Event Detail */}
-        {selectedEvent && (
-          <Card className="mb-6 border-l-4" style={{ borderLeftColor: '#00AACA' }}>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${
-                        categoryColors[selectedEvent.category]
-                      }`}
-                    >
-                      {categoryLabels[selectedEvent.category]}
-                    </span>
-                    {selectedEvent.isHoliday && (
-                      <span className="text-red-600 text-sm">🔴 공휴일</span>
+      <div className="border-t border-line-2 xl:flex xl:items-start">
+        <section aria-label="월간 달력" className="flex min-w-0 flex-1 flex-col gap-4 pt-6 xl:pr-10">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => navigateMonth('prev')}
+                aria-label="이전 달"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] text-ink transition-colors duration-150 hover:bg-fill md:h-9 md:w-9"
+              >
+                <ChevronLeft className="h-[18px] w-[18px]" aria-hidden="true" />
+              </button>
+              <h2 className="m-0 min-w-[132px] text-center text-[20px] leading-7 font-bold tracking-[-0.02em] tabular-nums text-ink">
+                {year}년 {month + 1}월
+              </h2>
+              <button
+                type="button"
+                onClick={() => navigateMonth('next')}
+                aria-label="다음 달"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] text-ink transition-colors duration-150 hover:bg-fill md:h-9 md:w-9"
+              >
+                <ChevronRight className="h-[18px] w-[18px]" aria-hidden="true" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={goToToday}
+              className="h-11 rounded-[8px] px-2.5 text-[14px] font-semibold text-ink transition-colors duration-150 hover:text-primary md:h-9"
+            >
+              오늘
+            </button>
+          </div>
+
+          <div
+            aria-label={`${year}년 ${month + 1}월 달력`}
+            aria-busy={isLoading || undefined}
+            className="grid grid-cols-7 border-b border-line"
+          >
+            {DAY_NAMES.map((day, i) => (
+              <span
+                key={day}
+                aria-hidden="true"
+                className={cn(
+                  'flex h-8 items-center justify-center px-2 text-[12px] font-semibold md:justify-start',
+                  i === 0 ? 'text-negative' : 'text-ink-2'
+                )}
+              >
+                {day}
+              </span>
+            ))}
+            {calendarCells.map((cell) => {
+              const { date, inMonth } = cell;
+              const dateStr = toDateKey(date);
+              const dayEvents = inMonth ? eventsByDate.get(dateStr) || [] : [];
+              const isToday = isSameDay(date, today);
+              const isSelected = !!selectedDate && isSameDay(date, selectedDate);
+              const isHoliday = dayEvents.some((e) => e.isHoliday);
+              const isSunday = date.getDay() === 0;
+
+              // 셀은 div, 날짜 숫자가 버튼(::before로 셀 전체를 덮어 클릭 영역 유지), 일정 제목은 그 위의 개별 버튼
+              return (
+                <div
+                  key={dateStr}
+                  className={cn(
+                    'relative flex min-h-[56px] min-w-0 flex-col items-center gap-1 border-t border-line p-1 transition-colors duration-150 ease-out md:min-h-24 md:items-start md:p-2',
+                    isSelected ? 'bg-fill' : 'hover:bg-fill/60'
+                  )}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleCellClick(cell)}
+                    aria-label={`${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일, 일정 ${dayEvents.length}개`}
+                    aria-pressed={isSelected}
+                    aria-current={isToday ? 'date' : undefined}
+                    className={cn(
+                      'inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold tabular-nums',
+                      'before:absolute before:inset-0 focus-visible:outline-none focus-visible:before:outline-2 focus-visible:before:-outline-offset-2 focus-visible:before:outline-primary',
+                      isToday
+                        ? 'bg-primary text-white'
+                        : !inMonth
+                        ? 'text-[#C9CFD9]'
+                        : isHoliday || isSunday
+                        ? 'text-negative'
+                        : 'text-ink'
+                    )}
+                  >
+                    {date.getDate()}
+                  </button>
+
+                  {/* Desktop: 6px 점 + 12px 한 줄 제목 */}
+                  <div className="hidden w-full min-w-0 flex-col gap-1 md:flex">
+                    {dayEvents.slice(0, 2).map((event, i) => {
+                      const start = new Date(event.startDate);
+                      const end = event.endDate ? new Date(event.endDate) : start;
+                      const isLong = getDiffDays(event) > 7;
+
+                      // 장기 일정 라벨: 시작일엔 "~M.DD", 종료일엔 "M.DD~"
+                      let label = event.title;
+                      if (isLong && event.endDate) {
+                        if (isSameDay(date, start)) label = `${event.title} ~${formatShortDate(end)}`;
+                        else if (isSameDay(date, end)) label = `${formatShortDate(start)}~ ${event.title}`;
+                      }
+
+                      return (
+                        <button
+                          key={`${event._id}-${i}`}
+                          type="button"
+                          onClick={() => handleCellEventClick(date, event)}
+                          aria-label={`${event.title} 상세 보기`}
+                          title={event.title}
+                          className="relative z-[1] flex max-w-full items-center gap-[5px] text-left text-[12px] leading-4 text-ink transition-colors duration-150 ease-out hover:text-primary"
+                        >
+                          <EventDot category={event.category} />
+                          <span className="min-w-0 truncate">{label}</span>
+                        </button>
+                      );
+                    })}
+                    {dayEvents.length > 2 && (
+                      <span className="text-[12px] leading-4 text-ink-2">+{dayEvents.length - 2}</span>
                     )}
                   </div>
-                  <h3 className="text-lg font-semibold mb-1">{selectedEvent.title}</h3>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {formatDateRange(selectedEvent.startDate, selectedEvent.endDate)}
-                  </p>
-                  {selectedEvent.description && (
-                    <p className="text-sm text-gray-700">{selectedEvent.description}</p>
+
+                  {/* Mobile: 점만 */}
+                  {dayEvents.length > 0 && (
+                    <span aria-hidden="true" className="flex items-center gap-[3px] md:hidden">
+                      {dayEvents.slice(0, 3).map((event, i) => (
+                        <EventDot key={`m-${event._id}-${i}`} category={event.category} />
+                      ))}
+                    </span>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  {isAdmin && !selectedEvent.isSystemHoliday && (
-                    <>
-                      <button
-                        onClick={() => handleEditEvent(selectedEvent)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        <Pencil className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEvent(selectedEvent._id)}
-                        className="p-2 rounded-lg hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600" />
-                      </button>
-                    </>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* 모바일 섹션 구분 띠 */}
+        <div aria-hidden="true" className="-mx-5 mt-6 h-2.5 bg-fill md:hidden" />
+
+        <aside
+          aria-label="선택한 날과 이번 달 일정"
+          className="flex min-w-0 flex-col gap-8 pt-2 md:mt-8 md:border-t md:border-line-2 md:pt-6 xl:mt-0 xl:w-[340px] xl:shrink-0 xl:border-t-0 xl:border-l xl:border-line xl:pl-8"
+        >
+          <section aria-labelledby="selected-day-title" className="flex flex-col">
+            <div className="flex min-h-12 items-center justify-between gap-3 md:min-h-0">
+              <h2 id="selected-day-title" className="m-0 text-[16px] leading-6 font-bold text-ink">
+                {selectedDate
+                  ? `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일 (${DAY_NAMES[selectedDate.getDay()]})`
+                  : '날짜를 선택하세요'}
+              </h2>
+              {selectedDate && (
+                <div className="-mr-2 flex items-center">
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => handleAddOnDate(selectedDate)}
+                      className="h-11 px-2 text-[13px] font-semibold text-primary transition-colors duration-150 hover:text-primary-hover md:h-8"
+                    >
+                      이 날에 추가
+                    </button>
                   )}
                   <button
-                    onClick={() => setSelectedEvent(null)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    type="button"
+                    onClick={clearSelectedDate}
+                    aria-label="날짜 선택 해제"
+                    className="inline-flex h-11 w-11 items-center justify-center text-ink-2 transition-colors duration-150 hover:text-ink md:h-8 md:w-8"
                   >
-                    <X className="w-4 h-4 text-gray-600" />
+                    <X className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
+              )}
+            </div>
+            {!selectedDate ? (
+              <p className="m-0 border-b border-line py-3.5 text-[14px] leading-5 text-ink-2">
+                달력에서 날짜를 누르면 그날의 일정이 보여요.
+              </p>
+            ) : isLoading ? (
+              <div className="border-b border-line py-3.5">
+                <div className="h-5 w-2/3 animate-pulse rounded-[4px] bg-fill" />
               </div>
-            </CardContent>
-          </Card>
-        )}
+            ) : selectedDayEvents.length === 0 ? (
+              <p className="m-0 border-b border-line py-3.5 text-[14px] leading-5 text-ink-2">
+                이 날의 일정이 없습니다.
+              </p>
+            ) : (
+              <ul className="m-0 list-none p-0">
+                {selectedDayEvents.map((event, i) => {
+                  const expanded = selectedEventId === event._id;
+                  const canManage = isAdmin && !event.isSystemHoliday;
+                  return (
+                    <li key={`sel-${event._id}-${i}`} className="border-b border-line">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEventId(expanded ? null : event._id)}
+                        aria-expanded={expanded}
+                        className="flex w-full flex-col gap-1 py-3.5 text-left"
+                      >
+                        <span className="text-[15px] leading-5 font-medium text-ink">{event.title}</span>
+                        <span className="inline-flex items-center gap-[5px] text-[12px] leading-4 text-ink-2">
+                          <EventDot category={event.category} />
+                          {categoryLabels[event.category]} · {formatDateRange(event.startDate, event.endDate)}
+                          {event.isHoliday && event.category !== 'holiday' && ' · 공휴일'}
+                        </span>
+                      </button>
+                      {expanded && (event.description || canManage) && (
+                        <div className="flex flex-col gap-2 pb-3.5">
+                          {event.description && (
+                            <p className="m-0 text-[14px] leading-5 whitespace-pre-line text-ink-2">
+                              {event.description}
+                            </p>
+                          )}
+                          {canManage && (
+                            <div className="-ml-2.5 flex items-center gap-1">
+                              <Button variant="text" size="sm" onClick={() => handleEditEvent(event)}>
+                                수정
+                              </Button>
+                              <Button
+                                variant="textDanger"
+                                size="sm"
+                                onClick={() => handleDeleteEvent(event._id)}
+                              >
+                                삭제
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
 
-        {/* Event List */}
-        <Card>
-          <CardContent className="p-4 md:p-6">
-            <h3 className="text-lg font-semibold mb-4" style={{ color: '#153974' }}>
+          <section aria-labelledby="month-events-title" className="flex flex-col">
+            <h2 id="month-events-title" className="m-0 flex min-h-12 items-center text-[16px] leading-6 font-bold text-ink md:min-h-0">
               이번 달 일정
-            </h3>
+            </h2>
             {isLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-100 animate-pulse rounded-lg" />
+              <div className="flex flex-col">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex min-h-[52px] items-center gap-3 border-b border-line py-1.5">
+                    <div className="h-4 w-[72px] animate-pulse rounded-[4px] bg-fill" />
+                    <div className="h-4 flex-1 animate-pulse rounded-[4px] bg-fill" />
+                  </div>
                 ))}
               </div>
             ) : sortedEvents.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">등록된 일정이 없습니다.</p>
+              <p className="m-0 py-3.5 text-[14px] leading-5 text-ink-2">등록된 일정이 없습니다.</p>
             ) : (
-              <div className="space-y-2">
+              <ul className="m-0 list-none p-0">
                 {sortedEvents.map((event) => (
-                  <div
-                    key={event._id}
-                    onClick={() => handleEventClick(event)}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer border border-gray-200"
-                  >
-                    <div
-                      className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ${
-                        categoryColors[event.category]
-                      }`}
-                    >
-                      {categoryLabels[event.category]}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        {event.isHoliday && <span className="text-red-600">🔴</span>}
-                        <span className="font-medium">{event.title}</span>
-                      </div>
-                      <p className="text-xs text-gray-600">
-                        {formatDateRange(event.startDate, event.endDate)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Event Form Modal */}
-        {showEventForm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xl font-semibold" style={{ color: '#153974' }}>
-                    {editingEvent ? '일정 수정' : '일정 추가'}
-                  </h3>
-                  <button
-                    onClick={() => setShowEventForm(false)}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSubmitEvent} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      제목 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">설명</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        시작일 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.startDate}
-                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        종료일
-                      </label>
-                      <input
-                        type="date"
-                        value={formData.endDate}
-                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                        min={formData.startDate}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">분류</label>
-                    <select
-                      value={formData.category}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          category: e.target.value as AcademicEventCategory,
-                        })
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      {(Object.keys(categoryLabels) as AcademicEventCategory[]).map((cat) => (
-                        <option key={cat} value={cat}>
-                          {categoryLabels[cat]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="isHoliday"
-                      checked={formData.isHoliday}
-                      onChange={(e) => setFormData({ ...formData, isHoliday: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <label htmlFor="isHoliday" className="text-sm font-medium text-gray-700">
-                      공휴일로 표시
-                    </label>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
+                  <li key={event._id}>
                     <button
                       type="button"
-                      onClick={() => setShowEventForm(false)}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                      onClick={() => handleMonthEventClick(event)}
+                      className="flex min-h-[52px] w-full items-center gap-3 border-b border-line py-1.5 text-left transition-colors duration-150 hover:bg-fill/60"
                     >
-                      취소
+                      <span className="w-[92px] shrink-0 text-[13px] leading-[18px] tabular-nums text-ink-2">
+                        {formatDateRange(event.startDate, event.endDate)}
+                      </span>
+                      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <span className="text-[15px] leading-5 font-medium text-ink">{event.title}</span>
+                        <span className="inline-flex items-center gap-[5px] text-[12px] leading-4 text-ink-2">
+                          <EventDot category={event.category} />
+                          {categoryLabels[event.category]}
+                        </span>
+                      </span>
                     </button>
-                    <button
-                      type="submit"
-                      disabled={createMutation.isPending || updateMutation.isPending}
-                      className="flex-1 px-4 py-2 rounded-lg text-white transition-colors disabled:opacity-50"
-                      style={{ backgroundColor: '#153974' }}
-                    >
-                      {createMutation.isPending || updateMutation.isPending
-                        ? '저장 중...'
-                        : editingEvent
-                        ? '수정'
-                        : '추가'}
-                    </button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </aside>
       </div>
+
+      {showEventForm && (
+        <EventFormDialog
+          isEditing={!!editingEvent}
+          formData={formData}
+          onChange={setFormData}
+          onSubmit={handleSubmitEvent}
+          onClose={() => setShowEventForm(false)}
+          isPending={createMutation.isPending || updateMutation.isPending}
+          categoryLabels={categoryLabels}
+        />
+      )}
     </div>
   );
 }

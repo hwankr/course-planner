@@ -2,20 +2,17 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui';
+import { PageHeader } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { Megaphone, ArrowRight } from 'lucide-react';
 import type { IPatchNoteResponse } from '@/types';
+import { formatPatchNoteDate, toPatchNoteItems } from './_components/format';
 
-const formatDate = (dateStr: string) =>
-  new Date(dateStr).toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-const truncate = (text: string, max = 100) =>
+// 목록에서는 앞쪽 항목만 보여주고 나머지는 상세에서 본다
+const MAX_LIST_ITEMS = 4;
+const truncate = (text: string, max = 140) =>
   text.length <= max ? text : text.slice(0, max) + '...';
+
+const HEADER_DESCRIPTION = '새로 생긴 기능과 고친 점을 모아둡니다.';
 
 export default function PatchNotesPage() {
   const { isLoading: authLoading } = useAuth();
@@ -32,10 +29,16 @@ export default function PatchNotesPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="max-w-2xl mx-auto space-y-4">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-slate-200" />
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-200" />
+      <div className="flex max-w-[760px] flex-col" aria-busy="true">
+        <PageHeader title="업데이트 소식" description={HEADER_DESCRIPTION} />
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex flex-wrap gap-x-10 gap-y-2 border-t border-line-2 pt-7 pb-8" aria-hidden="true">
+            <div className="h-5 w-[140px] animate-pulse bg-fill" />
+            <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-2.5">
+              <div className="h-6 w-1/2 animate-pulse bg-fill" />
+              <div className="h-5 w-full animate-pulse bg-fill" />
+            </div>
+          </div>
         ))}
       </div>
     );
@@ -43,10 +46,11 @@ export default function PatchNotesPage() {
 
   if (error) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
-          <p className="text-sm text-red-600">업데이트 소식을 불러오는 중 오류가 발생했습니다.</p>
-        </div>
+      <div className="flex max-w-[760px] flex-col">
+        <PageHeader title="업데이트 소식" description={HEADER_DESCRIPTION} />
+        <p role="alert" className="m-0 border-t border-line-2 py-7 text-[15px] leading-[23px] text-negative">
+          업데이트 소식을 불러오는 중 오류가 발생했습니다.
+        </p>
       </div>
     );
   }
@@ -54,58 +58,53 @@ export default function PatchNotesPage() {
   const patchNotes = data?.data ?? [];
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
-      {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-100">
-          <Megaphone className="w-5 h-5 text-purple-600" />
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">업데이트 소식</h1>
-      </div>
+    <div className="flex max-w-[760px] flex-col">
+      <PageHeader title="업데이트 소식" description={HEADER_DESCRIPTION} />
 
-      {/* Empty state */}
-      {patchNotes.length === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-10 text-center">
-          <Megaphone className="mx-auto mb-3 h-8 w-8 text-slate-300" />
-          <p className="text-sm text-slate-500">등록된 업데이트 소식이 없습니다.</p>
-        </div>
-      )}
-
-      {/* Patch note cards */}
-      <div className="flex flex-col gap-3">
-        {patchNotes.map((note) => (
-          <Link key={note._id} href={`/patch-notes/${note._id}`}>
-            <Card className="transition-shadow hover:shadow-md cursor-pointer">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-100">
-                      <Megaphone className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                        <span className="font-semibold text-gray-900 truncate">{note.title}</span>
-                        {note.version && (
-                          <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700 flex-shrink-0">
-                            {note.version}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-400 mb-2">
-                        {note.publishedAt ? formatDate(note.publishedAt) : formatDate(note.createdAt)}
-                      </p>
-                      <p className="text-sm text-slate-600 leading-relaxed">
-                        {truncate(note.content)}
-                      </p>
-                    </div>
+      {patchNotes.length === 0 ? (
+        <p className="m-0 border-t border-line-2 py-7 text-[15px] leading-[23px] text-ink-2">
+          등록된 업데이트 소식이 없습니다.
+        </p>
+      ) : (
+        <ul className="m-0 flex list-none flex-col border-b border-line-2 p-0">
+          {patchNotes.map((note, index) => {
+            const items = toPatchNoteItems(note.content);
+            const hiddenCount = items.length - MAX_LIST_ITEMS;
+            return (
+              <li key={note._id} className="border-t border-line-2">
+                <Link
+                  href={`/patch-notes/${note._id}`}
+                  className="group flex flex-wrap gap-x-10 gap-y-2 pt-7 pb-8"
+                >
+                  <div className="flex flex-[0_0_140px] flex-col gap-1">
+                    <span className="text-[14px] font-semibold text-ink tabular-nums">
+                      {formatPatchNoteDate(note.publishedAt || note.createdAt)}
+                    </span>
+                    {(note.version || index === 0) && (
+                      <span className="text-[13px] text-ink-2">
+                        {[note.version, index === 0 ? '최신' : null].filter(Boolean).join(' · ')}
+                      </span>
+                    )}
                   </div>
-                  <ArrowRight className="flex-shrink-0 mt-1 h-4 w-4 text-slate-300" />
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
-      </div>
+                  <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-2.5">
+                    <h2 className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink transition-colors duration-150 ease-out group-hover:text-primary">
+                      {note.title}
+                    </h2>
+                    <ul className="m-0 flex list-disc flex-col gap-1.5 pl-[18px] text-[15px] leading-[23px] break-words text-ink">
+                      {items.slice(0, MAX_LIST_ITEMS).map((item, i) => (
+                        <li key={i}>{truncate(item)}</li>
+                      ))}
+                    </ul>
+                    {hiddenCount > 0 && (
+                      <span className="text-[13px] leading-[18px] text-ink-2">외 {hiddenCount}개 항목</span>
+                    )}
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

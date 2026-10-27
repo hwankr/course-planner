@@ -1,6 +1,5 @@
 'use client';
 
-import { Megaphone, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PatchNotePreviewProps {
@@ -14,6 +13,7 @@ interface PatchNotePreviewProps {
  * 관리자가 발행 전 유저에게 어떻게 보이는지 확인할 수 있음
  *
  * // SYNC: 알림 드롭다운 아이템 마크업은 layout.tsx의 notification item rendering과 동기화 필요
+ * // SYNC: 상세 마크업은 app/(dashboard)/patch-notes/[id]/page.tsx와 동기화 필요
  */
 export function PatchNotePreview({ title, content, version }: PatchNotePreviewProps) {
   const displayTitle = title.trim() || '제목을 입력하세요';
@@ -23,62 +23,50 @@ export function PatchNotePreview({ title, content, version }: PatchNotePreviewPr
     : displayTitle;
 
   return (
-    <div className="rounded-xl border-2 border-dashed border-purple-200 bg-purple-50/30 p-4 space-y-4">
-      {/* Header */}
-      <div className="flex items-center gap-2 text-purple-600">
-        <Eye className="w-4 h-4" />
-        <span className="text-sm font-semibold">미리보기</span>
-      </div>
+    <section aria-label="미리보기" className="flex flex-col gap-5 border-t border-line-2 pt-5">
+      <h3 className="m-0 text-[13px] leading-[18px] font-semibold text-ink-2">미리보기</h3>
 
       {/* Section 1: Notification Dropdown Preview */}
-      <div className="space-y-1.5">
-        <p className="text-xs font-medium text-slate-500">알림 드롭다운</p>
-        <div className="rounded-lg border border-slate-200 bg-white p-0 overflow-hidden">
-          {/* SYNC: layout.tsx notification item rendering (lines 278-303) */}
-          <div className="flex items-start gap-3 px-4 py-3">
-            <div className="flex-shrink-0 mt-0.5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-100">
-                <Megaphone className="w-4 h-4 text-purple-600" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-700">
-                새로운 업데이트: {truncatedTitle}
-              </p>
-              <p className="text-xs text-gray-400 mt-0.5">방금 전</p>
-            </div>
+      <div className="flex flex-col gap-1.5">
+        <p className="m-0 text-[12px] leading-4 font-medium text-ink-2">알림 드롭다운</p>
+        <div className="max-w-[360px] rounded-none border border-line-2 bg-white">
+          {/* SYNC: layout.tsx NotificationMenu item rendering */}
+          <div className="flex min-h-[56px] flex-col justify-center gap-0.5 px-4 py-2.5">
+            <span className="text-[14px] leading-5 font-medium text-ink">
+              새로운 업데이트: {truncatedTitle}
+            </span>
+            <span className="text-[12px] leading-4 text-ink-2">업데이트 · 방금 전</span>
           </div>
         </div>
       </div>
 
       {/* Section 2: Content Detail Preview */}
-      <div className="space-y-1.5">
-        <p className="text-xs font-medium text-slate-500">업데이트 소식 상세</p>
-        <div className="rounded-lg border border-slate-200 bg-white p-4 space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className={cn(
-              'text-base font-bold',
-              title.trim() ? 'text-gray-900' : 'text-gray-400 italic'
-            )}>
-              {displayTitle}
-            </h3>
-            {version?.trim() && (
-              <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                {version.trim()}
-              </span>
+      <div className="flex flex-col gap-1.5">
+        <p className="m-0 text-[12px] leading-4 font-medium text-ink-2">업데이트 소식 상세</p>
+        <div className="flex flex-col border border-line-2 p-5">
+          <h4
+            className={cn(
+              'm-0 text-[22px] leading-[30px] font-bold tracking-[-0.02em] break-words md:text-[26px] md:leading-[34px]',
+              title.trim() ? 'text-ink' : 'text-placeholder'
             )}
-          </div>
-          <div className="max-h-64 overflow-y-auto">
-            <p className={cn(
-              'text-sm whitespace-pre-wrap leading-relaxed',
-              content.trim() ? 'text-slate-700' : 'text-gray-400 italic'
-            )}>
+          >
+            {displayTitle}
+          </h4>
+          <p className="m-0 mt-1.5 text-[13px] leading-[18px] text-ink-2 tabular-nums">
+            방금 전{version?.trim() && <> · {version.trim()}</>}
+          </p>
+          <div className="mt-5 max-h-64 overflow-y-auto border-t border-line-2 pt-5">
+            <p
+              className={cn(
+                'm-0 text-[15px] leading-6 break-words whitespace-pre-wrap',
+                content.trim() ? 'text-ink' : 'text-placeholder'
+              )}
+            >
               {displayContent}
             </p>
           </div>
-          <p className="text-xs text-slate-400">방금 전</p>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

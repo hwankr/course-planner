@@ -2,10 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button, Input } from '@/components/ui';
+import { AuthIntro } from '@/app/_components/AuthIntro';
+
+const REGISTER_FEATURES = [
+  { title: '체계적인 학기별 수강 관리', description: '4년간의 수강 계획을 한 곳에서 관리하세요' },
+  { title: '졸업 요건 실시간 추적', description: '언제든지 졸업까지 필요한 학점을 확인하세요' },
+  { title: '다른 사람들의 수강 계획 참고', description: '같은 학과 학생들의 수강 계획을 참고하세요' },
+];
 
 export default function RegisterPage() {
   const { register, isLoading } = useAuth();
@@ -53,136 +58,63 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex-1 flex">
-      {/* Left Panel - Branded Gradient */}
-      <div className="hidden md:flex md:w-1/2 lg:w-3/5 bg-gradient-to-r from-[#003E7E] via-[#153974] to-[#3069B3] animate-gradient relative overflow-hidden">
-        {/* Mesh Overlay */}
-        <div className="absolute inset-0 bg-mesh opacity-30" />
+    <div className="flex min-h-screen flex-wrap items-stretch bg-white text-ink">
+      <AuthIntro features={REGISTER_FEATURES} />
 
-        {/* Floating Decorative Shapes */}
-        <div className="absolute top-24 right-24 w-36 h-36 bg-white/20 rounded-full blur-xl animate-float" />
-        <div className="absolute bottom-40 left-32 w-44 h-44 bg-white/20 rounded-full blur-xl animate-float anim-delay-400" />
-        <div className="absolute top-1/3 left-24 w-28 h-28 bg-white/20 rounded-full blur-xl animate-float anim-delay-600" />
-
-        {/* Content */}
-        <div className="relative z-10 flex items-center justify-center p-12 animate-fade-in">
-          <div className="max-w-lg text-white">
-            <Image src="/yu-logo-white.svg" alt="영남대학교" className="h-12 mb-6" width={120} height={48} style={{ width: 'auto' }} />
-            <h1 className="text-4xl lg:text-5xl font-bold mb-8 leading-tight whitespace-pre-line">
-              영남대학교{'\n'}YU the Future
+      <section
+        aria-labelledby="register-title"
+        className="flex min-w-0 flex-[1_1_420px] flex-col items-center justify-center px-5 pt-10 pb-16 min-[900px]:px-16 min-[900px]:pt-10"
+      >
+        <div className="flex w-full max-w-[400px] flex-col gap-7">
+          <div className="flex flex-col gap-1.5">
+            <h1 id="register-title" className="text-[26px] leading-[34px] font-bold tracking-[-0.02em]">
+              회원가입
             </h1>
-
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-1">체계적인 학기별 수강 관리</h3>
-                  <p className="text-blue-100">4년간의 수강 계획을 한 곳에서 관리하세요</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-1">졸업 요건 실시간 추적</h3>
-                  <p className="text-blue-100">언제든지 졸업까지 필요한 학점을 확인하세요</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <CheckCircle2 className="w-6 h-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="text-xl font-semibold mb-1">다른 사람들의 수강 계획 참고</h3>
-                  <p className="text-blue-100">같은 학과 학생들의 수강 계획을 참고하세요</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Right Panel - Form */}
-      <div className="w-full md:w-1/2 lg:w-2/5 flex items-center justify-center p-8 bg-white">
-        <div className="max-w-md w-full animate-fade-in-up">
-          {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <Image src="/yu-logo.svg" alt="영남대학교" className="h-6" width={60} height={24} style={{ width: 'auto' }} />
-            <h2 className="text-2xl font-bold text-gradient">YU 수강 플래너</h2>
+            <p className="text-[14px] leading-5 text-ink-2">새 계정을 만들어보세요</p>
           </div>
 
-          {/* Title */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">회원가입</h1>
-            <p className="text-gray-500">새 계정을 만들어보세요</p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md text-red-600 text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                이름
-              </label>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+            <div className="flex flex-col gap-5">
               <Input
                 id="name"
                 name="name"
                 type="text"
+                label="이름"
+                autoComplete="name"
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="홍길동"
                 required
               />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                이메일
-              </label>
               <Input
                 id="email"
                 name="email"
                 type="email"
+                label="이메일"
+                autoComplete="email"
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="email@example.com"
                 required
               />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                비밀번호
-              </label>
               <Input
                 id="password"
                 name="password"
                 type="password"
+                label="비밀번호"
+                autoComplete="new-password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="8자 이상 (대문자, 소문자, 숫자 포함)"
+                helperText="8자 이상, 대문자·소문자·숫자 포함"
                 required
               />
-              <p className="mt-1 text-xs text-gray-500">
-                8자 이상, 대문자·소문자·숫자 포함
-              </p>
-            </div>
-
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
-              >
-                비밀번호 확인
-              </label>
               <Input
                 id="confirmPassword"
                 name="confirmPassword"
                 type="password"
+                label="비밀번호 확인"
+                autoComplete="new-password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="비밀번호 재입력"
@@ -190,20 +122,32 @@ export default function RegisterPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full" isLoading={isSubmitting || isLoading}>
+            {error && (
+              <p role="alert" className="-mt-2 text-[13px] leading-[18px] font-medium text-negative">
+                {error}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              className="h-[52px] w-full text-[16px]"
+              isLoading={isSubmitting || isLoading}
+            >
               회원가입
             </Button>
           </form>
 
-          {/* Login Link */}
-          <p className="mt-6 text-center text-sm text-gray-600">
-            이미 계정이 있으신가요?{' '}
-            <Link href="/login" className="text-[#153974] hover:underline font-medium">
+          <p className="text-[14px] text-ink-2">
+            이미 계정이 있으세요?{' '}
+            <Link
+              href="/login"
+              className="-my-3 inline-block py-3 font-semibold text-primary transition-colors duration-150 ease-out hover:text-primary-hover"
+            >
               로그인
             </Link>
           </p>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

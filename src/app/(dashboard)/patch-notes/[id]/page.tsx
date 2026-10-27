@@ -3,11 +3,23 @@
 import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Megaphone } from 'lucide-react';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import type { IPatchNoteResponse } from '@/types';
+import { formatPatchNoteDate } from '../_components/format';
+
+function BackLink() {
+  return (
+    <Link
+      href="/patch-notes"
+      className="inline-flex min-h-11 items-center gap-1 self-start text-[14px] font-semibold text-ink-2 transition-colors duration-150 ease-out hover:text-ink md:min-h-0 md:pb-1"
+    >
+      <ArrowLeft aria-hidden="true" className="h-3.5 w-3.5" strokeWidth={2.5} />
+      업데이트 소식
+    </Link>
+  );
+}
 
 export default function PatchNoteDetailPage() {
   const params = useParams();
@@ -37,79 +49,44 @@ export default function PatchNoteDetailPage() {
 
   const patchNote = data?.data;
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('ko-KR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
   if (authLoading || isLoading) {
     return (
-      <div className="space-y-4 max-w-2xl mx-auto">
-        <div className="h-6 w-32 animate-pulse rounded-lg bg-slate-200" />
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200" />
+      <div className="flex max-w-[720px] flex-col gap-3" aria-busy="true">
+        <div className="h-5 w-24 animate-pulse bg-fill" />
+        <div className="h-[34px] w-2/3 animate-pulse bg-fill" />
+        <div className="mt-6 h-48 animate-pulse bg-fill" />
       </div>
     );
   }
 
   if (error || !patchNote) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <Link
-          href="/patch-notes"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          목록으로
-        </Link>
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-8 text-center">
-          <p className="text-sm text-red-600">업데이트 소식을 찾을 수 없습니다.</p>
-        </div>
+      <div className="flex max-w-[720px] flex-col">
+        <BackLink />
+        <p role="alert" className="m-0 mt-4 border-t border-line-2 py-7 text-[15px] leading-[23px] text-negative">
+          업데이트 소식을 찾을 수 없습니다.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
-      <Link
-        href="/patch-notes"
-        className="inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        목록으로
-      </Link>
+    <article className="flex max-w-[720px] flex-col">
+      <BackLink />
+      {/* 개별 노트 제목은 콘텐츠 — 상단바가 '업데이트 소식'만 보여주므로 모든 폭에서 표시 */}
+      <header className="flex flex-col gap-1.5 pt-2 pb-7 md:pt-1">
+        <h1 className="m-0 text-[22px] leading-[30px] font-bold tracking-[-0.02em] break-words text-ink md:text-[26px] md:leading-[34px]">
+          {patchNote.title}
+        </h1>
+        <p className="m-0 text-[13px] leading-[18px] text-ink-2 tabular-nums">
+          {formatPatchNoteDate(patchNote.publishedAt || patchNote.createdAt)}
+          {patchNote.version && <> · {patchNote.version}</>}
+        </p>
+      </header>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-100">
-              <Megaphone className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">{patchNote.title}</h1>
-              <div className="flex items-center gap-2 mt-0.5">
-                {patchNote.version && (
-                  <span className="inline-flex rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-700">
-                    {patchNote.version}
-                  </span>
-                )}
-                <span className="text-xs text-slate-400">
-                  {patchNote.publishedAt ? formatDate(patchNote.publishedAt) : formatDate(patchNote.createdAt)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t pt-4">
-            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
-              {patchNote.content}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+      <div className="border-t border-line-2 pt-7">
+        <p className="m-0 text-[15px] leading-6 break-words whitespace-pre-wrap text-ink">{patchNote.content}</p>
+      </div>
+    </article>
   );
 }

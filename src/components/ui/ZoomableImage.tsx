@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { ZoomIn, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ZoomableImageProps {
   src: string;
@@ -10,88 +11,99 @@ interface ZoomableImageProps {
   width: number;
   height: number;
   className?: string;
+  /** next/image sizes (썸네일) */
+  sizes?: string;
 }
 
+/** 도움말 스크린샷: 테두리 1px Line2, 모서리 0, 누르면 전체 화면으로 확대 */
 export default function ZoomableImage({
   src,
   alt,
   width,
   height,
   className = '',
+  sizes = '(max-width: 768px) 100vw, 720px',
 }: ZoomableImageProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!isOpen) return;
+
+    const trigger = triggerRef.current;
+    closeRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      } else if (event.key === 'Tab') {
+        // 모달 안의 조작 요소는 닫기 버튼 하나 — 포커스를 그 안에 묶어둔다
+        event.preventDefault();
+        closeRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    document.body.style.overflow = 'hidden';
 
     return () => {
+      window.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = '';
+      // 닫히면 확대를 연 썸네일 버튼으로 포커스를 돌려준다
+      trigger?.focus();
     };
   }, [isOpen]);
 
-  const handleOpen = () => {
-    setIsOpen(true);
-  };
-
-  const handleClose = () => {
-    setIsOpen(false);
-  };
-
   return (
     <>
-      {/* Thumbnail with tap hint */}
-      <div className="relative group cursor-pointer" onClick={handleOpen}>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setIsOpen(true)}
+        aria-label={`${alt} 확대 보기`}
+        className="group relative block w-full cursor-zoom-in border border-line-2 bg-white p-0 text-left"
+      >
         <Image
           src={src}
           alt={alt}
           width={width}
           height={height}
-          className={className}
+          sizes={sizes}
+          className={cn('block h-auto w-full', className)}
         />
+        <span
+          aria-hidden="true"
+          className="absolute right-0 bottom-0 bg-ink/80 px-2 py-1 text-[12px] leading-4 font-medium text-white transition-opacity duration-150 ease-out md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100"
+        >
+          <span className="md:hidden">탭하여 확대</span>
+          <span className="hidden md:inline">클릭하여 확대</span>
+        </span>
+      </button>
 
-        {/* Mobile tap hint overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-all group-hover:bg-black/10 md:hidden">
-          <div className="flex items-center gap-1.5 rounded-full bg-black/40 px-3 py-1.5 text-[11px] text-white/80">
-            <ZoomIn className="h-3 w-3" />
-            탭하여 확대
-          </div>
-        </div>
-
-        {/* Desktop hover hint */}
-        <div className="absolute inset-0 hidden items-center justify-center bg-black/0 transition-all group-hover:bg-black/10 md:flex">
-          <div className="flex items-center gap-2 rounded-full bg-[#153974]/90 px-4 py-2 text-sm font-medium text-white shadow-lg opacity-0 transition-opacity group-hover:opacity-100">
-            <ZoomIn className="h-4 w-4" />
-            클릭하여 확대
-          </div>
-        </div>
-      </div>
-
-      {/* Fullscreen modal */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 animate-in fade-in duration-200"
-          onClick={handleClose}
+          role="dialog"
+          aria-modal="true"
+          aria-label={alt}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setIsOpen(false)}
         >
-          {/* Close button */}
           <button
-            onClick={handleClose}
-            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 active:bg-white/30"
+            ref={closeRef}
+            type="button"
+            onClick={() => setIsOpen(false)}
+            className="absolute top-3 right-3 z-10 flex h-11 w-11 cursor-pointer items-center justify-center rounded-[10px] text-white transition-colors duration-150 ease-out hover:bg-white/15"
             aria-label="닫기"
           >
-            <X className="h-6 w-6" />
+            <X aria-hidden="true" className="h-6 w-6" />
           </button>
 
           {/* Scrollable/zoomable image container */}
           <div
-            className="max-h-full max-w-full overflow-auto touch-pan-x touch-pan-y"
+            className="max-h-full max-w-full touch-pan-x touch-pan-y overflow-auto"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              WebkitOverflowScrolling: 'touch',
-            }}
+            style={{ WebkitOverflowScrolling: 'touch' }}
           >
             <Image
               src={src}
@@ -104,10 +116,9 @@ export default function ZoomableImage({
             />
           </div>
 
-          {/* Bottom hint text */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-xs text-white/80 backdrop-blur-sm">
+          <p className="absolute bottom-4 left-1/2 m-0 -translate-x-1/2 text-[13px] leading-[18px] text-white/80">
             이미지를 드래그하여 이동하세요
-          </div>
+          </p>
         </div>
       )}
     </>

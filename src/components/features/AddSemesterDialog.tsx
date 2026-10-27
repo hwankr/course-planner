@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
+import { cn } from '@/lib/utils';
 import type { Term } from '@/types';
+import { useDialogFocus } from './useDialogFocus';
 
 interface AddSemesterDialogProps {
   isOpen: boolean;
@@ -64,17 +65,9 @@ export function AddSemesterDialog({
     (s) => s.year === year && s.term === term
   );
 
-  // Handle escape key
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    window.addEventListener('keydown', handleEscape);
-    return () => window.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+  // 포커스 관리 + Escape 닫기. Escape는 document 단계에서 먼저 처리해 planner의 window Escape(학기 선택 해제)보다 앞선다.
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useDialogFocus(dialogRef, isOpen, { onEscape: onClose });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,117 +84,97 @@ export function AddSemesterDialog({
 
   if (!isOpen) return null;
 
+  const optionClass = (selected: boolean) =>
+    cn(
+      'h-11 border-b-2 px-0.5 text-[15px] transition-colors duration-150 ease-out disabled:cursor-not-allowed disabled:opacity-40',
+      selected ? 'border-primary font-semibold text-primary' : 'border-transparent font-medium text-ink-2 hover:text-ink'
+    );
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
       onClick={handleBackdropClick}
     >
-      <Card className="w-full max-w-md bg-white">
-        <CardContent className="pt-6">
-          <h2 className="text-2xl font-semibold mb-6">학기 추가</h2>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-semester-title"
+        className="w-full max-w-md rounded-none border border-line-2 bg-white px-6 pt-6 pb-5 shadow-float"
+      >
+        <h2 id="add-semester-title" className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink">
+          학기 추가
+        </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Grade Year Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                학년
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {[1, 2, 3, 4, 5].map((grade) => (
-                  <button
-                    key={grade}
-                    type="button"
-                    onClick={() => setYear(grade)}
-                    disabled={isLoading}
-                    className={`
-                      py-2.5 px-2 rounded-md border-2 transition-colors font-medium text-sm whitespace-nowrap
-                      ${
-                        year === grade
-                          ? 'border-[#153974] bg-[#153974]/10 text-[#153974]'
-                          : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                      }
-                      ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                    `}
-                  >
-                    {grade}학년
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Term Selector */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                학기
-              </label>
-              <div className="grid grid-cols-2 gap-3">
+        <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-6">
+          {/* Grade Year Selector */}
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="mb-1 p-0 text-[13px] leading-[18px] font-semibold text-ink-2">학년</legend>
+            <div className="flex gap-5 border-b border-line">
+              {[1, 2, 3, 4, 5].map((grade) => (
                 <button
+                  key={grade}
                   type="button"
-                  onClick={() => setTerm('spring')}
+                  onClick={() => setYear(grade)}
                   disabled={isLoading}
-                  className={`
-                    py-3 px-4 rounded-md border-2 transition-colors font-medium
-                    ${
-                      term === 'spring'
-                        ? 'border-[#153974] bg-[#153974]/10 text-[#153974]'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                    }
-                    ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  `}
+                  aria-pressed={year === grade}
+                  className={optionClass(year === grade)}
                 >
-                  1학기
+                  {grade}학년
                 </button>
+              ))}
+            </div>
+          </fieldset>
+
+          {/* Term Selector */}
+          <fieldset className="m-0 border-0 p-0">
+            <legend className="mb-1 p-0 text-[13px] leading-[18px] font-semibold text-ink-2">학기</legend>
+            <div className="flex gap-5 border-b border-line">
+              {(['spring', 'fall'] as const).map((t) => (
                 <button
+                  key={t}
                   type="button"
-                  onClick={() => setTerm('fall')}
+                  onClick={() => setTerm(t)}
                   disabled={isLoading}
-                  className={`
-                    py-3 px-4 rounded-md border-2 transition-colors font-medium
-                    ${
-                      term === 'fall'
-                        ? 'border-[#153974] bg-[#153974]/10 text-[#153974]'
-                        : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                    }
-                    ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                  `}
+                  aria-pressed={term === t}
+                  className={optionClass(term === t)}
                 >
-                  2학기
+                  {t === 'spring' ? '1학기' : '2학기'}
                 </button>
-              </div>
+              ))}
             </div>
+          </fieldset>
 
-            {/* Duplicate Warning */}
-            {isDuplicate && (
-              <div className="p-3 rounded-md bg-red-50 border border-red-200">
-                <p className="text-sm text-red-700 font-medium">
-                  {year}학년 {term === 'spring' ? '1학기' : '2학기'}는 이미 추가되어 있습니다.
-                </p>
-              </div>
-            )}
+          {/* Duplicate Warning */}
+          {isDuplicate && (
+            <p role="alert" className="m-0 text-[13px] leading-[18px] font-medium text-negative">
+              {year}학년 {term === 'spring' ? '1학기' : '2학기'}는 이미 추가되어 있습니다.
+            </p>
+          )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-2">
-              <Button
-                type="submit"
-                disabled={isDuplicate || isLoading}
-                isLoading={isLoading}
-                className="flex-1"
-              >
-                추가
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                취소
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <Button
+              type="button"
+              variant="text"
+              onClick={onClose}
+              disabled={isLoading}
+              className="h-12"
+            >
+              취소
+            </Button>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isDuplicate || isLoading}
+              isLoading={isLoading}
+              className="min-w-[120px]"
+            >
+              추가
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

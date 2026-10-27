@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Link from 'next/link';
-import { HelpCircle } from 'lucide-react';
+import { ChevronDown, HelpCircle } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { validatePriorCredits, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 import type { MajorType } from '@/types';
@@ -49,6 +49,54 @@ interface RequirementFormProps {
   suggestedCutoff?: { year: number; term: 'spring' | 'fall'; label: string } | null;
 }
 
+const fieldGridClass = 'grid grid-cols-2 gap-x-5 gap-y-5';
+
+/** 폼 섹션: 위 1px Line2 구분선 + 제목 */
+function FormSection({ title, description, children }: { title: string; description?: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-4 border-t border-line-2 py-6">
+      <div className="flex flex-col gap-0.5">
+        <h3 className="m-0 text-[15px] leading-[22px] font-bold text-ink">{title}</h3>
+        {description && <p className="m-0 text-[12px] leading-4 text-ink-2">{description}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** 밑줄 숫자 입력 — 라벨은 Input이 htmlFor로 연결한다 */
+function NumberField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  min = '0',
+  error,
+  helperText,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  min?: string;
+  error?: string;
+  helperText?: string;
+}) {
+  return (
+    <Input
+      label={label}
+      type="number"
+      inputMode="numeric"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      min={min}
+      error={error}
+      helperText={helperText}
+    />
+  );
+}
+
 export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, onLoadFromDeptReq, userMajorType, requirementYear, onYearChange, semesterOptions, suggestedCutoff }: RequirementFormProps) {
   const [majorType, setMajorType] = useState<'single' | 'double' | 'minor'>(initialData?.majorType || 'single');
   const [totalCredits, setTotalCredits] = useState(initialData?.totalCredits?.toString() || '');
@@ -82,6 +130,7 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
       : ''
   );
 
+  const cutoffSelectId = useId();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loadMessage, setLoadMessage] = useState<string>('');
 
@@ -273,384 +322,189 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
     });
   };
 
+  const radioOptions: Array<{ value: 'single' | 'double' | 'minor'; label: string; show: boolean }> = [
+    { value: 'single', label: '단일전공', show: true },
+    { value: 'double', label: '복수전공', show: showDouble },
+    { value: 'minor', label: '부전공', show: showMinor },
+  ];
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 p-4 bg-gray-50 rounded-lg border">
+    <form onSubmit={handleSubmit} className="flex flex-col">
       {/* 안내 링크 */}
-      <div className="flex items-center gap-2 text-xs text-gray-500 bg-blue-50 border border-blue-100 rounded-md px-3 py-2">
-        <HelpCircle className="w-3.5 h-3.5 text-[#00AACA] flex-shrink-0" />
-        <span>
-          졸업 기준과 취득 학점을 잘 모르시나요?{' '}
-          <Link
-            href="/help/graduation-guide"
-            className="text-[#00AACA] hover:text-[#153974] underline"
-          >
-            확인 방법 보기
-          </Link>
-        </span>
-      </div>
+      <p className="m-0 flex flex-wrap items-center gap-x-1.5 pb-5 text-[13px] leading-[18px] text-ink-2">
+        <HelpCircle aria-hidden="true" className="h-4 w-4 shrink-0" />
+        졸업 기준과 취득 학점을 잘 모르시나요?
+        <Link href="/help/graduation-guide" className="font-semibold text-primary hover:text-primary-hover">
+          확인 방법 보기
+        </Link>
+      </p>
 
       {/* 전공 유형 */}
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-gray-800 border-b pb-2">전공 유형</p>
+      <FormSection title="전공 유형">
         {showMajorTypeSection ? (
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="majorType"
-                value="single"
-                checked={majorType === 'single'}
-                onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
-                className="w-4 h-4"
-              />
-              <span className="text-sm">단일전공</span>
-            </label>
-            {showDouble && (
-              <label className="flex items-center gap-2 cursor-pointer">
+          <fieldset className="m-0 flex flex-wrap gap-x-6 gap-y-2 border-0 p-0">
+            <legend className="sr-only">전공 유형</legend>
+            {radioOptions.filter((o) => o.show).map((o) => (
+              <label key={o.value} className="inline-flex h-11 cursor-pointer items-center gap-2 text-[15px] font-medium text-ink">
                 <input
                   type="radio"
                   name="majorType"
-                  value="double"
-                  checked={majorType === 'double'}
+                  value={o.value}
+                  checked={majorType === o.value}
                   onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
-                  className="w-4 h-4"
+                  className="h-[18px] w-[18px] accent-primary"
                 />
-                <span className="text-sm">복수전공</span>
+                {o.label}
               </label>
-            )}
-            {showMinor && (
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="majorType"
-                  value="minor"
-                  checked={majorType === 'minor'}
-                  onChange={(e) => setMajorType(e.target.value as 'single' | 'double' | 'minor')}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm">부전공</span>
-              </label>
-            )}
-          </div>
+            ))}
+          </fieldset>
         ) : (
-          <p className="text-xs text-gray-500">
+          <p className="m-0 text-[13px] leading-[18px] text-ink-2">
             단일전공으로 설정되어 있습니다.{' '}
-            <Link href="/profile" className="text-[#00AACA] hover:text-[#153974] underline">
+            <Link href="/profile" className="font-semibold text-primary hover:text-primary-hover">
               복수전공/부전공은 프로필에서 변경하세요.
             </Link>
           </p>
         )}
         {onLoadFromDeptReq && (
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={handleLoadFromDeptReq}>
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-x-3">
+              {requirementYear !== undefined && onYearChange && (
+                <label className="relative inline-flex items-center text-ink">
+                  <span className="sr-only">기준 연도</span>
+                  <select
+                    value={requirementYear}
+                    onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
+                    className="h-11 cursor-pointer appearance-none border-0 bg-transparent p-0 pr-[18px] text-[14px] font-semibold text-ink outline-none [field-sizing:content] focus-visible:text-primary"
+                  >
+                    <option value={2025}>2025년</option>
+                    <option value={2026}>2026년</option>
+                  </select>
+                  <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-0 h-3.5 w-3.5" strokeWidth={2.5} />
+                </label>
+              )}
+              <Button type="button" variant="textPrimary" size="sm" onClick={handleLoadFromDeptReq} className="-ml-2.5">
                 학과 기준표에서 불러오기
               </Button>
-              {requirementYear !== undefined && onYearChange && (
-                <select
-                  value={requirementYear}
-                  onChange={(e) => onYearChange(parseInt(e.target.value, 10))}
-                  className="text-xs border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                >
-                  <option value={2025}>2025년</option>
-                  <option value={2026}>2026년</option>
-                </select>
-              )}
             </div>
-            {loadMessage && <p className="text-xs text-blue-600">{loadMessage}</p>}
+            {loadMessage && <p role="status" className="m-0 text-[12px] leading-4 text-positive">{loadMessage}</p>}
           </div>
         )}
-      </div>
+      </FormSection>
 
       {/* 졸업 기준 */}
-      <div className="border-t pt-4">
-        <p className="text-sm font-semibold text-gray-800 border-b pb-2 mb-3">졸업 기준</p>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>
-            <Input
-              type="number"
-              value={totalCredits}
-              onChange={(e) => setTotalCredits(e.target.value)}
-              placeholder="예: 130"
-              min="1"
-              className={errors.totalCredits ? 'border-red-500' : ''}
-            />
-            {errors.totalCredits && <p className="text-xs text-red-500 mt-1">{errors.totalCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">교양학점</label>
-            <Input
-              type="number"
-              value={generalCredits}
-              onChange={(e) => setGeneralCredits(e.target.value)}
-              placeholder="예: 30"
-              min="0"
-              className={errors.generalCredits ? 'border-red-500' : ''}
-            />
-            {errors.generalCredits && <p className="text-xs text-red-500 mt-1">{errors.generalCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">전공학점</label>
-            <Input
-              type="number"
-              value={primaryMajorCredits}
-              onChange={(e) => setPrimaryMajorCredits(e.target.value)}
-              placeholder="예: 60"
-              min="0"
-              className={errors.primaryMajorCredits ? 'border-red-500' : ''}
-            />
-            {errors.primaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.primaryMajorCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">전공핵심 (최소)</label>
-            <Input
-              type="number"
-              value={primaryMajorRequiredMin}
-              onChange={(e) => setPrimaryMajorRequiredMin(e.target.value)}
-              placeholder="예: 24"
-              min="0"
-              className={errors.primaryMajorRequiredMin ? 'border-red-500' : ''}
-            />
-            {errors.primaryMajorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.primaryMajorRequiredMin}</p>}
-          </div>
+      <FormSection title="졸업 기준">
+        <div className={fieldGridClass}>
+          <NumberField label="졸업학점" value={totalCredits} onChange={setTotalCredits} placeholder="예: 130" min="1" error={errors.totalCredits} />
+          <NumberField label="교양학점" value={generalCredits} onChange={setGeneralCredits} placeholder="예: 30" error={errors.generalCredits} />
+          <NumberField label="전공학점" value={primaryMajorCredits} onChange={setPrimaryMajorCredits} placeholder="예: 60" error={errors.primaryMajorCredits} />
+          <NumberField label="전공핵심 (최소)" value={primaryMajorRequiredMin} onChange={setPrimaryMajorRequiredMin} placeholder="예: 24" error={errors.primaryMajorRequiredMin} />
         </div>
-      </div>
+      </FormSection>
 
       {/* 복수전공 */}
       {majorType === 'double' && (
-        <div className="border-t pt-4">
-          <p className="text-sm font-semibold text-gray-800 border-b pb-2 mb-3">복수전공</p>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">복수전공 학점</label>
-              <Input
-                type="number"
-                value={secondaryMajorCredits}
-                onChange={(e) => setSecondaryMajorCredits(e.target.value)}
-                placeholder="예: 60"
-                min="0"
-                className={errors.secondaryMajorCredits ? 'border-red-500' : ''}
-              />
-              {errors.secondaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.secondaryMajorCredits}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">복수전공핵심 (최소)</label>
-              <Input
-                type="number"
-                value={secondaryMajorRequiredMin}
-                onChange={(e) => setSecondaryMajorRequiredMin(e.target.value)}
-                placeholder="예: 24"
-                min="0"
-                className={errors.secondaryMajorRequiredMin ? 'border-red-500' : ''}
-              />
-              {errors.secondaryMajorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.secondaryMajorRequiredMin}</p>}
-            </div>
+        <FormSection title="복수전공">
+          <div className={fieldGridClass}>
+            <NumberField label="복수전공 학점" value={secondaryMajorCredits} onChange={setSecondaryMajorCredits} placeholder="예: 60" error={errors.secondaryMajorCredits} />
+            <NumberField label="복수전공핵심 (최소)" value={secondaryMajorRequiredMin} onChange={setSecondaryMajorRequiredMin} placeholder="예: 24" error={errors.secondaryMajorRequiredMin} />
           </div>
-        </div>
+        </FormSection>
       )}
 
       {/* 부전공 */}
       {majorType === 'minor' && (
-        <div className="border-t pt-4">
-          <p className="text-sm font-semibold text-gray-800 border-b pb-2 mb-3">부전공</p>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">부전공 학점</label>
-              <Input
-                type="number"
-                value={minorCredits}
-                onChange={(e) => setMinorCredits(e.target.value)}
-                placeholder="예: 21"
-                min="0"
-                className={errors.minorCredits ? 'border-red-500' : ''}
-              />
-              {errors.minorCredits && <p className="text-xs text-red-500 mt-1">{errors.minorCredits}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">부전공핵심 (최소)</label>
-              <Input
-                type="number"
-                value={minorRequiredMin}
-                onChange={(e) => setMinorRequiredMin(e.target.value)}
-                placeholder="예: 9"
-                min="0"
-                className={errors.minorRequiredMin ? 'border-red-500' : ''}
-              />
-              {errors.minorRequiredMin && <p className="text-xs text-red-500 mt-1">{errors.minorRequiredMin}</p>}
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">주전공 최소 학점</label>
-              <Input
-                type="number"
-                value={minorPrimaryMajorMin}
-                onChange={(e) => setMinorPrimaryMajorMin(e.target.value)}
-                placeholder="예: 63"
-                min="0"
-                className={errors.minorPrimaryMajorMin ? 'border-red-500' : ''}
-              />
-              {errors.minorPrimaryMajorMin && <p className="text-xs text-red-500 mt-1">{errors.minorPrimaryMajorMin}</p>}
-            </div>
+        <FormSection title="부전공">
+          <div className={fieldGridClass}>
+            <NumberField label="부전공 학점" value={minorCredits} onChange={setMinorCredits} placeholder="예: 21" error={errors.minorCredits} />
+            <NumberField label="부전공핵심 (최소)" value={minorRequiredMin} onChange={setMinorRequiredMin} placeholder="예: 9" error={errors.minorRequiredMin} />
+            <NumberField label="주전공 최소 학점" value={minorPrimaryMajorMin} onChange={setMinorPrimaryMajorMin} placeholder="예: 63" error={errors.minorPrimaryMajorMin} />
           </div>
-        </div>
+        </FormSection>
       )}
 
       {/* 기이수 학점 */}
-      <div className="border-t pt-4">
-        <div>
-          <p className="text-sm font-semibold text-gray-800">기이수 학점</p>
-          <p className="text-xs text-gray-400 mt-0.5 mb-3">성적표 기준으로 이미 이수한 학점</p>
-        </div>
+      <FormSection title="기이수 학점" description="성적표 기준으로 이미 이수한 학점">
         {showCutoffSuggestion && suggestedCutoff && (
-          <div className="mb-3 text-xs bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-            <p className="text-amber-800">
+          <div role="status" className="flex flex-col items-start gap-1">
+            <p className="m-0 text-[13px] leading-[18px] font-medium text-ink">
               {priorCutoff === ''
                 ? <>계획에 &lsquo;이수&rsquo; 과목이 있습니다. 해당 학기가 기이수(성적표)에 이미 반영되어 있다면, 기준 학기를 설정해야 중복 합산되지 않습니다.</>
                 : <>기이수 학점을 수정했습니다. 성적표에 새로 반영된 학기가 있다면 기준 학기도 함께 올려주세요.</>}
             </p>
-            <button
+            <Button
               type="button"
+              variant="textPrimary"
+              size="sm"
               onClick={() => setPriorCutoff(`${suggestedCutoff.year}-${suggestedCutoff.term}`)}
-              className="mt-1.5 inline-flex items-center px-2 py-1 text-xs font-medium text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded transition-colors"
+              className="-ml-2.5"
             >
               {suggestedCutoff.label}까지로 설정
-            </button>
+            </Button>
           </div>
         )}
         {semesterOptions && semesterOptions.length > 0 && (
-          <div className="mb-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">기이수에 반영된 마지막 학기</label>
-            <select
-              value={priorCutoff}
-              onChange={(e) => setPriorCutoff(e.target.value)}
-              className="w-full text-sm border border-gray-300 rounded-md px-3 py-2 bg-white text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          <div className="group w-full">
+            <label
+              htmlFor={cutoffSelectId}
+              className="mb-1.5 block text-[13px] leading-[18px] font-semibold text-ink-2 transition-colors duration-150 group-focus-within:text-primary"
             >
-              <option value="">선택 안 함 — 계획의 이수 과목을 모두 합산</option>
-              {semesterOptions.map((o) => (
-                <option key={`${o.year}-${o.term}`} value={`${o.year}-${o.term}`}>
-                  {o.label}까지 기이수에 반영됨
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-gray-400 mt-0.5">
+              기이수에 반영된 마지막 학기
+            </label>
+            <div className="relative">
+              <select
+                id={cutoffSelectId}
+                value={priorCutoff}
+                onChange={(e) => setPriorCutoff(e.target.value)}
+                aria-describedby={`${cutoffSelectId}-desc`}
+                className="h-10 w-full cursor-pointer appearance-none truncate rounded-none border-0 border-b border-line-3 bg-transparent px-0 pr-6 text-[15px] font-medium text-ink outline-none transition-colors duration-150 ease-out focus:border-primary focus:shadow-[inset_0_-1px_0_var(--color-primary)]"
+              >
+                <option value="">선택 안 함 — 계획의 이수 과목을 모두 합산</option>
+                {semesterOptions.map((o) => (
+                  <option key={`${o.year}-${o.term}`} value={`${o.year}-${o.term}`}>
+                    {o.label}까지 기이수에 반영됨
+                  </option>
+                ))}
+              </select>
+              <ChevronDown aria-hidden="true" className="pointer-events-none absolute top-1/2 right-0 h-4 w-4 -translate-y-1/2 text-ink-2" />
+            </div>
+            <p id={`${cutoffSelectId}-desc`} className="mt-1.5 mb-0 text-[12px] leading-4 text-ink-2">
               선택한 학기까지 계획에 &lsquo;이수&rsquo;로 표시한 과목은 기이수 학점에 이미 포함된 것으로 보고 중복 합산하지 않습니다.
             </p>
           </div>
         )}
-        <div className="grid grid-cols-2 gap-x-3 gap-y-2">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">졸업학점</label>
-            <Input
-              type="number"
-              value={earnedTotalCredits}
-              onChange={(e) => setEarnedTotalCredits(e.target.value)}
-              placeholder="0"
-              min="0"
-              className={errors.earnedTotalCredits ? 'border-red-500' : ''}
-            />
-            <p className="text-xs text-gray-400 mt-0.5">이미 이수한 총 학점 (전공+교양+기타 포함)</p>
-            {errors.earnedTotalCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedTotalCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">교양</label>
-            <Input
-              type="number"
-              value={earnedGeneralCredits}
-              onChange={(e) => setEarnedGeneralCredits(e.target.value)}
-              placeholder="0"
-              min="0"
-              className={errors.earnedGeneralCredits ? 'border-red-500' : ''}
-            />
-            {errors.earnedGeneralCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedGeneralCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">전공</label>
-            <Input
-              type="number"
-              value={earnedPrimaryMajorCredits}
-              onChange={(e) => setEarnedPrimaryMajorCredits(e.target.value)}
-              placeholder="0"
-              min="0"
-              className={errors.earnedPrimaryMajorCredits ? 'border-red-500' : ''}
-            />
-            {errors.earnedPrimaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedPrimaryMajorCredits}</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">전공핵심</label>
-            <Input
-              type="number"
-              value={earnedPrimaryMajorRequiredCredits}
-              onChange={(e) => setEarnedPrimaryMajorRequiredCredits(e.target.value)}
-              placeholder="0"
-              min="0"
-              className={errors.earnedPrimaryMajorRequiredCredits ? 'border-red-500' : ''}
-            />
-            {errors.earnedPrimaryMajorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedPrimaryMajorRequiredCredits}</p>}
-          </div>
+        <div className={fieldGridClass}>
+          <NumberField
+            label="졸업학점"
+            value={earnedTotalCredits}
+            onChange={setEarnedTotalCredits}
+            placeholder="0"
+            helperText="이미 이수한 총 학점 (전공+교양+기타 포함)"
+            error={errors.earnedTotalCredits}
+          />
+          <NumberField label="교양" value={earnedGeneralCredits} onChange={setEarnedGeneralCredits} placeholder="0" error={errors.earnedGeneralCredits} />
+          <NumberField label="전공" value={earnedPrimaryMajorCredits} onChange={setEarnedPrimaryMajorCredits} placeholder="0" error={errors.earnedPrimaryMajorCredits} />
+          <NumberField label="전공핵심" value={earnedPrimaryMajorRequiredCredits} onChange={setEarnedPrimaryMajorRequiredCredits} placeholder="0" error={errors.earnedPrimaryMajorRequiredCredits} />
           {majorType === 'double' && (
             <>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">복수전공</label>
-                <Input
-                  type="number"
-                  value={earnedSecondaryMajorCredits}
-                  onChange={(e) => setEarnedSecondaryMajorCredits(e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  className={errors.earnedSecondaryMajorCredits ? 'border-red-500' : ''}
-                />
-                {errors.earnedSecondaryMajorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedSecondaryMajorCredits}</p>}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">복수전공핵심</label>
-                <Input
-                  type="number"
-                  value={earnedSecondaryMajorRequiredCredits}
-                  onChange={(e) => setEarnedSecondaryMajorRequiredCredits(e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  className={errors.earnedSecondaryMajorRequiredCredits ? 'border-red-500' : ''}
-                />
-                {errors.earnedSecondaryMajorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedSecondaryMajorRequiredCredits}</p>}
-              </div>
+              <NumberField label="복수전공" value={earnedSecondaryMajorCredits} onChange={setEarnedSecondaryMajorCredits} placeholder="0" error={errors.earnedSecondaryMajorCredits} />
+              <NumberField label="복수전공핵심" value={earnedSecondaryMajorRequiredCredits} onChange={setEarnedSecondaryMajorRequiredCredits} placeholder="0" error={errors.earnedSecondaryMajorRequiredCredits} />
             </>
           )}
           {majorType === 'minor' && (
             <>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">부전공</label>
-                <Input
-                  type="number"
-                  value={earnedMinorCredits}
-                  onChange={(e) => setEarnedMinorCredits(e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  className={errors.earnedMinorCredits ? 'border-red-500' : ''}
-                />
-                {errors.earnedMinorCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedMinorCredits}</p>}
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">부전공핵심</label>
-                <Input
-                  type="number"
-                  value={earnedMinorRequiredCredits}
-                  onChange={(e) => setEarnedMinorRequiredCredits(e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  className={errors.earnedMinorRequiredCredits ? 'border-red-500' : ''}
-                />
-                {errors.earnedMinorRequiredCredits && <p className="text-xs text-red-500 mt-1">{errors.earnedMinorRequiredCredits}</p>}
-              </div>
+              <NumberField label="부전공" value={earnedMinorCredits} onChange={setEarnedMinorCredits} placeholder="0" error={errors.earnedMinorCredits} />
+              <NumberField label="부전공핵심" value={earnedMinorRequiredCredits} onChange={setEarnedMinorRequiredCredits} placeholder="0" error={errors.earnedMinorRequiredCredits} />
             </>
           )}
         </div>
-      </div>
+      </FormSection>
 
-      <div className="flex gap-2 pt-2">
-        <Button type="submit" isLoading={isLoading} className="flex-1">
+      <div className="flex items-center gap-2 border-t border-line-2 pt-6">
+        <Button type="submit" size="lg" isLoading={isLoading}>
           {initialData ? '수정' : '저장'}
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="text" onClick={onCancel}>
           취소
         </Button>
       </div>

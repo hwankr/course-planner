@@ -1,22 +1,13 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Providers } from '@/components/providers/Providers';
 import { ClarityScript } from '@/components/providers/ClarityScript';
 import { GoogleAnalytics } from '@/components/providers/GoogleAnalytics';
 import { Footer } from '@/components/ui';
+// Pretendard Variable (self-hosted dynamic subset, Capacitor static export에서도 외부 CDN 없이 동작)
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 import './globals.css';
-
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
 
 export const metadata: Metadata = {
   title: 'YU 수강 플래너',
@@ -44,8 +35,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        <div className="flex-1 bg-gray-50">
+      <body className="antialiased flex flex-col min-h-screen bg-white text-ink">
+        <div className="flex-1">
           <Providers>{children}</Providers>
         </div>
         <Footer />

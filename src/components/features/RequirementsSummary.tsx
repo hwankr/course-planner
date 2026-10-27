@@ -8,7 +8,8 @@ import {
   useCreateDefaultGraduationRequirement,
 } from '@/hooks/useGraduationRequirements';
 import { RequirementForm } from '@/components/features/RequirementForm';
-import { Card, CardContent, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
@@ -26,9 +27,6 @@ import * as Sentry from '@sentry/nextjs';
 // View-mode presentational components
 // ============================================
 
-const PLANNED_STRIPES =
-  'repeating-linear-gradient(135deg, #93c5fd 0 3px, #dbeafe 3px 6px)';
-
 interface SegmentValues {
   earned: number;
   enrolled?: number;
@@ -40,11 +38,8 @@ function isMet({ earned, required }: SegmentValues) {
   return required > 0 && earned >= required;
 }
 
-/** 이수 → 수강중 → 예정 순서로 나란히 이어지는 스택 바. 누적 100% 초과분은 클램프. */
-function StackedBar({ earned, enrolled = 0, planned = 0, required, size = 'md' }: SegmentValues & { size?: 'lg' | 'md' | 'sm' }) {
-  const height = size === 'lg' ? 'h-2.5' : size === 'md' ? 'h-2' : 'h-1.5';
-  const met = isMet({ earned, required });
-
+/** 이수(Primary) → 수강중(Primary 45%) → 예정(중간톤) 순서의 6px 바. 누적 100% 초과분은 클램프. */
+function StackedBar({ earned, enrolled = 0, planned = 0, required, label }: SegmentValues & { label: string }) {
   let widths = { earned: 0, enrolled: 0, planned: 0 };
   if (required > 0) {
     const e = Math.min((earned / required) * 100, 100);
@@ -54,84 +49,64 @@ function StackedBar({ earned, enrolled = 0, planned = 0, required, size = 'md' }
   }
 
   return (
-    <div className={`flex-1 ${height} bg-gray-100 rounded-full overflow-hidden flex`}>
-      {widths.earned > 0 && (
-        <div className={met ? 'bg-emerald-500' : 'bg-blue-600'} style={{ width: `${widths.earned}%` }} />
-      )}
-      {widths.enrolled > 0 && (
-        <div className="bg-sky-400" style={{ width: `${widths.enrolled}%` }} />
-      )}
-      {widths.planned > 0 && (
-        <div style={{ width: `${widths.planned}%`, backgroundImage: PLANNED_STRIPES }} />
-      )}
+    <div role="img" aria-label={label} className="flex h-1.5 overflow-hidden rounded-[3px] bg-line">
+      <div className="bg-primary transition-[width] duration-200 ease-out" style={{ width: `${widths.earned}%` }} />
+      <div className="bg-primary/45 transition-[width] duration-200 ease-out" style={{ width: `${widths.enrolled}%` }} />
+      <div className="bg-bar-mid transition-[width] duration-200 ease-out" style={{ width: `${widths.planned}%` }} />
     </div>
   );
 }
 
-/** 바 아래 수치 라인: 색 점 + "이수 N · 수강중 N · 예정 N · 미계획 N". 0인 항목은 숨김. */
-function BreakdownLine({ earned, enrolled = 0, planned = 0, required, prior = 0, className = '' }: SegmentValues & { prior?: number; className?: string }) {
-  const met = isMet({ earned, required });
-  const unplanned = Math.max(0, required - earned - enrolled - planned);
-
-  if (met && enrolled === 0 && planned === 0) {
-    return <p className={`text-[11px] text-emerald-600 ${className}`}>요건 충족</p>;
-  }
-
+/** "54 / 72학점" — 충족하면 숫자를 Positive로 */
+function CreditValue({ earned, required, unit = '학점', sub = false }: SegmentValues & { unit?: string; sub?: boolean }) {
   return (
-    <p className={`text-[11px] text-gray-400 flex items-center gap-x-2.5 gap-y-0.5 flex-wrap ${className}`}>
-      <span className="flex items-center gap-1">
-        <span className={`w-2 h-2 rounded-[2px] inline-block ${met ? 'bg-emerald-500' : 'bg-blue-600'}`} />
-        이수 {earned}
-        {prior > 0 && <> (기이수 {prior} 포함)</>}
+    <span
+      className={cn(
+        'shrink-0 font-semibold tabular-nums',
+        sub ? 'text-[14px]' : 'text-[15px]',
+        isMet({ earned, required }) ? 'text-positive' : 'text-ink'
+      )}
+    >
+      {earned} <span className="font-medium text-ink-2">/ {required}{unit}</span>
+    </span>
+  );
+}
+
+/** 요건 행 보조 설명: "이수 12 (기이수 6 포함) · 수강중 3 · 예정 6". 0인 수강중/예정은 숨김. */
+function breakdownCaption({ earned, enrolled = 0, planned = 0, required, prior = 0 }: SegmentValues & { prior?: number }) {
+  if (isMet({ earned, required }) && enrolled === 0 && planned === 0) return '요건 충족';
+  if (earned === 0 && enrolled === 0 && planned === 0) return '아직 계획이 없어요';
+  const parts = [`이수 ${earned}${prior > 0 ? ` (기이수 ${prior} 포함)` : ''}`];
+  if (enrolled > 0) parts.push(`수강중 ${enrolled}`);
+  if (planned > 0) parts.push(`예정 ${planned}`);
+  return parts.join(' · ');
+}
+
+/** 요건 행: 이름 + 보조 설명(12/16 Ink2) · 이수/필요. 높이 52(데스크톱)/56(모바일), 하위 요건은 padding-left 16 */
+function TrackRow({
+  label,
+  sub = false,
+  prior = 0,
+  unit,
+  ...values
+}: SegmentValues & { label: string; sub?: boolean; prior?: number; unit?: string }) {
+  return (
+    <div className={cn('flex min-h-14 items-center gap-3 border-b border-line py-1.5 md:min-h-[52px] md:gap-4', sub && 'pl-4')}>
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className={sub ? 'text-[14px] leading-5 font-medium text-ink-2' : 'text-[15px] leading-5 font-semibold text-ink'}>{label}</span>
+        <span className="text-[12px] leading-4 text-ink-2 tabular-nums">{breakdownCaption({ ...values, prior })}</span>
       </span>
-      {enrolled > 0 && (
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-[2px] inline-block bg-sky-400" />
-          수강중 {enrolled}
-        </span>
-      )}
-      {planned > 0 && (
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-[2px] inline-block" style={{ backgroundImage: PLANNED_STRIPES }} />
-          예정 {planned}
-        </span>
-      )}
-      {unplanned > 0 && (
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-[2px] inline-block bg-gray-200" />
-          미계획 {unplanned}
-        </span>
-      )}
-    </p>
-  );
-}
-
-/** 요건 한 줄: 라벨 + 스택 바 + "이수/필요" + 아래 수치 라인. sub=true면 들여쓴 얇은 서브 행. */
-function TrackRow({ label, earned, enrolled = 0, planned = 0, required, prior = 0, sub = false }: SegmentValues & { label: string; prior?: number; sub?: boolean }) {
-  const met = isMet({ earned, required });
-  return (
-    <div>
-      <div className="flex items-center gap-2">
-        <span className={`w-16 flex-shrink-0 whitespace-nowrap ${sub ? 'pl-3 text-[11px] text-gray-400' : 'text-xs text-gray-600'}`}>
-          {sub ? `└ ${label}` : label}
-        </span>
-        <StackedBar earned={earned} enrolled={enrolled} planned={planned} required={required} size={sub ? 'sm' : 'md'} />
-        <span className={`w-16 flex-shrink-0 text-right whitespace-nowrap ${sub ? 'text-[11px]' : 'text-xs'} ${met ? 'text-emerald-600' : 'text-gray-500'}`}>
-          {met && '✓ '}
-          <span className="font-medium">{earned}</span>/{required}
-        </span>
-      </div>
-      <BreakdownLine
-        earned={earned}
-        enrolled={enrolled}
-        planned={planned}
-        required={required}
-        prior={prior}
-        className="mt-0.5 pl-[72px]"
-      />
+      <CreditValue {...values} sub={sub} unit={unit} />
     </div>
   );
 }
+
+/** 모바일 섹션 구분 띠 (Fill 10px, 페이지 가터만큼 좌우로 확장) */
+function MobileBand() {
+  return <div aria-hidden="true" className="-mx-5 h-2.5 bg-fill md:hidden" />;
+}
+
+const sectionClass = 'border-y border-line-2 py-8 md:pb-9';
 
 export function RequirementsSummary() {
   const [isEditing, setIsEditing] = useState(false);
@@ -284,77 +259,65 @@ export function RequirementsSummary() {
   // Loading state
   if (summaryState === 'loading') {
     return (
-      <Card>
-        <CardContent className="py-3">
-          <div className="h-4 bg-gray-200 rounded animate-pulse" />
-        </CardContent>
-      </Card>
+      <section aria-label="졸업 요건" aria-busy="true" className={sectionClass}>
+        <div className="flex flex-col gap-3">
+          <div className="h-[22px] w-20 animate-pulse rounded-[4px] bg-fill" />
+          <div className="h-[38px] w-56 animate-pulse rounded-[6px] bg-fill md:h-[52px]" />
+          <div className="mt-4 h-1.5 animate-pulse rounded-[3px] bg-fill" />
+        </div>
+      </section>
     );
   }
 
   // Error state - one or both queries failed
   if (summaryState === 'error') {
     return (
-      <Card role="alert" className="border-red-200">
-        <CardContent className="py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-sm text-red-600">졸업요건 정보를 불러오지 못했습니다.</p>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleRetry}
-            disabled={isRetrying}
-          >
-            {isRetrying ? '다시 시도 중...' : '다시 시도'}
-          </Button>
-        </CardContent>
-      </Card>
+      <section role="alert" aria-label="졸업 요건" className={cn(sectionClass, 'flex flex-wrap items-center justify-between gap-3')}>
+        <p className="m-0 text-[15px] font-medium text-negative">졸업요건 정보를 불러오지 못했습니다.</p>
+        <Button size="sm" variant="text" onClick={handleRetry} disabled={isRetrying}>
+          {isRetrying ? '다시 시도 중...' : '다시 시도'}
+        </Button>
+      </section>
     );
   }
 
   // Empty state - no requirement set
   if (summaryState === 'empty') {
     return (
-      <Card className="border-dashed">
-        <CardContent className="py-4">
-          {isEditing ? (
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-3">졸업 요건 입력</p>
-              {saveError && <p className="text-sm text-red-500 mb-2">{saveError}</p>}
-              <RequirementForm
-                onSubmit={handleUpsert}
-                onCancel={() => { setIsEditing(false); setSaveError(''); }}
-                isLoading={upsertMutation.isPending}
-                userMajorType={userMajorType}
-                onLoadFromDeptReq={handleLoadFromDeptReq}
-                requirementYear={requirementYear}
-                onYearChange={setRequirementYear}
-                semesterOptions={semesterOptions}
-                suggestedCutoff={suggestedCutoff}
-              />
+      <section aria-labelledby="req-title" className={sectionClass}>
+        {isEditing ? (
+          <div className="flex flex-col gap-4">
+            <h2 id="req-title" className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink">졸업 요건 입력</h2>
+            {saveError && <p role="alert" className="m-0 text-[13px] font-medium text-negative">{saveError}</p>}
+            <RequirementForm
+              onSubmit={handleUpsert}
+              onCancel={() => { setIsEditing(false); setSaveError(''); }}
+              isLoading={upsertMutation.isPending}
+              userMajorType={userMajorType}
+              onLoadFromDeptReq={handleLoadFromDeptReq}
+              requirementYear={requirementYear}
+              onYearChange={setRequirementYear}
+              semesterOptions={semesterOptions}
+              suggestedCutoff={suggestedCutoff}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <h2 id="req-title" className="m-0 text-[15px] leading-[22px] font-medium text-ink-2">졸업까지</h2>
+              <p className="m-0 text-[22px] leading-[30px] font-bold tracking-[-0.02em] text-ink">졸업 요건을 설정하세요</p>
             </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <p className="text-sm text-gray-500">졸업 요건을 설정하세요</p>
-              <div className="flex gap-2 flex-shrink-0">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setIsEditing(true)}
-                >
-                  직접 입력
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleCreateDefault}
-                  disabled={createDefaults.isPending}
-                >
-                  {createDefaults.isPending ? '생성 중...' : '기본 요건 생성'}
-                </Button>
-              </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <Button size="sm" variant="text" onClick={() => setIsEditing(true)}>
+                직접 입력
+              </Button>
+              <Button size="sm" variant="textPrimary" onClick={handleCreateDefault} disabled={createDefaults.isPending}>
+                {createDefaults.isPending ? '생성 중...' : '기본 요건 생성'}
+              </Button>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </section>
     );
   }
 
@@ -363,12 +326,10 @@ export function RequirementsSummary() {
   // Edit mode
   if (isEditing) {
     return (
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-medium text-gray-700">졸업 요건 수정</p>
-          </div>
-          {saveError && <p className="text-sm text-red-500 mb-2">{saveError}</p>}
+      <section aria-labelledby="req-title" className={sectionClass}>
+        <div className="flex flex-col gap-4">
+          <h2 id="req-title" className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink">졸업 요건 수정</h2>
+          {saveError && <p role="alert" className="m-0 text-[13px] font-medium text-negative">{saveError}</p>}
           <RequirementForm
             initialData={{
               majorType: requirement.majorType,
@@ -402,8 +363,8 @@ export function RequirementsSummary() {
             semesterOptions={semesterOptions}
             suggestedCutoff={suggestedCutoff}
           />
-        </CardContent>
-      </Card>
+        </div>
+      </section>
     );
   }
 
@@ -433,89 +394,112 @@ export function RequirementsSummary() {
   const priorMinor = requirement.earnedMinorCredits || 0;
   const priorMinorRequired = requirement.earnedMinorRequiredCredits || 0;
 
+  // 자유선택: 별도 트랙이 없으므로 총합에서 전공(복수·부전공 포함)·교양을 뺀 화면 표시용 파생값 (완료 판정에는 쓰지 않음)
+  const trackTotals = [major, general, ...(secondaryMajor ? [secondaryMajor] : []), ...(minor ? [minor] : [])];
+  const freeOf = (pick: (t: { required: number; earned: number; enrolled: number; planned: number }) => number) =>
+    Math.max(0, pick(total) - trackTotals.reduce((sum, t) => sum + (pick(t) || 0), 0));
+  // 입력값이 없으면 NaN/0 이하가 되어 행을 숨긴다
+  const free = {
+    required: total.required - trackTotals.reduce((sum, t) => sum + (t.required || 0), 0),
+    earned: freeOf((t) => t.earned),
+    enrolled: freeOf((t) => t.enrolled),
+    planned: freeOf((t) => t.planned),
+  };
+  const priorFree = Math.max(0, priorTotal - priorMajor - priorGeneral - priorSecondaryMajor - priorMinor);
+
   // 계획 반영 시 예상 진행률 (이수 + 수강중 + 예정)
   const projected = total.required > 0
     ? Math.min(Math.round(((total.earned + total.enrolled + total.planned) / total.required) * 100), 100)
     : 0;
+  const remaining = Math.max(0, total.required - total.earned);
+  const unplanned = Math.max(0, total.required - total.earned - total.enrolled - total.planned);
+  const barLabel = `전체 ${total.required}학점 중 이수 ${total.earned}, 수강중 ${total.enrolled}, 예정 ${total.planned}`;
+
+  // 완료 문구는 총학점과 모든 트랙·하위 요건(전공/핵심, 복수전공, 부전공, 주전공 최소, 교양)을 채웠을 때만
+  const trackChecks: SegmentValues[] = [total, major, major.requiredMin, general];
+  if (minorPrimaryMajorMin) trackChecks.push(minorPrimaryMajorMin);
+  if (secondaryMajor) trackChecks.push(secondaryMajor, secondaryMajor.requiredMin);
+  if (minor) trackChecks.push(minor, minor.requiredMin);
+  const allRequirementsMet = trackChecks.every((t) => t.required <= 0 || t.earned >= t.required);
+  const headline = allRequirementsMet
+    ? '졸업 요건을 모두 채웠어요'
+    : remaining > 0
+      ? `${remaining}학점 남았어요`
+      : '총학점은 채웠어요';
+
+  const editLink = (
+    <button
+      type="button"
+      onClick={() => setIsEditing(true)}
+      className="-my-2 h-10 shrink-0 py-2 pl-2 text-[13px] font-semibold text-primary transition-colors duration-150 ease-out hover:text-primary-hover md:text-[14px]"
+    >
+      요건 수정
+    </button>
+  );
 
   return (
-    <Card>
-      <CardContent className="py-3 px-3 sm:px-4">
-        {/* 헤더: 제목 + 연도 뱃지 + 진행률 */}
-        <div className="flex items-baseline justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 whitespace-nowrap">졸업 요건</span>
-            {requirement?.requirementYear && (
-              <span className="text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                {requirement.requirementYear}년 기준
-              </span>
-            )}
-          </div>
-          <div className="flex items-baseline gap-1.5">
-            <span className={`text-lg font-semibold ${total.percentage >= 100 ? 'text-emerald-600' : 'text-gray-800'}`}>
-              {total.percentage}%
-            </span>
-            {projected > total.percentage && (
-              <span className="text-xs text-gray-400 whitespace-nowrap">→ 계획 반영 시 {projected}%</span>
-            )}
-          </div>
+    <section
+      aria-labelledby="req-title"
+      className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] md:gap-14 md:border-y md:border-line-2 md:pt-8 md:pb-9"
+    >
+      {/* 졸업까지: 큰 숫자 하나 + 진행 바 */}
+      <div className="flex min-w-0 flex-col pb-7 md:pb-0">
+        <h2 id="req-title" className="m-0 text-[15px] leading-[22px] font-medium text-ink-2">졸업까지</h2>
+        <p className="mt-1 mb-0 text-[30px] leading-[38px] font-bold tracking-[-0.03em] text-ink md:mt-1.5 md:text-[44px] md:leading-[52px]">
+          {headline}
+        </p>
+        <div className="mt-5 md:mt-7">
+          <StackedBar earned={total.earned} enrolled={total.enrolled} planned={total.planned} required={total.required} label={barLabel} />
         </div>
-
-        {/* 총 학점 히어로 바 */}
-        <div className="mt-2 flex items-center gap-2">
-          <StackedBar earned={total.earned} enrolled={total.enrolled} planned={total.planned} required={total.required} size="lg" />
-          <span className="text-xs text-gray-500 whitespace-nowrap">
-            <span className="font-medium text-gray-700">{total.earned}</span>/{total.required}학점
+        <div className="mt-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-[13px] leading-[18px] md:mt-3 md:text-[14px] md:leading-5">
+          <span className="font-semibold tabular-nums text-ink">
+            {total.earned} / {total.required}학점 <span className="font-medium text-ink-2">· 이수 {total.percentage}%</span>
           </span>
-        </div>
-        <BreakdownLine
-          earned={total.earned}
-          enrolled={total.enrolled}
-          planned={total.planned}
-          required={total.required}
-          prior={priorTotal}
-          className="mt-1.5"
-        />
-
-        {/* 요건별 상세 */}
-        <div className="mt-3 pt-3 border-t space-y-2.5">
-          <TrackRow label="전공" earned={major.earned} enrolled={major.enrolled} planned={major.planned} required={major.required} prior={priorMajor} />
-          <TrackRow label="핵심" sub earned={major.requiredMin.earned} enrolled={major.requiredMin.enrolled ?? 0} planned={major.requiredMin.planned ?? 0} required={major.requiredMin.required} prior={priorMajorRequired} />
-          {minorPrimaryMajorMin && (
-            <TrackRow label="주전공최소" sub earned={minorPrimaryMajorMin.earned} required={minorPrimaryMajorMin.required} />
+          {total.required > 0 && (
+            <span className="font-semibold text-primary">계획 반영 시 {projected}%</span>
           )}
-
-          {secondaryMajor && (
-            <>
-              <TrackRow label="복수전공" earned={secondaryMajor.earned} enrolled={secondaryMajor.enrolled} planned={secondaryMajor.planned} required={secondaryMajor.required} prior={priorSecondaryMajor} />
-              <TrackRow label="핵심" sub earned={secondaryMajor.requiredMin.earned} enrolled={secondaryMajor.requiredMin.enrolled ?? 0} planned={secondaryMajor.requiredMin.planned ?? 0} required={secondaryMajor.requiredMin.required} prior={priorSecondaryMajorRequired} />
-            </>
-          )}
-
-          {minor && (
-            <>
-              <TrackRow label="부전공" earned={minor.earned} enrolled={minor.enrolled} planned={minor.planned} required={minor.required} prior={priorMinor} />
-              <TrackRow label="핵심" sub earned={minor.requiredMin.earned} enrolled={minor.requiredMin.enrolled ?? 0} planned={minor.requiredMin.planned ?? 0} required={minor.requiredMin.required} prior={priorMinorRequired} />
-            </>
-          )}
-
-          <TrackRow label="교양" earned={general.earned} enrolled={general.enrolled} planned={general.planned} required={general.required} prior={priorGeneral} />
         </div>
+        <p className="mt-1.5 mb-0 text-[13px] leading-[18px] text-ink-2 tabular-nums">
+          이수 {total.earned}
+          {priorTotal > 0 && <> (기이수 {priorTotal} 포함)</>}
+          {' · '}수강중 {total.enrolled} · 예정 {total.planned} · 미계획 {unplanned}
+        </p>
+      </div>
 
-        {/* 푸터: 도움말 + 요건 수정 */}
-        <div className="mt-3 pt-2.5 border-t flex items-center justify-between gap-2 flex-wrap">
-          <span className="text-[11px] text-gray-400">과목 카드의 상태(예정·수강중·이수)를 바꾸면 바로 반영됩니다.</span>
-          <button
-            onClick={() => setIsEditing(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#153974] bg-[#153974]/10 hover:bg-[#153974]/20 rounded-md transition-colors"
-          >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            요건 수정
-          </button>
+      <MobileBand />
+
+      {/* 요건 리스트: 행마다 이수·수강중·예정 보조 설명 */}
+      <div className="flex min-w-0 flex-col py-2 md:py-0">
+        <div className="flex h-12 items-center justify-between md:hidden">
+          <h2 className="m-0 text-[16px] leading-6 font-bold text-ink">졸업 요건</h2>
+          {editLink}
         </div>
-      </CardContent>
-    </Card>
+        <TrackRow label="전공" earned={major.earned} enrolled={major.enrolled} planned={major.planned} required={major.required} prior={priorMajor} />
+        <TrackRow label="전공핵심" sub earned={major.requiredMin.earned} enrolled={major.requiredMin.enrolled ?? 0} planned={major.requiredMin.planned ?? 0} required={major.requiredMin.required} prior={priorMajorRequired} />
+        {minorPrimaryMajorMin && (
+          <TrackRow label="주전공 최소" sub earned={minorPrimaryMajorMin.earned} required={minorPrimaryMajorMin.required} />
+        )}
+        {secondaryMajor && (
+          <>
+            <TrackRow label="복수전공" earned={secondaryMajor.earned} enrolled={secondaryMajor.enrolled} planned={secondaryMajor.planned} required={secondaryMajor.required} prior={priorSecondaryMajor} />
+            <TrackRow label="복수전공 핵심" sub earned={secondaryMajor.requiredMin.earned} enrolled={secondaryMajor.requiredMin.enrolled ?? 0} planned={secondaryMajor.requiredMin.planned ?? 0} required={secondaryMajor.requiredMin.required} prior={priorSecondaryMajorRequired} />
+          </>
+        )}
+        {minor && (
+          <>
+            <TrackRow label="부전공" earned={minor.earned} enrolled={minor.enrolled} planned={minor.planned} required={minor.required} prior={priorMinor} />
+            <TrackRow label="부전공 핵심" sub earned={minor.requiredMin.earned} enrolled={minor.requiredMin.enrolled ?? 0} planned={minor.requiredMin.planned ?? 0} required={minor.requiredMin.required} prior={priorMinorRequired} />
+          </>
+        )}
+        <TrackRow label="교양" earned={general.earned} enrolled={general.enrolled} planned={general.planned} required={general.required} prior={priorGeneral} />
+        {free.required > 0 && (
+          <TrackRow label="자유선택" earned={free.earned} enrolled={free.enrolled} planned={free.planned} required={free.required} prior={priorFree} />
+        )}
+        <div className="hidden flex-wrap items-center justify-between gap-4 pt-3 md:flex">
+          <span className="text-[13px] leading-[18px] text-ink-2">과목의 상태를 누르면 바로 반영돼요</span>
+          {editLink}
+        </div>
+      </div>
+    </section>
   );
 }

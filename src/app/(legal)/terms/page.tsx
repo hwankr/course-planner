@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: '이용약관 | YU 수강 플래너',
@@ -8,37 +9,25 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <div className="container mx-auto max-w-3xl px-4 py-16">
+    <div className="min-h-screen bg-white text-ink">
+      <div className="mx-auto w-full max-w-3xl px-5 py-12 md:px-8 md:py-16">
         <Link
           href="/"
-          className="inline-flex items-center text-[#153974] hover:text-[#1a4a8f] mb-8 transition-colors"
+          className="inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-primary hover:text-primary-hover mb-6 transition-colors duration-150 ease-out"
         >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 19l-7-7m0 0l7-7m-7 7h18"
-            />
-          </svg>
+          <ArrowLeft aria-hidden="true" className="h-4 w-4" />
           돌아가기
         </Link>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <h1 className="text-3xl md:text-4xl font-bold text-[#153974] mb-2">
+        <div>
+          <h1 className="text-[26px] leading-[34px] font-bold tracking-[-0.02em] text-ink mb-2">
             이용약관
           </h1>
-          <p className="text-gray-500 mb-8">시행일: 2026년 2월 9일</p>
+          <p className="text-[13px] leading-[18px] text-ink-2 mb-10">시행일: 2026년 2월 9일</p>
 
-          <div className="space-y-8 text-gray-700 leading-relaxed">
+          <div className="space-y-9 text-[15px] leading-6 text-ink">
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제1조 (목적)
               </h2>
               <p>
@@ -49,7 +38,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제2조 (정의)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -73,7 +62,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제3조 (약관의 효력 및 변경)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -94,7 +83,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제4조 (서비스의 제공)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -120,7 +109,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제5조 (회원가입 및 계정)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -140,7 +129,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제6조 (회원의 의무)
               </h2>
               <p className="mb-2">회원은 다음 행위를 하여서는 안 됩니다:</p>
@@ -159,7 +148,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제7조 (서비스 이용 제한)
               </h2>
               <p>
@@ -169,22 +158,22 @@ export default function TermsPage() {
               </p>
             </section>
 
-            <section className="bg-amber-50 border-2 border-amber-300 rounded-lg p-6">
-              <h2 className="text-2xl font-bold text-red-700 mb-4">
-                제8조 (학사 정보 면책) ⚠️ 중요
+            <section className="border-y border-line-2 py-6">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-negative mb-3">
+                제8조 (학사 정보 면책) 중요
               </h2>
               <ol className="list-decimal list-inside space-y-3 ml-4">
-                <li className="font-semibold text-gray-900">
+                <li className="font-semibold text-ink">
                   본 서비스에서 제공하는 학과, 과목, 졸업 요건, 선수과목 등의
                   학사 정보는 참고용으로만 제공되며, 정확한 정보는 반드시
                   영남대학교 소속 학과 또는 학사팀에 직접 확인하시기
                   바랍니다.
                 </li>
-                <li className="font-semibold text-gray-900">
+                <li className="font-semibold text-ink">
                   학사 정보는 수동으로 업데이트되며, 대학의 공식 커리큘럼
                   변경사항이 즉시 반영되지 않을 수 있습니다.
                 </li>
-                <li className="font-semibold text-red-700">
+                <li className="font-semibold text-negative">
                   본 서비스의 학사 정보 부정확성으로 인해 발생하는 수강 신청
                   오류, 졸업 요건 미충족, 학점 인정 문제 등 모든 불이익에
                   대해 운영자는 어떠한 법적 책임도 지지 않습니다.
@@ -197,7 +186,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제9조 (지적재산권)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -213,7 +202,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제10조 (서비스 변경 및 중단)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -233,7 +222,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제11조 (면책 조항)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -257,7 +246,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">
                 제12조 (분쟁 해결)
               </h2>
               <ol className="list-decimal list-inside space-y-2 ml-4">
@@ -272,14 +261,14 @@ export default function TermsPage() {
               </ol>
             </section>
 
-            <section className="border-t-2 border-gray-200 pt-6">
-              <h2 className="text-2xl font-bold text-[#153974] mb-4">부칙</h2>
+            <section className="border-t border-line-2 pt-6">
+              <h2 className="text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink mb-3">부칙</h2>
               <p>본 약관은 2026년 2월 9일부터 시행됩니다.</p>
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
+              <div className="mt-6 border-y border-line-2 py-4">
+                <p className="text-[13px] leading-[18px] text-ink-2">
                   <strong>문의:</strong> fabronjeon@gmail.com
                 </p>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-[13px] leading-[18px] text-ink-2 mt-1">
                   <strong>운영자:</strong> 개인 프로젝트 (영남대학교 학생)
                 </p>
               </div>
