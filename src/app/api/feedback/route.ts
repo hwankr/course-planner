@@ -2,7 +2,7 @@
  * @api-separable
  * @endpoint GET /api/feedback - 피드백 목록 조회 (관리자)
  * @endpoint POST /api/feedback - 피드백 제출
- * @service feedbackService.findAllAndMarkRead, feedbackService.create
+ * @service feedbackService.findAll, feedbackService.create
  * @migration-notes Express 변환 시: app.get('/api/feedback', ...) + app.post('/api/feedback', ...)
  */
 
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     if (category) filter.category = category;
     if (limit) filter.limit = limit;
 
-    const feedbacks = await feedbackService.findAllAndMarkRead(filter);
+    const feedbacks = await feedbackService.findAll(filter);
 
     return NextResponse.json({
       success: true,
@@ -69,6 +69,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: '로그인이 필요합니다.' }, { status: 401 });
+    }
     // Rate limiting
     const clientIp = getClientIp(request);
     const rateLimitResult = feedbackLimiter.check(clientIp);
@@ -90,15 +94,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = feedbackSchema.parse(body);
 
-    // Get user session (optional - anonymous feedback allowed)
-    const session = await getServerSession(authOptions);
-
     // Prepare feedback data
     const feedbackData = {
       category: validatedData.category,
       message: validatedData.content,
       email: validatedData.email || undefined,
-      userId: session?.user?.id,
+      userId: session.user.id,
     };
 
     // Create feedback

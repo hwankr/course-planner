@@ -68,25 +68,6 @@ async function fetchCourses(filter?: ExtendedCourseFilter): Promise<ICourse[]> {
   return result.data;
 }
 
-/**
- * Fetch single course by ID
- */
-async function fetchCourse(id: string): Promise<ICourse> {
-  const response = await fetch(`/api/courses/${id}`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch course: ${response.statusText}`);
-  }
-
-  const result: ApiResponse<ICourse> = await response.json();
-
-  if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to fetch course');
-  }
-
-  return result.data;
-}
-
 // ============================================
 // React Query Hooks
 // ============================================
@@ -146,22 +127,6 @@ export function useCourses(filter?: ExtendedCourseFilter) {
   }
 
   return apiResult;
-}
-
-/**
- * Fetch single course by ID
- *
- * @example
- * const { data: course, isLoading, error } = useCourse(courseId);
- */
-export function useCourse(id: string) {
-  return useQuery({
-    queryKey: ['courses', id],
-    queryFn: () => fetchCourse(id),
-    enabled: !!id, // Only run query when id is provided
-    staleTime: 5 * 60 * 1000, // 5 minutes - course catalog is relatively static
-    refetchOnWindowFocus: false,
-  });
 }
 
 /**

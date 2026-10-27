@@ -58,7 +58,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-wrap items-stretch bg-white text-ink">
+    <main className="flex min-h-screen flex-wrap items-stretch bg-white text-ink">
       <AuthIntro features={REGISTER_FEATURES} />
 
       <section
@@ -148,6 +148,6 @@ export default function RegisterPage() {
           </p>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

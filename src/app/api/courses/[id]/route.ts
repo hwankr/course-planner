@@ -24,7 +24,11 @@ export async function GET(request: Request, { params }: RouteParams) {
   try {
     const { id } = await params;
     if (!isValidObjectId(id)) return invalidIdResponse('과목 ID');
-    const course = await courseService.findById(id);
+    const session = await getServerSession(authOptions);
+    const course = await courseService.findById(id, {
+      userId: session?.user?.id,
+      isAdmin: session ? await isActiveAdminSession(session) : false,
+    });
 
     if (!course) {
       return NextResponse.json(

@@ -39,7 +39,7 @@ interface RequirementFormProps {
   onSubmit: (data: RequirementFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
-  onLoadFromDeptReq?: () => Promise<Partial<RequirementFormData> | null>;
+  onLoadFromDeptReq?: (majorType?: MajorType) => Promise<Partial<RequirementFormData> | null>;
   userMajorType?: MajorType;
   requirementYear?: number;
   onYearChange?: (year: number) => void;
@@ -268,7 +268,7 @@ export function RequirementForm({ initialData, onSubmit, onCancel, isLoading, on
   const handleLoadFromDeptReq = async () => {
     if (!onLoadFromDeptReq) return;
     try {
-      const data = await onLoadFromDeptReq();
+      const data = await onLoadFromDeptReq(majorType);
       if (data) {
         if (data.majorType) setMajorType(data.majorType);
         if (data.totalCredits !== undefined) setTotalCredits(data.totalCredits.toString());

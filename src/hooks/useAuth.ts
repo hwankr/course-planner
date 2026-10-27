@@ -3,12 +3,17 @@
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { usePlanStore } from '@/stores/planStore';
+import { safeCallbackUrl } from '@/components/providers/authNavigation';
 import { handleCredentialSignIn } from '@/lib/auth/login-message';
 import { useGuestStore } from '@/stores/guestStore';
 
 export function useAuth() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const callbackUrl = () => safeCallbackUrl(new URLSearchParams(window.location.search).get('callbackUrl'));
   const { isGuest, enterGuestMode, exitGuestMode } = useGuestStore();
 
   const isLoading = status === 'loading';
@@ -28,7 +33,7 @@ export function useAuth() {
       // 비회원 모드였을 경우 해제 (멱등 - 비회원 아니어도 안전)
       exitGuestMode();
 
-      router.push('/planner');
+      router.push(callbackUrl());
       router.refresh();
     },
     [router, exitGuestMode]
@@ -38,7 +43,7 @@ export function useAuth() {
     // signIn('google')은 full-page redirect를 트리거하므로
     // exitGuestMode()를 반드시 signIn 이전에 호출해야 함
     exitGuestMode();
-    await signIn('google', { callbackUrl: '/planner' });
+    await signIn('google', { callbackUrl: callbackUrl() });
   }, [exitGuestMode]);
 
   const logout = useCallback(async () => {
@@ -47,10 +52,14 @@ export function useAuth() {
       router.push('/');
       return;
     }
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    usePlanStore.setState(usePlanStore.getInitialState());
     await signOut({ redirect: false });
+    queryClient.clear();
     router.push('/login');
     router.refresh();
-  }, [router, isGuest, exitGuestMode]);
+  }, [router, isGuest, exitGuestMode, queryClient]);
 
   const register = useCallback(
     async (data: { email: string; password: string; name: string }) => {

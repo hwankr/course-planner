@@ -6,10 +6,13 @@
 
 import { connectDB } from '@/lib/db/mongoose';
 import type { ClientSession } from 'mongoose';
-import { GraduationRequirement, Plan, User } from '@/models';
+import { GraduationRequirement, Plan, User, DepartmentCurriculum } from '@/models';
 import type { IGraduationRequirementDocument } from '@/models';
 import type { IPlanDocument } from '@/models';
-import type { GraduationRequirementInput, GraduationProgress, CourseInfo } from '@/types';
+import type { GraduationRequirementInput, GraduationProgress, CourseInfo, MajorType } from '@/types';
+import { DEFAULT_CURRICULUM_YEAR, DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
+import { resolveMajorTrack } from '@/lib/graduationDelta';
+import { departmentRequirementService } from './departmentRequirement.service';
 import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 
 /**
@@ -54,8 +57,8 @@ async function remove(
  * - general_required / general_elective -> general track
  * - major_required / major_elective:
  *   - single major or no secondary dept: all -> primaryMajor
- *   - double major: course.department === secondaryDept -> secondaryMajor, else -> primaryMajor
- *   - minor: course.department === secondaryDept -> minor, else -> primaryMajor
+ *   - selected departmentId, then legacy course.department determine the major track
+ *   - without either field, only secondary-exclusive curriculum courses use the secondary/minor track
  * - free_elective -> only counts toward total
  *
  * Sub-requirements:
@@ -71,12 +74,26 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
   const requirement = await GraduationRequirement.findOne({ user: userId }).lean();
   if (!requirement) return null;
 
-  const user = await User.findById(userId).select('department secondaryDepartment majorType').lean();
+  const user = await User.findById(userId).select('department secondaryDepartment majorType curriculumYear').lean();
 
   const pct = (earned: number, required: number) =>
     required > 0 ? Math.min(100, Math.round((earned / required) * 100)) : 0;
 
-  const majorType = requirement.majorType || 'single';
+  const majorType = (requirement.majorType || 'single') as MajorType;
+  const primaryDeptId = user?.department?.toString();
+  const secondaryDeptId = user?.secondaryDepartment?.toString();
+  const memberships = secondaryDeptId && majorType !== 'single'
+    ? await DepartmentCurriculum.find({
+      department: { $in: [primaryDeptId, secondaryDeptId].filter((id): id is string => !!id) },
+      year: user?.curriculumYear ?? DEFAULT_CURRICULUM_YEAR,
+    }).select('department course').lean()
+    : [];
+  const attribution = {
+    majorType, secondaryDepartmentId: secondaryDeptId,
+    primaryCourseIds: memberships.filter(c => c.department.toString() === primaryDeptId).map(c => c.course.toString()),
+    secondaryCourseIds: memberships.filter(c => c.department.toString() === secondaryDeptId).map(c => c.course.toString()),
+  };
+
 
   // Prior earned credits (총은 트랙 합계 미만이면 트랙 합계로 보정 — 과거 불일치 데이터 방어)
   const priorTotal = effectivePriorTotal(requirement);
@@ -91,6 +108,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
   // Helper to create empty progress
   const emptyProgress = (): GraduationProgress => {
     const result: GraduationProgress = {
+      attribution,
       total: {
         required: requirement.totalCredits,
         earned: priorTotal,
@@ -172,8 +190,6 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
 
   if (!plan) return emptyProgress();
 
-  // User department info for course attribution
-  const secondaryDeptId = user?.secondaryDepartment?.toString();
 
   // Track accumulators
   const tracks = {
@@ -241,19 +257,11 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
       if (isGeneralCategory) {
         trackKey = 'general';
       } else if (isMajorCategory) {
-        if (majorType === 'single' || !secondaryDeptId) {
-          // Single major or no secondary dept - all major courses go to primary
-          trackKey = 'primaryMajor';
-        } else {
-          const courseDeptId = course.department?.toString();
-          if (courseDeptId && courseDeptId === secondaryDeptId) {
-            // Course belongs to secondary department
-            trackKey = majorType === 'double' ? 'secondaryMajor' : 'minor';
-          } else {
-            // Course belongs to primary department (or unknown dept)
-            trackKey = 'primaryMajor';
-          }
-        }
+        trackKey = resolveMajorTrack({
+          id: info.id,
+          departmentId: entry.departmentId?.toString(),
+          department: course.department?.toString(),
+        }, attribution);
       }
       // else: free_elective -> trackKey stays 'free', only counts toward total
 
@@ -290,6 +298,7 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
 
   // Build result
   const result: GraduationProgress = {
+    attribution,
     total: {
       required: requirement.totalCredits,
       earned: totalEarned + priorTotal,
@@ -374,6 +383,41 @@ async function calculateProgress(userId: string): Promise<GraduationProgress | n
   return result;
 }
 
+/** Sync profile tracks while preserving custom thresholds and prior-earned credits. */
+async function syncProfile(
+  userId: string,
+  previous: { majorType?: string; department?: { toString(): string }; secondaryDepartment?: { toString(): string } },
+  profile: { majorType?: 'single' | 'double' | 'minor'; department?: { toString(): string }; secondaryDepartment?: { toString(): string } }
+): Promise<void> {
+  const current = await findByUser(userId);
+  if (!current || !profile.department) return;
+  const majorType = profile.majorType || 'single';
+  const year = current.requirementYear ?? DEFAULT_REQUIREMENT_YEAR;
+  const departmentId = profile.department.toString();
+  const [defaults, oldDefaults, secondary] = await Promise.all([
+    departmentRequirementService.getAutoFill({ departmentId, majorType, track: 'primary', year }),
+    // 이전 기본값은 '이전 학과 + 이전 전공유형' 기준으로 계산해야 학과 변경 시 기본값 그대로였던 값을 새 기본값으로 바꿀 수 있다.
+    departmentRequirementService.getAutoFill({ departmentId: previous.department?.toString() ?? departmentId, majorType: (current.majorType || 'single') as MajorType, track: 'primary', year }),
+    majorType !== 'single' && profile.secondaryDepartment
+      ? departmentRequirementService.getAutoFill({ departmentId: profile.secondaryDepartment.toString(), majorType, track: 'secondary', year })
+      : null,
+  ]);
+  const updates: Record<string, unknown> = { majorType };
+  if (defaults && 'primaryMajorCredits' in defaults) {
+    for (const key of ['primaryMajorCredits', 'primaryMajorRequiredMin'] as const) {
+      const oldValue = oldDefaults && 'primaryMajorCredits' in oldDefaults ? oldDefaults[key] : undefined;
+      if (current[key] === oldValue && defaults[key] != null) updates[key] = defaults[key];
+    }
+  }
+  const changedSecondary = previous.secondaryDepartment?.toString() !== profile.secondaryDepartment?.toString();
+  if (secondary) {
+    for (const [key, value] of Object.entries(secondary)) {
+      if (value != null && (current.majorType !== majorType || changedSecondary || (current as unknown as Record<string, unknown>)[key] == null)) updates[key] = value;
+    }
+  }
+  await GraduationRequirement.updateOne({ user: userId }, { $set: updates }, { runValidators: true });
+}
+
 /**
  * 기본 졸업요건 생성 (단일 문서)
  */
@@ -399,4 +443,5 @@ export const graduationRequirementService = {
   remove,
   calculateProgress,
   createDefaults,
+  syncProfile,
 };

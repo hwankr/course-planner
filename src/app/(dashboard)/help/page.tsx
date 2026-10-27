@@ -82,9 +82,9 @@ export default function HelpPage() {
             <HelpFigures>
               <ZoomableImage
                 src="/help/onboarding-screen.png"
-                alt="온보딩 화면 - 학과 선택과 졸업요건 설정"
-                width={1080}
-                height={400}
+                alt="초기 설정 1단계 — 컴퓨터공학과 선택과 입학연도 입력"
+                width={1344}
+                height={1192}
               />
             </HelpFigures>
           </HelpSection>
@@ -118,15 +118,15 @@ export default function HelpPage() {
             <HelpFigures>
               <ZoomableImage
                 src="/help/planner-semesters.png"
-                alt="학기 그리드 - 학년별 학기와 과목 배치"
-                width={1500}
-                height={600}
+                alt="수강 계획 — 2학년 1·2학기 과목과 이수·수강중·예정 상태"
+                width={1304}
+                height={1914}
               />
               <ZoomableImage
                 src="/help/course-catalog.png"
-                alt="과목 리스트 - 학년/학기/카테고리 필터와 추가 버튼"
-                width={1500}
-                height={400}
+                alt="과목 리스트 — 검색, 학과·학년·학기·이수구분 필터와 과목 추가 버튼"
+                width={616}
+                height={1600}
               />
             </HelpFigures>
           </HelpSection>
@@ -139,6 +139,7 @@ export default function HelpPage() {
             <HelpDefinitionList
               rows={[
                 { term: '전공 · 교양', detail: '카테고리별 이수 학점과 기준 학점' },
+                { term: '전공핵심', detail: '전공 학점에 포함되는 하위 요건이며, 전공필수와는 별도 분류' },
                 { term: '진행률 바', detail: '이수 · 수강중 · 예정을 나눠 표시' },
                 { term: '요건 수정', detail: '기이수 학점과 기준 학점을 직접 입력' },
               ]}
@@ -149,9 +150,9 @@ export default function HelpPage() {
             <HelpFigures>
               <ZoomableImage
                 src="/help/requirements-widget.png"
-                alt="졸업요건 위젯 - 전공/교양 카테고리별 진행률 바"
-                width={1500}
-                height={200}
+                alt="졸업요건 요약 — 남은 학점과 전공·전공핵심·교양·자유선택 이수 현황"
+                width={1904}
+                height={628}
               />
             </HelpFigures>
           </HelpSection>
@@ -168,15 +169,15 @@ export default function HelpPage() {
             <HelpFigures>
               <ZoomableImage
                 src="/help/statistics-ranking.png"
-                alt="학과 통계 - 카테고리/학기 필터와 인기 과목 순위"
-                width={1200}
-                height={800}
+                alt="학과 통계 — 학기·이수구분 필터와 인기 과목 순위"
+                width={1904}
+                height={1316}
               />
               <ZoomableImage
                 src="/help/statistics-overview.png"
-                alt="학기별 평균 수강 현황과 익명 수강계획 열람"
-                width={1200}
-                height={400}
+                alt="학과 통계 — 학기별 평균 수강 현황과 익명 수강계획 목록"
+                width={1904}
+                height={1244}
               />
             </HelpFigures>
           </HelpSection>

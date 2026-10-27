@@ -104,6 +104,7 @@ export interface PlannedCourse {
   status: 'planned' | 'enrolled' | 'completed' | 'failed';
   grade?: string;
   category?: RequirementCategory; // Stored from DepartmentCurriculum
+  departmentId?: string; // Selected curriculum department; absent on legacy plans
 }
 
 export interface SemesterPlan {
@@ -185,18 +186,6 @@ export type RequirementCategory =
 /** 전공 유형 */
 export type MajorType = 'single' | 'double' | 'minor';
 
-/** 전공 트랙별 요건 (전공핵심 + 전공계) */
-export interface MajorTrackRequirement {
-  majorRequiredMin: number;   // 전공핵심 최소학점
-  majorCredits: number;       // 전공계 학점 (전공핵심 포함 총 전공학점)
-}
-
-/** 전공 트랙별 기이수 학점 */
-export interface MajorTrackEarned {
-  earnedMajorCredits: number;         // 기이수 전공학점
-  earnedMajorRequiredCredits: number; // 기이수 전공핵심학점
-}
-
 // ============================================
 // DepartmentRequirement Types (학과 졸업요건 기준표)
 // ============================================
@@ -210,22 +199,6 @@ export interface DepartmentMajorTypeConfig {
 /** 부전공 전용 추가 필드 */
 export interface DepartmentMinorConfig extends DepartmentMajorTypeConfig {
   primaryMajorMin: number | null;   // 부전공시 주전공 최소학점
-}
-
-/** 학과 졸업요건 기준표 (참조 테이블) */
-export interface IDepartmentRequirement {
-  _id: Types.ObjectId;
-  college: string;                    // 대학 (예: "공과대학")
-  departmentName: string;             // 학부(과)·전공 (예: "건축학부 건축학전공")
-  year: number;                       // 기준 연도 (예: 2025)
-  generalCredits: number | null;      // 교양 학점 (null = 교양 없음, 의학과 등)
-  single: DepartmentMajorTypeConfig;  // 단일전공 설정
-  double: DepartmentMajorTypeConfig;  // 복수전공 설정
-  minor: DepartmentMinorConfig;       // 부전공 설정
-  totalCredits: number;               // 졸업학점
-  availableMajorTypes: MajorType[];   // 가용 전공유형 (computed from non-null majorCredits)
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface IRequirement {
@@ -252,52 +225,6 @@ export interface CreateRequirementInput {
 // ============================================
 // Graduation Requirement Types
 // ============================================
-
-export interface IGraduationRequirement {
-  _id: Types.ObjectId;
-  user: Types.ObjectId;
-  majorType: MajorType;                 // NEW
-
-  // 공통 요건
-  totalCredits: number;
-  generalCredits: number;
-
-  // 주전공 요건
-  primaryMajorCredits: number;           // renamed from majorCredits
-  primaryMajorRequiredMin: number;       // renamed from majorRequiredMin
-
-  // 복수전공 요건 (majorType === 'double')
-  secondaryMajorCredits?: number;
-  secondaryMajorRequiredMin?: number;
-
-  // 부전공 요건 (majorType === 'minor')
-  minorCredits?: number;
-  minorRequiredMin?: number;
-  minorPrimaryMajorMin?: number;
-
-  // 기이수 학점 - 공통
-  earnedTotalCredits: number;
-  earnedGeneralCredits: number;
-
-  // 기이수 학점 - 주전공
-  earnedPrimaryMajorCredits: number;            // renamed from earnedMajorCredits
-  earnedPrimaryMajorRequiredCredits: number;    // renamed from earnedMajorRequiredCredits
-
-  // 기이수 학점 - 복수전공
-  earnedSecondaryMajorCredits?: number;
-  earnedSecondaryMajorRequiredCredits?: number;
-
-  // 기이수 학점 - 부전공
-  earnedMinorCredits?: number;
-  earnedMinorRequiredCredits?: number;
-
-  // 기이수에 이미 반영된 마지막 학기 (이 학기까지의 '이수' 과목은 중복 합산 제외)
-  priorCutoffYear?: number | null;
-  priorCutoffTerm?: Term | null;
-
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export interface GraduationRequirementInput {
   majorType: MajorType;
@@ -359,7 +286,15 @@ export interface TrackProgress extends GroupProgress {
   requiredMin: SubRequirement;  // 전공핵심 서브 요건
 }
 
+export interface MajorAttributionContext {
+  majorType?: MajorType;
+  secondaryDepartmentId?: string;
+  primaryCourseIds?: string[];
+  secondaryCourseIds?: string[];
+}
+
 export interface GraduationProgress {
+  attribution?: MajorAttributionContext;
   total: GroupProgress;
   primaryMajor: TrackProgress;           // renamed from 'major'
   secondaryMajor?: TrackProgress;        // NEW: 복수전공 진행률
@@ -421,20 +356,6 @@ export interface AcademicEventFilter {
 export type FeedbackCategory = 'bug' | 'feature' | 'data-error' | 'other' | 'contact';
 export type FeedbackStatus = 'pending' | 'resolved';
 
-export interface IFeedbackResponse {
-  _id: string;
-  category: FeedbackCategory;
-  message: string;
-  email?: string;
-  userId?: { _id: string; email: string; name: string };
-  status: FeedbackStatus;
-  adminReply?: string;
-  adminReplyAt?: string;
-  isReadByUser: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 // ============================================
 // PatchNote Types (업데이트 소식)
 // ============================================
@@ -462,15 +383,6 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
   message?: string;
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-  };
 }
 
 // ============================================

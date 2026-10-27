@@ -2,13 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAdminMutation, useAdminFormSession } from '../_components/useAdminMutation';
+import { invalidateAdminData } from '../_components/adminCache';
 import { useAuth } from '@/hooks/useAuth';
 import { useToastStore } from '@/stores/toastStore';
-import { Card, CardContent } from '@/components/ui';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, X, BookOpen } from 'lucide-react';
-import Link from 'next/link';
+import { Button, Input, Select, Textarea, CategoryLabel } from '@/components/ui';
+import { AdminHeader, AdminRow, AdminLoading } from '../_components/AdminParts';
+import { AdminDialog, AdminConfirmDialog } from '../_components/AdminDialog';
+import { Plus, Pencil, Trash2, X, BookOpen } from 'lucide-react';
 import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
+import { buildOfficialCoursePayload, type CourseFormData } from './courseForm';
+import { AdminPagination } from '../_components/AdminPagination';
+import type { Pagination } from '@/types/admin';
 import type { RequirementCategory, Semester } from '@/types';
 
 // ============================================
@@ -35,16 +41,7 @@ interface CourseItem {
   isActive: boolean;
 }
 
-interface CourseFormData {
-  code: string;
-  name: string;
-  credits: number;
-  department: string;
-  category: RequirementCategory | '';
-  semesters: Semester[];
-  recommendedYear: string;
-  description: string;
-}
+
 
 // ============================================
 // Constants
@@ -58,16 +55,6 @@ const CATEGORY_LABELS: Record<RequirementCategory, string> = {
   general_elective: '교양선택',
   free_elective: '자유선택',
   teaching: '교직',
-};
-
-const CATEGORY_COLORS: Record<RequirementCategory, string> = {
-  major_required: 'bg-red-100 text-red-700',
-  major_compulsory: 'bg-orange-100 text-orange-700',
-  major_elective: 'bg-blue-100 text-blue-700',
-  general_required: 'bg-green-100 text-green-700',
-  general_elective: 'bg-teal-100 text-teal-700',
-  free_elective: 'bg-gray-100 text-gray-700',
-  teaching: 'bg-purple-100 text-purple-700',
 };
 
 const SEMESTER_LABELS: Record<Semester, string> = {
@@ -90,7 +77,9 @@ const EMPTY_FORM: CourseFormData = {
   department: '',
   category: '',
   semesters: [],
-  recommendedYear: '',
+  recommendedYear: '1',
+  recommendedSemester: 'spring',
+  curriculumYear: DEFAULT_CURRICULUM_YEAR,
   description: '',
 };
 
@@ -103,12 +92,15 @@ export default function AdminCoursesPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
   const queryClient = useQueryClient();
+  const formSession = useAdminFormSession();
 
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<RequirementCategory | ''>('');
   const [yearFilter, setYearFilter] = useState(DEFAULT_CURRICULUM_YEAR);
+
+  const [page, setPage] = useState(1);
 
   // Form state
   const [showForm, setShowForm] = useState(false);
@@ -124,11 +116,13 @@ export default function AdminCoursesPage() {
     if (departmentFilter) params.set('departmentId', departmentFilter);
     if (categoryFilter) params.set('category', categoryFilter);
     if (yearFilter) params.set('curriculumYear', String(yearFilter));
+    params.set('page', String(page));
+    params.set('limit', '50');
     return params.toString();
   };
 
-  const { data: coursesData, isLoading, error } = useQuery<{ success: boolean; data: CourseItem[] }>({
-    queryKey: ['admin-courses', searchTerm, departmentFilter, categoryFilter, yearFilter],
+  const { data: coursesData, isLoading, error } = useQuery<{ success: boolean; data: CourseItem[]; pagination: Pagination }>({
+    queryKey: ['admin-courses', searchTerm, departmentFilter, categoryFilter, yearFilter, page],
     queryFn: async () => {
       const qs = buildQueryString();
       const res = await fetch(`/api/courses${qs ? `?${qs}` : ''}`);
@@ -138,8 +132,8 @@ export default function AdminCoursesPage() {
     enabled: isAdmin && !authLoading,
   });
 
-  const { data: departmentsData } = useQuery<{ success: boolean; data: DepartmentItem[] }>({
-    queryKey: ['departments'],
+  const { data: departmentsData, isError: departmentsError, refetch: retryDepartments } = useQuery<{ success: boolean; data: DepartmentItem[] }>({
+    queryKey: ['admin-departments'],
     queryFn: async () => {
       const res = await fetch('/api/departments');
       if (!res.ok) throw new Error('학과 목록을 불러오는데 실패했습니다.');
@@ -150,18 +144,9 @@ export default function AdminCoursesPage() {
 
   // ---- Mutations ----
 
-  const { mutate: createCourse, isPending: isCreating } = useMutation({
+  const { mutate: createCourse, isPending: isCreating } = useAdminMutation({
     mutationFn: async (data: CourseFormData) => {
-      const body: Record<string, unknown> = {
-        code: data.code.toUpperCase(),
-        name: data.name,
-        credits: data.credits,
-        semesters: data.semesters,
-      };
-      if (data.department) body.department = data.department;
-      if (data.category) body.category = data.category;
-      if (data.recommendedYear) body.recommendedYear = parseInt(data.recommendedYear, 10);
-      if (data.description.trim()) body.description = data.description.trim();
+      const body = buildOfficialCoursePayload(data);
 
       const res = await fetch('/api/courses', {
         method: 'POST',
@@ -172,17 +157,17 @@ export default function AdminCoursesPage() {
       if (!res.ok) throw new Error(result.error || '과목 생성에 실패했습니다.');
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-courses'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'courses');
       addToast({ type: 'success', message: '과목이 생성되었습니다.' });
-      closeForm();
+      if (formSession.isCurrent(sessionId)) closeForm();
     },
     onError: (err: Error) => {
       addToast({ type: 'warning', message: err.message });
     },
-  });
+  }, formSession);
 
-  const { mutate: updateCourse, isPending: isUpdating } = useMutation({
+  const { mutate: updateCourse, isPending: isUpdating } = useAdminMutation({
     mutationFn: async ({ id, data }: { id: string; data: CourseFormData }) => {
       const body: Record<string, unknown> = {
         code: data.code.toUpperCase(),
@@ -205,39 +190,40 @@ export default function AdminCoursesPage() {
       if (!res.ok) throw new Error(result.error || '과목 수정에 실패했습니다.');
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-courses'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'courses');
       addToast({ type: 'success', message: '과목이 수정되었습니다.' });
-      closeForm();
+      if (formSession.isCurrent(sessionId)) closeForm();
     },
     onError: (err: Error) => {
       addToast({ type: 'warning', message: err.message });
     },
-  });
+  }, formSession);
 
-  const { mutate: deleteCourse } = useMutation({
+  const { mutate: deleteCourse, isPending: isDeleting } = useAdminMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/courses/${id}`, { method: 'DELETE' });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || '과목 삭제에 실패했습니다.');
       return result;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-courses'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'courses');
       addToast({ type: 'success', message: '과목이 삭제되었습니다.' });
-      setDeletingId(null);
+      if (formSession.isCurrent(sessionId)) setDeletingId(null);
     },
-    onError: (err: Error) => {
+    onError: (err: Error, _variables, sessionId) => {
       addToast({ type: 'warning', message: err.message });
-      setDeletingId(null);
+      if (formSession.isCurrent(sessionId)) setDeletingId(null);
     },
-  });
+  }, formSession);
 
   // ---- Handlers ----
 
   const openCreateForm = () => {
     setEditingCourse(null);
     setFormData(EMPTY_FORM);
+    formSession.begin();
     setShowForm(true);
   };
 
@@ -250,9 +236,12 @@ export default function AdminCoursesPage() {
       department: course.department?._id || '',
       category: course.category || '',
       semesters: [...course.semesters],
-      recommendedYear: course.recommendedYear?.toString() || '',
+      recommendedYear: course.recommendedYear?.toString() || '1',
+      recommendedSemester: course.recommendedSemester === 'fall' ? 'fall' : 'spring',
+      curriculumYear: yearFilter,
       description: course.description || '',
     });
+    formSession.begin();
     setShowForm(true);
   };
 
@@ -264,6 +253,7 @@ export default function AdminCoursesPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isCreating || isUpdating) return;
     if (!formData.code.trim() || !formData.name.trim() || formData.semesters.length === 0) {
       addToast({ type: 'warning', message: '과목 코드, 과목명, 개설 학기는 필수입니다.' });
       return;
@@ -271,6 +261,9 @@ export default function AdminCoursesPage() {
     if (editingCourse) {
       updateCourse({ id: editingCourse._id, data: formData });
     } else {
+      try { buildOfficialCoursePayload(formData); } catch (error) {
+        addToast({ type: 'warning', message: (error as Error).message }); return;
+      }
       createCourse(formData);
     }
   };
@@ -287,12 +280,7 @@ export default function AdminCoursesPage() {
   // ---- Auth guard ----
 
   if (authLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200" />
-      </div>
-    );
+    return <AdminLoading />;
   }
 
   if (!isAdmin) {
@@ -307,58 +295,35 @@ export default function AdminCoursesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Link
-          href="/admin"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          관리자 대시보드로 돌아가기
-        </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">과목 관리</h1>
-            <p className="mt-1 text-gray-600">
-              등록된 과목을 관리합니다. ({courses.length}건)
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={openCreateForm}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#00AACA] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#153974] cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            과목 추가
-          </button>
-        </div>
-      </div>
+      <AdminHeader
+        title="과목 관리"
+        description={<>등록된 과목을 관리합니다. (총 {coursesData?.pagination.total ?? 0}건)</>}
+        actions={<Button type="button" variant={showForm ? 'outline' : 'primary'} onClick={openCreateForm}><Plus aria-hidden="true" className="h-4 w-4" />과목 추가</Button>}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
+          <Input variant="search" aria-label="과목명 또는 코드 검색" className="pr-10"
             type="text"
             placeholder="과목명 또는 코드 검색"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-8 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+            onChange={(e) => { setPage(1); setSearchTerm(e.target.value); }}
           />
           {searchTerm && (
-            <button
+            <Button aria-label="검색 지우기" variant="text"
               type="button"
-              onClick={() => setSearchTerm('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              onClick={() => { setPage(1); setSearchTerm(''); }}
+              size="icon" className="absolute right-0 top-1/2 -translate-y-1/2"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
 
-        <select
+        <Select aria-label="학과"
           value={departmentFilter}
-          onChange={(e) => setDepartmentFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+          onChange={(e) => { setPage(1); setDepartmentFilter(e.target.value); }}
         >
           <option value="">전체 학과</option>
           {departments.map((dept) => (
@@ -366,12 +331,11 @@ export default function AdminCoursesPage() {
               {dept.name}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select aria-label="카테고리"
           value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as RequirementCategory | '')}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+          onChange={(e) => { setPage(1); setCategoryFilter(e.target.value as RequirementCategory | ''); }}
         >
           <option value="">전체 카테고리</option>
           {ALL_CATEGORIES.map((cat) => (
@@ -379,69 +343,62 @@ export default function AdminCoursesPage() {
               {CATEGORY_LABELS[cat]}
             </option>
           ))}
-        </select>
+        </Select>
 
-        <select
+        <Select aria-label="기준 연도"
           value={yearFilter}
-          onChange={(e) => setYearFilter(Number(e.target.value))}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+          onChange={(e) => { setPage(1); setYearFilter(Number(e.target.value)); }}
         >
           <option value={2025}>2025년</option>
           <option value={2026}>2026년</option>
-        </select>
+        </Select>
       </div>
 
+      {departmentsError && <div role="alert" className="text-[13px] text-ink-2">학과 목록을 불러오는데 실패했습니다. <Button variant="outline" onClick={() => retryDepartments()}>학과 다시 시도</Button></div>}
+      <AdminPagination pagination={coursesData?.pagination} pending={isLoading} onPage={setPage} />
       {/* Loading */}
-      {isLoading && (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-200" />
-          ))}
-        </div>
-      )}
+      {isLoading && <AdminLoading />}
 
       {/* Error */}
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        <div role="alert" className="border-t border-line-2 py-8 text-[13px] text-ink-2">
           과목 목록을 불러오는데 실패했습니다.
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && !error && courses.length === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <BookOpen className="mx-auto h-12 w-12 text-slate-300" />
-          <p className="mt-4 text-sm text-slate-500">등록된 과목이 없습니다.</p>
+        <div className="border-t border-line-2 py-12 text-center">
+          <BookOpen className="mx-auto h-12 w-12 text-placeholder" />
+          <p className="mt-4 text-sm text-ink-2">등록된 과목이 없습니다.</p>
         </div>
       )}
 
       {/* Course List */}
       {!isLoading && courses.length > 0 && (
-        <div className="space-y-3">
+        <div className="border-t border-line-2">
           {courses.map((course) => (
-            <Card key={course._id} className="overflow-hidden">
-              <CardContent className="p-4 sm:p-5">
+            <AdminRow key={course._id}>
+              <div>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   {/* Course info */}
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-sm font-bold text-slate-800">
+                      <span className="text-sm font-bold text-ink">
                         {course.code}
                       </span>
-                      <span className="text-sm font-medium text-slate-700">
+                      <span className="text-sm font-medium text-ink">
                         {course.name}
                       </span>
-                      <span className="inline-flex rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                      <span className="inline-flex text-xs font-medium text-ink-2">
                         {course.credits}학점
                       </span>
                       {course.category && (
-                        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${CATEGORY_COLORS[course.category]}`}>
-                          {CATEGORY_LABELS[course.category]}
-                        </span>
+                        <CategoryLabel category={course.category} />
                       )}
                     </div>
 
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-2">
                       {course.department && (
                         <span>{course.department.name}</span>
                       )}
@@ -458,137 +415,91 @@ export default function AdminCoursesPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button aria-label="수정" variant="text"
                       type="button"
                       onClick={() => openEditForm(course)}
-                      className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+                      size="icon"
                       title="수정"
                     >
                       <Pencil className="h-4 w-4" />
-                    </button>
-                    {deletingId === course._id ? (
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => deleteCourse(course._id)}
-                          className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700 cursor-pointer"
-                        >
-                          삭제
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingId(null)}
-                          className="rounded-lg bg-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-300 cursor-pointer"
-                        >
-                          취소
-                        </button>
-                      </div>
-                    ) : (
-                      <button
+                    </Button>
+                    {(
+                      <Button aria-label="삭제" variant="textDanger"
                         type="button"
-                        onClick={() => setDeletingId(course._id)}
-                        className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                        onClick={() => { formSession.begin(); setDeletingId(course._id); }}
+                        size="icon"
                         title="삭제"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </AdminRow>
           ))}
         </div>
       )}
 
       {/* Create/Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-gray-900">
-                {editingCourse ? '과목 수정' : '과목 추가'}
-              </h2>
-              <button
-                type="button"
-                onClick={closeForm}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+        <AdminDialog isPending={formSession.isPending} title={<>{editingCourse ? '과목 수정' : '과목 추가'}</>} onClose={closeForm} pending={isCreating || isUpdating}>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Code */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  과목 코드 <span className="text-red-500">*</span>
-                </label>
-                <input
+                <Input label="과목 코드 *"
                   type="text"
                   value={formData.code}
                   onChange={(e) => setFormData((p) => ({ ...p, code: e.target.value }))}
                   placeholder="예: CSE1001"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 uppercase focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                   required
                 />
               </div>
 
               {/* Name */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  과목명 <span className="text-red-500">*</span>
-                </label>
-                <input
+                <Input label="과목명 *"
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
                   placeholder="예: 프로그래밍 기초"
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                   required
                 />
               </div>
 
               {/* Credits */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">
-                  학점 <span className="text-red-500">*</span>
-                </label>
-                <input
+                <Input label="학점 *"
                   type="number"
                   min={1}
                   max={12}
                   value={formData.credits}
                   onChange={(e) => setFormData((p) => ({ ...p, credits: parseInt(e.target.value, 10) || 1 }))}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                   required
                 />
               </div>
 
               {/* Department */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">학과</label>
-                <select
+                <Select label="학과" required={!editingCourse} disabled={departmentsError}
                   value={formData.department}
                   onChange={(e) => setFormData((p) => ({ ...p, department: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                 >
-                  <option value="">학과 없음 (공통)</option>
+                  <option value="">학과 선택</option>
                   {departments.map((dept) => (
                     <option key={dept._id} value={dept._id}>
                       {dept.name}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               {/* Category */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">카테고리</label>
-                <select
+                <Select label="카테고리" required={!editingCourse}
                   value={formData.category}
                   onChange={(e) => setFormData((p) => ({ ...p, category: e.target.value as RequirementCategory | '' }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                 >
                   <option value="">카테고리 없음</option>
                   {ALL_CATEGORIES.map((cat) => (
@@ -596,81 +507,74 @@ export default function AdminCoursesPage() {
                       {CATEGORY_LABELS[cat]}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
+              {!editingCourse && <>
+                <Input label="교육과정 연도" type="number" required min={2020} max={2100} value={formData.curriculumYear} onChange={e => setFormData(p => ({ ...p, curriculumYear: Number(e.target.value) }))} />
+                <Select label="권장 학기" value={formData.recommendedSemester} onChange={e => setFormData(p => ({ ...p, recommendedSemester: e.target.value as 'spring' | 'fall' }))}>
+                  <option value="spring">1학기</option><option value="fall">2학기</option>
+                </Select>
+              </>}
               {/* Semesters */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  개설 학기 <span className="text-red-500">*</span>
-                </label>
+              <fieldset>
+                <legend className="mb-2 text-[13px] font-semibold text-ink-2">개설 학기 *</legend>
                 <div className="flex flex-wrap gap-2">
                   {ALL_SEMESTERS.map((sem) => (
-                    <button
+                    <Button aria-pressed={formData.semesters.includes(sem)} className={formData.semesters.includes(sem) ? "border-primary text-primary" : undefined} variant="outline"
                       key={sem}
                       type="button"
                       onClick={() => toggleSemester(sem)}
-                      className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                        formData.semesters.includes(sem)
-                          ? 'bg-[#00AACA] text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
                     >
                       {SEMESTER_LABELS[sem]}
-                    </button>
+                    </Button>
                   ))}
                 </div>
-              </div>
+              </fieldset>
 
               {/* Recommended Year */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">권장 학년</label>
-                <select
+                <Select label="권장 학년" required={!editingCourse}
                   value={formData.recommendedYear}
                   onChange={(e) => setFormData((p) => ({ ...p, recommendedYear: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                 >
                   <option value="">선택 안 함</option>
                   <option value="1">1학년</option>
                   <option value="2">2학년</option>
                   <option value="3">3학년</option>
                   <option value="4">4학년</option>
-                </select>
+                </Select>
               </div>
 
               {/* Description */}
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700">설명</label>
-                <textarea
+                <Textarea label="설명"
                   value={formData.description}
                   onChange={(e) => setFormData((p) => ({ ...p, description: e.target.value }))}
                   placeholder="과목에 대한 설명을 입력하세요"
                   rows={3}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20 resize-none"
                 />
               </div>
 
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-2">
-                <button
+                <Button variant="text"
                   type="button"
                   onClick={closeForm}
-                  className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-300 cursor-pointer"
                 >
                   취소
-                </button>
-                <button
+                </Button>
+                <Button variant="primary"
                   type="submit"
                   disabled={isSaving}
-                  className="rounded-lg bg-[#00AACA] px-4 py-2 text-sm font-medium text-white hover:bg-[#153974] disabled:opacity-50 cursor-pointer"
                 >
                   {isSaving ? '저장 중...' : editingCourse ? '수정' : '추가'}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
+        </AdminDialog>
       )}
+      {deletingId && <AdminConfirmDialog isPending={formSession.isPending} title="과목 삭제" description="정말 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다." onClose={() => setDeletingId(null)} onConfirm={() => { if (!isDeleting) deleteCourse(deletingId); }} pending={isDeleting} />}
     </div>
   );
 }

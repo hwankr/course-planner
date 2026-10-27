@@ -18,7 +18,7 @@ async function getStats(year?: number): Promise<AdminStats> {
   await connectDB();
 
   const courseCountPromise = year
-    ? DepartmentCurriculum.distinct('course', { year }).then(ids => ids.length)
+    ? DepartmentCurriculum.distinct('course', { year }).then(ids => Course.countDocuments({ _id: { $in: ids }, isActive: true, createdBy: null }))
     : Course.countDocuments({ isActive: true, createdBy: null });
 
   const [courseCount, departmentCount, userCount, planCount] = await Promise.all([

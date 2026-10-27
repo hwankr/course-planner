@@ -44,7 +44,7 @@ export function Toast() {
                       {toast.graduationDelta.categoryPct && (
                         <div className="flex items-center gap-1.5 text-[12px] leading-4">
                           <span className="text-ink-2 w-7 flex-shrink-0">
-                            {toast.graduationDelta.categoryLabel.startsWith('전공') ? '전공' : '교양'}
+                            {['복수전공', '부전공'].includes(toast.graduationDelta.categoryLabel) ? toast.graduationDelta.categoryLabel : toast.graduationDelta.categoryLabel.startsWith('전공') ? '전공' : '교양'}
                           </span>
                           <div className="flex-1 h-1.5 bg-line rounded-[3px] overflow-hidden relative">
                             <div

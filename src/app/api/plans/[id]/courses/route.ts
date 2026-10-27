@@ -10,6 +10,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { planService } from '@/services';
+import { PlanInputError } from '@/services/plan.service';
 import { z } from 'zod';
 import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 import * as Sentry from '@sentry/nextjs';
@@ -69,6 +70,9 @@ export async function POST(request: Request, { params }: RouteParams) {
       message: '과목이 추가되었습니다.',
     });
   } catch (error) {
+    if (error instanceof PlanInputError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, error: error.issues[0].message },

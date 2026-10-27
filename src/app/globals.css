@@ -61,16 +61,51 @@
   }
 }
 
+/* Linux systems may fall back to D2Coding for Hangul. Match its full-em
+   advance to Pretendard (1770 / 2048) without downloading another font.
+   Metrics: ascent 1950 / 1770, descent 494 / 1770, line gap 0.
+   Native macOS/Windows/Korean sans fonts keep their existing precedence. */
+@font-face {
+  font-family: 'Pretendard Korean Fallback';
+  src: local('D2Coding');
+  font-style: normal;
+  font-weight: 100 500;
+  size-adjust: 86.42578125%;
+  ascent-override: 110.16949153%;
+  descent-override: 27.90960452%;
+  line-gap-override: 0%;
+  unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7AF, U+D7B0-D7FF;
+}
+
+@font-face {
+  font-family: 'Pretendard Korean Fallback';
+  src: local('D2Coding Bold');
+  font-style: normal;
+  font-weight: 600 900;
+  size-adjust: 86.42578125%;
+  ascent-override: 110.16949153%;
+  descent-override: 27.90960452%;
+  line-gap-override: 0%;
+  unicode-range: U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7AF, U+D7B0-D7FF;
+}
+
+@layer base {
+  body {
+    --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+      'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic',
+      'Pretendard Korean Fallback', system-ui, sans-serif;
+    font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+      'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic',
+      'Pretendard Korean Fallback', system-ui, sans-serif;
+  }
+}
+
 /* 모바일 하단 탭바(84px)가 루트 레이아웃의 Footer를 가리지 않도록 */
 @media (max-width: 767.98px) {
   body:has([data-mobile-tabbar]) {
     padding-bottom: 84px;
   }
 }
-
-/* NOTE: scroll-behavior: smooth removed from html to prevent conflict with
-   @hello-pangea/dnd's internal scroll tracking during drag operations.
-   Use the smoothScrollTo() utility for explicit smooth scrolls instead. */
 
 /* ============================================
    KEYFRAME ANIMATIONS
@@ -103,33 +138,6 @@
   }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes cursorBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
 /* ============================================
    ANIMATION UTILITY CLASSES
    ============================================ */
@@ -146,243 +154,6 @@
   animation: fadeInDown 0.5s ease-out both;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-gradient {
-  animation: gradientShift 8s ease infinite;
-  background-size: 200% 200%;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.3s ease-out both;
-}
-
-.animate-cursor {
-  animation: cursorBlink 1s step-end infinite;
-}
-
-/* ============================================
-   ANIMATION DELAY UTILITIES (anim-delay-*)
-   ============================================ */
-
-.anim-delay-100 { animation-delay: 100ms; }
-.anim-delay-200 { animation-delay: 200ms; }
-.anim-delay-300 { animation-delay: 300ms; }
-.anim-delay-400 { animation-delay: 400ms; }
-.anim-delay-500 { animation-delay: 500ms; }
-.anim-delay-600 { animation-delay: 600ms; }
-.anim-delay-700 { animation-delay: 700ms; }
-
-/* ============================================
-   GLASS MORPHISM
-   ============================================ */
-
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-/* ============================================
-   TEXT GRADIENT (neutralized)
-   ============================================ */
-
-/* 디자인 언어는 그라데이션 글자를 쓰지 않는다. 기존 호출처 호환을 위해 단색 Ink로 중립화. */
-.text-gradient {
-  color: var(--color-ink);
-}
-
-/* ============================================
-   BACKGROUND PATTERNS
-   ============================================ */
-
-.bg-mesh {
-  background-image:
-    radial-gradient(at 40% 20%, rgba(21, 57, 116, 0.15) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(48, 105, 179, 0.12) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(0, 170, 202, 0.1) 0px, transparent 50%),
-    radial-gradient(at 80% 50%, rgba(48, 105, 179, 0.08) 0px, transparent 50%),
-    radial-gradient(at 0% 100%, rgba(0, 170, 202, 0.06) 0px, transparent 50%);
-}
-
-.bg-dots {
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-.bg-grid {
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-/* ============================================
-   SCROLL-TRIGGERED ANIMATIONS
-   ============================================ */
-
-.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.7s cubic-bezier(0.4, 0, 0.2, 1),
-              transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.animate-on-scroll.visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ============================================
-   SCROLL STAGGER DELAYS (transition-delay)
-
-   IMPORTANT: These use `transition-delay`, NOT
-   `animation-delay`. The existing `anim-delay-*`
-   classes set `animation-delay` which does NOT
-   affect CSS transitions. Use these `scroll-delay-*`
-   classes exclusively with `.animate-on-scroll`.
-   ============================================ */
-
-.scroll-delay-0 {
-  transition-delay: 0ms;
-}
-
-.scroll-delay-100 {
-  transition-delay: 100ms;
-}
-
-.scroll-delay-150 {
-  transition-delay: 150ms;
-}
-
-.scroll-delay-200 {
-  transition-delay: 200ms;
-}
-
-.scroll-delay-300 {
-  transition-delay: 300ms;
-}
-
-.scroll-delay-400 {
-  transition-delay: 400ms;
-}
-
-.scroll-delay-450 {
-  transition-delay: 450ms;
-}
-
-.scroll-delay-500 {
-  transition-delay: 500ms;
-}
-
-/* ============================================
-   GLOW SHADOW
-   ============================================ */
-
-.shadow-glow {
-  box-shadow: 0 4px 24px rgba(21, 57, 116, 0.2), 0 0 48px rgba(0, 170, 202, 0.08);
-}
-
-/* ============================================
-   CLIP PATH UTILITIES
-   ============================================ */
-
-.clip-diagonal-top {
-  clip-path: polygon(0 6%, 100% 0, 100% 100%, 0 100%);
-}
-
-.clip-diagonal-both {
-  clip-path: polygon(0 6%, 100% 0, 100% 94%, 0 100%);
-}
-
-.clip-hero-bottom {
-  clip-path: polygon(0 0, 100% 0, 100% 88%, 0 100%);
-}
-
-/* ============================================
-   DECORATIVE NUMBERS
-   ============================================ */
-
-.deco-number {
-  font-size: clamp(80px, 15vw, 160px);
-  font-weight: 800;
-  line-height: 1;
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(21, 57, 116, 0.08);
-  pointer-events: none;
-  user-select: none;
-}
-
-.deco-number-light {
-  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.06);
-}
-
-/* ============================================
-   GEOMETRIC DECORATIONS
-   ============================================ */
-
-.deco-ring {
-  border-radius: 50%;
-  border: 2px solid rgba(0, 170, 202, 0.15);
-  pointer-events: none;
-}
-
-.deco-ring-lg {
-  width: 400px;
-  height: 400px;
-}
-
-.deco-ring-sm {
-  width: 200px;
-  height: 200px;
-}
-
-.deco-dot-accent {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #00AACA;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-/* ============================================
-   DIVIDER LINES
-   ============================================ */
-
-.divider-vertical-gradient {
-  width: 1px;
-  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.2), transparent);
-}
-
-.divider-horizontal-gradient {
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(255,255,255,0.15), transparent);
-}
-
-/* ============================================
-   TEXT GRADIENT TYPING (landing hero, dark background)
-   ============================================ */
-
-.text-gradient-typing {
-  background: linear-gradient(90deg, #4dd9f0, #60a5fa, #a78bfa, #4dd9f0);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: gradientFlow 4s ease infinite;
-  filter: drop-shadow(0 0 20px rgba(0, 170, 202, 0.4));
-}
-
-@keyframes gradientFlow {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
 /* ============================================
    REDUCED MOTION SUPPORT
    ============================================ */
@@ -390,20 +161,10 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-fade-in-up,
-  .animate-fade-in-down,
-  .animate-float,
-  .animate-scale-in,
-  .animate-gradient,
-  .animate-cursor {
+  .animate-fade-in-down {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
-  }
-
-  .animate-on-scroll {
-    opacity: 1 !important;
-    transform: none !important;
-    transition: none !important;
   }
 }
 

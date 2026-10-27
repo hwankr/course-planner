@@ -70,11 +70,6 @@ export const authLimiter = createRateLimiter({
   max: 20 // 20회
 });
 
-export const apiLimiter = createRateLimiter({
-  windowMs: 60 * 1000, // 1분
-  max: 60 // 60회
-});
-
 // Helper to get IP from request
 export function getClientIp(request: Request): string {
   // Check various headers for client IP

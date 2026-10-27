@@ -1,5 +1,9 @@
 'use client';
 
+import { useGuestPlanStore } from './guestPlanStore';
+import { useGuestCourseStore } from './guestCourseStore';
+import { useGuestProfileStore } from './guestProfileStore';
+import { useGuestGraduationStore } from './guestGraduationStore';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
@@ -28,6 +32,10 @@ export const useGuestStore = create<GuestState>()(
         set({ isGuest: false });
       },
       clearAllGuestData: () => {
+        useGuestPlanStore.getState().clearAll();
+        useGuestCourseStore.getState().clearAll();
+        useGuestProfileStore.getState().reset();
+        useGuestGraduationStore.getState().reset();
         // Clear all guest localStorage keys
         if (typeof window !== 'undefined') {
           localStorage.removeItem('guest-plans');

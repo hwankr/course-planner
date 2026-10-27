@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { authOptions } from '@/lib/auth/options';
 import { courseService } from '@/services';
 import { z } from 'zod';
@@ -46,6 +47,13 @@ export async function GET(request: Request) {
       userId: session?.user?.id, // Include user's custom courses
     };
 
+    if (searchParams.has('page')) {
+      const paging = z.object({ page: z.coerce.number().int().min(1), limit: z.coerce.number().int().min(1).max(200) })
+        .safeParse({ page: searchParams.get('page'), limit: searchParams.get('limit') ?? 50 });
+      if (!paging.success) return NextResponse.json({ success: false, error: '페이지와 개수를 확인해주세요.' }, { status: 400 });
+      const result = await courseService.findPage({ ...filter, ...paging.data });
+      return NextResponse.json({ success: true, ...result });
+    }
     const courses = await courseService.findAll(filter);
 
     return NextResponse.json({
@@ -62,6 +70,8 @@ export async function GET(request: Request) {
 }
 
 const createCourseSchema = z.object({
+  official: z.boolean().optional(),
+  curriculumYear: z.coerce.number().int().min(2020).max(2100).optional(),
   code: z.string().min(1, '과목 코드는 필수입니다.'),
   name: z.string().min(1, '과목명은 필수입니다.'),
   credits: z.coerce.number().min(1).max(12),
@@ -87,14 +97,23 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createCourseSchema.parse(body);
 
-    // 모든 사용자(admin 포함)가 이 API로 생성하는 과목은 커스텀 과목
-    // 공식 과목은 seed 스크립트로만 생성됨
-    const courseData = {
-      ...validatedData,
-      createdBy: session.user.id,
-    };
-
-    const course = await courseService.create(courseData);
+    let course;
+    if (validatedData.official) {
+      if (!(await isActiveAdminSession(session))) {
+        return NextResponse.json({ success: false, error: '관리자 권한이 필요합니다.' }, { status: 403 });
+      }
+      const official = createCourseSchema.extend({
+        department: z.string().regex(/^[a-f\d]{24}$/i, '학과를 선택해주세요.'),
+        curriculumYear: z.number().int().min(2020).max(2100),
+        category: createCourseSchema.shape.category.unwrap(),
+        recommendedYear: z.number().int().min(1).max(6),
+        recommendedSemester: z.enum(['spring', 'fall']),
+        semesters: z.array(z.enum(['spring', 'summer', 'fall', 'winter'])).min(1),
+      }).parse(validatedData);
+      course = await courseService.createOfficial(official);
+    } else {
+      course = await courseService.create({ ...validatedData, createdBy: session.user.id });
+    }
 
     return NextResponse.json({
       success: true,

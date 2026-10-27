@@ -2,12 +2,15 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAdminMutation, useAdminFormSession } from '../_components/useAdminMutation';
+import { invalidateAdminData } from '../_components/adminCache';
 import { useAuth } from '@/hooks/useAuth';
 import { useToastStore } from '@/stores/toastStore';
-import { Card, CardContent } from '@/components/ui';
-import { ArrowLeft, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
-import Link from 'next/link';
+import { Button, Input, Select } from '@/components/ui';
+import { AdminHeader, AdminRow, AdminLoading } from '../_components/AdminParts';
+import { AdminDialog } from '../_components/AdminDialog';
+import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
 
 interface MajorConfig {
@@ -70,6 +73,7 @@ export default function AdminRequirementsPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
   const queryClient = useQueryClient();
+  const formSession = useAdminFormSession();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [collegeFilter, setCollegeFilter] = useState('');
@@ -89,7 +93,7 @@ export default function AdminRequirementsPage() {
     enabled: isAdmin && !authLoading,
   });
 
-  const { mutate: createRequirement, isPending: isCreating } = useMutation({
+  const { mutate: createRequirement, isPending: isCreating } = useAdminMutation({
     mutationFn: async (body: Record<string, unknown>) => {
       const res = await fetch('/api/admin/requirements', {
         method: 'POST',
@@ -102,17 +106,17 @@ export default function AdminRequirementsPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-requirements'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'requirements');
       addToast({ type: 'success', message: '졸업요건이 생성되었습니다.' });
-      closeForm();
+      if (formSession.isCurrent(sessionId)) closeForm();
     },
     onError: (err: Error) => {
       addToast({ type: 'warning', message: err.message });
     },
-  });
+  }, formSession);
 
-  const { mutate: updateRequirement, isPending: isUpdating } = useMutation({
+  const { mutate: updateRequirement, isPending: isUpdating } = useAdminMutation({
     mutationFn: async ({ id, body }: { id: string; body: Record<string, unknown> }) => {
       const res = await fetch(`/api/admin/requirements/${id}`, {
         method: 'PUT',
@@ -125,17 +129,17 @@ export default function AdminRequirementsPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-requirements'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'requirements');
       addToast({ type: 'success', message: '졸업요건이 수정되었습니다.' });
-      closeForm();
+      if (formSession.isCurrent(sessionId)) closeForm();
     },
     onError: (err: Error) => {
       addToast({ type: 'warning', message: err.message });
     },
-  });
+  }, formSession);
 
-  const { mutate: deleteRequirement } = useMutation({
+  const { mutate: deleteRequirement, isPending: isDeleting } = useAdminMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/admin/requirements/${id}`, { method: 'DELETE' });
       if (!res.ok) {
@@ -144,16 +148,16 @@ export default function AdminRequirementsPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-requirements'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'requirements');
       addToast({ type: 'success', message: '졸업요건이 삭제되었습니다.' });
-      setDeleteConfirmId(null);
+      if (formSession.isCurrent(sessionId)) setDeleteConfirmId(null);
     },
-    onError: (err: Error) => {
+    onError: (err: Error, _variables, sessionId) => {
       addToast({ type: 'warning', message: err.message });
-      setDeleteConfirmId(null);
+      if (formSession.isCurrent(sessionId)) setDeleteConfirmId(null);
     },
-  });
+  }, formSession);
 
   const requirements = useMemo(() => data?.data ?? [], [data?.data]);
 
@@ -195,6 +199,7 @@ export default function AdminRequirementsPage() {
   function openCreate() {
     setForm(initialForm);
     setEditingId(null);
+    formSession.begin();
     setShowForm(true);
   }
 
@@ -221,11 +226,13 @@ export default function AdminRequirementsPage() {
       },
     });
     setEditingId(item._id);
+    formSession.begin();
     setShowForm(true);
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (isCreating || isUpdating) return;
     const body = {
       college: form.college,
       departmentName: form.departmentName,
@@ -256,12 +263,7 @@ export default function AdminRequirementsPage() {
 
   // Auth guard - render early returns AFTER all hooks
   if (authLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200" />
-      </div>
-    );
+    return <AdminLoading />;
   }
 
   if (!isAdmin) {
@@ -274,153 +276,112 @@ export default function AdminRequirementsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Link
-          href="/admin"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          관리자 대시보드로 돌아가기
-        </Link>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">졸업 요건 관리</h1>
-            <p className="mt-1 text-gray-600">
-              학과별 졸업 요건을 관리합니다. ({filtered.length}건)
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a4a94] cursor-pointer"
-          >
-            <Plus className="h-4 w-4" />
-            추가
-          </button>
-        </div>
-      </div>
+      <AdminHeader
+        title="졸업 요건 관리"
+        description={<>학과별 졸업 요건을 관리합니다. ({filtered.length}건)</>}
+        actions={<Button type="button" variant={showForm ? 'outline' : 'primary'} onClick={openCreate}><Plus aria-hidden="true" className="h-4 w-4" />추가</Button>}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
+          <Input variant="search" aria-label="학과명 검색..." className="pr-10"
             type="text"
             placeholder="학과명 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-9 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
           />
           {searchQuery && (
-            <button
+            <Button aria-label="검색 지우기" variant="text"
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+              size="icon" className="absolute right-0 top-1/2 -translate-y-1/2"
             >
               <X className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
-        <select
+        <Select aria-label="대학"
           value={collegeFilter}
           onChange={(e) => setCollegeFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
         >
           <option value="">전체 대학</option>
           {colleges.map((c) => (
             <option key={c} value={c}>{c}</option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select aria-label="기준 연도"
           value={yearFilter}
           onChange={(e) => setYearFilter(e.target.value ? Number(e.target.value) : '')}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
         >
           <option value="">전체 연도</option>
           <option value={2025}>2025년</option>
           <option value={2026}>2026년</option>
-        </select>
+        </Select>
       </div>
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeForm}>
-          <div
-            className="mx-4 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="mb-4 text-lg font-bold text-gray-900">
-              {editingId ? '졸업요건 수정' : '졸업요건 추가'}
-            </h2>
+        <AdminDialog isPending={formSession.isPending} title={<>{editingId ? '졸업요건 수정' : '졸업요건 추가'}</>} onClose={closeForm} pending={isCreating || isUpdating}>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Basic */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">대학 *</label>
-                  <input
+                  <Input label="대학 *"
                     type="text"
                     required
                     value={form.college}
                     onChange={(e) => setForm({ ...form, college: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     placeholder="공과대학"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">학과명 *</label>
-                  <input
+                  <Input label="학과명 *"
                     type="text"
                     required
                     value={form.departmentName}
                     onChange={(e) => setForm({ ...form, departmentName: e.target.value })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     placeholder="건축학부 건축학전공"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-slate-600">적용 연도 *</label>
-                <select
+                <Select label="적용 연도 *"
                   value={form.year}
                   onChange={(e) => setForm({ ...form, year: Number(e.target.value) })}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                 >
                   <option value={2025}>2025</option>
                   <option value={2026}>2026</option>
-                </select>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">졸업학점 *</label>
-                  <input
+                  <Input label="졸업학점 *"
                     type="number"
                     required
                     min={1}
                     value={form.totalCredits}
                     onChange={(e) => setForm({ ...form, totalCredits: e.target.value ? Number(e.target.value) : '' })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-600">교양학점</label>
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input label="교양학점"
                       type="number"
                       min={0}
                       disabled={form.noGeneral}
                       value={form.noGeneral ? '' : (form.generalCredits ?? '')}
                       onChange={(e) => setForm({ ...form, generalCredits: e.target.value ? Number(e.target.value) : '' })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20 disabled:bg-slate-50 disabled:text-slate-400"
                     />
                   </div>
-                  <label className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
+                  <label className="mt-1 flex items-center gap-1.5 text-xs text-ink-2">
                     <input
                       type="checkbox"
                       checked={form.noGeneral}
                       onChange={(e) => setForm({ ...form, noGeneral: e.target.checked, generalCredits: e.target.checked ? null : '' })}
-                      className="rounded"
+                      className="rounded-none"
                     />
                     교양 없음
                   </label>
@@ -428,167 +389,137 @@ export default function AdminRequirementsPage() {
               </div>
 
               {/* Single Major */}
-              <fieldset className="rounded-lg border border-slate-200 p-3">
-                <legend className="px-2 text-xs font-semibold text-slate-600">단일전공</legend>
+              <fieldset className="border-t border-line-2 py-3">
+                <legend className="pr-3 text-[13px] font-semibold text-ink-2">단일전공</legend>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs text-slate-500">전공핵심 최소</label>
-                    <input
+                    <Input label="전공핵심 최소"
                       type="number"
                       min={0}
                       value={form.single.majorRequiredMin ?? ''}
                       onChange={(e) => setForm({ ...form, single: { ...form.single, majorRequiredMin: e.target.value ? Number(e.target.value) : '' } })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-slate-500">전공계</label>
-                    <input
+                    <Input label="전공계"
                       type="number"
                       min={0}
                       value={form.single.majorCredits ?? ''}
                       onChange={(e) => setForm({ ...form, single: { ...form.single, majorCredits: e.target.value ? Number(e.target.value) : '' } })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     />
                   </div>
                 </div>
               </fieldset>
 
               {/* Double Major */}
-              <fieldset className="rounded-lg border border-slate-200 p-3">
-                <legend className="px-2 text-xs font-semibold text-slate-600">복수전공</legend>
+              <fieldset className="border-t border-line-2 py-3">
+                <legend className="pr-3 text-[13px] font-semibold text-ink-2">복수전공</legend>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs text-slate-500">전공핵심 최소</label>
-                    <input
+                    <Input label="전공핵심 최소"
                       type="number"
                       min={0}
                       value={form.double.majorRequiredMin ?? ''}
                       onChange={(e) => setForm({ ...form, double: { ...form.double, majorRequiredMin: e.target.value ? Number(e.target.value) : '' } })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-slate-500">전공계</label>
-                    <input
+                    <Input label="전공계"
                       type="number"
                       min={0}
                       value={form.double.majorCredits ?? ''}
                       onChange={(e) => setForm({ ...form, double: { ...form.double, majorCredits: e.target.value ? Number(e.target.value) : '' } })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     />
                   </div>
                 </div>
               </fieldset>
 
               {/* Minor */}
-              <fieldset className="rounded-lg border border-slate-200 p-3">
-                <legend className="px-2 text-xs font-semibold text-slate-600">부전공</legend>
+              <fieldset className="border-t border-line-2 py-3">
+                <legend className="pr-3 text-[13px] font-semibold text-ink-2">부전공</legend>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs text-slate-500">전공핵심 최소</label>
-                    <input
+                    <Input label="전공핵심 최소"
                       type="number"
                       min={0}
                       value={form.minor.majorRequiredMin ?? ''}
                       onChange={(e) => setForm({ ...form, minor: { ...form.minor, majorRequiredMin: e.target.value ? Number(e.target.value) : '' } })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs text-slate-500">전공계</label>
-                    <input
+                    <Input label="전공계"
                       type="number"
                       min={0}
                       value={form.minor.majorCredits ?? ''}
                       onChange={(e) => setForm({ ...form, minor: { ...form.minor, majorCredits: e.target.value ? Number(e.target.value) : '' } })}
-                      className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                     />
                   </div>
                 </div>
                 <div className="mt-3">
-                  <label className="mb-1 block text-xs text-slate-500">부전공 시 주전공 최소</label>
-                  <input
+                  <Input label="부전공 시 주전공 최소"
                     type="number"
                     min={0}
                     value={form.minor.primaryMajorMin ?? ''}
                     onChange={(e) => setForm({ ...form, minor: { ...form.minor, primaryMajorMin: e.target.value ? Number(e.target.value) : '' } })}
-                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
                   />
                 </div>
               </fieldset>
 
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-2">
-                <button
+                <Button variant="text"
                   type="button"
                   onClick={closeForm}
-                  className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 cursor-pointer"
                 >
                   취소
-                </button>
-                <button
+                </Button>
+                <Button variant="primary"
                   type="submit"
                   disabled={isSaving}
-                  className="rounded-lg bg-[#153974] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a4a94] disabled:opacity-50 cursor-pointer"
                 >
                   {isSaving ? '저장 중...' : editingId ? '수정' : '추가'}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* Delete Confirmation */}
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setDeleteConfirmId(null)}>
-          <div
-            className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-bold text-gray-900">삭제 확인</h3>
-            <p className="mt-2 text-sm text-slate-600">이 졸업요건을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
+        <AdminDialog isPending={formSession.isPending} title={<>삭제 확인</>} onClose={() => setDeleteConfirmId(null)} pending={isDeleting}>
+            <p className="mt-2 text-sm text-ink-2">이 졸업요건을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
             <div className="mt-4 flex justify-end gap-2">
-              <button
+              <Button variant="text"
                 type="button"
-                onClick={() => setDeleteConfirmId(null)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 cursor-pointer"
+                disabled={isDeleting} onClick={() => { if (!formSession.isPending()) setDeleteConfirmId(null); }}
               >
                 취소
-              </button>
-              <button
+              </Button>
+              <Button variant="textDanger"
                 type="button"
-                onClick={() => deleteRequirement(deleteConfirmId)}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 cursor-pointer"
+                disabled={isDeleting}
+                onClick={() => { if (!isDeleting) deleteRequirement(deleteConfirmId); }}
               >
                 삭제
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+        </AdminDialog>
       )}
 
       {/* Loading */}
-      {isLoading && (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-32 animate-pulse rounded-2xl bg-slate-200" />
-          ))}
-        </div>
-      )}
+      {isLoading && <AdminLoading />}
 
       {/* Error */}
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        <div role="alert" className="border-t border-line-2 py-8 text-[13px] text-ink-2">
           졸업요건 목록을 불러오는데 실패했습니다.
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && !error && filtered.length === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <p className="mt-4 text-sm text-slate-500">
+        <div className="border-t border-line-2 py-12 text-center">
+          <p className="mt-4 text-sm text-ink-2">
             {searchQuery || collegeFilter ? '검색 결과가 없습니다.' : '등록된 졸업요건이 없습니다.'}
           </p>
         </div>
@@ -599,24 +530,24 @@ export default function AdminRequirementsPage() {
         <div className="space-y-6">
           {grouped.map(([college, items]) => (
             <div key={college}>
-              <h2 className="mb-3 text-sm font-semibold text-slate-500 uppercase tracking-wide">
+              <h2 className="mb-3 text-sm font-semibold text-ink-2 uppercase tracking-wide">
                 {college} ({items.length})
               </h2>
-              <div className="space-y-3">
+              <div className="border-t border-line-2">
                 {items.map((item) => (
-                  <Card key={item._id} className="overflow-hidden">
-                    <CardContent className="p-4 sm:p-5">
+                  <AdminRow key={item._id}>
+                    <div>
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-ink">
                             {item.departmentName}
-                            <span className="ml-2 text-xs font-normal text-slate-400">{item.year}년</span>
+                            <span className="ml-2 text-xs font-normal text-ink-2">{item.year}년</span>
                           </h3>
-                          <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-600">
+                          <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-2">
                             <span>졸업학점: <strong>{item.totalCredits}</strong></span>
                             <span>교양: <strong>{displayNum(item.generalCredits)}</strong></span>
                           </div>
-                          <div className="mt-2 space-y-0.5 text-xs text-slate-500">
+                          <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-2">
                             <p>
                               단일전공: 핵심 {displayNum(item.single.majorRequiredMin)} / 전공 {displayNum(item.single.majorCredits)}
                             </p>
@@ -630,26 +561,26 @@ export default function AdminRequirementsPage() {
                           </div>
                         </div>
                         <div className="flex shrink-0 gap-1">
-                          <button
+                          <Button aria-label="수정" variant="text"
                             type="button"
                             onClick={() => openEdit(item)}
-                            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+                            size="icon"
                             title="수정"
                           >
                             <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
+                          </Button>
+                          <Button aria-label="삭제" variant="textDanger"
                             type="button"
-                            onClick={() => setDeleteConfirmId(item._id)}
-                            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                            onClick={() => { formSession.begin(); setDeleteConfirmId(item._id); }}
+                            size="icon"
                             title="삭제"
                           >
                             <Trash2 className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
+                    </div>
+                  </AdminRow>
                 ))}
               </div>
             </div>

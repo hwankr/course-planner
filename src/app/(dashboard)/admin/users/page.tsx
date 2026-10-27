@@ -2,13 +2,17 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAdminMutation, useAdminFormSession } from '../_components/useAdminMutation';
+import { AdminPagination } from '../_components/AdminPagination';
+import type { Pagination } from '@/types/admin';
+import { invalidateAdminData } from '../_components/adminCache';
 import { useAuth } from '@/hooks/useAuth';
 import { useToastStore } from '@/stores/toastStore';
-import { Card, CardContent } from '@/components/ui';
+import { Button, Input, Select, StatusText, CategoryLabel } from '@/components/ui';
+import { AdminHeader, AdminRow, AdminLoading } from '../_components/AdminParts';
+import { AdminConfirmDialog } from '../_components/AdminDialog';
 import {
-  ArrowLeft,
-  Search,
   Shield,
   User,
   ChevronDown,
@@ -19,7 +23,6 @@ import {
   GraduationCap,
   Calendar,
 } from 'lucide-react';
-import Link from 'next/link';
 
 interface DepartmentItem {
   _id: string;
@@ -72,13 +75,16 @@ export default function AdminUsersPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const addToast = useToastStore((s) => s.addToast);
   const queryClient = useQueryClient();
+  const formSession = useAdminFormSession();
 
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [sortOption, setSortOption] = useState('recent');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [roleConfirmUser, setRoleConfirmUser] = useState<UserItem | null>(null);
 
   const buildQueryString = () => {
     const params = new URLSearchParams();
@@ -86,11 +92,13 @@ export default function AdminUsersPage() {
     if (roleFilter) params.set('role', roleFilter);
     if (departmentFilter) params.set('department', departmentFilter);
     if (sortOption) params.set('sort', sortOption);
+    params.set('page', String(page));
+    params.set('limit', '50');
     return params.toString();
   };
 
-  const { data, isLoading, error } = useQuery<{ success: boolean; data: UserItem[] }>({
-    queryKey: ['admin-users', search, roleFilter, departmentFilter, sortOption],
+  const { data, isLoading, error } = useQuery<{ success: boolean; data: UserItem[]; pagination: Pagination }>({
+    queryKey: ['admin-users', search, roleFilter, departmentFilter, sortOption, page],
     queryFn: async () => {
       const qs = buildQueryString();
       const res = await fetch(`/api/admin/users${qs ? `?${qs}` : ''}`);
@@ -100,8 +108,8 @@ export default function AdminUsersPage() {
     enabled: isAdmin && !authLoading,
   });
 
-  const { data: departmentsData } = useQuery<{ success: boolean; data: DepartmentItem[] }>({
-    queryKey: ['departments'],
+  const { data: departmentsData, isError: departmentsError, refetch: retryDepartments } = useQuery<{ success: boolean; data: DepartmentItem[] }>({
+    queryKey: ['admin-departments'],
     queryFn: async () => {
       const res = await fetch('/api/departments');
       if (!res.ok) throw new Error('학과 목록을 불러오는데 실패했습니다.');
@@ -111,7 +119,7 @@ export default function AdminUsersPage() {
   });
 
   // 사용자 계획표 조회 (확장 시 lazy-load)
-  const { data: planData, isLoading: planLoading } = useQuery<{ success: boolean; data: UserPlan | null }>({
+  const { data: planData, isLoading: planLoading, isError: planError, refetch: retryPlan } = useQuery<{ success: boolean; data: UserPlan | null }>({
     queryKey: ['admin-user-plan', expandedUserId],
     queryFn: async () => {
       const res = await fetch(`/api/admin/users/${expandedUserId}/plan`);
@@ -121,7 +129,7 @@ export default function AdminUsersPage() {
     enabled: !!expandedUserId,
   });
 
-  const { mutate: updateRole } = useMutation({
+  const { mutate: updateRole, isPending: isUpdatingRole } = useAdminMutation({
     mutationFn: async ({ id, role }: { id: string; role: 'student' | 'admin' }) => {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: 'PATCH',
@@ -134,16 +142,17 @@ export default function AdminUsersPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'users');
       addToast({ type: 'success', message: '사용자 역할이 변경되었습니다.' });
+      if (formSession.isCurrent(sessionId)) setRoleConfirmUser(null);
     },
     onError: (err: Error) => {
       addToast({ type: 'warning', message: err.message });
     },
-  });
+  }, formSession);
 
-  const { mutate: deleteUser, isPending: isDeleting } = useMutation({
+  const { mutate: deleteUser, isPending: isDeleting } = useAdminMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: 'DELETE',
@@ -154,25 +163,20 @@ export default function AdminUsersPage() {
       }
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      setDeleteConfirmId(null);
-      setExpandedUserId(null);
+    onSuccess: (_result, _variables, sessionId) => {
+      void invalidateAdminData(queryClient, 'users');
+      if (formSession.isCurrent(sessionId)) setDeleteConfirmId(null);
+      if (formSession.isCurrent(sessionId)) setExpandedUserId(null);
       addToast({ type: 'success', message: '사용자가 삭제되었습니다.' });
     },
-    onError: (err: Error) => {
-      setDeleteConfirmId(null);
+    onError: (err: Error, _variables, sessionId) => {
+      if (formSession.isCurrent(sessionId)) setDeleteConfirmId(null);
       addToast({ type: 'warning', message: err.message });
     },
-  });
+  }, formSession);
 
   if (authLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
-        <div className="h-64 animate-pulse rounded-2xl bg-slate-200" />
-      </div>
-    );
+    return <AdminLoading />;
   }
 
   if (!isAdmin) {
@@ -182,13 +186,10 @@ export default function AdminUsersPage() {
 
   const users = data?.data ?? [];
 
-  const handleRoleChange = (user: UserItem) => {
-    const newRole = user.role === 'admin' ? 'student' : 'admin';
-    if (!confirm(`${user.name}님의 역할을 ${newRole === 'admin' ? '관리자' : '학생'}(으)로 변경하시겠습니까?`)) return;
-    updateRole({ id: user._id, role: newRole });
-  };
+  const handleRoleChange = (user: UserItem) => { formSession.begin(); setRoleConfirmUser(user); };
 
   const handleDeleteClick = (userId: string) => {
+    formSession.begin();
     setDeleteConfirmId(userId);
   };
 
@@ -231,15 +232,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-700';
-      case 'enrolled': return 'bg-blue-100 text-blue-700';
-      case 'failed': return 'bg-red-100 text-red-700';
-      default: return 'bg-slate-100 text-slate-600';
-    }
-  };
-
   const getCategoryLabel = (category?: string) => {
     switch (category) {
       case 'major_required': return '전공핵심';
@@ -256,45 +248,32 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Link
-          href="/admin"
-          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-[#00AACA] transition-colors hover:text-[#153974]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          관리자 대시보드로 돌아가기
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">사용자 관리</h1>
-        <p className="mt-1 text-gray-600">
-          사용자 목록과 권한을 관리합니다. ({users.length}명)
-        </p>
-      </div>
+      <AdminHeader
+        title="사용자 관리"
+        description={<>사용자 목록과 권한을 관리합니다. (총 {data?.pagination.total ?? 0}명)</>}
+      />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
+          <Input variant="search" aria-label="이름 또는 이메일 검색..." className="pr-10"
             type="text"
             placeholder="이름 또는 이메일 검색..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-10 pr-3 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+            onChange={(e) => { setPage(1); setSearch(e.target.value); }}
           />
         </div>
-        <select
+        <Select aria-label="역할"
           value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+          onChange={(e) => { setPage(1); setRoleFilter(e.target.value); }}
         >
           <option value="">전체 역할</option>
           <option value="student">학생</option>
           <option value="admin">관리자</option>
-        </select>
-        <select
+        </Select>
+        <Select aria-label="학과"
           value={departmentFilter}
-          onChange={(e) => setDepartmentFilter(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+          onChange={(e) => { setPage(1); setDepartmentFilter(e.target.value); }}
         >
           <option value="">전체 학과</option>
           {(departmentsData?.data ?? []).map((dept) => (
@@ -302,73 +281,72 @@ export default function AdminUsersPage() {
               {dept.name}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select aria-label="정렬"
           value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
+          onChange={(e) => { setPage(1); setSortOption(e.target.value); }}
         >
           <option value="recent">최근 가입순</option>
           <option value="lastLogin">최근 접속순</option>
           <option value="name">이름순</option>
-        </select>
+        </Select>
       </div>
 
+      {departmentsError && <div role="alert" className="text-[13px] text-ink-2">학과 목록을 불러오는데 실패했습니다. <Button variant="outline" onClick={() => retryDepartments()}>학과 다시 시도</Button></div>}
+      <AdminPagination pagination={data?.pagination} pending={isLoading} onPage={setPage} />
       {/* Loading */}
-      {isLoading && (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-200" />
-          ))}
-        </div>
-      )}
+      {isLoading && <AdminLoading />}
 
       {/* Error */}
       {error && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-600">
+        <div role="alert" className="border-t border-line-2 py-8 text-[13px] text-ink-2">
           사용자 목록을 불러오는데 실패했습니다.
         </div>
       )}
 
       {/* Empty */}
       {!isLoading && !error && users.length === 0 && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center">
-          <User className="mx-auto h-12 w-12 text-slate-300" />
-          <p className="mt-4 text-sm text-slate-500">사용자가 없습니다.</p>
+        <div className="border-t border-line-2 py-12 text-center">
+          <User className="mx-auto h-12 w-12 text-placeholder" />
+          <p className="mt-4 text-sm text-ink-2">사용자가 없습니다.</p>
         </div>
       )}
 
       {/* User List */}
       {!isLoading && users.length > 0 && (
-        <div className="space-y-3">
+        <div className="border-t border-line-2">
           {users.map((user) => {
             const isExpanded = expandedUserId === user._id;
-            const isDeleteTarget = deleteConfirmId === user._id;
 
             return (
-              <Card key={user._id} className="overflow-hidden">
-                <CardContent className="p-4 sm:p-5">
+              <AdminRow key={user._id}>
+                <div>
                   {/* Main row */}
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     {/* User info */}
                     <div
-                      className="flex-1 min-w-0 cursor-pointer"
+                      className="w-full min-w-0 cursor-pointer sm:w-auto sm:flex-1"
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={isExpanded}
+                      aria-controls={`user-details-${user._id}`}
+                      onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); toggleExpand(user._id); } }}
                       onClick={() => toggleExpand(user._id)}
                     >
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-slate-900 truncate">
+                        <span className="font-medium text-ink truncate">
                           {user.name}
                         </span>
                         {user.studentId && (
-                          <span className="inline-flex rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+                          <span className="inline-flex text-xs font-medium text-ink-2">
                             {user.studentId}
                           </span>
                         )}
                         <span
-                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                          className={`inline-flex items-center gap-1 text-xs font-semibold ${
                             user.role === 'admin'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-blue-100 text-blue-700'
+                              ? 'text-negative'
+                              : 'text-ink-2'
                           }`}
                         >
                           {user.role === 'admin' ? (
@@ -379,16 +357,16 @@ export default function AdminUsersPage() {
                           {user.role === 'admin' ? '관리자' : '학생'}
                         </span>
                         <span
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-flex text-xs font-medium ${
                             user.provider === 'google'
-                              ? 'bg-yellow-100 text-yellow-700'
-                              : 'bg-gray-100 text-gray-700'
+                              ? 'text-ink-2'
+                              : 'text-ink'
                           }`}
                         >
                           {user.provider === 'google' ? 'Google' : '이메일'}
                         </span>
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-400">
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 break-all text-xs text-ink-2">
                         <span>{user.email}</span>
                         {user.department?.name && <span>{user.department.name}</span>}
                         {user.enrollmentYear && <span>{user.enrollmentYear}학번</span>}
@@ -398,62 +376,59 @@ export default function AdminUsersPage() {
 
                     {/* Actions */}
                     <div className="flex items-center gap-2 shrink-0">
-                      <button
+                      <Button variant="text"
                         type="button"
                         onClick={() => handleRoleChange(user)}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer ${
-                          user.role === 'admin'
-                            ? 'bg-slate-200 text-slate-600 hover:bg-slate-300'
-                            : 'bg-red-600 text-white hover:bg-red-700'
-                        }`}
                       >
                         {user.role === 'admin' ? '학생으로 변경' : '관리자로 변경'}
-                      </button>
-                      <button
+                      </Button>
+                      <Button aria-label="상세 정보" variant="text"
                         type="button"
                         onClick={() => toggleExpand(user._id)}
-                        className="rounded-lg bg-slate-100 p-1.5 text-slate-500 transition-colors hover:bg-slate-200 cursor-pointer"
+                        size="icon"
                         title="상세 정보"
+                        aria-expanded={isExpanded}
+                        aria-controls={`user-details-${user._id}`}
                       >
                         {isExpanded ? (
                           <ChevronUp className="h-4 w-4" />
                         ) : (
                           <ChevronDown className="h-4 w-4" />
                         )}
-                      </button>
+                      </Button>
                     </div>
                   </div>
 
                   {/* Expanded detail panel */}
                   {isExpanded && (
-                    <div className="mt-4 border-t border-slate-100 pt-4">
+                    <div id={`user-details-${user._id}`} className="mt-4 border-t border-line pt-4">
                       {/* User detail info */}
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="flex items-center gap-2 text-sm">
-                          <GraduationCap className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-500">학번:</span>
-                          <span className="font-medium text-slate-700">
+                          <GraduationCap className="h-4 w-4 text-ink-2" />
+                          <span className="text-ink-2">학번:</span>
+                          <span className="font-medium text-ink">
                             {user.studentId || (user.enrollmentYear ? `${user.enrollmentYear}학번` : '미입력')}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <BookOpen className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-500">학과:</span>
-                          <span className="font-medium text-slate-700">
+                          <BookOpen className="h-4 w-4 text-ink-2" />
+                          <span className="text-ink-2">학과:</span>
+                          <span className="font-medium text-ink">
                             {user.department?.name || '미설정'}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-500">마지막 접속:</span>
-                          <span className="font-medium text-slate-700">
+                          <Clock className="h-4 w-4 text-ink-2" />
+                          <span className="text-ink-2">마지막 접속:</span>
+                          <span className="font-medium text-ink">
                             {formatDateTime(user.lastLoginAt)}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-slate-400" />
-                          <span className="text-slate-500">가입일:</span>
-                          <span className="font-medium text-slate-700">
+                          <Calendar className="h-4 w-4 text-ink-2" />
+                          <span className="text-ink-2">가입일:</span>
+                          <span className="font-medium text-ink">
                             {formatDate(user.createdAt)}
                           </span>
                         </div>
@@ -461,7 +436,7 @@ export default function AdminUsersPage() {
 
                       {/* Plan section */}
                       <div className="mt-4">
-                        <h3 className="mb-3 text-sm font-semibold text-slate-700">
+                        <h3 className="mb-3 text-sm font-semibold text-ink">
                           수강 계획표
                         </h3>
                         {(() => {
@@ -474,22 +449,22 @@ export default function AdminUsersPage() {
 
                           if (planLoading && expandedUserId === user._id) {
                             return (
-                              <div className="space-y-2">
-                                <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
-                                <div className="h-16 animate-pulse rounded-lg bg-slate-100" />
-                              </div>
+                              <AdminLoading />
                             );
+                          }
+                          if (planError) {
+                            return <div role="alert" className="py-4 text-sm text-ink-2">수강계획을 불러오는데 실패했습니다. <Button variant="outline" onClick={() => retryPlan()}>계획 다시 시도</Button></div>;
                           }
                           if (!plan) {
                             return (
-                              <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-400">
+                              <div className="rounded-none border-t border-line py-4 text-center text-sm text-ink-2">
                                 계획표를 생성하지 않았습니다.
                               </div>
                             );
                           }
                           if (plan.semesters.length === 0) {
                             return (
-                              <div className="rounded-lg border border-slate-100 bg-slate-50 p-4 text-center text-sm text-slate-400">
+                              <div className="rounded-none border-t border-line py-4 text-center text-sm text-ink-2">
                                 계획표에 등록된 학기가 없습니다.
                               </div>
                             );
@@ -497,7 +472,7 @@ export default function AdminUsersPage() {
                           return (
                             <div>
                               {/* Plan summary */}
-                              <div className="mb-3 flex flex-wrap gap-4 text-xs text-slate-500">
+                              <div className="mb-3 flex flex-wrap gap-4 text-xs text-ink-2">
                                 <span>{plan.semesters.length}개 학기</span>
                                 <span>{totalCourses}개 과목</span>
                                 <span>{totalCredits}학점</span>
@@ -513,47 +488,41 @@ export default function AdminUsersPage() {
                                   return (
                                     <div
                                       key={`${semester.year}-${semester.term}`}
-                                      className="rounded-lg border border-slate-100 bg-slate-50 p-3"
+                                      className="border-t border-line py-3"
                                     >
                                       <div className="mb-2 flex items-center justify-between">
-                                        <span className="text-xs font-semibold text-slate-600">
+                                        <span className="text-xs font-semibold text-ink-2">
                                           {semester.year}년 {semester.term === 'spring' ? '1' : '2'}학기
                                         </span>
-                                        <span className="text-xs text-slate-400">
+                                        <span className="text-xs text-ink-2">
                                           {semester.courses.length}과목 / {semCredits}학점
                                         </span>
                                       </div>
                                       {semester.courses.length === 0 ? (
-                                        <p className="text-xs text-slate-400">등록된 과목 없음</p>
+                                        <p className="text-xs text-ink-2">등록된 과목 없음</p>
                                       ) : (
                                         <div className="space-y-1">
                                           {semester.courses.map((c) => (
                                             <div
                                               key={c.course?._id || Math.random()}
-                                              className="flex items-center justify-between rounded bg-white px-2.5 py-1.5 text-xs"
+                                              className="flex items-center justify-between min-h-[52px] flex-wrap gap-2 border-b border-line py-2 text-xs"
                                             >
                                               <div className="flex items-center gap-2 min-w-0">
-                                                <span className="font-mono text-slate-400 shrink-0">
+                                                <span className="font-mono text-ink-2 shrink-0">
                                                   {c.course?.code}
                                                 </span>
-                                                <span className="text-slate-700 truncate">
+                                                <span className="text-ink truncate">
                                                   {c.course?.name}
                                                 </span>
                                                 {getCategoryLabel(c.category || c.course?.category) && (
-                                                  <span className="shrink-0 text-slate-400">
-                                                    {getCategoryLabel(c.category || c.course?.category)}
-                                                  </span>
+                                                  <CategoryLabel category={c.category || c.course?.category} />
                                                 )}
                                               </div>
                                               <div className="flex items-center gap-2 shrink-0 ml-2">
-                                                <span className="text-slate-400">
+                                                <span className="text-ink-2">
                                                   {c.course?.credits}학점
                                                 </span>
-                                                <span
-                                                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getStatusColor(c.status)}`}
-                                                >
-                                                  {getStatusLabel(c.status)}
-                                                </span>
+                                                <StatusText status={c.status} label={getStatusLabel(c.status)} />
                                               </div>
                                             </div>
                                           ))}
@@ -569,47 +538,27 @@ export default function AdminUsersPage() {
                       </div>
 
                       {/* Delete section */}
-                      <div className="mt-4 flex justify-end border-t border-slate-100 pt-4">
-                        {!isDeleteTarget ? (
-                          <button
+                      <div className="mt-4 flex justify-end border-t border-line pt-4">
+                        {(
+                          <Button variant="textDanger"
                             type="button"
                             onClick={() => handleDeleteClick(user._id)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                             사용자 삭제
-                          </button>
-                        ) : (
-                          <div className="flex items-center gap-3">
-                            <span className="text-xs text-red-600">
-                              {user.name}님의 모든 데이터가 삭제됩니다. 정말 삭제하시겠습니까?
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteConfirmId(null)}
-                              className="rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-200 cursor-pointer"
-                            >
-                              취소
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteConfirm(user._id)}
-                              disabled={isDeleting}
-                              className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50 cursor-pointer"
-                            >
-                              {isDeleting ? '삭제 중...' : '삭제 확인'}
-                            </button>
-                          </div>
+                          </Button>
                         )}
                       </div>
                     </div>
                   )}
-                </CardContent>
-              </Card>
+                </div>
+              </AdminRow>
             );
           })}
         </div>
       )}
+      {deleteConfirmId && <AdminConfirmDialog isPending={formSession.isPending} title="사용자 삭제" description={<>{users.find((user) => user._id === deleteConfirmId)?.name}님의 모든 데이터가 삭제됩니다. 정말 삭제하시겠습니까?</>} onClose={() => setDeleteConfirmId(null)} onConfirm={() => handleDeleteConfirm(deleteConfirmId)} pending={isDeleting} confirmLabel="삭제 확인" />}
+      {roleConfirmUser && <AdminConfirmDialog isPending={formSession.isPending} title="사용자 역할 변경" description={<>{roleConfirmUser.name}님의 역할을 {roleConfirmUser.role === 'admin' ? '학생' : '관리자'}(으)로 변경하시겠습니까?</>} onClose={() => setRoleConfirmUser(null)} onConfirm={() => updateRole({ id: roleConfirmUser._id, role: roleConfirmUser.role === 'admin' ? 'student' : 'admin' })} pending={isUpdatingRole} confirmLabel="변경" danger={false} />}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { useDepartments } from '@/hooks/useOnboarding';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Toast } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import { GuestPlanImportPrompt } from '@/components/providers/GuestPlanImportPrompt';
 import OnboardingGuard from '@/components/providers/OnboardingGuard';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
@@ -56,7 +57,13 @@ const mobilePageTitles: Record<string, string> = {
   '/help/feedback': '문의 및 건의',
   '/help/graduation-guide': '졸업 가이드',
   '/patch-notes': '업데이트 소식',
-  '/admin': '관리자',
+  '/admin': '관리자 대시보드',
+  '/admin/courses': '과목 관리',
+  '/admin/departments': '학과 관리',
+  '/admin/requirements': '졸업 요건 관리',
+  '/admin/users': '사용자 관리',
+  '/admin/feedback': '피드백 관리',
+  '/admin/patch-notes': '업데이트 소식 관리',
 };
 
 /** 자체 h1을 가진 화면: 모바일 상단바는 제목 대신 워드마크를 보여 제목 중복을 피한다. */
@@ -624,7 +631,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className="min-w-0 flex-1">
         {/* Mobile top bar */}
         <header className="sticky top-0 z-30 flex h-[52px] items-center justify-between gap-2 bg-white pl-5 pr-3 md:hidden">
-          {mobileWordmarkPaths.some((href) => matchesPath(pathname, href)) ? (
+          {mobileWordmarkPaths.some((href) => matchesPath(pathname, href)) || pathname.startsWith('/patch-notes/') ? (
             <span className="min-w-0 truncate text-[16px] font-bold tracking-[-0.02em] text-ink">YU 수강 플래너</span>
           ) : (
             <h1 className="m-0 min-w-0 truncate text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink">
@@ -656,7 +663,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="mx-auto w-full max-w-[1180px] px-5 pt-2 pb-10 md:px-12 md:pt-9 md:pb-[72px] md:mx-0">
           <ErrorBoundary>
-            <OnboardingGuard>{children}</OnboardingGuard>
+            <OnboardingGuard>{children}<GuestPlanImportPrompt /></OnboardingGuard>
           </ErrorBoundary>
         </main>
       </div>

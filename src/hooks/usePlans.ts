@@ -38,17 +38,6 @@ async function fetchMyPlan(): Promise<IPlan> {
   return result.data;
 }
 
-async function fetchPlan(id: string): Promise<IPlan> {
-  const response = await fetch(`/api/plans/${id}`);
-  const result: ApiResponse<IPlan> = await response.json();
-
-  if (!result.success || !result.data) {
-    throw new Error(result.error || 'Failed to fetch plan');
-  }
-
-  return result.data;
-}
-
 async function resetPlan(id: string): Promise<IPlan> {
   const response = await fetch(`/api/plans/${id}`, {
     method: 'DELETE',
@@ -64,6 +53,9 @@ async function resetPlan(id: string): Promise<IPlan> {
 }
 
 async function addCourseToPlan(params: AddCourseToSemesterInput): Promise<IPlan> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    throw new Error('오프라인 상태입니다. 과목이 저장되지 않았습니다. 연결 후 다시 추가해주세요.');
+  }
   const { planId, year, term, courseId, departmentId } = params;
 
   const response = await fetch(`/api/plans/${planId}/courses`, {
@@ -182,50 +174,6 @@ export function useMyPlan(options?: { enabled?: boolean }) {
 }
 
 /**
- * Fetch a single plan by ID with populated courses
- */
-export function usePlan(id: string, options?: { enabled?: boolean }) {
-  const isGuest = useGuestStore((s) => s.isGuest);
-  const guestPlan = useGuestPlanStore((s) => s.plan);
-
-  const apiResult = useQuery({
-    queryKey: planKeys.detail(id),
-    queryFn: () => fetchPlan(id),
-    enabled: !isGuest && (options?.enabled ?? true) && !!id,
-    staleTime: 30 * 1000, // 30 seconds - plan changes frequently via drag-and-drop
-  });
-
-  if (isGuest) {
-    if (guestPlan) {
-      const data = {
-        _id: { toString: () => guestPlan.id } as unknown as IPlan['_id'],
-        semesters: guestPlan.semesters.map((sem) => ({
-          year: sem.year,
-          term: sem.term,
-          courses: sem.courses.map((c) => ({
-            course: {
-              _id: { toString: () => c.id },
-              code: c.code,
-              name: c.name,
-              credits: c.credits,
-              category: c.category,
-            } as unknown as IPlan['semesters'][number]['courses'][number]['course'],
-            status: c.status,
-          })),
-        })),
-        user: {} as unknown as IPlan['user'],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as unknown as IPlan;
-      return { ...apiResult, data, isLoading: false, error: null, isError: false } as typeof apiResult;
-    }
-    return { ...apiResult, data: undefined, isLoading: false, error: null, isError: false } as typeof apiResult;
-  }
-
-  return apiResult;
-}
-
-/**
  * Reset a plan (clear all semesters/courses)
  */
 export function useResetPlan() {
@@ -268,6 +216,8 @@ export function useAddCourse() {
 
   const apiMutation = useMutation({
     mutationFn: addCourseToPlan,
+    networkMode: 'always',
+    retry: false,
     onSuccess: (data) => {
       queryClient.setQueryData(planKeys.detail('my'), data);
       queryClient.invalidateQueries({ queryKey: graduationRequirementKeys.progress() });

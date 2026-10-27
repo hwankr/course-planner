@@ -8,8 +8,8 @@ export default function manifest(): MetadataRoute.Manifest {
       '영남대학교 학생을 위한 학기별 수강 계획 및 졸업 요건 추적 시스템',
     start_url: '/',
     display: 'standalone',
-    background_color: '#f9fafb',
-    theme_color: '#154878',
+    background_color: '#FFFFFF',
+    theme_color: '#2D5BE3',
     icons: [
       {
         src: '/icon-192x192.png',

@@ -261,10 +261,3 @@ export const useGuestPlanStore = create<GuestPlanState>()(
     }
   )
 );
-
-// Selector helpers
-export const useGuestActivePlan = () =>
-  useGuestPlanStore((s) => s.plan);
-
-export const useGuestPlanHydrated = () =>
-  useGuestPlanStore((s) => s._hasHydrated);

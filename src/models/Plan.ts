@@ -16,6 +16,10 @@ const plannedCourseSchema = new Schema(
       ref: 'Course',
       required: true,
     },
+    departmentId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Department',
+    },
     status: {
       type: String,
       enum: ['planned', 'enrolled', 'completed', 'failed'],
@@ -69,6 +73,17 @@ const planSchema = new Schema<IPlanDocument>(
 
 // 인덱스: 사용자당 단일 계획
 planSchema.index({ user: 1 }, { unique: true });
+
+// Next.js HMR can retain a compiled model from before this optional path existed.
+// Extend only its in-memory subdocument schema; no stored plans are rewritten.
+const cachedPlan = mongoose.models.Plan;
+if (cachedPlan) {
+  const semesters = cachedPlan.schema.path('semesters') as Schema.Types.DocumentArray;
+  const courses = semesters.schema.path('courses') as Schema.Types.DocumentArray;
+  if (!courses.schema.path('departmentId')) {
+    courses.schema.add({ departmentId: { type: Schema.Types.ObjectId, ref: 'Department' } });
+  }
+}
 
 const Plan: Model<IPlanDocument> =
   mongoose.models.Plan || mongoose.model<IPlanDocument>('Plan', planSchema);

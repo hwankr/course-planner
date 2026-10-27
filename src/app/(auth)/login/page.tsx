@@ -26,6 +26,14 @@ export default function LoginPage() {
   const [inAppInfo, setInAppInfo] = useState<{ isInApp: boolean; appName: string | null; isIOS: boolean }>({ isInApp: false, appName: null, isIOS: false });
 
   useEffect(() => {
+    const authError = new URLSearchParams(window.location.search).get('error');
+    const messages: Record<string, string> = {
+      CredentialsSignin: '이메일 또는 비밀번호가 올바르지 않습니다. 다시 확인해주세요.',
+      OAuthAccountNotLinked: '이미 다른 로그인 방식으로 가입한 이메일입니다. 기존 방식으로 로그인해주세요.',
+      AccessDenied: '로그인 접근이 거부되었습니다. 계정 권한을 확인해주세요.',
+      Callback: '로그인을 완료하지 못했습니다. 다시 시도해주세요.',
+    };
+    if (authError) setError(messages[authError] || '로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
     const info = detectInAppBrowser();
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     setInAppInfo({ ...info, isIOS });
@@ -56,7 +64,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen flex-wrap items-stretch bg-white text-ink">
+    <main className="flex min-h-screen flex-wrap items-stretch bg-white text-ink">
       <AuthIntro features={LOGIN_FEATURES} />
 
       <section
@@ -176,6 +184,6 @@ export default function LoginPage() {
           </p>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

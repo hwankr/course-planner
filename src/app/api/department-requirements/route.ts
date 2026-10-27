@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { departmentRequirementService } from '@/services/departmentRequirement.service';
+import { isValidObjectId, invalidIdResponse } from '@/lib/validation';
 import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: NextRequest) {
@@ -18,24 +19,20 @@ export async function GET(request: NextRequest) {
     const yearParam = searchParams.get('year');
     const year = yearParam ? parseInt(yearParam, 10) : undefined;
 
-    // Specific department + majorType -> auto-fill data
-    if (college && departmentName && majorType) {
-      if (majorType === 'single') {
-        const primary = await departmentRequirementService.getPrimaryRequirements(college, departmentName, year);
-        if (!primary) {
-          return NextResponse.json({ success: false, error: '학과를 찾을 수 없습니다.' }, { status: 404 });
-        }
-        return NextResponse.json({ success: true, data: primary });
-      }
-
-      // double/minor: returns SECONDARY department requirements
-      const secondary = await departmentRequirementService.getSecondaryRequirements(
-        college, departmentName, majorType, year
-      );
-      if (!secondary) {
-        return NextResponse.json({ success: false, error: '학과를 찾을 수 없습니다.' }, { status: 404 });
-      }
-      return NextResponse.json({ success: true, data: secondary });
+    const departmentId = searchParams.get('departmentId') || undefined;
+    const track = searchParams.get('track');
+    if (departmentId && !isValidObjectId(departmentId)) return invalidIdResponse('학과 ID');
+    if ((majorType && !['single', 'double', 'minor'].includes(majorType)) ||
+        (track && !['primary', 'secondary'].includes(track))) {
+      return NextResponse.json({ success: false, error: '유효하지 않은 전공 유형입니다.' }, { status: 400 });
+    }
+    if ((departmentId || (college && departmentName)) && majorType) {
+      const data = await departmentRequirementService.getAutoFill({
+        departmentId, college: college || undefined, departmentName: departmentName || undefined,
+        majorType, track: track as 'primary' | 'secondary' | undefined, year,
+      });
+      if (!data) return NextResponse.json({ success: false, error: '학과를 찾을 수 없습니다.' }, { status: 404 });
+      return NextResponse.json({ success: true, data });
     }
 
     // Specific department -> full document

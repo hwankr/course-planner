@@ -1,7 +1,23 @@
-import type { GraduationRequirementInput } from '@/types';
+import type { GraduationRequirementInput, MajorAttributionContext } from '@/types';
 import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 
+/** Shared by server progress and client deltas; legacy shared courses remain primary. */
+export function resolveMajorTrack(
+  course: { id?: string; departmentId?: string; department?: string },
+  context?: MajorAttributionContext
+): 'primaryMajor' | 'secondaryMajor' | 'minor' {
+  if (!context?.secondaryDepartmentId || context.majorType === 'single') return 'primaryMajor';
+  const departmentId = course.departmentId || course.department;
+  const secondary = departmentId
+    ? departmentId === context.secondaryDepartmentId
+    : !!course.id && !!context.secondaryCourseIds?.includes(course.id) && !context.primaryCourseIds?.includes(course.id);
+  return secondary ? (context.majorType === 'minor' ? 'minor' : 'secondaryMajor') : 'primaryMajor';
+}
+
 interface CourseForDelta {
+  id?: string;
+  departmentId?: string;
+  department?: string;
   credits: number;
   category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
 }
@@ -62,7 +78,8 @@ const GENERAL_CATEGORIES = ['general_required', 'general_elective'];
 export function computeGraduationDelta(
   course: CourseForDelta,
   requirement: GraduationRequirementInput | null,
-  currentTotals: CurrentTotals
+  currentTotals: CurrentTotals,
+  attribution?: MajorAttributionContext
 ): GraduationDelta | null {
   if (!requirement) return null;
 
@@ -95,30 +112,20 @@ export function computeGraduationDelta(
   let secondRowAfter: { credits: number; percentage: number };
 
   if (isMajor) {
-    categoryKey = 'primaryMajor';
-    const beforePlanned = currentTotals.primaryMajorPlanned;
-    const afterPlanned = beforePlanned + credits;
-    before = {
-      credits: currentTotals.primaryMajorEarned + beforePlanned,
-      percentage: pct(currentTotals.primaryMajorEarned, beforePlanned, requirement.primaryMajorCredits),
-    };
-    after = {
-      credits: currentTotals.primaryMajorEarned + afterPlanned,
-      percentage: pct(currentTotals.primaryMajorEarned, afterPlanned, requirement.primaryMajorCredits),
-    };
-
-    // Second row: major_required
-    secondRowCategoryKey = 'major_required';
-    const majorReqBeforePlanned = currentTotals.primaryMajorRequiredPlanned;
-    const majorReqAfterPlanned = majorReqBeforePlanned + (cat === 'major_required' ? credits : 0);
-    secondRowBefore = {
-      credits: currentTotals.primaryMajorRequiredEarned + majorReqBeforePlanned,
-      percentage: pct(currentTotals.primaryMajorRequiredEarned, majorReqBeforePlanned, requirement.primaryMajorRequiredMin),
-    };
-    secondRowAfter = {
-      credits: currentTotals.primaryMajorRequiredEarned + majorReqAfterPlanned,
-      percentage: pct(currentTotals.primaryMajorRequiredEarned, majorReqAfterPlanned, requirement.primaryMajorRequiredMin),
-    };
+    const track = resolveMajorTrack(course, { ...attribution, majorType: requirement.majorType });
+    categoryKey = track;
+    const earned = currentTotals[`${track}Earned`] || 0;
+    const planned = currentTotals[`${track}Planned`] || 0;
+    const required = requirement[`${track}Credits`] || 0;
+    const reqEarned = currentTotals[`${track}RequiredEarned`] || 0;
+    const reqPlanned = currentTotals[`${track}RequiredPlanned`] || 0;
+    const reqRequired = requirement[`${track}RequiredMin`] || 0;
+    before = { credits: earned + planned, percentage: pct(earned, planned, required) };
+    after = { credits: earned + planned + credits, percentage: pct(earned, planned + credits, required) };
+    secondRowCategoryKey = track === 'primaryMajor' ? 'major_required' : `${track}Required`;
+    const requiredDelta = cat === 'major_required' ? credits : 0;
+    secondRowBefore = { credits: reqEarned + reqPlanned, percentage: pct(reqEarned, reqPlanned, reqRequired) };
+    secondRowAfter = { credits: reqEarned + reqPlanned + requiredDelta, percentage: pct(reqEarned, reqPlanned + requiredDelta, reqRequired) };
   } else if (isGeneral) {
     categoryKey = 'general';
     const beforePlanned = currentTotals.generalPlanned;
@@ -162,26 +169,6 @@ export function computeGraduationDelta(
 }
 
 /**
- * Format delta into a human-readable toast description string.
- */
-export function formatDeltaDescription(delta: GraduationDelta): string {
-  const parts: string[] = [];
-
-  if (delta.categoryKey !== 'total') {
-    const groupLabel = delta.categoryKey === 'primaryMajor' ? '전공' : '교양';
-    parts.push(
-      `${groupLabel}: ${delta.before.credits} → ${delta.after.credits}학점 (${delta.before.percentage}% → ${delta.after.percentage}%)`
-    );
-  }
-
-  parts.push(
-    `전체: ${delta.totalBefore.credits} → ${delta.totalAfter.credits}학점 (${delta.totalBefore.percentage}% → ${delta.totalAfter.percentage}%)`
-  );
-
-  return parts.join(' · ');
-}
-
-/**
  * Compute current totals from plan semesters + requirement earned credits.
  * Call this BEFORE addCourseToSemester() to capture pre-mutation state.
  */
@@ -190,70 +177,56 @@ export function computeCurrentTotals(
     year: number;
     term: string;
     courses: Array<{
+      id?: string;
+      departmentId?: string;
+      department?: string;
       credits: number;
       category?: string;
       status: string;
     }>;
   }>,
-  requirement: GraduationRequirementInput | null
+  requirement: GraduationRequirementInput | null,
+  attribution?: MajorAttributionContext
 ): CurrentTotals {
-  let totalEarned = 0,
-    totalPlanned = 0;
-  let primaryMajorEarned = 0,
-    primaryMajorPlanned = 0;
-  let generalEarned = 0,
-    generalPlanned = 0;
-  let primaryMajorRequiredEarned = 0,
-    primaryMajorRequiredPlanned = 0;
-
+  const totals: CurrentTotals = {
+    totalEarned: 0, totalPlanned: 0,
+    primaryMajorEarned: 0, primaryMajorPlanned: 0,
+    primaryMajorRequiredEarned: 0, primaryMajorRequiredPlanned: 0,
+    secondaryMajorEarned: 0, secondaryMajorPlanned: 0,
+    secondaryMajorRequiredEarned: 0, secondaryMajorRequiredPlanned: 0,
+    minorEarned: 0, minorPlanned: 0, minorRequiredEarned: 0, minorRequiredPlanned: 0,
+    generalEarned: 0, generalPlanned: 0,
+  };
   for (const sem of semesters) {
-    // 기이수 반영 기준 학기 이전의 '이수' 과목은 기이수와 중복 — 합산 제외
-    const coveredByPrior = isSemesterCoveredByPrior(
-      sem.year,
-      sem.term,
-      requirement?.priorCutoffYear,
-      requirement?.priorCutoffTerm
-    );
-
-    for (const c of sem.courses) {
-      const credits = c.credits;
-      const cat = c.category || 'free_elective';
-      if (c.status === 'completed') {
-        if (coveredByPrior) continue;
-        totalEarned += credits;
-        if (MAJOR_CATEGORIES.includes(cat)) primaryMajorEarned += credits;
-        if (GENERAL_CATEGORIES.includes(cat)) generalEarned += credits;
-        if (cat === 'major_required') primaryMajorRequiredEarned += credits;
-      } else if (c.status === 'planned' || c.status === 'enrolled') {
-        totalPlanned += credits;
-        if (MAJOR_CATEGORIES.includes(cat)) primaryMajorPlanned += credits;
-        if (GENERAL_CATEGORIES.includes(cat)) generalPlanned += credits;
-        if (cat === 'major_required') primaryMajorRequiredPlanned += credits;
+    const covered = isSemesterCoveredByPrior(sem.year, sem.term, requirement?.priorCutoffYear, requirement?.priorCutoffTerm);
+    for (const course of sem.courses) {
+      if (course.status === 'failed' || (course.status === 'completed' && covered)) continue;
+      const suffix = course.status === 'completed' ? 'Earned' : 'Planned';
+      const cat = course.category || 'free_elective';
+      totals[`total${suffix}`] += course.credits;
+      if (MAJOR_CATEGORIES.includes(cat)) {
+        const track = resolveMajorTrack(course, { ...attribution, majorType: requirement?.majorType });
+        const key = `${track}${suffix}` as const;
+        totals[key] = (totals[key] || 0) + course.credits;
+        if (cat === 'major_required') {
+          const requiredKey = `${track}Required${suffix}` as const;
+          totals[requiredKey] = (totals[requiredKey] || 0) + course.credits;
+        }
       }
+      if (GENERAL_CATEGORIES.includes(cat)) totals[`general${suffix}`] += course.credits;
     }
   }
-
-  // Add prior earned credits from requirement (총은 트랙 합계 미만이면 보정)
   if (requirement) {
-    totalEarned += effectivePriorTotal(requirement);
-    primaryMajorEarned += requirement.earnedPrimaryMajorCredits || 0;
-    generalEarned += requirement.earnedGeneralCredits || 0;
-    primaryMajorRequiredEarned += requirement.earnedPrimaryMajorRequiredCredits || 0;
+    totals.totalEarned += effectivePriorTotal(requirement);
+    totals.primaryMajorEarned += requirement.earnedPrimaryMajorCredits || 0;
+    totals.primaryMajorRequiredEarned += requirement.earnedPrimaryMajorRequiredCredits || 0;
+    totals.generalEarned += requirement.earnedGeneralCredits || 0;
+    totals.secondaryMajorEarned! += requirement.earnedSecondaryMajorCredits || 0;
+    totals.secondaryMajorRequiredEarned! += requirement.earnedSecondaryMajorRequiredCredits || 0;
+    totals.minorEarned! += requirement.earnedMinorCredits || 0;
+    totals.minorRequiredEarned! += requirement.earnedMinorRequiredCredits || 0;
   }
-
-  return {
-    totalEarned,
-    totalPlanned,
-    primaryMajorEarned,
-    primaryMajorPlanned,
-    generalEarned,
-    generalPlanned,
-    primaryMajorRequiredEarned,
-    primaryMajorRequiredPlanned,
-  };
+  return totals;
 }
 
-/**
- * Category label lookup (exported for use by toast and preview components)
- */
 export const GRADUATION_CATEGORY_LABELS = CATEGORY_LABELS;

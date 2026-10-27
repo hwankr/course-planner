@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { ReadOnlySemesterColumn } from './ReadOnlySemesterColumn';
 import { useAnonymousPlanDetail } from '@/hooks/useStatistics';
 import { useDialogFocus } from './useDialogFocus';
+import { Button } from '@/components/ui';
 import { X, AlertCircle, Loader2, Info } from 'lucide-react';
 
 interface AnonymousPlanModalProps {
@@ -11,12 +12,14 @@ interface AnonymousPlanModalProps {
   onClose: () => void;
   anonymousId: string | null;
   departmentId?: string;
+  planNumber: number;
 }
 
-export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId }: AnonymousPlanModalProps) {
+export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId, planNumber }: AnonymousPlanModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   useDialogFocus(modalRef, isOpen, { initialFocus: 'container' });
-  const { data, isLoading, isError } = useAnonymousPlanDetail(isOpen ? anonymousId : null, departmentId);
+  const { data, isLoading, isError, error, refetch, isFetching } = useAnonymousPlanDetail(isOpen ? anonymousId : null, departmentId);
+  const isNotFound = isError && error?.status === 404;
 
   // ESC key handler
   const handleKeyDown = useCallback(
@@ -39,11 +42,11 @@ export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId 
 
   // Auto-close on 404
   useEffect(() => {
-    if (isError) {
+    if (isNotFound) {
       const timer = setTimeout(onClose, 2000);
       return () => clearTimeout(timer);
     }
-  }, [isError, onClose]);
+  }, [isNotFound, onClose]);
 
   if (!isOpen) return null;
 
@@ -56,7 +59,7 @@ export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -73,7 +76,7 @@ export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId 
         <div className="flex items-start justify-between gap-4 border-b border-line px-6 pt-5 pb-4">
           <div className="flex flex-col gap-1">
             <h2 id="anonymous-plan-title" className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink">
-              익명 수강계획
+              계획 {planNumber}
             </h2>
             {data && (
               <p className="m-0 text-[13px] leading-[18px] tabular-nums text-ink-2">
@@ -103,8 +106,14 @@ export function AnonymousPlanModal({ isOpen, onClose, anonymousId, departmentId 
           {isError && (
             <div role="alert" className="flex flex-col items-center gap-1 py-16 text-center">
               <AlertCircle aria-hidden="true" className="mb-2 h-6 w-6 text-negative" />
-              <p className="m-0 text-[15px] font-semibold text-ink">이 계획 정보가 갱신되었습니다.</p>
-              <p className="m-0 text-[13px] leading-[18px] text-ink-2">목록을 새로고침합니다...</p>
+              <p className="m-0 text-[15px] font-semibold text-ink">
+                {isNotFound ? '이 계획 정보가 갱신되었습니다.' : '수강 계획을 불러오지 못했습니다.'}
+              </p>
+              {isNotFound ? (
+                <p className="m-0 text-[13px] leading-[18px] text-ink-2">목록을 새로고침합니다...</p>
+              ) : (
+                <Button variant="textPrimary" onClick={() => refetch()} disabled={isFetching}>다시 시도</Button>
+              )}
             </div>
           )}
 

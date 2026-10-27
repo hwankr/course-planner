@@ -101,7 +101,7 @@ export default function StatisticsPage() {
   const effectiveDepartmentId = isGuest ? (guestDepartmentId || undefined) : undefined;
 
   const { data: statsData, isLoading: statsLoading, isError: statsError, error: statsErrorObj } = useDepartmentStats(effectiveDepartmentId);
-  const { data: plansData, isLoading: plansLoading } = useAnonymousPlans(effectiveDepartmentId, 1, 3, !isGuest);
+  const { data: plansData, isLoading: plansLoading, isError: plansError, refetch: refetchPlans, isFetching: plansFetching } = useAnonymousPlans(effectiveDepartmentId, 1, 3, !isGuest);
 
   // Error handling - MUST be checked FIRST
   if (statsLoading) {
@@ -333,7 +333,7 @@ export default function StatisticsPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 pt-3">
           <span className="text-[13px] leading-[18px] text-ink-2">
-            계획을 작성한 학생 중 비율입니다 · 직접 추가한 과목은 빼고 공식 교과목만 집계해요
+            해당 학과 전체 가입자 중 비율입니다 (빈 계획 포함) · 직접 추가한 과목은 빼고 공식 교과목만 집계해요
           </span>
           {filteredCourses.length > INITIAL_VISIBLE && (
             remainingCount > 0 ? (
@@ -342,7 +342,7 @@ export default function StatisticsPage() {
                 onClick={() => setVisibleCount((prev) => prev + MORE_STEP)}
                 className="h-11 text-[14px] font-semibold text-ink transition-colors duration-150 hover:text-primary md:h-9"
               >
-                {remainingCount}개 더보기
+                {Math.min(MORE_STEP, remainingCount)}개 더보기
               </button>
             ) : (
               <button
@@ -430,6 +430,15 @@ export default function StatisticsPage() {
               </div>
             ))}
           </div>
+        ) : plansError ? (
+          <div role="alert" className="flex flex-col items-start gap-2 border-t border-line py-4">
+            <p className="m-0 text-[14px] text-negative">
+              수강 계획을 불러오지 못했습니다.
+            </p>
+            <Button variant="textPrimary" onClick={() => refetchPlans()} disabled={plansFetching}>
+              {plansFetching ? '다시 불러오는 중...' : '다시 시도'}
+            </Button>
+          </div>
         ) : plansData?.plans.length === 0 ? (
           <div className="border-t border-line py-4 text-[14px] leading-5 text-ink-2">
             <p className="m-0 font-medium text-ink">아직 공개된 수강 계획이 없습니다</p>
@@ -439,7 +448,7 @@ export default function StatisticsPage() {
           <>
             <ul className="m-0 flex list-none flex-col p-0">
               {plansData?.plans.slice(0, 3).map((plan, index) => {
-                const label = String.fromCharCode(65 + index);
+                const label = index + 1;
                 return (
                   <li key={plan.anonymousId}>
                     <button
@@ -448,7 +457,7 @@ export default function StatisticsPage() {
                       className="group flex min-h-14 w-full items-center gap-4 border-b border-line py-1.5 text-left transition-colors duration-150 hover:bg-fill/60"
                     >
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="text-[15px] leading-5 font-medium text-ink">익명 학생 {label}</span>
+                        <span className="text-[15px] leading-5 font-medium text-ink">계획 {label}</span>
                         <span className="text-[12px] leading-4 text-ink-2">
                           {plan.semesterCount}학기 계획 · {plan.totalCourses}과목 · {plan.totalCredits}학점
                         </span>
@@ -487,6 +496,7 @@ export default function StatisticsPage() {
         <AnonymousPlanModal
           isOpen={true}
           anonymousId={selectedPlanId}
+          planNumber={(plansData?.plans.findIndex((plan) => plan.anonymousId === selectedPlanId) ?? -1) + 1}
           departmentId={effectiveDepartmentId}
           onClose={() => setSelectedPlanId(null)}
         />

@@ -175,6 +175,8 @@ export const authOptions: NextAuthOptions = {
         // Session refresh: re-fetch from DB to get updated department
         const dbUser = await userService.findByEmail(token.email as string);
         if (dbUser) {
+          token.name = dbUser.name;
+          token.picture = dbUser.image;
           token.id = dbUser._id.toString();
           token.role = dbUser.role;
           token.department = dbUser.department?.toString();

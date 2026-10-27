@@ -7,6 +7,7 @@
 
 import { connectDB } from '@/lib/db/mongoose';
 import DepartmentRequirement from '@/models/DepartmentRequirement';
+import Department from '@/models/Department';
 import type { IDepartmentRequirementDocument } from '@/models/DepartmentRequirement';
 import type { MajorType } from '@/types';
 
@@ -87,12 +88,15 @@ async function getAvailableMajorTypes(
 
 /**
  * 주전공 학과의 졸업요건 조회 (auto-fill용)
- * 주전공은 항상 해당 학과의 'single' 컬럼 값을 사용
+ * 선택한 전공유형의 주전공 학점 기준을 사용
+ * - single: single 컬럼, double: double 컬럼(주전공도 복수전공 기준으로 축소)
+ * - minor: minor.primaryMajorMin(부전공 시 주전공 최소) + single의 핵심 기준
  */
 async function getPrimaryRequirements(
   college: string,
   departmentName: string,
-  year?: number
+  year?: number,
+  majorType: MajorType = 'single'
 ): Promise<{
   totalCredits: number;
   generalCredits: number | null;
@@ -102,11 +106,22 @@ async function getPrimaryRequirements(
   const doc = await findByDepartmentName(college, departmentName, year);
   if (!doc) return null;
 
+  // minor.majorCredits/majorRequiredMin은 "이 학과를 부전공으로 이수할 때"의 값이다.
+  // 부전공을 둔 학생의 주전공 기준은 minor.primaryMajorMin("부전공 시 주전공 최소")이며,
+  // 핵심 학점 기준은 단일전공과 동일하게 본다. (없으면 단일전공 기준으로 fallback)
+  const primary =
+    majorType === 'minor'
+      ? {
+          majorCredits: doc.minor.primaryMajorMin ?? doc.single.majorCredits,
+          majorRequiredMin: doc.single.majorRequiredMin,
+        }
+      : doc[majorType];
+
   return {
     totalCredits: doc.totalCredits,
     generalCredits: doc.generalCredits,
-    primaryMajorCredits: doc.single.majorCredits,
-    primaryMajorRequiredMin: doc.single.majorRequiredMin,
+    primaryMajorCredits: primary.majorCredits,
+    primaryMajorRequiredMin: primary.majorRequiredMin,
   };
 }
 
@@ -142,6 +157,26 @@ async function getSecondaryRequirements(
     minorRequiredMin: doc.minor.majorRequiredMin,
     minorPrimaryMajorMin: doc.minor.primaryMajorMin,
   };
+}
+
+/** Optional ID and track selectors preserve the legacy name-based API. */
+async function getAutoFill(input: {
+  college?: string; departmentName?: string; departmentId?: string;
+  majorType: MajorType; track?: 'primary' | 'secondary'; year?: number;
+}) {
+  let { college, departmentName } = input;
+  if (input.departmentId) {
+    await connectDB();
+    const department = await Department.findById(input.departmentId).select('college name').lean();
+    if (!department) return null;
+    college = department.college;
+    departmentName = department.name;
+  }
+  if (!college || !departmentName) return null;
+  if (input.track === 'primary' || input.majorType === 'single') {
+    return getPrimaryRequirements(college, departmentName, input.year, input.majorType);
+  }
+  return getSecondaryRequirements(college, departmentName, input.majorType, input.year);
 }
 
 /**
@@ -224,6 +259,7 @@ export const departmentRequirementService = {
   listColleges,
   findAll,
   getAvailableMajorTypes,
+  getAutoFill,
   getPrimaryRequirements,
   getSecondaryRequirements,
   create,

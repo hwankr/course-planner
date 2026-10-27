@@ -87,11 +87,10 @@ test('guest minor courses count only toward the minor track', async () => {
   assert.equal(progress.minor?.requiredMin.planned, 3);
 });
 
-test('guest plan and planner mappings preserve departmentId for click, drag, sync, and preview', async () => {
-  const [guestPlanSource, plannerSource, previewSource] = await Promise.all([
+test('guest plan and planner mappings preserve departmentId for click, drag, and sync', async () => {
+  const [guestPlanSource, plannerSource] = await Promise.all([
     readFile(resolve(process.cwd(), 'src/stores/guestPlanStore.ts'), 'utf8'),
     readFile(resolve(process.cwd(), 'src/app/(dashboard)/planner/page.tsx'), 'utf8'),
-    readFile(resolve(process.cwd(), 'src/hooks/useGraduationPreview.ts'), 'utf8'),
   ]);
 
   assert.match(guestPlanSource, /export interface GuestPlannedCourse[\s\S]*departmentId\?: string;/);
@@ -99,8 +98,6 @@ test('guest plan and planner mappings preserve departmentId for click, drag, syn
   assert.match(plannerSource, /departmentId:\s*dragData\?\.departmentId/);
   assert.match(plannerSource, /departmentId:\s*c\.departmentId/);
   assert.match(plannerSource, /departmentId:\s*courseData\.departmentId,[\s\S]*addCourseMutation\.mutateAsync/);
-  assert.match(previewSource, /departmentId:\s*c\.departmentId/);
-  assert.match(previewSource, /departmentId:\s*previewCourse\.departmentId/);
 });
 
 test('catalog passes the active department through add and custom-course flows', async () => {

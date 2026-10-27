@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import type { IPatchNoteResponse } from '@/types';
 import { formatPatchNoteDate } from '../_components/format';
+import { LoginNotice } from '../_components/LoginNotice';
 
 function BackLink() {
   return (
@@ -31,10 +32,11 @@ export default function PatchNoteDetailPage() {
     queryKey: ['patch-note', id],
     queryFn: async () => {
       const res = await fetch(`/api/patch-notes/${id}`);
-      if (!res.ok) throw new Error('업데이트 소식을 불러올 수 없습니다.');
+      if (!res.ok) throw Object.assign(new Error('업데이트 소식을 불러올 수 없습니다.'), { status: res.status });
       return res.json();
     },
     enabled: !!id && !authLoading,
+    retry: (failureCount, error) => !('status' in error && (error.status === 401 || error.status === 404)) && failureCount < 3,
   });
 
   // 읽음 처리 + 알림 카운트 갱신
@@ -63,9 +65,12 @@ export default function PatchNoteDetailPage() {
     return (
       <div className="flex max-w-[720px] flex-col">
         <BackLink />
+        <h1 className="mt-2 text-[26px] leading-[34px] font-bold text-ink">업데이트 소식</h1>
+        {error && 'status' in error && error.status === 401 ? <LoginNotice /> : (
         <p role="alert" className="m-0 mt-4 border-t border-line-2 py-7 text-[15px] leading-[23px] text-negative">
           업데이트 소식을 찾을 수 없습니다.
         </p>
+        )}
       </div>
     );
   }

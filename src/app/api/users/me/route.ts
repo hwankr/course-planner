@@ -86,13 +86,7 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const validatedData = updateUserSchema.parse(body);
 
-    // Transform null to undefined for service layer
-    const serviceData = {
-      ...validatedData,
-      secondaryDepartment: validatedData.secondaryDepartment === null ? undefined : validatedData.secondaryDepartment,
-    };
-
-    const updatedUser = await userService.update(session.user.id, serviceData);
+    const updatedUser = await userService.update(session.user.id, validatedData);
     if (!updatedUser) {
       return NextResponse.json(
         { success: false, error: '사용자를 찾을 수 없습니다.' },

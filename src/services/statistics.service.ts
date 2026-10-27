@@ -24,6 +24,10 @@ const STATS_TTL = 10 * 60 * 1000;  // 10 minutes
 const PLANS_TTL = 10 * 60 * 1000;  // 10 minutes
 const DETAIL_TTL = 30 * 60 * 1000; // 30 minutes
 
+export function compareStatisticsSemesters(a: { year: number; term: string }, b: { year: number; term: string }): number {
+  return a.year - b.year || Number(a.term === 'fall') - Number(b.term === 'fall');
+}
+
 interface PlansCache {
   plans: AnonymousPlanSummary[];
   total: number;
@@ -143,8 +147,7 @@ async function getDepartmentCourseStats(
     studentCount: c.studentCount,
     percentage: Math.round((c.studentCount / totalStudents) * 1000) / 10,
     semesters: (c.semesters || []).sort(
-      (a: { year: number; term: string }, b: { year: number; term: string }) =>
-        a.year - b.year || (a.term === 'spring' ? -1 : 1)
+      compareStatisticsSemesters
     ),
   }));
 
@@ -212,6 +215,8 @@ async function getDepartmentCourseStats(
       avgCredits: Math.round(s.avgCredits * 10) / 10,
     })
   );
+
+  semesterDistribution.sort(compareStatisticsSemesters);
 
   const result: DepartmentCourseStats = {
     departmentId: departmentId,

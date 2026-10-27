@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   DepartmentCourseStats,
   AnonymousPlanSummary,
@@ -135,6 +135,23 @@ export function useAnonymousPlans(departmentId?: string, page: number = 1, limit
   });
 }
 
+/** 전체 보기에서는 이미 읽은 페이지를 유지하며 다음 페이지를 덧붙인다. */
+export function useAllAnonymousPlans(departmentId?: string, enabled: boolean = true) {
+  const limit = 9;
+  return useInfiniteQuery({
+    queryKey: [...statisticsKeys.all, 'plans', 'infinite', departmentId, limit],
+    queryFn: ({ pageParam }) => fetchAnonymousPlans(departmentId, pageParam, limit),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.plans.length > 0 && lastPage.page * lastPage.limit < lastPage.total
+        ? lastPage.page + 1
+        : undefined,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+}
+
 /**
  * 익명 계획 상세 조회
  * - 404 시 plans 목록 자동 invalidate
@@ -157,7 +174,7 @@ export function useAnonymousPlanDetail(anonymousId: string | null, departmentId?
       onError: (error: StatisticsError) => {
         if (error?.status === 404) {
           // Invalidate plans list to get fresh anonymousIds
-          queryClient.invalidateQueries({ queryKey: statisticsKeys.all });
+          queryClient.invalidateQueries({ queryKey: [...statisticsKeys.all, 'plans'] });
         }
       },
     },

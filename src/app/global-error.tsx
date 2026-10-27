@@ -2,6 +2,8 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+import './globals.css';
 
 export default function GlobalError({
   error,
@@ -16,18 +18,14 @@ export default function GlobalError({
 
   return (
     <html lang="ko">
-      <body>
-        <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-          <div className="rounded-full bg-red-100 p-3">
-            <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900">심각한 오류가 발생했습니다</h2>
-          <p className="text-sm text-gray-600">예상치 못한 오류가 발생했습니다. 페이지를 새로고침해주세요.</p>
+      <body className="bg-white text-ink antialiased">
+        <div className="mx-auto flex min-h-screen max-w-xl flex-col items-start justify-center gap-3 px-5 py-8" role="alert">
+          <h2 className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink">심각한 오류가 발생했습니다</h2>
+          <p className="m-0 text-[13px] leading-[18px] font-medium text-ink-2">예상치 못한 오류가 발생했습니다. 페이지를 새로고침해주세요.</p>
           <button
+            type="button"
             onClick={() => reset()}
-            className="rounded-md bg-[#153974] px-4 py-2 text-sm font-medium text-white hover:bg-[#003E7E]"
+            className="-ml-2.5 h-10 rounded-[8px] px-2.5 text-[14px] font-semibold text-primary transition-colors duration-150 hover:text-primary-hover"
           >
             다시 시도
           </button>

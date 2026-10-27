@@ -44,13 +44,14 @@ export function AddSemesterDialog({
     if (last.term === 'spring') {
       return { year: last.year, term: 'fall' as Term };
     } else {
-      return { year: Math.min(last.year + 1, 5), term: 'spring' as Term };
+      return { year: Math.min(last.year + 1, 6), term: 'spring' as Term };
     }
   }, [existingSemesters]);
 
-  // Set defaults when dialog opens
+  // Apply defaults once per opening; background refetches must not reset a selection.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !wasOpen.current) {
       const defaults = calculateDefaults();
       // Use queueMicrotask to avoid synchronous setState in effect
       queueMicrotask(() => {
@@ -58,6 +59,7 @@ export function AddSemesterDialog({
         setTerm(defaults.term);
       });
     }
+    wasOpen.current = isOpen;
   }, [isOpen, calculateDefaults]);
 
   // Check for duplicates
@@ -110,8 +112,8 @@ export function AddSemesterDialog({
           {/* Grade Year Selector */}
           <fieldset className="m-0 border-0 p-0">
             <legend className="mb-1 p-0 text-[13px] leading-[18px] font-semibold text-ink-2">학년</legend>
-            <div className="flex gap-5 border-b border-line">
-              {[1, 2, 3, 4, 5].map((grade) => (
+            <div className="flex gap-3 border-b border-line sm:gap-5">
+              {[1, 2, 3, 4, 5, 6].map((grade) => (
                 <button
                   key={grade}
                   type="button"
@@ -129,7 +131,7 @@ export function AddSemesterDialog({
           {/* Term Selector */}
           <fieldset className="m-0 border-0 p-0">
             <legend className="mb-1 p-0 text-[13px] leading-[18px] font-semibold text-ink-2">학기</legend>
-            <div className="flex gap-5 border-b border-line">
+            <div className="flex gap-3 border-b border-line sm:gap-5">
               {(['spring', 'fall'] as const).map((t) => (
                 <button
                   key={t}

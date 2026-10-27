@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { AnonymousPlanModal } from './AnonymousPlanModal';
-import { useAnonymousPlans } from '@/hooks/useStatistics';
+import { useAllAnonymousPlans } from '@/hooks/useStatistics';
+import { Button } from '@/components/ui';
 import { useDialogFocus } from './useDialogFocus';
 import { X, Loader2, ChevronRight, Info } from 'lucide-react';
 
@@ -13,14 +14,16 @@ interface AllPlansModalProps {
 }
 
 export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalProps) {
-  const [plansPage, setPlansPage] = useState(1);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   useDialogFocus(modalRef, isOpen, { initialFocus: 'container' });
 
-  const { data: plansData, isLoading: plansLoading } = useAnonymousPlans(
-    departmentId, plansPage, 9, isOpen
-  );
+  const {
+    data: plansData, isLoading: plansLoading, isError, refetch,
+    fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, isFetchNextPageError,
+  } = useAllAnonymousPlans(departmentId, isOpen);
+  const plans = plansData?.pages.flatMap((page) => page.plans) ?? [];
+  const total = plansData?.pages[0]?.total;
 
   // ESC key handler - CRITIC FIX #1: skip close when detail modal is open
   const handleKeyDown = useCallback(
@@ -56,7 +59,6 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
     if (!isOpen) {
       // Queue state updates to avoid synchronous setState in effect
       Promise.resolve().then(() => {
-        setPlansPage(1);
         setSelectedPlanId(null);
       });
     }
@@ -67,7 +69,7 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
   return (
     <>
       <div
-        className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget && selectedPlanId === null) onClose();
         }}
@@ -88,7 +90,7 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
               </h2>
               {plansData && (
                 <p className="m-0 text-[13px] leading-[18px] tabular-nums text-ink-2">
-                  총 {plansData.total}개의 수강계획
+                  총 {total}개의 수강계획
                 </p>
               )}
             </div>
@@ -104,7 +106,17 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-6 pb-4">
-            {plansLoading && plansPage === 1 ? (
+            {isError && (
+              <div role="alert" className="flex flex-col items-start gap-2 py-4">
+                <p className="m-0 text-[14px] text-negative">
+                  수강 계획을 불러오지 못했습니다.
+                </p>
+                <Button variant="textPrimary" onClick={() => isFetchNextPageError ? fetchNextPage() : refetch()} disabled={isFetching}>
+                  {isFetching ? '다시 불러오는 중...' : '다시 시도'}
+                </Button>
+              </div>
+            )}
+            {plansLoading ? (
               <div className="flex items-center justify-center gap-2 py-12 text-[13px] text-ink-2">
                 <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
                 불러오는 중이에요
@@ -112,8 +124,8 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
             ) : (
               <>
                 <ul className="m-0 list-none p-0">
-                  {plansData?.plans.map((plan, index) => {
-                    const label = String.fromCharCode(65 + ((plansPage - 1) * 9 + index));
+                  {plans.map((plan, index) => {
+                    const label = index + 1;
                     return (
                       <li key={plan.anonymousId}>
                         <button
@@ -136,14 +148,14 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
                   })}
                 </ul>
 
-                {plansData && plansData.total > plansPage * plansData.limit && (
+                {hasNextPage && !isError && (
                   <button
                     type="button"
-                    onClick={() => setPlansPage((p) => p + 1)}
-                    disabled={plansLoading}
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetching}
                     className="mt-2 inline-flex h-11 items-center gap-1.5 text-[14px] font-semibold text-primary transition-colors duration-150 ease-out hover:text-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    {plansLoading ? (
+                    {isFetchingNextPage ? (
                       <>
                         <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />
                         로딩 중...
@@ -154,7 +166,7 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
                   </button>
                 )}
 
-                {plansData?.plans.length === 0 && (
+                {!isError && plansData && plans.length === 0 && (
                   <div className="flex flex-col gap-1 py-12 text-center">
                     <p className="m-0 text-[15px] font-semibold text-ink">아직 공개된 수강 계획이 없습니다</p>
                     <p className="m-0 text-[13px] leading-[18px] text-ink-2">학과 학생들이 수강 계획을 작성하면 이곳에 익명으로 표시됩니다</p>
@@ -172,11 +184,12 @@ export function AllPlansModal({ isOpen, onClose, departmentId }: AllPlansModalPr
         </div>
       </div>
 
-      {/* Detail Modal - renders on top at z-50 */}
+      {/* Detail Modal - renders above the list at z-60 */}
       {selectedPlanId && (
         <AnonymousPlanModal
           isOpen={true}
           anonymousId={selectedPlanId}
+          planNumber={plans.findIndex((plan) => plan.anonymousId === selectedPlanId) + 1}
           departmentId={departmentId}
           onClose={() => setSelectedPlanId(null)}
         />

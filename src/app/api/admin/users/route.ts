@@ -10,6 +10,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth/options';
 import { isActiveAdminSession } from '@/lib/auth/admin-session';
 import { userService } from '@/services/user.service';
+import { z } from 'zod';
 import * as Sentry from '@sentry/nextjs';
 
 export async function GET(request: Request) {
@@ -28,6 +29,13 @@ export async function GET(request: Request) {
     const department = searchParams.get('department') || undefined;
     const sort = searchParams.get('sort') || undefined;
 
+    if (searchParams.has('page')) {
+      const paging = z.object({ page: z.coerce.number().int().min(1), limit: z.coerce.number().int().min(1).max(200) })
+        .safeParse({ page: searchParams.get('page'), limit: searchParams.get('limit') ?? 50 });
+      if (!paging.success) return NextResponse.json({ success: false, error: '페이지와 개수를 확인해주세요.' }, { status: 400 });
+      const result = await userService.findAllUsers({ search, role, department, sort, ...paging.data });
+      return NextResponse.json({ success: true, ...result });
+    }
     const users = await userService.findAllUsers({ search, role, department, sort });
     return NextResponse.json({ success: true, data: users });
   } catch (error) {

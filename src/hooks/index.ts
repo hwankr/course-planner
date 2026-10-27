@@ -6,12 +6,11 @@
 export { useAuth } from './useAuth';
 export {
   useMyPlan,
-  usePlan,
   useResetPlan,
   useAddCourse,
   useRemoveCourse,
 } from './usePlans';
-export { useCourses, useCourse } from './useCourses';
+export { useCourses } from './useCourses';
 export {
   useDepartmentStats,
   useAnonymousPlans,

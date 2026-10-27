@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import type { IPatchNoteResponse } from '@/types';
 import { formatPatchNoteDate, toPatchNoteItems } from './_components/format';
+import { LoginNotice } from './_components/LoginNotice';
 
 // 목록에서는 앞쪽 항목만 보여주고 나머지는 상세에서 본다
 const MAX_LIST_ITEMS = 4;
@@ -21,10 +22,11 @@ export default function PatchNotesPage() {
     queryKey: ['patch-notes'],
     queryFn: async () => {
       const res = await fetch('/api/patch-notes');
-      if (!res.ok) throw new Error('업데이트 소식을 불러올 수 없습니다.');
+      if (!res.ok) throw Object.assign(new Error('업데이트 소식을 불러올 수 없습니다.'), { status: res.status });
       return res.json();
     },
     enabled: !authLoading,
+    retry: (failureCount, error) => !('status' in error && error.status === 401) && failureCount < 3,
   });
 
   if (authLoading || isLoading) {
@@ -48,9 +50,11 @@ export default function PatchNotesPage() {
     return (
       <div className="flex max-w-[760px] flex-col">
         <PageHeader title="업데이트 소식" description={HEADER_DESCRIPTION} />
+        {'status' in error && error.status === 401 ? <LoginNotice /> : (
         <p role="alert" className="m-0 border-t border-line-2 py-7 text-[15px] leading-[23px] text-negative">
           업데이트 소식을 불러오는 중 오류가 발생했습니다.
         </p>
+        )}
       </div>
     );
   }
@@ -87,7 +91,7 @@ export default function PatchNotesPage() {
                     )}
                   </div>
                   <div className="flex min-w-0 flex-[1_1_360px] flex-col gap-2.5">
-                    <h2 className="m-0 text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink transition-colors duration-150 ease-out group-hover:text-primary">
+                    <h2 className="m-0 min-w-0 break-words [overflow-wrap:anywhere] text-[18px] leading-[26px] font-bold tracking-[-0.02em] text-ink transition-colors duration-150 ease-out group-hover:text-primary">
                       {note.title}
                     </h2>
                     <ul className="m-0 flex list-disc flex-col gap-1.5 pl-[18px] text-[15px] leading-[23px] break-words text-ink">

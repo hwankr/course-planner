@@ -12,7 +12,6 @@ import { useUpdateCourseStatus } from '@/hooks/useCourseStatus';
 import { usePlanStore } from '@/stores/planStore';
 import { useAutoScrollOnDrag, smoothScrollTo } from '@/hooks/useAutoScrollOnDrag';
 import { CourseCard } from '@/components/features/CourseCard';
-import { useGraduationPreviewStore } from '@/stores/graduationPreviewStore';
 import { SemesterColumn } from '@/components/features/SemesterColumn';
 import { SEMESTER_META_WRAP_CLASS, SemesterMeta } from '@/components/features/SemesterMeta';
 import { CourseCatalog } from '@/components/features/CourseCatalog';
@@ -25,6 +24,7 @@ import type { Term, ICourse, RequirementCategory } from '@/types';
 import { useToastStore } from '@/stores/toastStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
 import { graduationRequirementKeys, useGraduationRequirement } from '@/hooks/useGraduationRequirements';
+import type { GraduationProgress } from '@/types';
 import { computeGraduationDelta, computeCurrentTotals, GRADUATION_CATEGORY_LABELS } from '@/lib/graduationDelta';
 import type { GraduationRequirementInput } from '@/types';
 import { useSession } from 'next-auth/react';
@@ -177,9 +177,6 @@ export default function PlannerPage() {
   // Zustand store
   const { activePlan, setActivePlan, addCourseToSemester, removeCourseFromSemester, clearSemester, moveCourse, focusedSemester, toggleFocusedSemester, setFocusedSemester } = usePlanStore();
 
-  // Preview store
-  const { setPreview, clearPreview, triggerHighlight } = useGraduationPreviewStore();
-
   // Export hook
   const { exportAsPng, exportAsPdf, isExporting } = usePlannerExport({
     targetRef: exportRef,
@@ -263,29 +260,32 @@ export default function PlannerPage() {
   }, [isGuest, queryClient]);
 
   // Helper: show toast with graduation impact after adding a course
-  const showAddCourseToast = useCallback((course: { name: string; credits: number; category?: string }, year: number, term: string, courseId: string) => {
+  const showAddCourseToast = useCallback((course: { name: string; credits: number; category?: string; departmentId?: string }, year: number, term: string, courseId: string) => {
     const requirement = getRequirementImperative();
-    // currentTotals was captured BEFORE the mutation by the caller
+    const attribution = isGuest ? {
+      majorType: useGuestProfileStore.getState().majorType,
+      secondaryDepartmentId: useGuestProfileStore.getState().secondaryDepartmentId ?? undefined,
+    } : queryClient.getQueryData<GraduationProgress>(graduationRequirementKeys.progress())?.attribution;
     const currentPlanState = usePlanStore.getState().activePlan;
     const currentTotals = computeCurrentTotals(
-      currentPlanState?.semesters ?? [],
-      requirement
-    );
-    // The course was ALREADY added to the store by this point, so subtract it back for accurate "before" state
-    const adjustedTotals = { ...currentTotals };
-    const cat = course.category || 'free_elective';
-    const majorCats = ['major_required', 'major_compulsory', 'major_elective'];
-    const generalCats = ['general_required', 'general_elective'];
-    adjustedTotals.totalPlanned -= course.credits;
-    if (majorCats.includes(cat)) adjustedTotals.primaryMajorPlanned -= course.credits;
-    if (generalCats.includes(cat)) adjustedTotals.generalPlanned -= course.credits;
-    if (cat === 'major_required') adjustedTotals.primaryMajorRequiredPlanned -= course.credits;
-
-    const delta = computeGraduationDelta(
-      { credits: course.credits, category: course.category as RequirementCategory | undefined },
+      (currentPlanState?.semesters ?? []).map(sem => ({ ...sem, courses: sem.courses.filter(c => c.id !== courseId) })),
       requirement,
-      adjustedTotals
+      attribution
     );
+    const delta = computeGraduationDelta(
+      { id: courseId, ...course, category: course.category as RequirementCategory | undefined },
+      requirement,
+      currentTotals,
+      attribution
+    );
+    const track = delta?.categoryKey;
+    const trackRequired = track === 'secondaryMajor' ? requirement?.secondaryMajorCredits
+      : track === 'minor' ? requirement?.minorCredits
+      : track === 'primaryMajor' ? requirement?.primaryMajorCredits : requirement?.generalCredits;
+    const coreRequired = track === 'secondaryMajor' ? requirement?.secondaryMajorRequiredMin
+      : track === 'minor' ? requirement?.minorRequiredMin : requirement?.primaryMajorRequiredMin;
+    const isMajorTrack = ['primaryMajor', 'secondaryMajor', 'minor'].includes(track || '');
+    const trackLabel = track === 'secondaryMajor' ? '복수전공' : track === 'minor' ? '부전공' : undefined;
 
     const catLabel = GRADUATION_CATEGORY_LABELS[course.category || 'free_elective'] || '자유선택';
 
@@ -320,15 +320,15 @@ export default function PlannerPage() {
       duration: 5000,
       graduationDelta: delta ? {
         creditsDelta: course.credits,
-        categoryLabel: catLabel,
+        categoryLabel: trackLabel ?? catLabel,
         categoryPct: delta.categoryKey !== 'total' ? { before: delta.before.percentage, after: delta.after.percentage } : undefined,
-        categoryCredits: delta.categoryKey !== 'total' ? { after: delta.after.credits, required: delta.categoryKey === 'primaryMajor' ? requirement!.primaryMajorCredits : requirement!.generalCredits } : undefined,
-        secondRowLabel: delta.secondRowCategoryKey === 'major_required' ? '전공핵심' : '전체',
+        categoryCredits: delta.categoryKey !== 'total' ? { after: delta.after.credits, required: trackRequired ?? 0 } : undefined,
+        secondRowLabel: isMajorTrack ? `${trackLabel ?? '전공'} 핵심` : '전체',
         secondRowPct: { before: delta.secondRowBefore.percentage, after: delta.secondRowAfter.percentage },
-        secondRowCredits: { after: delta.secondRowAfter.credits, required: delta.secondRowCategoryKey === 'major_required' ? requirement!.primaryMajorRequiredMin : requirement!.totalCredits },
+        secondRowCredits: { after: delta.secondRowAfter.credits, required: isMajorTrack ? coreRequired ?? 0 : requirement!.totalCredits },
       } : undefined,
     });
-  }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation]);
+  }, [getRequirementImperative, activePlan, isGuest, removeCourseFromSemester, removeCourseMutation, queryClient]);
 
   // Sync fetched plan to Zustand store (skip for guests — handled by guest sync effect)
   useEffect(() => {
@@ -360,6 +360,7 @@ export default function PlannerPage() {
               code: string;
               name: string;
               credits: number;
+              department?: string | { _id: string };
               category?: 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching';
             };
             const courseId = course._id?.toString() || (pc.course as unknown as string);
@@ -369,6 +370,7 @@ export default function PlannerPage() {
               name: course.name || 'Unknown Course',
               credits: course.credits || 0,
               category: (pc.category || course.category || categoryMap.get(courseId)) as 'major_required' | 'major_compulsory' | 'major_elective' | 'general_required' | 'general_elective' | 'free_elective' | 'teaching' | undefined,
+              departmentId: pc.departmentId?.toString() ?? (typeof course.department === 'string' ? course.department : course.department?._id?.toString()),
               status: pc.status,
             };
           }),
@@ -562,17 +564,7 @@ export default function PlannerPage() {
     }
   }, [activePlan, resetPlanMutation]);
 
-  // Helper to find course data from draggableId
-  const findCourseData = useCallback((courseId: string) => {
-    if (!activePlan) return null;
-    for (const sem of activePlan.semesters) {
-      const course = sem.courses.find(c => c.id === courseId);
-      if (course) return course;
-    }
-    return null;
-  }, [activePlan]);
-
-  // Handle drag start - set preview and track active drag for DragOverlay
+  // Handle drag start - track active drag for DragOverlay
   const handleDragStart = useCallback((event: DragStartEvent) => {
     // Clear pending scroll-back on new drag
     if (scrollBackTimeoutRef.current) {
@@ -593,25 +585,7 @@ export default function PlannerPage() {
 
     handleDragStartScroll({ droppableId: data.containerId });
 
-    // Only preview removal if dragging FROM a semester
-    if (data.type === 'semester') {
-      const course = findCourseData(String(active.id));
-      if (course) {
-        setPreview(
-          {
-            id: course.id,
-            code: course.code,
-            name: course.name,
-            credits: course.credits,
-            category: course.category ?? 'free_elective',
-            departmentId: course.departmentId,
-          },
-          'remove',
-          null
-        );
-      }
-    }
-  }, [findCourseData, setPreview, handleDragStartScroll]);
+  }, [handleDragStartScroll]);
 
   // Handle adding a new semester
   const handleAddSemester = () => {
@@ -639,7 +613,6 @@ export default function PlannerPage() {
     (event: DragEndEvent) => {
       const wasDragScrollActive = isDragScrollActiveRef.current;
       handleDragEndRestore();
-      clearPreview();
       setActiveDragData(null);
 
       const { active, over } = event;
@@ -701,17 +674,6 @@ export default function PlannerPage() {
         // Optimistic update
         addCourseToSemester(destInfo.year, destInfo.term, optimisticCourse);
 
-        // Show toast with graduation impact
-        showAddCourseToast(
-          { name: optimisticCourse.name, credits: optimisticCourse.credits, category: optimisticCourse.category },
-          destInfo.year,
-          destInfo.term,
-          draggableId
-        );
-
-        // Trigger graduation highlight animation (synchronous, fires on optimistic update)
-        triggerHighlight();
-
         // API call (or guest store update) - fire-and-forget async
         void (async () => {
           try {
@@ -727,7 +689,9 @@ export default function PlannerPage() {
                 departmentId: dragData?.departmentId,
               });
             }
+            showAddCourseToast(optimisticCourse, destInfo.year, destInfo.term, draggableId);
           } catch (error) {
+            useToastStore.getState().addToast({ message: error instanceof Error ? `저장되지 않음: ${error.message}` : '과목이 저장되지 않았습니다. 다시 시도해주세요.', type: 'warning', duration: 5000 });
             // Only rollback if course still exists (wasn't undone)
             const currentState = usePlanStore.getState().activePlan;
             const stillExists = currentState?.semesters.some(sem =>
@@ -765,8 +729,6 @@ export default function PlannerPage() {
 
         // Optimistic update
         removeCourseFromSemester(sourceInfo.year, sourceInfo.term, draggableId);
-
-        triggerHighlight();
 
         // API call - fire-and-forget async
         void (async () => {
@@ -826,7 +788,7 @@ export default function PlannerPage() {
         return;
       }
     },
-    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, moveCourseMutation, clearPreview, triggerHighlight, queryClient, isGuest, showAddCourseToast, handleDragEndRestore, isDragScrollActiveRef, isDesktop]
+    [activePlan, addCourseToSemester, removeCourseFromSemester, moveCourse, addCourseMutation, removeCourseMutation, moveCourseMutation, queryClient, isGuest, showAddCourseToast, handleDragEndRestore, isDragScrollActiveRef, isDesktop]
   );
 
   // Handle remove course from semester column
@@ -948,14 +910,6 @@ export default function PlannerPage() {
       };
       addCourseToSemester(year, term, optimisticCourse);
 
-      // Show toast with graduation impact
-      showAddCourseToast(
-        { name: courseData.name, credits: courseData.credits, category: courseData.category },
-        year,
-        term,
-        courseId
-      );
-
       // API call (or guest store update)
       try {
         if (isGuest) {
@@ -971,7 +925,9 @@ export default function PlannerPage() {
             departmentId: courseData.departmentId,
           });
         }
+        showAddCourseToast(optimisticCourse, year, term, courseId);
       } catch (error) {
+        useToastStore.getState().addToast({ message: error instanceof Error ? `저장되지 않음: ${error.message}` : '과목이 저장되지 않았습니다. 다시 시도해주세요.', type: 'warning', duration: 5000 });
         // Only rollback if course still exists (wasn't undone)
         const currentState = usePlanStore.getState().activePlan;
         const stillExists = currentState?.semesters.some(sem =>

@@ -16,3 +16,5 @@ export {
 } from './CategoryDot';
 export { StatusText, STATUS_LABELS, STATUS_TEXT_CLASS } from './StatusText';
 export type { CourseStatusValue } from './StatusText';
+export { Select, type SelectProps } from './Select';
+export { Textarea, type TextareaProps } from './Textarea';

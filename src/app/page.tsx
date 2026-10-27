@@ -123,7 +123,7 @@ export default function Home() {
             <ArrowRight aria-hidden="true" className="h-4 w-4" strokeWidth={2.5} />
           </button>
         </div>
-        <span className="mt-3.5 text-[13px] leading-[18px] text-ink-2">비회원은 데이터가 저장되지 않습니다</span>
+        <span className="mt-3.5 text-[13px] leading-[18px] text-ink-2">비회원 데이터는 이 브라우저에만 저장됩니다</span>
 
         <LandingPreview />
       </section>

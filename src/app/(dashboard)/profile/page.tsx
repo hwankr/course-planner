@@ -95,6 +95,7 @@ export default function ProfilePage() {
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [validationAttempted, setValidationAttempted] = useState(false);
   // 마지막 저장을 요청한 영역 — 상태 문구를 해당 영역에만 표시
   const [saveSection, setSaveSection] = useState<SaveSection | null>(null);
   const [formData, setFormData] = useState<ProfileForm>({
@@ -147,7 +148,7 @@ export default function ProfilePage() {
   };
 
   // Fetch current user profile
-  const { data: userProfile, isLoading: isLoadingProfile } = useQuery<UserProfile>({
+  const { data: userProfile, isLoading: isLoadingProfile, isError: isProfileError, isFetching: isFetchingProfile, refetch: refetchProfile } = useQuery<UserProfile>({
     queryKey: ['user', 'me'],
     queryFn: async () => {
       const res = await fetch('/api/users/me');
@@ -159,7 +160,7 @@ export default function ProfilePage() {
   });
 
   // Fetch departments for dropdown
-  const { data: departments = [] } = useQuery<Department[]>({
+  const { data: departments = [], isError: isDepartmentsError, isFetching: isFetchingDepartments, refetch: refetchDepartments } = useQuery<Department[]>({
     queryKey: ['departments'],
     queryFn: async () => {
       const res = await fetch('/api/departments');
@@ -224,6 +225,7 @@ export default function ProfilePage() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
       await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['graduation-requirement'] });
       // Refresh NextAuth session to update JWT with new department/curriculumYear
       await updateSession();
       setJustSaved(true);
@@ -247,12 +249,15 @@ export default function ProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isFormDisabled || isSaving) return;
+    setValidationAttempted(true);
+    if (!formData.name.trim() || !formData.enrollmentYear) return;
     setSaveSection('basic');
     if (isGuest) {
       // 비회원 기본 정보 저장은 전공 설정을 포함하지 않는다
       guestProfile.setProfile({
-        name: formData.name || undefined,
-        enrollmentYear: formData.enrollmentYear ? parseInt(formData.enrollmentYear, 10) : undefined,
+        name: formData.name.trim(),
+        enrollmentYear: parseInt(formData.enrollmentYear, 10),
         curriculumYear: formData.curriculumYear ? parseInt(formData.curriculumYear, 10) : undefined,
         departmentId: formData.department || undefined,
         departmentName: departments.find((d) => d._id === formData.department)?.name || undefined,
@@ -264,9 +269,9 @@ export default function ProfilePage() {
 
     const updateData: { name?: string; department?: string; enrollmentYear?: number; curriculumYear?: number; majorType?: MajorType; secondaryDepartment?: string | null } = {};
 
-    if (formData.name) updateData.name = formData.name;
+    updateData.name = formData.name.trim();
     if (formData.department) updateData.department = formData.department;
-    if (formData.enrollmentYear) updateData.enrollmentYear = parseInt(formData.enrollmentYear, 10);
+    updateData.enrollmentYear = parseInt(formData.enrollmentYear, 10);
     if (formData.curriculumYear) updateData.curriculumYear = parseInt(formData.curriculumYear, 10);
     updateData.majorType = formData.majorType;
     updateData.secondaryDepartment = formData.majorType !== 'single' && formData.secondaryDepartment ? formData.secondaryDepartment : null;
@@ -276,6 +281,9 @@ export default function ProfilePage() {
 
   // 전공 설정 전용 저장 — majorType/두 번째 전공만 저장한다
   const handleSaveMajor = () => {
+    if (isFormDisabled || isSaving) return;
+    setValidationAttempted(true);
+    if (!formData.name.trim() || !formData.enrollmentYear) return;
     if (updateMutation.isError) updateMutation.reset();
     setSaveSection('major');
     if (isGuest) {
@@ -302,7 +310,9 @@ export default function ProfilePage() {
   // 회원 기본 정보 저장은 전공 설정까지 함께 보낸다
   const isDirty = isGuest ? isBasicDirty : isBasicDirty || isMajorDirty;
   const isSaving = !isGuest && updateMutation.isPending;
-  const isFormDisabled = !isGuest && isLoadingProfile;
+  const isFormDisabled = !isGuest && (isLoadingProfile || isProfileError || !userProfile || !savedForm);
+  const nameError = validationAttempted && !formData.name.trim() ? '이름을 입력해주세요.' : undefined;
+  const yearError = validationAttempted && !formData.enrollmentYear ? '입학년도를 선택해주세요.' : undefined;
   const saveError = !isGuest && updateMutation.isError
     ? updateMutation.error?.message || '저장에 실패했습니다.'
     : null;
@@ -341,8 +351,28 @@ export default function ProfilePage() {
         description="프로필을 설정하면 과목 리스트가 학과별로 필터됩니다."
       />
 
-
+      {isFormDisabled ? (
+        <section className="flex flex-col items-start gap-3 border-t border-line-2 py-7">
+          {isProfileError ? (
+            <div role="alert" className="flex flex-wrap items-center gap-3">
+              <p className="m-0 text-[15px] text-negative">프로필을 불러오지 못했습니다.</p>
+              <Button variant="textPrimary" onClick={() => refetchProfile()} disabled={isFetchingProfile}>
+                {isFetchingProfile ? '다시 불러오는 중...' : '다시 시도'}
+              </Button>
+            </div>
+          ) : <p role="status" className="m-0 text-[15px] text-ink-2">프로필을 불러오는 중...</p>}
+          <Button disabled>저장</Button>
+        </section>
+      ) : (
       <form onSubmit={handleSubmit} className="flex flex-col" noValidate>
+        {isDepartmentsError && (
+          <div role="alert" className="flex flex-wrap items-center gap-3 border-t border-line-2 py-4">
+            <p className="m-0 text-[14px] text-negative">학과 목록을 불러오지 못했습니다. 다시 불러온 뒤 학과를 선택해주세요.</p>
+            <Button type="button" variant="textPrimary" onClick={() => refetchDepartments()} disabled={isFetchingDepartments}>
+              {isFetchingDepartments ? '다시 불러오는 중...' : '다시 시도'}
+            </Button>
+          </div>
+        )}
         <ProfileSection id="basic-title" title="기본 정보">
           <div className="grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-x-10 gap-y-2">
             {!isGuest && (
@@ -368,6 +398,8 @@ export default function ProfilePage() {
                 onChange={handleChange}
                 placeholder="이름"
                 autoComplete="name"
+                required
+                error={nameError}
                 disabled={isFormDisabled}
               />
             </Field>
@@ -375,17 +407,21 @@ export default function ProfilePage() {
               <UnderlineSelect
                 id="p-year"
                 name="enrollmentYear"
+                required
+                aria-invalid={!!yearError}
+                aria-describedby={yearError ? 'p-year-error' : undefined}
                 value={formData.enrollmentYear}
                 onChange={handleChange}
                 disabled={isFormDisabled}
               >
-                <option value="">선택 안 함</option>
+                <option value="">입학년도 선택</option>
                 {ENROLLMENT_YEARS.map((year) => (
                   <option key={year} value={year}>
                     {year}년
                   </option>
                 ))}
               </UnderlineSelect>
+              {yearError && <p id="p-year-error" className="m-0 text-[12px] leading-4 text-negative">{yearError}</p>}
             </Field>
             <Field
               label="커리큘럼 연도"
@@ -413,7 +449,7 @@ export default function ProfilePage() {
                 value={formData.department}
                 onChange={(val) => updateForm({ department: val })}
                 placeholder="학과를 검색하세요"
-                disabled={isFormDisabled}
+                disabled={isFormDisabled || isDepartmentsError}
               />
             </Field>
           </div>
@@ -467,7 +503,7 @@ export default function ProfilePage() {
                   value={formData.secondaryDepartment}
                   onChange={(val) => updateForm({ secondaryDepartment: val })}
                   placeholder="학과를 검색하세요"
-                  disabled={isFormDisabled}
+                  disabled={isFormDisabled || isDepartmentsError}
                 />
               </div>
             </Field>
@@ -492,6 +528,7 @@ export default function ProfilePage() {
           </div>
         </ProfileSection>
       </form>
+      )}
 
       <SectionBand />
 

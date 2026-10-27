@@ -143,13 +143,23 @@ async function update(
   data: Partial<Pick<CreateUserInput, 'name' | 'department' | 'enrollmentYear'> & {
     onboardingCompleted: boolean;
     majorType: MajorType;
-    secondaryDepartment?: string;
+    secondaryDepartment?: string | null;
     curriculumYear?: number;
   }>
 ): Promise<IUserDocument | null> {
   await connectDB();
-  return User.findByIdAndUpdate(id, data, { new: true })
-    .populate('department secondaryDepartment');
+  const previous = await User.findById(id).select('majorType secondaryDepartment department').lean();
+  if (!previous) return null;
+  const { secondaryDepartment, ...fields } = data;
+  const clearSecondary = data.majorType === 'single' || secondaryDepartment === null;
+  const updated = await User.findByIdAndUpdate(id, {
+    $set: { ...fields, ...(!clearSecondary && secondaryDepartment !== undefined ? { secondaryDepartment } : {}) },
+    ...(clearSecondary ? { $unset: { secondaryDepartment: 1 } } : {}),
+  }, { new: true });
+  if (updated && (data.majorType !== undefined || secondaryDepartment !== undefined || data.department !== undefined)) {
+    await graduationRequirementService.syncProfile(id, previous, updated);
+  }
+  return updated?.populate('department secondaryDepartment') ?? null;
 }
 
 /**
@@ -273,12 +283,18 @@ function toAdminUserListItem(user: AdminUserListItem): AdminUserListItem {
   };
 }
 
-async function findAllUsers(filter?: {
+interface AdminUserFilter {
   search?: string;
   role?: string;
   department?: string;
   sort?: string;
-}): Promise<AdminUserListItem[]> {
+  page?: number;
+  limit?: number;
+}
+type AdminUserPage = { data: AdminUserListItem[]; pagination: { page: number; limit: number; total: number; totalPages: number } };
+async function findAllUsers(filter: AdminUserFilter & { page: number }): Promise<AdminUserPage>;
+async function findAllUsers(filter?: AdminUserFilter): Promise<AdminUserListItem[]>;
+async function findAllUsers(filter?: AdminUserFilter): Promise<AdminUserListItem[] | AdminUserPage> {
   await connectDB();
 
   const conditions: Record<string, unknown>[] = [];
@@ -303,14 +319,22 @@ async function findAllUsers(filter?: {
 
   const sortObj = SORT_MAP[filter?.sort ?? ''] ?? { createdAt: -1 };
   const query = conditions.length > 0 ? { $and: conditions } : {};
+  const page = Math.max(1, Math.floor(filter?.page ?? 1));
+  const limit = Math.max(1, Math.min(200, Math.floor(filter?.limit ?? 200)));
   const users = await User.find(query)
     .select(ADMIN_USER_LIST_PROJECTION)
     .populate('department', 'code name')
-    .sort(sortObj)
-    .limit(200)
+    .sort({ ...sortObj, _id: 1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
     .lean<AdminUserListItem[]>();
 
-  return users.map(toAdminUserListItem);
+  const data = users.map(toAdminUserListItem);
+  if (filter?.page !== undefined) {
+    const total = await User.countDocuments(query);
+    return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+  }
+  return data;
 }
 
 /**

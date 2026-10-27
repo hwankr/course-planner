@@ -7,8 +7,9 @@
 import mongoose, { type ClientSession } from 'mongoose';
 import { connectDB } from '@/lib/db/mongoose';
 import { escapeRegex } from '@/lib/validation';
-import { Course, DepartmentCurriculum } from '@/models';
+import { Course, Department, DepartmentCurriculum } from '@/models';
 import type { ICourseDocument } from '@/models';
+import type { Pagination, OfficialCourseInput } from '@/types/admin';
 import type { CreateCourseInput, CourseFilter, RequirementCategory } from '@/types';
 
 /**
@@ -147,51 +148,9 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     return enrichedCourses as ICourseDocument[];
   }
 
-  // Curriculum-year filtering without department (e.g., admin courses page)
+  // Across departments, classification belongs to the curriculum, not Course.
   if (filter?.curriculumYear) {
-    const courseIds = await DepartmentCurriculum.distinct('course', { year: filter.curriculumYear });
-
-    const conditions: Record<string, unknown>[] = [
-      { isActive: true },
-      { _id: { $in: courseIds } },
-    ];
-
-    if (filter.userId) {
-      conditions.push({
-        $or: [{ createdBy: null }, { createdBy: filter.userId }],
-      });
-    } else {
-      conditions.push({ createdBy: null });
-    }
-
-    if (filter.search) {
-      const escapedSearch = escapeRegex(filter.search);
-      conditions.push({
-        $or: [
-          { name: { $regex: escapedSearch, $options: 'i' } },
-          { code: { $regex: escapedSearch, $options: 'i' } },
-        ],
-      });
-    }
-
-    if (filter.category) {
-      conditions.push({ category: filter.category });
-    }
-
-    if (filter.semester) {
-      conditions.push({ semesters: filter.semester });
-    }
-
-    if (filter.recommendedYear) {
-      conditions.push({ recommendedYear: filter.recommendedYear });
-    }
-
-    return Course.find({ $and: conditions })
-      .populate('department', 'code name')
-      .populate('prerequisites', 'code name')
-      .sort({ code: 1 })
-      .limit(filter.limit ?? 200)
-      .lean();
+    return (await findPage({ ...filter, page: 1, limit: filter.limit ?? 200 })).data;
   }
 
   // Original logic for non-department queries (unchanged)
@@ -240,12 +199,78 @@ async function findAll(filter?: CourseFilter): Promise<ICourseDocument[]> {
     .lean();
 }
 
+/** Paginated official curriculum catalog. The legacy array method remains available. */
+async function findPage(filter: CourseFilter & { page: number; limit?: number }): Promise<{ data: ICourseDocument[]; pagination: Pagination }> {
+  await connectDB();
+  const page = Math.max(1, Math.floor(filter.page));
+  const limit = Math.max(1, Math.min(200, Math.floor(filter.limit ?? 50)));
+  const curriculumFilter: Record<string, unknown> = {};
+  if (filter.departmentId) curriculumFilter.department = filter.departmentId;
+  if (filter.curriculumYear) curriculumFilter.year = filter.curriculumYear;
+  if (filter.category) curriculumFilter.category = filter.category;
+  if (filter.recommendedYear) curriculumFilter.recommendedYear = filter.recommendedYear;
+  if (filter.recommendedSemester) curriculumFilter.recommendedSemester = filter.recommendedSemester;
+  const entries = await DepartmentCurriculum.find(curriculumFilter)
+    .select('course category recommendedYear recommendedSemester department year')
+    .sort({ year: -1, department: 1, recommendedSemester: 1, _id: 1 }).lean();
+  const metadata = new Map<string, (typeof entries)[number]>();
+  for (const entry of entries) {
+    if (!metadata.has(String(entry.course))) metadata.set(String(entry.course), entry);
+  }
+  const query: Record<string, unknown> = {
+    isActive: true, createdBy: null, _id: { $in: [...metadata.keys()] },
+  };
+  if (filter.search) {
+    const search = { $regex: escapeRegex(filter.search), $options: 'i' };
+    query.$or = [{ name: search }, { code: search }];
+  }
+  if (filter.semester) query.semesters = filter.semester;
+  const [courses, total] = await Promise.all([
+    Course.find(query).populate('department', 'code name').populate('prerequisites', 'code name')
+      .sort({ code: 1, _id: 1 }).skip((page - 1) * limit).limit(limit).lean(),
+    Course.countDocuments(query),
+  ]);
+  const data = courses.map(course => {
+    const entry = metadata.get(String(course._id))!;
+    return { ...course, category: entry.category, recommendedYear: entry.recommendedYear,
+      recommendedSemester: entry.recommendedSemester };
+  }) as unknown as ICourseDocument[];
+  return { data, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+}
+
+/** Creates the official course and its curriculum atomically; never assigns a personal owner. */
+async function createOfficial(input: OfficialCourseInput): Promise<ICourseDocument> {
+  await connectDB();
+  const session = await mongoose.startSession();
+  try {
+    return await session.withTransaction(async () => {
+      const department = await Department.exists({ _id: input.department, isActive: true }).session(session);
+      if (!department) throw new Error('활성 학과를 선택해주세요.');
+      const existing = await Course.findOne({ code: input.code.toUpperCase(), createdBy: null }).session(session);
+      if (existing) throw new Error('이미 존재하는 과목 코드입니다.');
+      const { curriculumYear, ...courseData } = input;
+      const [course] = await Course.create([{ ...courseData, code: input.code.toUpperCase() }], { session });
+      await DepartmentCurriculum.create([{
+        department: input.department, course: course._id, year: curriculumYear,
+        category: input.category, recommendedYear: input.recommendedYear,
+        recommendedSemester: input.recommendedSemester,
+      }], { session });
+      return course.populate('department', 'code name');
+    });
+  } finally {
+    await session.endSession();
+  }
+}
+
 /**
  * ID로 과목 조회
  */
-async function findById(id: string): Promise<ICourseDocument | null> {
+async function findById(id: string, viewer?: { userId?: string; isAdmin?: boolean }): Promise<ICourseDocument | null> {
   await connectDB();
-  return Course.findById(id)
+  const access = viewer?.isAdmin ? {} : {
+    $or: [{ createdBy: null }, ...(viewer?.userId ? [{ createdBy: viewer.userId }] : [])],
+  };
+  return Course.findOne({ _id: id, ...access })
     .populate('department', 'code name')
     .populate('prerequisites', 'code name credits')
     .lean();
@@ -373,6 +398,8 @@ async function findCommonCourses(filter?: { category?: RequirementCategory; sear
 
 export const courseService = {
   findAll,
+  findPage,
+  createOfficial,
   findById,
   findByCode,
   create,

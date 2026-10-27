@@ -55,7 +55,7 @@ export default async function proxy(request: NextRequest) {
 
     // 인증되지 않은 사용자는 로그인 페이지로 리다이렉트
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    loginUrl.searchParams.set('callbackUrl', pathname + request.nextUrl.search);
     const response = NextResponse.redirect(loginUrl);
     addSecurityHeaders(response, isProduction);
     return response;

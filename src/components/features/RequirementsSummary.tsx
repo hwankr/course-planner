@@ -15,6 +15,7 @@ import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { usePlanStore } from '@/stores/planStore';
 import { useGuestPlanStore } from '@/stores/guestPlanStore';
+import type { MajorType } from '@/types';
 import { DEFAULT_REQUIREMENT_YEAR } from '@/lib/constants';
 import { effectivePriorTotal, isSemesterCoveredByPrior } from '@/lib/priorCredits';
 import {
@@ -136,8 +137,8 @@ export function RequirementsSummary() {
   const { data: session } = useSession();
   const isGuest = useGuestStore((s) => s.isGuest);
   const guestProfileMajorType = useGuestProfileStore((s) => s.majorType);
-  const guestDepartmentCollege = useGuestProfileStore((s) => s.departmentCollege);
-  const guestDepartmentName = useGuestProfileStore((s) => s.departmentName);
+  const guestDepartmentId = useGuestProfileStore((s) => s.departmentId);
+  const guestSecondaryDepartmentId = useGuestProfileStore((s) => s.secondaryDepartmentId);
   const userMajorType = isGuest ? guestProfileMajorType : (session?.user?.majorType || 'single');
 
   // 기이수 반영 기준 학기 선택지: 현재 계획에 존재하는 학기 목록
@@ -169,37 +170,22 @@ export function RequirementsSummary() {
   }
 
   // Auto-fill callback: fetches DepartmentRequirement for user's department + selected year
-  const handleLoadFromDeptReq = async () => {
-    let college: string | undefined;
-    let departmentName: string | undefined;
-
-    if (isGuest) {
-      college = guestDepartmentCollege ?? undefined;
-      departmentName = guestDepartmentName ?? undefined;
-    } else if (session?.user?.department) {
-      // Fetch department info by ID to get college and name
-      const deptRes = await fetch(`/api/departments/${session.user.department}`);
-      if (deptRes.ok) {
-        const deptJson = await deptRes.json();
-        if (deptJson.success && deptJson.data) {
-          college = deptJson.data.college;
-          departmentName = deptJson.data.name;
-        }
-      }
-    }
-
-    if (!college || !departmentName) return null;
-
-    const params = new URLSearchParams({
-      college,
-      departmentName,
-      majorType: userMajorType || 'single',
-      year: String(requirementYear),
-    });
-    const res = await fetch(`/api/department-requirements?${params}`);
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data : null;
+  const handleLoadFromDeptReq = async (majorType: MajorType = userMajorType) => {
+    const primaryId = isGuest ? guestDepartmentId : session?.user?.department;
+    const secondaryId = isGuest ? guestSecondaryDepartmentId : session?.user?.secondaryDepartment;
+    const load = async (departmentId: string, track: 'primary' | 'secondary') => {
+      const params = new URLSearchParams({ departmentId, majorType, track, year: String(requirementYear) });
+      const response = await fetch(`/api/department-requirements?${params}`);
+      if (!response.ok) return null;
+      const json = await response.json();
+      return json.success ? json.data : null;
+    };
+    if (!primaryId || (majorType !== 'single' && !secondaryId)) return null;
+    const [primary, secondary] = await Promise.all([
+      load(primaryId, 'primary'),
+      majorType !== 'single' && secondaryId ? load(secondaryId, 'secondary') : {},
+    ]);
+    return primary && secondary ? { ...primary, ...secondary } : null;
   };
 
   const handleRetry = async () => {
@@ -259,11 +245,22 @@ export function RequirementsSummary() {
   // Loading state
   if (summaryState === 'loading') {
     return (
-      <section aria-label="졸업 요건" aria-busy="true" className={sectionClass}>
-        <div className="flex flex-col gap-3">
-          <div className="h-[22px] w-20 animate-pulse rounded-[4px] bg-fill" />
-          <div className="h-[38px] w-56 animate-pulse rounded-[6px] bg-fill md:h-[52px]" />
-          <div className="mt-4 h-1.5 animate-pulse rounded-[3px] bg-fill" />
+      <section aria-label="졸업 요건" aria-busy="true" className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(min(420px,100%),1fr))] md:gap-14 md:border-y md:border-line-2 md:pt-8 md:pb-9">
+        <div className="h-[170px] md:h-auto">
+          <div className="h-[22px] w-20 animate-pulse bg-fill" />
+          <div className="mt-1 h-[38px] w-56 animate-pulse bg-fill md:h-[52px]" />
+          <div className="mt-5 h-1.5 animate-pulse bg-fill" />
+        </div>
+        <MobileBand />
+        <div className="py-2 md:py-0">
+          <div className="h-12 md:hidden" />
+          {Array.from({ length: (requirementData?.majorType ?? userMajorType) === 'single' ? 4 : (requirementData?.majorType ?? userMajorType) === 'minor' ? 7 : 6 }, (_, i) => (
+            <div key={i} className="flex h-14 items-center justify-between border-b border-line md:h-[52px]">
+              <div className="h-5 w-20 animate-pulse bg-fill" />
+              <div className="h-5 w-24 animate-pulse bg-fill" />
+            </div>
+          ))}
+          <div className="hidden h-8 md:block" />
         </div>
       </section>
     );

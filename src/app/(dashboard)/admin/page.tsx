@@ -6,7 +6,9 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { DEFAULT_CURRICULUM_YEAR } from '@/lib/constants';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui';
+import { PageHeader, Select } from '@/components/ui';
+import { AdminLoading } from './_components/AdminParts';
+import { ChevronRight } from 'lucide-react';
 
 const adminMenus = [
   {
@@ -46,7 +48,7 @@ export default function AdminPage() {
   const { isAdmin, isLoading: authLoading } = useAuth();
   const [selectedYear, setSelectedYear] = useState(DEFAULT_CURRICULUM_YEAR);
 
-  const { data, isLoading } = useQuery<{
+  const { data, isLoading, error } = useQuery<{
     success: boolean;
     data: {
       courseCount: number;
@@ -64,18 +66,7 @@ export default function AdminPage() {
     enabled: isAdmin && !authLoading,
   });
 
-  if (authLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-8 w-48 animate-pulse rounded-lg bg-slate-200" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-200" />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (authLoading) return <AdminLoading />;
 
   if (!isAdmin) {
     router.push('/planner');
@@ -84,88 +75,48 @@ export default function AdminPage() {
 
   const stats = data?.data;
 
+  const counters = [
+    { label: `활성 교육과정 과목 (${selectedYear})`, value: stats?.courseCount },
+    { label: '학과', value: stats?.departmentCount },
+    { label: '사용자', value: stats?.userCount },
+    { label: '수강 계획', value: stats?.planCount },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">관리자 대시보드</h1>
-          <p className="text-gray-600 mt-1">시스템을 관리하세요.</p>
-        </div>
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-[#00AACA] focus:outline-none focus:ring-2 focus:ring-[#00AACA]/20"
-        >
-          <option value={2025}>2025년</option>
-          <option value={2026}>2026년</option>
-        </select>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-[#153974]">
-              {isLoading ? (
-                <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-200" />
-              ) : (
-                (stats?.courseCount ?? 0)
-              )}
+    <div>
+      <PageHeader
+        title="관리자 대시보드"
+        description="시스템을 관리하세요."
+        actions={
+          <Select aria-label="기준 연도" value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))}>
+            <option value={2025}>2025년</option>
+            <option value={2026}>2026년</option>
+          </Select>
+        }
+      />
+      {error ? (
+        <p role="alert" className="border-t border-line-2 py-8 text-[13px] text-ink-2">통계를 불러오는데 실패했습니다.</p>
+      ) : isLoading ? <AdminLoading /> : (
+        <dl className="mb-8 grid grid-cols-2 gap-x-5 border-t border-line-2 md:grid-cols-4">
+          {counters.map(({ label, value }) => (
+            <div key={label} className="border-b border-line py-4">
+              <dt className="text-[13px] text-ink-2">{label}</dt>
+              <dd className="mt-1 text-[28px] leading-9 font-bold tabular-nums text-ink">{value ?? 0}</dd>
             </div>
-            <p className="text-sm text-gray-600">공식 과목 ({selectedYear})</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-green-600">
-              {isLoading ? (
-                <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-200" />
-              ) : (
-                (stats?.departmentCount ?? 0)
-              )}
-            </div>
-            <p className="text-sm text-gray-600">학과</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-purple-600">
-              {isLoading ? (
-                <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-200" />
-              ) : (
-                (stats?.userCount ?? 0)
-              )}
-            </div>
-            <p className="text-sm text-gray-600">사용자</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-3xl font-bold text-orange-600">
-              {isLoading ? (
-                <span className="inline-block h-8 w-12 animate-pulse rounded bg-slate-200" />
-              ) : (
-                (stats?.planCount ?? 0)
-              )}
-            </div>
-            <p className="text-sm text-gray-600">수강 계획</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Admin Menus */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          ))}
+        </dl>
+      )}
+      <nav aria-label="관리자 메뉴" className="border-t border-line-2">
         {adminMenus.map((menu) => (
-          <Link key={menu.href} href={menu.href}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-              <CardHeader>
-                <CardTitle className="text-lg">{menu.title}</CardTitle>
-                <CardDescription>{menu.description}</CardDescription>
-              </CardHeader>
-            </Card>
+          <Link key={menu.href} href={menu.href} className="flex min-h-[56px] items-center justify-between gap-4 border-b border-line py-3 text-ink hover:text-primary md:min-h-[52px]">
+            <div>
+              <h2 className="text-[15px] leading-5 font-semibold">{menu.title}</h2>
+              <p className="mt-1 text-[13px] leading-[18px] text-ink-2">{menu.description}</p>
+            </div>
+            <ChevronRight aria-hidden="true" className="h-4 w-4 shrink-0 text-ink-2" />
           </Link>
         ))}
-      </div>
+      </nav>
     </div>
   );
 }

@@ -149,7 +149,7 @@ export default function CalendarPage() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const { data, isLoading } = useAcademicEvents(year, month + 1);
+  const { data, isLoading, isError, isFetching, refetch } = useAcademicEvents(year, month + 1);
   const createMutation = useCreateAcademicEvent();
   const updateMutation = useUpdateAcademicEvent();
   const deleteMutation = useDeleteAcademicEvent();
@@ -416,6 +416,15 @@ export default function CalendarPage() {
         }
       />
 
+      {isError && (
+        <div role="alert" className="flex flex-wrap items-center gap-3 border-t border-line-2 py-4">
+          <p className="m-0 text-[14px] text-negative">일정을 불러오지 못했습니다</p>
+          <Button variant="textPrimary" onClick={() => refetch()} disabled={isFetching}>
+            {isFetching ? '다시 불러오는 중...' : '다시 시도'}
+          </Button>
+        </div>
+      )}
+
       <div className="border-t border-line-2 xl:flex xl:items-start">
         <section aria-label="월간 달력" className="flex min-w-0 flex-1 flex-col gap-4 pt-6 xl:pr-10">
           <div className="flex items-center justify-between gap-3">
@@ -596,7 +605,7 @@ export default function CalendarPage() {
               <div className="border-b border-line py-3.5">
                 <div className="h-5 w-2/3 animate-pulse rounded-[4px] bg-fill" />
               </div>
-            ) : selectedDayEvents.length === 0 ? (
+            ) : isError && !data ? null : selectedDayEvents.length === 0 ? (
               <p className="m-0 border-b border-line py-3.5 text-[14px] leading-5 text-ink-2">
                 이 날의 일정이 없습니다.
               </p>
@@ -611,9 +620,9 @@ export default function CalendarPage() {
                         type="button"
                         onClick={() => setSelectedEventId(expanded ? null : event._id)}
                         aria-expanded={expanded}
-                        className="flex w-full flex-col gap-1 py-3.5 text-left"
+                        className="flex min-w-0 w-full flex-col gap-1 py-3.5 text-left"
                       >
-                        <span className="text-[15px] leading-5 font-medium text-ink">{event.title}</span>
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere] text-[15px] leading-5 font-medium text-ink">{event.title}</span>
                         <span className="inline-flex items-center gap-[5px] text-[12px] leading-4 text-ink-2">
                           <EventDot category={event.category} />
                           {categoryLabels[event.category]} · {formatDateRange(event.startDate, event.endDate)}
@@ -621,9 +630,9 @@ export default function CalendarPage() {
                         </span>
                       </button>
                       {expanded && (event.description || canManage) && (
-                        <div className="flex flex-col gap-2 pb-3.5">
+                        <div className="flex min-w-0 flex-col gap-2 pb-3.5 [overflow-wrap:anywhere]">
                           {event.description && (
-                            <p className="m-0 text-[14px] leading-5 whitespace-pre-line text-ink-2">
+                            <p className="m-0 min-w-0 break-words text-[14px] leading-5 whitespace-pre-line text-ink-2">
                               {event.description}
                             </p>
                           )}
@@ -663,7 +672,7 @@ export default function CalendarPage() {
                   </div>
                 ))}
               </div>
-            ) : sortedEvents.length === 0 ? (
+            ) : isError && !data ? null : sortedEvents.length === 0 ? (
               <p className="m-0 py-3.5 text-[14px] leading-5 text-ink-2">등록된 일정이 없습니다.</p>
             ) : (
               <ul className="m-0 list-none p-0">
@@ -678,7 +687,7 @@ export default function CalendarPage() {
                         {formatDateRange(event.startDate, event.endDate)}
                       </span>
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                        <span className="text-[15px] leading-5 font-medium text-ink">{event.title}</span>
+                        <span className="min-w-0 break-words [overflow-wrap:anywhere] text-[15px] leading-5 font-medium text-ink">{event.title}</span>
                         <span className="inline-flex items-center gap-[5px] text-[12px] leading-4 text-ink-2">
                           <EventDot category={event.category} />
                           {categoryLabels[event.category]}

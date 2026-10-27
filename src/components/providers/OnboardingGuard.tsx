@@ -1,5 +1,6 @@
 'use client';
 
+import { isPublicPage } from './authNavigation';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
@@ -32,7 +33,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
   const isGuestMode = isGuest || isGuestFromStorage();
 
   const isOnboardingPage = pathname === '/onboarding';
-  const isHelpPage = pathname.startsWith('/help');
+  const isHelpPage = isPublicPage(pathname);
   const isLoading = status === 'loading';
   const isAuthenticated = status === 'authenticated';
   const onboardingCompleted = session?.user?.onboardingCompleted === true;
@@ -50,6 +51,8 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
       exitGuestMode();
       return;
     }
+
+    if (isHelpPage) return;
 
     // Guest mode routing
     if (isGuestMode) {
@@ -71,7 +74,7 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
 
     // Not authenticated -> redirect to login
     if (!isAuthenticated) {
-      router.replace('/login');
+      router.replace('/login?callbackUrl=' + encodeURIComponent(window.location.pathname + window.location.search));
       return;
     }
 
@@ -91,11 +94,13 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
     }
   }, [guestHydrated, guestProfileHydrated, isGuestMode, guestOnboarded, isLoading, isAuthenticated, onboardingCompleted, isOnboardingPage, isHelpPage, router, exitGuestMode]);
 
-  // Rule 1: Stores still hydrating -> spinner
+  if (isHelpPage) return <>{children}</>;
+
+  // Rule 1: Stores still hydrating -> loading status
   if (!guestHydrated || (isGuestMode && !guestProfileHydrated)) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]" />
+      <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-live="polite">
+        <p className="text-[13px] leading-[18px] font-medium text-ink-2 animate-pulse">불러오는 중…</p>
       </div>
     );
   }
@@ -112,11 +117,11 @@ export default function OnboardingGuard({ children }: { children: React.ReactNod
     return <>{children}</>;
   }
 
-  // Rule 3: Session loading -> spinner
+  // Rule 3: Session loading -> loading status
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3069B3]" />
+      <div className="flex min-h-[50vh] items-center justify-center" role="status" aria-live="polite">
+        <p className="text-[13px] leading-[18px] font-medium text-ink-2 animate-pulse">불러오는 중…</p>
       </div>
     );
   }

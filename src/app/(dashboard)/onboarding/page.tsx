@@ -1,22 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent, Button, Input, SearchableSelect } from '@/components/ui';
+import { Button, Input, SearchableSelect, SectionHeader } from '@/components/ui';
 import { useDepartments, useCompleteOnboarding } from '@/hooks/useOnboarding';
-import {
-  Check,
-  School,
-  GraduationCap,
-  BookOpen,
-  Award,
-  ArrowRight,
-  ArrowLeft,
-  CheckCircle,
-  AlertTriangle,
-} from 'lucide-react';
+import { Check, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
 import { useGuestStore } from '@/stores/guestStore';
 import { useGuestProfileStore } from '@/stores/guestProfileStore';
 import { useGuestGraduationStore } from '@/stores/guestGraduationStore';
@@ -47,6 +37,8 @@ export default function OnboardingPage() {
 
   const [step, setStep] = useState(1);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const formRef = useRef<HTMLDivElement>(null);
 
   // Step 1 data
   const [departmentId, setDepartmentId] = useState('');
@@ -98,8 +90,8 @@ export default function OnboardingPage() {
           setAvailableMajorTypes(['single', 'double', 'minor']);
           return;
         }
-        const data = await res.json();
-        if (data.availableMajorTypes) {
+        const { data } = await res.json();
+        if (data?.availableMajorTypes) {
           setAvailableMajorTypes(data.availableMajorTypes);
           // If currently selected majorType is not available, reset to 'single'
           if (!data.availableMajorTypes.includes(majorType)) {
@@ -112,7 +104,7 @@ export default function OnboardingPage() {
     };
     fetchAvailable();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [departmentId, departments]);
+  }, [departmentId, departments, requirementYear]);
 
   // Auto-fill from department requirements when entering Step 2
   const autoFillFromDeptReq = async (yearOverride?: number) => {
@@ -123,13 +115,18 @@ export default function OnboardingPage() {
     setAutoFillMessage('');
 
     try {
-      // Fetch primary (single track) requirements
-      const primaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}&majorType=single&year=${year}`);
+      // Fetch the selected primary track independently from the secondary department.
+      const primaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(selectedDept.college!)}&departmentName=${encodeURIComponent(selectedDept.name)}&majorType=${majorType}&track=primary&year=${year}`);
+      if (!primaryRes.ok) throw new Error('학과 기준표를 불러오지 못했습니다.');
       if (primaryRes.ok) {
-        const primaryData = await primaryRes.json();
-        if (primaryData.totalCredits) setTotalCredits(primaryData.totalCredits);
+        const { data: primaryData } = await primaryRes.json();
+        if (!primaryData) throw new Error('학과 기준표가 없습니다.');
+        if (primaryData.totalCredits != null) setTotalCredits(primaryData.totalCredits);
         if (primaryData.generalCredits !== undefined && primaryData.generalCredits !== null) setGeneralCredits(primaryData.generalCredits);
-        if (primaryData.primaryMajorCredits) setPrimaryMajorCredits(primaryData.primaryMajorCredits);
+        if (primaryData.primaryMajorCredits != null) {
+          setPrimaryMajorCredits(primaryData.primaryMajorCredits);
+          if (majorType === 'minor') setMinorPrimaryMajorMin(primaryData.primaryMajorCredits);
+        }
         if (primaryData.primaryMajorRequiredMin !== undefined && primaryData.primaryMajorRequiredMin !== null) setPrimaryMajorRequiredMin(primaryData.primaryMajorRequiredMin);
       }
 
@@ -139,14 +136,14 @@ export default function OnboardingPage() {
         if (secondaryDept?.college && secondaryDept?.name) {
           const secondaryRes = await fetch(`/api/department-requirements?college=${encodeURIComponent(secondaryDept.college!)}&departmentName=${encodeURIComponent(secondaryDept.name)}&majorType=${majorType}&year=${year}`);
           if (secondaryRes.ok) {
-            const secData = await secondaryRes.json();
+            const { data: secData } = await secondaryRes.json();
+            if (!secData) throw new Error('학과 기준표가 없습니다.');
             if (majorType === 'double') {
-              if (secData.secondaryMajorCredits) setSecondaryMajorCredits(secData.secondaryMajorCredits);
+              if (secData.secondaryMajorCredits != null) setSecondaryMajorCredits(secData.secondaryMajorCredits);
               if (secData.secondaryMajorRequiredMin !== undefined) setSecondaryMajorRequiredMin(secData.secondaryMajorRequiredMin);
             } else if (majorType === 'minor') {
-              if (secData.minorCredits) setMinorCredits(secData.minorCredits);
+              if (secData.minorCredits != null) setMinorCredits(secData.minorCredits);
               if (secData.minorRequiredMin !== undefined) setMinorRequiredMin(secData.minorRequiredMin);
-              if (secData.minorPrimaryMajorMin !== undefined) setMinorPrimaryMajorMin(secData.minorPrimaryMajorMin);
             }
           }
         }
@@ -183,8 +180,19 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     setError('');
-    if (totalCredits < 1) {
-      setError('졸업학점은 1 이상이어야 합니다.');
+    const errors: Record<string, string> = {};
+    const inputs = formRef.current?.querySelectorAll<HTMLInputElement>('input[type="number"]') ?? [];
+    for (const input of inputs) {
+      const label = input.labels?.[0]?.textContent || '학점';
+      const min = Number(input.min || 0);
+      if (!input.value || !Number.isFinite(input.valueAsNumber)) errors[input.id] = `${label}을 입력해주세요.`;
+      else if (!Number.isInteger(input.valueAsNumber)) errors[input.id] = `${label}은 정수로 입력해주세요.`;
+      else if (input.valueAsNumber < min) errors[input.id] = `${label}은 ${min} 이상이어야 합니다.`;
+    }
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      setError('입력한 학점을 확인해주세요.');
+      document.getElementById(Object.keys(errors)[0])?.focus();
       return;
     }
 
@@ -273,63 +281,36 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center px-4">
+    <div ref={formRef} className="min-h-[60vh] py-6 md:py-10">
       <div className="w-full max-w-2xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="text-center animate-fade-in-down">
-          <h1 className="text-3xl font-bold text-gradient">초기 설정</h1>
-          <p className="text-gray-600 mt-2">수강 계획을 시작하기 위한 기본 정보를 입력해주세요.</p>
-          <p className="text-sm text-gray-400 mt-1">몇 가지 정보만 입력하면 바로 시작할 수 있어요</p>
-        </div>
+        <header>
+          <h1 className="text-[26px] leading-[34px] font-bold tracking-[-0.02em] text-ink">초기 설정</h1>
+          <p className="mt-2 text-[15px] leading-5 text-ink-2">수강 계획을 시작하기 위한 기본 정보를 입력해주세요.</p>
+          <p className="mt-1 text-[13px] leading-[18px] text-ink-2">몇 가지 정보만 입력하면 바로 시작할 수 있어요.</p>
+        </header>
 
-        {/* Premium Progress Stepper */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-center gap-0 w-full max-w-xs mx-auto">
-            {/* Step 1 Circle */}
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-              step === 1
-                ? 'bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30'
-                : 'bg-emerald-500 text-white'
-            }`}>
-              {step > 1 ? <Check className="w-5 h-5" /> : '1'}
-            </div>
+        <ol aria-label="초기 설정 진행 단계" className="grid grid-cols-2 text-[14px] leading-5 font-semibold">
+          <li
+            aria-current={step === 1 ? 'step' : undefined}
+            className={`border-b pb-3 ${step === 1 ? 'border-primary text-primary' : 'border-line-2 text-ink'}`}
+          >
+            <span aria-hidden="true">1. </span>학과 선택
+            {step > 1 && <span className="sr-only"> 완료</span>}
+          </li>
+          <li
+            aria-current={step === 2 ? 'step' : undefined}
+            className={`border-b pb-3 ${step === 2 ? 'border-primary text-primary' : 'border-line-2 text-ink-2'}`}
+          >
+            <span aria-hidden="true">2. </span>졸업 요건
+          </li>
+        </ol>
 
-            {/* Connecting Line */}
-            <div className="flex-1 h-1 mx-2 rounded-full bg-gray-200 overflow-hidden">
-              <div className={`h-full rounded-full transition-all duration-500 ${
-                step > 1 ? 'w-full bg-gradient-to-r from-[#153974] to-[#3069B3]' : 'w-0'
-              }`} />
-            </div>
-
-            {/* Step 2 Circle */}
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
-              step === 2
-                ? 'bg-gradient-to-br from-[#153974] to-[#3069B3] text-white shadow-lg shadow-[#153974]/30'
-                : 'bg-gray-200 text-gray-500'
-            }`}>
-              2
-            </div>
-          </div>
-
-          {/* Step Labels */}
-          <div className="flex justify-between w-full max-w-xs mx-auto mt-2 px-0">
-            <span className={`text-xs font-medium transition-colors duration-300 ${step >= 1 ? 'text-[#153974]' : 'text-gray-400'}`}>학과 선택</span>
-            <span className={`text-xs font-medium transition-colors duration-300 ${step >= 2 ? 'text-[#153974]' : 'text-gray-400'}`}>졸업 요건</span>
-          </div>
-        </div>
-
-        {/* Step Content */}
         {step === 1 ? (
-          <Card className="border-t-4 border-[#3069B3] animate-fade-in-up">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <School className="w-5 h-5 text-[#153974]" />
-                <CardTitle>학과 및 입학 정보</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          <section aria-labelledby="onboarding-profile-title" className="border-b border-line-2 pb-6">
+            <SectionHeader id="onboarding-profile-title" title="학과 및 입학 정보" className="mb-6" />
+            <div className="space-y-6">
               <div>
-                <label htmlFor="onboarding-department" className="block text-sm font-medium text-gray-700 mb-1">학과</label>
+                <label htmlFor="onboarding-department" className="block text-sm font-medium text-ink-2 mb-1">학과</label>
                 <SearchableSelect
                   id="onboarding-department"
                   options={departmentOptions}
@@ -340,23 +321,23 @@ export default function OnboardingPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">입학연도</label>
                 <Input
+                  label="입학연도"
                   type="number"
                   value={enrollmentYear}
                   onChange={(e) => setEnrollmentYear(e.target.value)}
                   placeholder="예: 2024"
+                  helperText="입학한 연도를 입력하세요."
                   min={2000}
                   max={new Date().getFullYear() + 1}
                 />
-                <p className="text-xs text-gray-500 mt-1">입학한 연도를 입력하세요.</p>
               </div>
 
               {/* 복수전공/부전공 추가 */}
               {departmentId && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">복수전공 / 부전공</label>
-                  <div className="flex gap-2">
+                  <p id="onboarding-major-type-label" className="mb-2 text-[13px] leading-[18px] font-semibold text-ink-2">복수전공 / 부전공</p>
+                  <div role="group" aria-labelledby="onboarding-major-type-label" className="flex gap-2">
                     {/* 복수전공 추가 토글 */}
                     {availableMajorTypes.includes('double') && (
                       <button
@@ -370,16 +351,15 @@ export default function OnboardingPage() {
                             setSecondaryDepartmentId('');
                           }
                         }}
-                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
-                          majorType === 'double'
-                            ? 'bg-purple-500 text-white border-purple-500 shadow-sm'
-                            : 'bg-white text-gray-700 border-gray-300 hover:border-purple-400 hover:text-purple-600'
+                        aria-pressed={majorType === 'double'}
+                        className={`min-h-11 flex-1 border-b px-2 py-2 text-[14px] font-semibold transition-colors duration-150 ${
+                          majorType === 'double' ? 'border-primary text-primary' : 'border-line-2 text-ink-2 hover:text-ink'
                         }`}
                       >
                         <span className="flex items-center justify-center gap-1.5">
                           {majorType === 'double' ? (
                             <>
-                              <Check className="w-4 h-4" />
+                              <Check aria-hidden="true" className="w-4 h-4" />
                               복수전공
                             </>
                           ) : (
@@ -402,18 +382,15 @@ export default function OnboardingPage() {
                           }
                         }}
                         disabled={majorType === 'double'}
-                        className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-all ${
-                          majorType === 'minor'
-                            ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
-                            : majorType === 'double'
-                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-orange-400 hover:text-orange-600'
+                        aria-pressed={majorType === 'minor'}
+                        className={`min-h-11 flex-1 border-b px-2 py-2 text-[14px] font-semibold transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 ${
+                          majorType === 'minor' ? 'border-primary text-primary' : 'border-line-2 text-ink-2 hover:text-ink'
                         }`}
                       >
                         <span className="flex items-center justify-center gap-1.5">
                           {majorType === 'minor' ? (
                             <>
-                              <Check className="w-4 h-4" />
+                              <Check aria-hidden="true" className="w-4 h-4" />
                               부전공
                             </>
                           ) : (
@@ -424,7 +401,7 @@ export default function OnboardingPage() {
                     )}
                   </div>
                   {majorType !== 'single' && (
-                    <p className="text-xs text-gray-500 mt-1.5">
+                    <p className="text-xs text-ink-2 mt-1.5">
                       {majorType === 'double' ? '복수전공' : '부전공'}을 선택했습니다. 해제하려면 다시 클릭하세요.
                     </p>
                   )}
@@ -434,7 +411,7 @@ export default function OnboardingPage() {
               {/* Secondary Department (shown for double/minor) */}
               {majorType !== 'single' && (
                 <div>
-                  <label htmlFor="onboarding-secondary-department" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="onboarding-secondary-department" className="block text-sm font-medium text-ink-2 mb-1">
                     {majorType === 'double' ? '복수전공 학과' : '부전공 학과'}
                   </label>
                   <SearchableSelect
@@ -447,64 +424,53 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p role="alert" className="text-[13px] leading-[18px] text-negative">{error}</p>}
 
               <div className="flex justify-end pt-2">
                 <Button onClick={handleNext} className="inline-flex items-center">
                   다음
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  <ArrowRight aria-hidden="true" className="w-4 h-4 ml-1" />
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         ) : (
-          <Card className="border-t-4 border-emerald-500 animate-fade-in-up">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5 text-emerald-600" />
-                  <CardTitle>졸업 요건 설정</CardTitle>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <label className="text-xs text-gray-500 whitespace-nowrap">기준 연도</label>
-                  <select
-                    value={requirementYear}
-                    onChange={(e) => {
-                      const newYear = parseInt(e.target.value);
-                      setRequirementYear(newYear);
-                      autoFillFromDeptReq(newYear);
-                    }}
-                    className="text-xs border border-gray-300 rounded-md px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#153974] focus:border-[#153974]"
-                  >
-                    <option value={2025}>2025</option>
-                    <option value={2026}>2026</option>
-                  </select>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                졸업 기준과 취득 학점을 잘 모르시나요?{' '}
-                <Link
-                  href="/help/graduation-guide"
-                  className="text-[#00AACA] hover:text-[#153974] underline"
+          <section aria-labelledby="onboarding-requirements-title" className="border-b border-line-2 pb-6">
+            <div className="mb-6 space-y-4">
+              <SectionHeader id="onboarding-requirements-title" title="졸업 요건 설정" />
+              <div className="flex items-center gap-3">
+                <label htmlFor="onboarding-requirement-year" className="text-[13px] leading-[18px] font-semibold text-ink-2">기준 연도</label>
+                <select
+                  id="onboarding-requirement-year"
+                  value={requirementYear}
+                  onChange={(e) => {
+                    const newYear = parseInt(e.target.value);
+                    setRequirementYear(newYear);
+                    autoFillFromDeptReq(newYear);
+                  }}
+                  className="h-10 border-0 border-b border-line-3 bg-transparent pr-6 text-[15px] font-medium text-ink focus:border-primary"
                 >
+                  <option value={2025}>2025</option>
+                  <option value={2026}>2026</option>
+                </select>
+              </div>
+              <p className="text-[13px] leading-[18px] text-ink-2">
+                졸업 기준과 취득 학점을 잘 모르시나요?{' '}
+                <Link href="/help/graduation-guide" className="text-primary hover:text-primary-hover underline underline-offset-4">
                   확인 방법 보기
                 </Link>
               </p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Warning banner for multi-major */}
+            </div>
+            <div className="space-y-6">
               {majorType !== 'single' && (
-                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-amber-800">
-                      {majorType === 'double' ? '복수전공' : '부전공'}을 선택하셨습니다
-                    </p>
-                    <p className="text-xs text-amber-600 mt-1">
-                      이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요.
-                      아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다.
-                    </p>
-                  </div>
+                <div className="border-y border-line-2 py-4 text-ink-2">
+                  <p className="text-[14px] leading-5 font-semibold">
+                    {majorType === 'double' ? '복수전공' : '부전공'}을 선택하셨습니다
+                  </p>
+                  <p className="mt-1 text-[13px] leading-[18px]">
+                    이수 기준이 변경되므로 졸업 요건을 직접 확인하고 설정해주세요.
+                    아래 값은 학과 기준표에서 자동으로 불러온 것이며, 실제와 다를 수 있습니다.
+                  </p>
                 </div>
               )}
 
@@ -512,89 +478,115 @@ export default function OnboardingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Left: Graduation Requirements */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-1.5 border-b pb-2">
-                    <BookOpen className="w-4 h-4 text-gray-500" />
-                    <h3 className="text-sm font-semibold text-gray-900">졸업 기준</h3>
-                  </div>
+                  <SectionHeader title="졸업 기준" className="border-b border-line-2 pb-3" />
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">졸업학점</label>
                     <Input
+                      label="졸업학점"
                       type="number"
-                      value={totalCredits}
-                      onChange={(e) => setTotalCredits(parseInt(e.target.value) || 0)}
+                      id="onboarding-totalCredits"
+                      error={fieldErrors['onboarding-totalCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(totalCredits) ? '' : totalCredits}
+                      onChange={(e) => { setTotalCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-totalCredits']: '' })); }}
                       min={1}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">교양학점</label>
                     <Input
+                      label="교양학점"
                       type="number"
-                      value={generalCredits}
-                      onChange={(e) => setGeneralCredits(parseInt(e.target.value) || 0)}
+                      id="onboarding-generalCredits"
+                      error={fieldErrors['onboarding-generalCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(generalCredits) ? '' : generalCredits}
+                      onChange={(e) => { setGeneralCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-generalCredits']: '' })); }}
                       min={0}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">전공학점</label>
                     <Input
+                      label="전공학점"
                       type="number"
-                      value={primaryMajorCredits}
-                      onChange={(e) => setPrimaryMajorCredits(parseInt(e.target.value) || 0)}
+                      id="onboarding-primaryMajorCredits"
+                      error={fieldErrors['onboarding-primaryMajorCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(primaryMajorCredits) ? '' : primaryMajorCredits}
+                      onChange={(e) => { setPrimaryMajorCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-primaryMajorCredits']: '' })); }}
                       min={0}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">전공핵심 (최소)</label>
                     <Input
+                      label="전공핵심 (최소)"
                       type="number"
-                      value={primaryMajorRequiredMin}
-                      onChange={(e) => setPrimaryMajorRequiredMin(parseInt(e.target.value) || 0)}
+                      helperText="전공핵심 최소 이수학점"
+                      id="onboarding-primaryMajorRequiredMin"
+                      error={fieldErrors['onboarding-primaryMajorRequiredMin']}
+                      required
+                      step={1}
+                      value={Number.isNaN(primaryMajorRequiredMin) ? '' : primaryMajorRequiredMin}
+                      onChange={(e) => { setPrimaryMajorRequiredMin(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-primaryMajorRequiredMin']: '' })); }}
                       min={0}
                     />
-                    <p className="text-xs text-gray-400 mt-0.5">전공필수 최소 이수학점</p>
                   </div>
                 </div>
 
                 {/* Right: Earned Credits */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-1.5 border-b pb-2">
-                    <Award className="w-4 h-4 text-gray-500" />
-                    <h3 className="text-sm font-semibold text-gray-900">취득 학점</h3>
-                  </div>
+                  <SectionHeader title="취득 학점" className="border-b border-line-2 pb-3" />
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">기이수 졸업학점</label>
                     <Input
+                      label="기이수 졸업학점"
                       type="number"
-                      value={earnedTotalCredits}
-                      onChange={(e) => setEarnedTotalCredits(parseInt(e.target.value) || 0)}
-                      min={0}
-                    />
-                    <p className="text-xs text-gray-400 mt-0.5">이미 이수한 총 학점 (전공+교양+기타 포함)</p>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-600 mb-1">기이수 교양학점</label>
-                    <Input
-                      type="number"
-                      value={earnedGeneralCredits}
-                      onChange={(e) => setEarnedGeneralCredits(parseInt(e.target.value) || 0)}
+                      helperText="이미 이수한 총 학점 (전공+교양+기타 포함)"
+                      id="onboarding-earnedTotalCredits"
+                      error={fieldErrors['onboarding-earnedTotalCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(earnedTotalCredits) ? '' : earnedTotalCredits}
+                      onChange={(e) => { setEarnedTotalCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedTotalCredits']: '' })); }}
                       min={0}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">기이수 전공학점</label>
                     <Input
+                      label="기이수 교양학점"
                       type="number"
-                      value={earnedPrimaryMajorCredits}
-                      onChange={(e) => setEarnedPrimaryMajorCredits(parseInt(e.target.value) || 0)}
+                      id="onboarding-earnedGeneralCredits"
+                      error={fieldErrors['onboarding-earnedGeneralCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(earnedGeneralCredits) ? '' : earnedGeneralCredits}
+                      onChange={(e) => { setEarnedGeneralCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedGeneralCredits']: '' })); }}
                       min={0}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-600 mb-1">기이수 전공핵심학점</label>
                     <Input
+                      label="기이수 전공학점"
                       type="number"
-                      value={earnedPrimaryMajorRequiredCredits}
-                      onChange={(e) => setEarnedPrimaryMajorRequiredCredits(parseInt(e.target.value) || 0)}
+                      id="onboarding-earnedPrimaryMajorCredits"
+                      error={fieldErrors['onboarding-earnedPrimaryMajorCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(earnedPrimaryMajorCredits) ? '' : earnedPrimaryMajorCredits}
+                      onChange={(e) => { setEarnedPrimaryMajorCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedPrimaryMajorCredits']: '' })); }}
+                      min={0}
+                    />
+                  </div>
+                  <div>
+                    <Input
+                      label="기이수 전공핵심학점"
+                      type="number"
+                      id="onboarding-earnedPrimaryMajorRequiredCredits"
+                      error={fieldErrors['onboarding-earnedPrimaryMajorRequiredCredits']}
+                      required
+                      step={1}
+                      value={Number.isNaN(earnedPrimaryMajorRequiredCredits) ? '' : earnedPrimaryMajorRequiredCredits}
+                      onChange={(e) => { setEarnedPrimaryMajorRequiredCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedPrimaryMajorRequiredCredits']: '' })); }}
                       min={0}
                     />
                   </div>
@@ -604,31 +596,21 @@ export default function OnboardingPage() {
                 {majorType === 'double' && (
                   <>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-1.5 border-b pb-2">
-                        <BookOpen className="w-4 h-4 text-purple-500" />
-                        <h3 className="text-sm font-semibold text-gray-900">복수전공 기준</h3>
+                      <SectionHeader title="복수전공 기준" className="border-b border-line-2 pb-3" />
+                      <div>
+                        <Input label="복수전공 전공학점" type="number" id="onboarding-secondaryMajorCredits" error={fieldErrors['onboarding-secondaryMajorCredits']} required step={1} value={Number.isNaN(secondaryMajorCredits) ? '' : secondaryMajorCredits} onChange={(e) => { setSecondaryMajorCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-secondaryMajorCredits']: '' })); }} min={0} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">복수전공 전공학점</label>
-                        <Input type="number" value={secondaryMajorCredits} onChange={(e) => setSecondaryMajorCredits(parseInt(e.target.value) || 0)} min={0} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">복수전공 전공핵심 (최소)</label>
-                        <Input type="number" value={secondaryMajorRequiredMin} onChange={(e) => setSecondaryMajorRequiredMin(parseInt(e.target.value) || 0)} min={0} />
+                        <Input label="복수전공 전공핵심 (최소)" type="number" id="onboarding-secondaryMajorRequiredMin" error={fieldErrors['onboarding-secondaryMajorRequiredMin']} required step={1} value={Number.isNaN(secondaryMajorRequiredMin) ? '' : secondaryMajorRequiredMin} onChange={(e) => { setSecondaryMajorRequiredMin(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-secondaryMajorRequiredMin']: '' })); }} min={0} />
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-1.5 border-b pb-2">
-                        <Award className="w-4 h-4 text-purple-500" />
-                        <h3 className="text-sm font-semibold text-gray-900">복수전공 기이수</h3>
+                      <SectionHeader title="복수전공 기이수" className="border-b border-line-2 pb-3" />
+                      <div>
+                        <Input label="기이수 복수전공 전공학점" type="number" id="onboarding-earnedSecondaryMajorCredits" error={fieldErrors['onboarding-earnedSecondaryMajorCredits']} required step={1} value={Number.isNaN(earnedSecondaryMajorCredits) ? '' : earnedSecondaryMajorCredits} onChange={(e) => { setEarnedSecondaryMajorCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedSecondaryMajorCredits']: '' })); }} min={0} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">기이수 복수전공 전공학점</label>
-                        <Input type="number" value={earnedSecondaryMajorCredits} onChange={(e) => setEarnedSecondaryMajorCredits(parseInt(e.target.value) || 0)} min={0} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">기이수 복수전공 전공핵심</label>
-                        <Input type="number" value={earnedSecondaryMajorRequiredCredits} onChange={(e) => setEarnedSecondaryMajorRequiredCredits(parseInt(e.target.value) || 0)} min={0} />
+                        <Input label="기이수 복수전공 전공핵심" type="number" id="onboarding-earnedSecondaryMajorRequiredCredits" error={fieldErrors['onboarding-earnedSecondaryMajorRequiredCredits']} required step={1} value={Number.isNaN(earnedSecondaryMajorRequiredCredits) ? '' : earnedSecondaryMajorRequiredCredits} onChange={(e) => { setEarnedSecondaryMajorRequiredCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedSecondaryMajorRequiredCredits']: '' })); }} min={0} />
                       </div>
                     </div>
                   </>
@@ -638,35 +620,24 @@ export default function OnboardingPage() {
                 {majorType === 'minor' && (
                   <>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-1.5 border-b pb-2">
-                        <BookOpen className="w-4 h-4 text-orange-500" />
-                        <h3 className="text-sm font-semibold text-gray-900">부전공 기준</h3>
+                      <SectionHeader title="부전공 기준" className="border-b border-line-2 pb-3" />
+                      <div>
+                        <Input label="부전공 전공학점" type="number" id="onboarding-minorCredits" error={fieldErrors['onboarding-minorCredits']} required step={1} value={Number.isNaN(minorCredits) ? '' : minorCredits} onChange={(e) => { setMinorCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-minorCredits']: '' })); }} min={0} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">부전공 전공학점</label>
-                        <Input type="number" value={minorCredits} onChange={(e) => setMinorCredits(parseInt(e.target.value) || 0)} min={0} />
+                        <Input label="부전공 전공핵심 (최소)" type="number" id="onboarding-minorRequiredMin" error={fieldErrors['onboarding-minorRequiredMin']} required step={1} value={Number.isNaN(minorRequiredMin) ? '' : minorRequiredMin} onChange={(e) => { setMinorRequiredMin(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-minorRequiredMin']: '' })); }} min={0} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">부전공 전공핵심 (최소)</label>
-                        <Input type="number" value={minorRequiredMin} onChange={(e) => setMinorRequiredMin(parseInt(e.target.value) || 0)} min={0} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">부전공시 주전공 최소학점</label>
-                        <Input type="number" value={minorPrimaryMajorMin} onChange={(e) => setMinorPrimaryMajorMin(parseInt(e.target.value) || 0)} min={0} />
+                        <Input label="부전공시 주전공 최소학점" type="number" id="onboarding-minorPrimaryMajorMin" error={fieldErrors['onboarding-minorPrimaryMajorMin']} required step={1} value={Number.isNaN(minorPrimaryMajorMin) ? '' : minorPrimaryMajorMin} onChange={(e) => { setMinorPrimaryMajorMin(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-minorPrimaryMajorMin']: '' })); }} min={0} />
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div className="flex items-center gap-1.5 border-b pb-2">
-                        <Award className="w-4 h-4 text-orange-500" />
-                        <h3 className="text-sm font-semibold text-gray-900">부전공 기이수</h3>
+                      <SectionHeader title="부전공 기이수" className="border-b border-line-2 pb-3" />
+                      <div>
+                        <Input label="기이수 부전공 전공학점" type="number" id="onboarding-earnedMinorCredits" error={fieldErrors['onboarding-earnedMinorCredits']} required step={1} value={Number.isNaN(earnedMinorCredits) ? '' : earnedMinorCredits} onChange={(e) => { setEarnedMinorCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedMinorCredits']: '' })); }} min={0} />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">기이수 부전공 전공학점</label>
-                        <Input type="number" value={earnedMinorCredits} onChange={(e) => setEarnedMinorCredits(parseInt(e.target.value) || 0)} min={0} />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-600 mb-1">기이수 부전공 전공핵심</label>
-                        <Input type="number" value={earnedMinorRequiredCredits} onChange={(e) => setEarnedMinorRequiredCredits(parseInt(e.target.value) || 0)} min={0} />
+                        <Input label="기이수 부전공 전공핵심" type="number" id="onboarding-earnedMinorRequiredCredits" error={fieldErrors['onboarding-earnedMinorRequiredCredits']} required step={1} value={Number.isNaN(earnedMinorRequiredCredits) ? '' : earnedMinorRequiredCredits} onChange={(e) => { setEarnedMinorRequiredCredits(e.target.valueAsNumber); setFieldErrors((prev) => ({ ...prev, ['onboarding-earnedMinorRequiredCredits']: '' })); }} min={0} />
                       </div>
                     </div>
                   </>
@@ -674,23 +645,23 @@ export default function OnboardingPage() {
               </div>
 
               {autoFillMessage && (
-                <p className="text-xs text-emerald-600 bg-emerald-50 px-3 py-2 rounded-md">{autoFillMessage}</p>
+                <p className="text-[13px] leading-[18px] text-ink-2">{autoFillMessage}</p>
               )}
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p role="alert" className="text-[13px] leading-[18px] text-negative">{error}</p>}
 
               <div className="flex justify-between pt-2">
-                <Button variant="outline" onClick={() => { setStep(1); setError(''); setAutoFillMessage(''); }} className="inline-flex items-center">
-                  <ArrowLeft className="w-4 h-4 mr-1" />
+                <Button variant="text" onClick={() => { setStep(1); setError(''); setAutoFillMessage(''); }} className="inline-flex items-center">
+                  <ArrowLeft aria-hidden="true" className="w-4 h-4 mr-1" />
                   이전
                 </Button>
                 <Button onClick={handleComplete} disabled={!isGuest && completeMutation.isPending} className="inline-flex items-center">
                   {!isGuest && completeMutation.isPending ? '처리 중...' : '완료'}
-                  {(isGuest || !completeMutation.isPending) && <CheckCircle className="w-4 h-4 ml-1" />}
+                  {(isGuest || !completeMutation.isPending) && <CheckCircle aria-hidden="true" className="w-4 h-4 ml-1" />}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         )}
       </div>
     </div>

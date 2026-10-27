@@ -162,10 +162,10 @@ async function getUnreadCountForUser(userId: string): Promise<number> {
 /**
  * 관리자 읽음 처리
  */
-async function markAsReadByAdmin(ids: string[]): Promise<void> {
+async function markAsReadByAdmin(ids?: string[]): Promise<void> {
   await connectDB();
   await Feedback.updateMany(
-    { _id: { $in: ids } },
+    { isReadByAdmin: false, ...(ids ? { _id: { $in: ids } } : {}) },
     { isReadByAdmin: true }
   );
 }
@@ -185,35 +185,8 @@ async function markAsReadByUser(userId: string): Promise<void> {
  * 관리자 목록 조회 + 읽음 처리 (서비스 레이어에서 일괄 처리)
  */
 async function findAllAndMarkRead(filter?: FeedbackFilter): Promise<IFeedbackDocument[]> {
-  await connectDB();
-
-  const conditions: Record<string, unknown> = {};
-  if (filter?.status) {
-    conditions.status = filter.status;
-  }
-  if (filter?.category) {
-    conditions.category = filter.category;
-  }
-
-  const limit = filter?.limit ?? 50;
-
-  const feedbacks = await Feedback.find(conditions)
-    .populate('userId', 'email name')
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .lean();
-
-  const unreadIds = feedbacks
-    .filter((fb) => !fb.isReadByAdmin)
-    .map((fb) => fb._id.toString());
-  if (unreadIds.length > 0) {
-    await Feedback.updateMany(
-      { _id: { $in: unreadIds } },
-      { isReadByAdmin: true }
-    );
-  }
-
-  return feedbacks;
+  // Legacy service name retained for callers; reads never change administrative state.
+  return findAll(filter);
 }
 
 /**
