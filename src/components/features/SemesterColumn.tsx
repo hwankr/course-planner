@@ -61,7 +61,8 @@ function DraggableSemesterCourse({
       {...attributes}
       {...listeners}
       className={isDragging ? 'opacity-40' : ''}
-      style={{ transform: CSS.Translate.toString(transform), touchAction: 'none' }}
+      // 평소엔 세로 스와이프를 브라우저 스크롤에 맡기고, 길게 눌러 드래그가 켜진 뒤에만 막는다
+      style={{ transform: CSS.Translate.toString(transform), touchAction: isDragging ? 'none' : 'pan-y' }}
     >
       <CourseCard
         course={course}
